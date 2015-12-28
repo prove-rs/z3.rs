@@ -1,0 +1,15 @@
+[package]
+name = "z3-sys"
+version = "0.1.0"
+authors = ["Graydon Hoare <graydon@pobox.com>"]
+
+description = "Low-level rust-bindgen bindings for the Z3 SMT solver from Microsoft Research"
+license = "MIT"
+keywords = ["FFI", "SMT", "satisfiability", "solver"]
+readme = "README.md"
+homepage = "https://github.com/graydon/z3-sys"
+repository = "https://github.com/graydon/z3-sys.git"
+
+[dependencies]
+libc = "0.2"
+va_list = "0.0.1"
