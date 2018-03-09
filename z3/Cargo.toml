@@ -8,6 +8,7 @@ license = "MIT"
 keywords = ["FFI", "SMT", "satisfiability", "solver"]
 categories = ["api-bindings"]
 readme = "README.md"
+documentation = "https://docs.rs/z3/"
 homepage = "https://github.com/endoli/z3.rs"
 repository = "https://github.com/endoli/z3.rs.git"
 
