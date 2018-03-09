@@ -11,4 +11,3 @@ homepage = "https://github.com/graydon/z3-sys"
 repository = "https://github.com/graydon/z3-sys.git"
 
 [dependencies]
-libc = "0.2"

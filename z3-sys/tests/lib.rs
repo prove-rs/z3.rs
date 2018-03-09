@@ -1,5 +1,4 @@
 extern crate z3_sys;
-extern crate libc;
 
 use std::ffi::{CString, CStr};
 use z3_sys::*;
@@ -39,8 +38,8 @@ fn smoketest() {
         assert_eq!(Z3_model_eval(ctx, model, const_x, Z3_TRUE, &mut interp_x), Z3_TRUE);
         assert_eq!(Z3_model_eval(ctx, model, const_y, Z3_TRUE, &mut interp_y), Z3_TRUE);
 
-        let mut val_x : ::libc::c_int = -5;
-        let mut val_y : ::libc::c_int = -5;
+        let mut val_x: i32 = -5;
+        let mut val_y: i32 = -5;
         assert_eq!(Z3_get_numeral_int(ctx, interp_x, &mut val_x), Z3_TRUE);
         assert_eq!(Z3_get_numeral_int(ctx, interp_y, &mut val_y), Z3_TRUE);
         assert_eq!(val_x, 0);
