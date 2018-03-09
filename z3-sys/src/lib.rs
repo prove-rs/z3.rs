@@ -5,13 +5,17 @@
 
 pub const Z3_TRUE: i32 = 1;
 pub const Z3_FALSE: i32 = 0;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_symbol {
     _unused: [u8; 0],
 }
+/// Lisp-like symbol used to name types, constants, and functions.
+/// A symbol can be created using string or integers.
 pub type Z3_symbol = *mut _Z3_symbol;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
@@ -19,181 +23,244 @@ pub struct _Z3_literals {
     _unused: [u8; 0],
 }
 pub type Z3_literals = *mut _Z3_literals;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_config {
     _unused: [u8; 0],
 }
+/// Configuration object used to initialize logical contexts.
 pub type Z3_config = *mut _Z3_config;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_context {
     _unused: [u8; 0],
 }
+/// Manager of all other Z3 objects, global configuration options, etc.
 pub type Z3_context = *mut _Z3_context;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_sort {
     _unused: [u8; 0],
 }
+/// Kind of AST used to represent types.
 pub type Z3_sort = *mut _Z3_sort;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_func_decl {
     _unused: [u8; 0],
 }
+/// Kind of AST used to represent function symbols.
 pub type Z3_func_decl = *mut _Z3_func_decl;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_ast {
     _unused: [u8; 0],
 }
+/// Abstract Syntax Tree node. That is, the data structure used in Z3
+/// to represent terms, formulas, and types.
 pub type Z3_ast = *mut _Z3_ast;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_app {
     _unused: [u8; 0],
 }
+/// Kind of AST used to represent function applications.
 pub type Z3_app = *mut _Z3_app;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_pattern {
     _unused: [u8; 0],
 }
+/// Kind of AST used to represent pattern and multi-patterns used
+/// to guide quantifier instantiation.
 pub type Z3_pattern = *mut _Z3_pattern;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_model {
     _unused: [u8; 0],
 }
+/// Model for the constraints inserted into the logical context.
 pub type Z3_model = *mut _Z3_model;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_constructor {
     _unused: [u8; 0],
 }
+/// Type constructor for a (recursive) datatype.
 pub type Z3_constructor = *mut _Z3_constructor;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_constructor_list {
     _unused: [u8; 0],
 }
+/// List of constructors for a (recursive) datatype.
 pub type Z3_constructor_list = *mut _Z3_constructor_list;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_params {
     _unused: [u8; 0],
 }
+/// Parameter set used to configure many components such as:
+/// simplifiers, tactics, solvers, etc.
 pub type Z3_params = *mut _Z3_params;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_param_descrs {
     _unused: [u8; 0],
 }
+/// Provides a collection of parameter names, their types,
+/// default values and documentation strings. Solvers, tactics,
+/// and other objects accept different collection of parameters.
 pub type Z3_param_descrs = *mut _Z3_param_descrs;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_goal {
     _unused: [u8; 0],
 }
+/// Set of formulas that can be solved and/or transformed using
+/// tactics and solvers.
 pub type Z3_goal = *mut _Z3_goal;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_tactic {
     _unused: [u8; 0],
 }
+/// Basic building block for creating custom solvers for specific
+/// problem domains.
 pub type Z3_tactic = *mut _Z3_tactic;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_probe {
     _unused: [u8; 0],
 }
+/// Function/predicate used to inspect a goal and collect information
+/// that may be used to decide which solver and/or preprocessing step
+/// will be used.
 pub type Z3_probe = *mut _Z3_probe;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_stats {
     _unused: [u8; 0],
 }
+/// Statistical data for a solver.
 pub type Z3_stats = *mut _Z3_stats;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_solver {
     _unused: [u8; 0],
 }
+/// (Incremental) solver, possibly specialized by a particular
+/// tactic or logic.
 pub type Z3_solver = *mut _Z3_solver;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_ast_vector {
     _unused: [u8; 0],
 }
+/// Vector of [`Z3_ast`](type.Z3_ast.html) objects.
 pub type Z3_ast_vector = *mut _Z3_ast_vector;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_ast_map {
     _unused: [u8; 0],
 }
+/// Mapping from [`Z3_ast`] to [`Z3_ast`] objects.
+///
+/// [`Z3_ast`]: type.Z3_ast.html
 pub type Z3_ast_map = *mut _Z3_ast_map;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_apply_result {
     _unused: [u8; 0],
 }
+/// Collection of subgoals resulting from applying of a tactic
+/// to a goal.
 pub type Z3_apply_result = *mut _Z3_apply_result;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_func_interp {
     _unused: [u8; 0],
 }
+/// Interpretation of a function in a model.
 pub type Z3_func_interp = *mut _Z3_func_interp;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_func_entry {
     _unused: [u8; 0],
 }
+/// Representation of the value of a
+/// [`Z3_func_interp`](type.Z3_func_interp.html)
+/// at a particular point.
 pub type Z3_func_entry = *mut _Z3_func_entry;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_fixedpoint {
     _unused: [u8; 0],
 }
+/// Context for the recursive predicate solver.
 pub type Z3_fixedpoint = *mut _Z3_fixedpoint;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_optimize {
     _unused: [u8; 0],
 }
+/// Context for solving optimization queries.
 pub type Z3_optimize = *mut _Z3_optimize;
+
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
 pub struct _Z3_rcf_num {
     _unused: [u8; 0],
 }
-
 pub type Z3_rcf_num = *mut _Z3_rcf_num;
 
 /// Z3 Boolean type. It is just an alias for `int`.
