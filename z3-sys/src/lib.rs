@@ -1836,11 +1836,7 @@ extern "C" {
     pub fn Z3_param_descrs_dec_ref(c: Z3_context, p: Z3_param_descrs);
 
     /// Return the kind associated with the given parameter name `n`.
-    pub fn Z3_param_descrs_get_kind(
-        c: Z3_context,
-        p: Z3_param_descrs,
-        n: Z3_symbol,
-    ) -> ParamKind;
+    pub fn Z3_param_descrs_get_kind(c: Z3_context, p: Z3_param_descrs, n: Z3_symbol) -> ParamKind;
 
     /// Return the number of parameters in the given parameter description set.
     pub fn Z3_param_descrs_size(c: Z3_context, p: Z3_param_descrs) -> ::std::os::raw::c_uint;

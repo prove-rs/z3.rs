@@ -1,6 +1,6 @@
 extern crate z3_sys;
 
-use std::ffi::{CString, CStr};
+use std::ffi::{CStr, CString};
 use z3_sys::*;
 
 #[test]
@@ -29,14 +29,22 @@ fn smoketest() {
 
         // Check that the string-value of the model is as expected
         let model_s = Z3_model_to_string(ctx, model);
-        assert_eq!(CStr::from_ptr(model_s).to_str().unwrap(),
-                   "y -> (- 1)\nx -> 0\n");
+        assert_eq!(
+            CStr::from_ptr(model_s).to_str().unwrap(),
+            "y -> (- 1)\nx -> 0\n"
+        );
 
         // Grab the actual constant values out of the model
-        let mut interp_x : Z3_ast = const_x;
-        let mut interp_y : Z3_ast = const_y;
-        assert_eq!(Z3_model_eval(ctx, model, const_x, Z3_TRUE, &mut interp_x), Z3_TRUE);
-        assert_eq!(Z3_model_eval(ctx, model, const_y, Z3_TRUE, &mut interp_y), Z3_TRUE);
+        let mut interp_x: Z3_ast = const_x;
+        let mut interp_y: Z3_ast = const_y;
+        assert_eq!(
+            Z3_model_eval(ctx, model, const_x, Z3_TRUE, &mut interp_x),
+            Z3_TRUE
+        );
+        assert_eq!(
+            Z3_model_eval(ctx, model, const_y, Z3_TRUE, &mut interp_y),
+            Z3_TRUE
+        );
 
         let mut val_x: i32 = -5;
         let mut val_y: i32 = -5;
