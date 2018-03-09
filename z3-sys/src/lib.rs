@@ -4336,8 +4336,6 @@ extern "C" {
     ) -> Z3_ast;
 
     /// Log interaction to a file.
-    ///
-    /// extra_API('Z3_open_log', INT, (_in(STRING),))
     pub fn Z3_open_log(filename: Z3_string) -> Z3_bool;
 
     /// Append user-defined string to interaction log.
@@ -4346,13 +4344,9 @@ extern "C" {
     /// [`Z3_open_log`](fn.Z3_open_log.html).
     /// It contains the formulas that are checked using Z3.
     /// You can use this command to append comments, for instance.
-    ///
-    /// extra_API('Z3_append_log', VOID, (_in(STRING),))
     pub fn Z3_append_log(string: Z3_string);
 
     /// Close interaction log.
-    ///
-    /// extra_API('Z3_close_log', VOID, ())
     pub fn Z3_close_log();
 
     /// Enable/disable printing warning messages to the console.
