@@ -193,324 +193,163 @@ pub type Z3_optimize = *mut _Z3_optimize;
 pub struct _Z3_rcf_num {
     _unused: [u8; 0],
 }
+
 pub type Z3_rcf_num = *mut _Z3_rcf_num;
+
 /// Z3 Boolean type. It is just an alias for `int`.
 pub type Z3_bool = ::std::os::raw::c_int;
+
 /// Z3 string type. It is just an alias for `const char *`.
 pub type Z3_string = *const ::std::os::raw::c_char;
+
 pub type Z3_string_ptr = *mut Z3_string;
+
 pub const Z3_L_FALSE: Z3_lbool = -1;
 pub const Z3_L_UNDEF: Z3_lbool = 0;
 pub const Z3_L_TRUE: Z3_lbool = 1;
+
 /// Lifted Boolean type: `false`, `undefined`, `true`.
 pub type Z3_lbool = i32;
-pub const Z3_INT_SYMBOL: Z3_symbol_kind = 0;
-pub const Z3_STRING_SYMBOL: Z3_symbol_kind = 1;
+
 /// The different kinds of symbol.
-/// In Z3, a symbol can be represented using integers and strings (See [`Z3_get_symbol_kind`](fn.Z3_get_symbol_kind.html)).
+/// In Z3, a symbol can be represented using integers and
+/// strings (See [`Z3_get_symbol_kind`](fn.Z3_get_symbol_kind.html)).
+///
+/// This corresponds to `Z3_symbol_kind` in the C API.
 ///
 /// See also:
 ///
 /// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
 /// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
-pub type Z3_symbol_kind = u32;
-pub const Z3_PARAMETER_INT: Z3_parameter_kind = 0;
-pub const Z3_PARAMETER_DOUBLE: Z3_parameter_kind = 1;
-pub const Z3_PARAMETER_RATIONAL: Z3_parameter_kind = 2;
-pub const Z3_PARAMETER_SYMBOL: Z3_parameter_kind = 3;
-pub const Z3_PARAMETER_SORT: Z3_parameter_kind = 4;
-pub const Z3_PARAMETER_AST: Z3_parameter_kind = 5;
-pub const Z3_PARAMETER_FUNC_DECL: Z3_parameter_kind = 6;
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum SymbolKind {
+    /// An integer symbol.
+    ///
+    /// This corresponds to `Z3_INT_SYMBOL` in the C API.
+    Int = 0,
+    /// A string symbol.
+    ///
+    /// This corresponds to `Z3_STRING_SYMBOL` in the C API.
+    String = 1,
+}
+
 /// The different kinds of parameters that can be associated with function symbols.
+///
+/// This corresponds to `Z3_parameter_kind` in the C API.
 ///
 /// See also:
 ///
 /// - [`Z3_get_decl_num_parameters`](fn.Z3_get_decl_num_parameters.html)
 /// - [`Z3_get_decl_parameter_kind`](fn.Z3_get_decl_parameter_kind.html)
-///
-/// - Z3_PARAMETER_INT is used for integer parameters.
-/// - Z3_PARAMETER_DOUBLE is used for double parameters.
-/// - Z3_PARAMETER_RATIONAL is used for parameters that are rational numbers.
-/// - Z3_PARAMETER_SYMBOL is used for parameters that are symbols.
-/// - Z3_PARAMETER_SORT is used for sort parameters.
-/// - Z3_PARAMETER_AST is used for expression parameters.
-/// - Z3_PARAMETER_FUNC_DECL is used for function declaration parameters.
-pub type Z3_parameter_kind = u32;
-pub const Z3_UNINTERPRETED_SORT: Z3_sort_kind = 0;
-pub const Z3_BOOL_SORT: Z3_sort_kind = 1;
-pub const Z3_INT_SORT: Z3_sort_kind = 2;
-pub const Z3_REAL_SORT: Z3_sort_kind = 3;
-pub const Z3_BV_SORT: Z3_sort_kind = 4;
-pub const Z3_ARRAY_SORT: Z3_sort_kind = 5;
-pub const Z3_DATATYPE_SORT: Z3_sort_kind = 6;
-pub const Z3_RELATION_SORT: Z3_sort_kind = 7;
-pub const Z3_FINITE_DOMAIN_SORT: Z3_sort_kind = 8;
-pub const Z3_FLOATING_POINT_SORT: Z3_sort_kind = 9;
-pub const Z3_ROUNDING_MODE_SORT: Z3_sort_kind = 10;
-pub const Z3_SEQ_SORT: Z3_sort_kind = 11;
-pub const Z3_RE_SORT: Z3_sort_kind = 12;
-pub const Z3_UNKNOWN_SORT: Z3_sort_kind = 1000;
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ParameterKind {
+    /// An integer parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_INT` in the C API.
+    Int = 0,
+    /// A double parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_DOUBLE` in the C API.
+    Double = 1,
+    /// A rational number parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_RATIONAL` in the C API.
+    Rational = 2,
+    /// A symbol parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_SYMBOL` in the C API.
+    Symbol = 3,
+    /// A sort parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_SORT` in the C API.
+    Sort = 4,
+    /// An expression parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_AST` in the C API.
+    AST = 5,
+    /// A function declaration parameter.
+    ///
+    /// This corresponds to `Z3_PARAMETER_FUNC_DECL` in the C API.
+    FuncDecl = 6,
+}
+
 /// The different kinds of Z3 types (See [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)).
-pub type Z3_sort_kind = u32;
-pub const Z3_NUMERAL_AST: Z3_ast_kind = 0;
-pub const Z3_APP_AST: Z3_ast_kind = 1;
-pub const Z3_VAR_AST: Z3_ast_kind = 2;
-pub const Z3_QUANTIFIER_AST: Z3_ast_kind = 3;
-pub const Z3_SORT_AST: Z3_ast_kind = 4;
-pub const Z3_FUNC_DECL_AST: Z3_ast_kind = 5;
-pub const Z3_UNKNOWN_AST: Z3_ast_kind = 1000;
+///
+/// This corresponds to `Z3_sort_kind` in the C API.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum SortKind {
+    /// This corresponds to `Z3_UINTERPRETED_SORT` in the C API.
+    Uninterpreted = 0,
+    /// This corresponds to `Z3_BOOL_SORT` in the C API.
+    Bool = 1,
+    /// This corresponds to `Z3_INT_SORT` in the C API.
+    Int = 2,
+    /// This corresponds to `Z3_REAL_SORT` in the C API.
+    Real = 3,
+    /// This corresponds to `Z3_BV_SORT` in the C API.
+    BV = 4,
+    /// This corresponds to `Z3_ARRAY_SORT` in the C API.
+    Array = 5,
+    /// This corresponds to `Z3_DATATYPE_SORT` in the C API.
+    Datatype = 6,
+    /// This corresponds to `Z3_RELATION_SORT` in the C API.
+    Relation = 7,
+    /// This corresponds to `Z3_FINITE_DOMAIN_SORT` in the C API.
+    FiniteDomain = 8,
+    /// This corresponds to `Z3_FLOATING_POINT_SORT` in the C API.
+    FloatingPoint = 9,
+    /// This corresponds to `Z3_ROUNDING_MODE_SORT` in the C API.
+    RoundingMode = 10,
+    /// This corresponds to `Z3_SEQ_SORT` in the C API.
+    Seq = 11,
+    /// This corresponds to `Z3_RE_SORT` in the C API.
+    RE = 12,
+    /// This corresponds to `Z3_UNKNOWN_SORT` in the C API.
+    Unknown = 1000,
+}
+
 /// The different kinds of Z3 AST (abstract syntax trees). That is, terms, formulas and types.
 ///
-/// - Z3_APP_AST:            constant and applications
-/// - Z3_NUMERAL_AST:        numeral constants
-/// - Z3_VAR_AST:            bound variables
-/// - Z3_QUANTIFIER_AST:     quantifiers
-/// - Z3_SORT_AST:           sort
-/// - Z3_FUNC_DECL_AST:      function declaration
-/// - Z3_UNKNOWN_AST:        internal
-pub type Z3_ast_kind = u32;
-pub const Z3_OP_TRUE: Z3_decl_kind = 256;
-pub const Z3_OP_FALSE: Z3_decl_kind = 257;
-pub const Z3_OP_EQ: Z3_decl_kind = 258;
-pub const Z3_OP_DISTINCT: Z3_decl_kind = 259;
-pub const Z3_OP_ITE: Z3_decl_kind = 260;
-pub const Z3_OP_AND: Z3_decl_kind = 261;
-pub const Z3_OP_OR: Z3_decl_kind = 262;
-pub const Z3_OP_IFF: Z3_decl_kind = 263;
-pub const Z3_OP_XOR: Z3_decl_kind = 264;
-pub const Z3_OP_NOT: Z3_decl_kind = 265;
-pub const Z3_OP_IMPLIES: Z3_decl_kind = 266;
-pub const Z3_OP_OEQ: Z3_decl_kind = 267;
-pub const Z3_OP_INTERP: Z3_decl_kind = 268;
-pub const Z3_OP_ANUM: Z3_decl_kind = 512;
-pub const Z3_OP_AGNUM: Z3_decl_kind = 513;
-pub const Z3_OP_LE: Z3_decl_kind = 514;
-pub const Z3_OP_GE: Z3_decl_kind = 515;
-pub const Z3_OP_LT: Z3_decl_kind = 516;
-pub const Z3_OP_GT: Z3_decl_kind = 517;
-pub const Z3_OP_ADD: Z3_decl_kind = 518;
-pub const Z3_OP_SUB: Z3_decl_kind = 519;
-pub const Z3_OP_UMINUS: Z3_decl_kind = 520;
-pub const Z3_OP_MUL: Z3_decl_kind = 521;
-pub const Z3_OP_DIV: Z3_decl_kind = 522;
-pub const Z3_OP_IDIV: Z3_decl_kind = 523;
-pub const Z3_OP_REM: Z3_decl_kind = 524;
-pub const Z3_OP_MOD: Z3_decl_kind = 525;
-pub const Z3_OP_TO_REAL: Z3_decl_kind = 526;
-pub const Z3_OP_TO_INT: Z3_decl_kind = 527;
-pub const Z3_OP_IS_INT: Z3_decl_kind = 528;
-pub const Z3_OP_POWER: Z3_decl_kind = 529;
-pub const Z3_OP_STORE: Z3_decl_kind = 768;
-pub const Z3_OP_SELECT: Z3_decl_kind = 769;
-pub const Z3_OP_CONST_ARRAY: Z3_decl_kind = 770;
-pub const Z3_OP_ARRAY_MAP: Z3_decl_kind = 771;
-pub const Z3_OP_ARRAY_DEFAULT: Z3_decl_kind = 772;
-pub const Z3_OP_SET_UNION: Z3_decl_kind = 773;
-pub const Z3_OP_SET_INTERSECT: Z3_decl_kind = 774;
-pub const Z3_OP_SET_DIFFERENCE: Z3_decl_kind = 775;
-pub const Z3_OP_SET_COMPLEMENT: Z3_decl_kind = 776;
-pub const Z3_OP_SET_SUBSET: Z3_decl_kind = 777;
-pub const Z3_OP_AS_ARRAY: Z3_decl_kind = 778;
-pub const Z3_OP_ARRAY_EXT: Z3_decl_kind = 779;
-pub const Z3_OP_BNUM: Z3_decl_kind = 1024;
-pub const Z3_OP_BIT1: Z3_decl_kind = 1025;
-pub const Z3_OP_BIT0: Z3_decl_kind = 1026;
-pub const Z3_OP_BNEG: Z3_decl_kind = 1027;
-pub const Z3_OP_BADD: Z3_decl_kind = 1028;
-pub const Z3_OP_BSUB: Z3_decl_kind = 1029;
-pub const Z3_OP_BMUL: Z3_decl_kind = 1030;
-pub const Z3_OP_BSDIV: Z3_decl_kind = 1031;
-pub const Z3_OP_BUDIV: Z3_decl_kind = 1032;
-pub const Z3_OP_BSREM: Z3_decl_kind = 1033;
-pub const Z3_OP_BUREM: Z3_decl_kind = 1034;
-pub const Z3_OP_BSMOD: Z3_decl_kind = 1035;
-pub const Z3_OP_BSDIV0: Z3_decl_kind = 1036;
-pub const Z3_OP_BUDIV0: Z3_decl_kind = 1037;
-pub const Z3_OP_BSREM0: Z3_decl_kind = 1038;
-pub const Z3_OP_BUREM0: Z3_decl_kind = 1039;
-pub const Z3_OP_BSMOD0: Z3_decl_kind = 1040;
-pub const Z3_OP_ULEQ: Z3_decl_kind = 1041;
-pub const Z3_OP_SLEQ: Z3_decl_kind = 1042;
-pub const Z3_OP_UGEQ: Z3_decl_kind = 1043;
-pub const Z3_OP_SGEQ: Z3_decl_kind = 1044;
-pub const Z3_OP_ULT: Z3_decl_kind = 1045;
-pub const Z3_OP_SLT: Z3_decl_kind = 1046;
-pub const Z3_OP_UGT: Z3_decl_kind = 1047;
-pub const Z3_OP_SGT: Z3_decl_kind = 1048;
-pub const Z3_OP_BAND: Z3_decl_kind = 1049;
-pub const Z3_OP_BOR: Z3_decl_kind = 1050;
-pub const Z3_OP_BNOT: Z3_decl_kind = 1051;
-pub const Z3_OP_BXOR: Z3_decl_kind = 1052;
-pub const Z3_OP_BNAND: Z3_decl_kind = 1053;
-pub const Z3_OP_BNOR: Z3_decl_kind = 1054;
-pub const Z3_OP_BXNOR: Z3_decl_kind = 1055;
-pub const Z3_OP_CONCAT: Z3_decl_kind = 1056;
-pub const Z3_OP_SIGN_EXT: Z3_decl_kind = 1057;
-pub const Z3_OP_ZERO_EXT: Z3_decl_kind = 1058;
-pub const Z3_OP_EXTRACT: Z3_decl_kind = 1059;
-pub const Z3_OP_REPEAT: Z3_decl_kind = 1060;
-pub const Z3_OP_BREDOR: Z3_decl_kind = 1061;
-pub const Z3_OP_BREDAND: Z3_decl_kind = 1062;
-pub const Z3_OP_BCOMP: Z3_decl_kind = 1063;
-pub const Z3_OP_BSHL: Z3_decl_kind = 1064;
-pub const Z3_OP_BLSHR: Z3_decl_kind = 1065;
-pub const Z3_OP_BASHR: Z3_decl_kind = 1066;
-pub const Z3_OP_ROTATE_LEFT: Z3_decl_kind = 1067;
-pub const Z3_OP_ROTATE_RIGHT: Z3_decl_kind = 1068;
-pub const Z3_OP_EXT_ROTATE_LEFT: Z3_decl_kind = 1069;
-pub const Z3_OP_EXT_ROTATE_RIGHT: Z3_decl_kind = 1070;
-pub const Z3_OP_BIT2BOOL: Z3_decl_kind = 1071;
-pub const Z3_OP_INT2BV: Z3_decl_kind = 1072;
-pub const Z3_OP_BV2INT: Z3_decl_kind = 1073;
-pub const Z3_OP_CARRY: Z3_decl_kind = 1074;
-pub const Z3_OP_XOR3: Z3_decl_kind = 1075;
-pub const Z3_OP_BSMUL_NO_OVFL: Z3_decl_kind = 1076;
-pub const Z3_OP_BUMUL_NO_OVFL: Z3_decl_kind = 1077;
-pub const Z3_OP_BSMUL_NO_UDFL: Z3_decl_kind = 1078;
-pub const Z3_OP_BSDIV_I: Z3_decl_kind = 1079;
-pub const Z3_OP_BUDIV_I: Z3_decl_kind = 1080;
-pub const Z3_OP_BSREM_I: Z3_decl_kind = 1081;
-pub const Z3_OP_BUREM_I: Z3_decl_kind = 1082;
-pub const Z3_OP_BSMOD_I: Z3_decl_kind = 1083;
-pub const Z3_OP_PR_UNDEF: Z3_decl_kind = 1280;
-pub const Z3_OP_PR_TRUE: Z3_decl_kind = 1281;
-pub const Z3_OP_PR_ASSERTED: Z3_decl_kind = 1282;
-pub const Z3_OP_PR_GOAL: Z3_decl_kind = 1283;
-pub const Z3_OP_PR_MODUS_PONENS: Z3_decl_kind = 1284;
-pub const Z3_OP_PR_REFLEXIVITY: Z3_decl_kind = 1285;
-pub const Z3_OP_PR_SYMMETRY: Z3_decl_kind = 1286;
-pub const Z3_OP_PR_TRANSITIVITY: Z3_decl_kind = 1287;
-pub const Z3_OP_PR_TRANSITIVITY_STAR: Z3_decl_kind = 1288;
-pub const Z3_OP_PR_MONOTONICITY: Z3_decl_kind = 1289;
-pub const Z3_OP_PR_QUANT_INTRO: Z3_decl_kind = 1290;
-pub const Z3_OP_PR_DISTRIBUTIVITY: Z3_decl_kind = 1291;
-pub const Z3_OP_PR_AND_ELIM: Z3_decl_kind = 1292;
-pub const Z3_OP_PR_NOT_OR_ELIM: Z3_decl_kind = 1293;
-pub const Z3_OP_PR_REWRITE: Z3_decl_kind = 1294;
-pub const Z3_OP_PR_REWRITE_STAR: Z3_decl_kind = 1295;
-pub const Z3_OP_PR_PULL_QUANT: Z3_decl_kind = 1296;
-pub const Z3_OP_PR_PULL_QUANT_STAR: Z3_decl_kind = 1297;
-pub const Z3_OP_PR_PUSH_QUANT: Z3_decl_kind = 1298;
-pub const Z3_OP_PR_ELIM_UNUSED_VARS: Z3_decl_kind = 1299;
-pub const Z3_OP_PR_DER: Z3_decl_kind = 1300;
-pub const Z3_OP_PR_QUANT_INST: Z3_decl_kind = 1301;
-pub const Z3_OP_PR_HYPOTHESIS: Z3_decl_kind = 1302;
-pub const Z3_OP_PR_LEMMA: Z3_decl_kind = 1303;
-pub const Z3_OP_PR_UNIT_RESOLUTION: Z3_decl_kind = 1304;
-pub const Z3_OP_PR_IFF_TRUE: Z3_decl_kind = 1305;
-pub const Z3_OP_PR_IFF_FALSE: Z3_decl_kind = 1306;
-pub const Z3_OP_PR_COMMUTATIVITY: Z3_decl_kind = 1307;
-pub const Z3_OP_PR_DEF_AXIOM: Z3_decl_kind = 1308;
-pub const Z3_OP_PR_DEF_INTRO: Z3_decl_kind = 1309;
-pub const Z3_OP_PR_APPLY_DEF: Z3_decl_kind = 1310;
-pub const Z3_OP_PR_IFF_OEQ: Z3_decl_kind = 1311;
-pub const Z3_OP_PR_NNF_POS: Z3_decl_kind = 1312;
-pub const Z3_OP_PR_NNF_NEG: Z3_decl_kind = 1313;
-pub const Z3_OP_PR_NNF_STAR: Z3_decl_kind = 1314;
-pub const Z3_OP_PR_CNF_STAR: Z3_decl_kind = 1315;
-pub const Z3_OP_PR_SKOLEMIZE: Z3_decl_kind = 1316;
-pub const Z3_OP_PR_MODUS_PONENS_OEQ: Z3_decl_kind = 1317;
-pub const Z3_OP_PR_TH_LEMMA: Z3_decl_kind = 1318;
-pub const Z3_OP_PR_HYPER_RESOLVE: Z3_decl_kind = 1319;
-pub const Z3_OP_RA_STORE: Z3_decl_kind = 1536;
-pub const Z3_OP_RA_EMPTY: Z3_decl_kind = 1537;
-pub const Z3_OP_RA_IS_EMPTY: Z3_decl_kind = 1538;
-pub const Z3_OP_RA_JOIN: Z3_decl_kind = 1539;
-pub const Z3_OP_RA_UNION: Z3_decl_kind = 1540;
-pub const Z3_OP_RA_WIDEN: Z3_decl_kind = 1541;
-pub const Z3_OP_RA_PROJECT: Z3_decl_kind = 1542;
-pub const Z3_OP_RA_FILTER: Z3_decl_kind = 1543;
-pub const Z3_OP_RA_NEGATION_FILTER: Z3_decl_kind = 1544;
-pub const Z3_OP_RA_RENAME: Z3_decl_kind = 1545;
-pub const Z3_OP_RA_COMPLEMENT: Z3_decl_kind = 1546;
-pub const Z3_OP_RA_SELECT: Z3_decl_kind = 1547;
-pub const Z3_OP_RA_CLONE: Z3_decl_kind = 1548;
-pub const Z3_OP_FD_CONSTANT: Z3_decl_kind = 1549;
-pub const Z3_OP_FD_LT: Z3_decl_kind = 1550;
-pub const Z3_OP_SEQ_UNIT: Z3_decl_kind = 1551;
-pub const Z3_OP_SEQ_EMPTY: Z3_decl_kind = 1552;
-pub const Z3_OP_SEQ_CONCAT: Z3_decl_kind = 1553;
-pub const Z3_OP_SEQ_PREFIX: Z3_decl_kind = 1554;
-pub const Z3_OP_SEQ_SUFFIX: Z3_decl_kind = 1555;
-pub const Z3_OP_SEQ_CONTAINS: Z3_decl_kind = 1556;
-pub const Z3_OP_SEQ_EXTRACT: Z3_decl_kind = 1557;
-pub const Z3_OP_SEQ_REPLACE: Z3_decl_kind = 1558;
-pub const Z3_OP_SEQ_AT: Z3_decl_kind = 1559;
-pub const Z3_OP_SEQ_LENGTH: Z3_decl_kind = 1560;
-pub const Z3_OP_SEQ_INDEX: Z3_decl_kind = 1561;
-pub const Z3_OP_SEQ_TO_RE: Z3_decl_kind = 1562;
-pub const Z3_OP_SEQ_IN_RE: Z3_decl_kind = 1563;
-pub const Z3_OP_STR_TO_INT: Z3_decl_kind = 1564;
-pub const Z3_OP_INT_TO_STR: Z3_decl_kind = 1565;
-pub const Z3_OP_RE_PLUS: Z3_decl_kind = 1566;
-pub const Z3_OP_RE_STAR: Z3_decl_kind = 1567;
-pub const Z3_OP_RE_OPTION: Z3_decl_kind = 1568;
-pub const Z3_OP_RE_CONCAT: Z3_decl_kind = 1569;
-pub const Z3_OP_RE_UNION: Z3_decl_kind = 1570;
-pub const Z3_OP_RE_RANGE: Z3_decl_kind = 1571;
-pub const Z3_OP_RE_LOOP: Z3_decl_kind = 1572;
-pub const Z3_OP_RE_INTERSECT: Z3_decl_kind = 1573;
-pub const Z3_OP_RE_EMPTY_SET: Z3_decl_kind = 1574;
-pub const Z3_OP_RE_FULL_SET: Z3_decl_kind = 1575;
-pub const Z3_OP_RE_COMPLEMENT: Z3_decl_kind = 1576;
-pub const Z3_OP_LABEL: Z3_decl_kind = 1792;
-pub const Z3_OP_LABEL_LIT: Z3_decl_kind = 1793;
-pub const Z3_OP_DT_CONSTRUCTOR: Z3_decl_kind = 2048;
-pub const Z3_OP_DT_RECOGNISER: Z3_decl_kind = 2049;
-pub const Z3_OP_DT_ACCESSOR: Z3_decl_kind = 2050;
-pub const Z3_OP_DT_UPDATE_FIELD: Z3_decl_kind = 2051;
-pub const Z3_OP_PB_AT_MOST: Z3_decl_kind = 2304;
-pub const Z3_OP_PB_AT_LEAST: Z3_decl_kind = 2305;
-pub const Z3_OP_PB_LE: Z3_decl_kind = 2306;
-pub const Z3_OP_PB_GE: Z3_decl_kind = 2307;
-pub const Z3_OP_PB_EQ: Z3_decl_kind = 2308;
-pub const Z3_OP_FPA_RM_NEAREST_TIES_TO_EVEN: Z3_decl_kind = 2309;
-pub const Z3_OP_FPA_RM_NEAREST_TIES_TO_AWAY: Z3_decl_kind = 2310;
-pub const Z3_OP_FPA_RM_TOWARD_POSITIVE: Z3_decl_kind = 2311;
-pub const Z3_OP_FPA_RM_TOWARD_NEGATIVE: Z3_decl_kind = 2312;
-pub const Z3_OP_FPA_RM_TOWARD_ZERO: Z3_decl_kind = 2313;
-pub const Z3_OP_FPA_NUM: Z3_decl_kind = 2314;
-pub const Z3_OP_FPA_PLUS_INF: Z3_decl_kind = 2315;
-pub const Z3_OP_FPA_MINUS_INF: Z3_decl_kind = 2316;
-pub const Z3_OP_FPA_NAN: Z3_decl_kind = 2317;
-pub const Z3_OP_FPA_PLUS_ZERO: Z3_decl_kind = 2318;
-pub const Z3_OP_FPA_MINUS_ZERO: Z3_decl_kind = 2319;
-pub const Z3_OP_FPA_ADD: Z3_decl_kind = 2320;
-pub const Z3_OP_FPA_SUB: Z3_decl_kind = 2321;
-pub const Z3_OP_FPA_NEG: Z3_decl_kind = 2322;
-pub const Z3_OP_FPA_MUL: Z3_decl_kind = 2323;
-pub const Z3_OP_FPA_DIV: Z3_decl_kind = 2324;
-pub const Z3_OP_FPA_REM: Z3_decl_kind = 2325;
-pub const Z3_OP_FPA_ABS: Z3_decl_kind = 2326;
-pub const Z3_OP_FPA_MIN: Z3_decl_kind = 2327;
-pub const Z3_OP_FPA_MAX: Z3_decl_kind = 2328;
-pub const Z3_OP_FPA_FMA: Z3_decl_kind = 2329;
-pub const Z3_OP_FPA_SQRT: Z3_decl_kind = 2330;
-pub const Z3_OP_FPA_ROUND_TO_INTEGRAL: Z3_decl_kind = 2331;
-pub const Z3_OP_FPA_EQ: Z3_decl_kind = 2332;
-pub const Z3_OP_FPA_LT: Z3_decl_kind = 2333;
-pub const Z3_OP_FPA_GT: Z3_decl_kind = 2334;
-pub const Z3_OP_FPA_LE: Z3_decl_kind = 2335;
-pub const Z3_OP_FPA_GE: Z3_decl_kind = 2336;
-pub const Z3_OP_FPA_IS_NAN: Z3_decl_kind = 2337;
-pub const Z3_OP_FPA_IS_INF: Z3_decl_kind = 2338;
-pub const Z3_OP_FPA_IS_ZERO: Z3_decl_kind = 2339;
-pub const Z3_OP_FPA_IS_NORMAL: Z3_decl_kind = 2340;
-pub const Z3_OP_FPA_IS_SUBNORMAL: Z3_decl_kind = 2341;
-pub const Z3_OP_FPA_IS_NEGATIVE: Z3_decl_kind = 2342;
-pub const Z3_OP_FPA_IS_POSITIVE: Z3_decl_kind = 2343;
-pub const Z3_OP_FPA_FP: Z3_decl_kind = 2344;
-pub const Z3_OP_FPA_TO_FP: Z3_decl_kind = 2345;
-pub const Z3_OP_FPA_TO_FP_UNSIGNED: Z3_decl_kind = 2346;
-pub const Z3_OP_FPA_TO_UBV: Z3_decl_kind = 2347;
-pub const Z3_OP_FPA_TO_SBV: Z3_decl_kind = 2348;
-pub const Z3_OP_FPA_TO_REAL: Z3_decl_kind = 2349;
-pub const Z3_OP_FPA_TO_IEEE_BV: Z3_decl_kind = 2350;
-pub const Z3_OP_FPA_BVWRAP: Z3_decl_kind = 2351;
-pub const Z3_OP_FPA_BV2RM: Z3_decl_kind = 2352;
-pub const Z3_OP_INTERNAL: Z3_decl_kind = 2353;
-pub const Z3_OP_UNINTERPRETED: Z3_decl_kind = 2354;
+/// This corresponds to `Z3_ast_kind` in the C API.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum AstKind {
+    /// numeral constants
+    ///
+    /// This corresponds to `Z3_NUMERAL_AST` in the C API.
+    Numeral = 0,
+    /// constant and applications
+    ///
+    /// This corresponds to `Z3_APP_AST` in the C API.
+    App = 1,
+    /// bound variables
+    ///
+    /// This corresponds to `Z3_VAR_AST` in the C API.
+    Var = 2,
+    /// quantifiers
+    ///
+    /// This corresponds to `Z3_QUANTIFIER_AST` in the C API.
+    Quantifier = 3,
+    /// sort
+    ///
+    /// This corresponds to `Z3_SORT_AST` in the C API.
+    Sort = 4,
+    /// function declaration
+    ///
+    /// This corresponds to `Z3_FUNC_DECL_AST` in the C API.
+    FuncDecl = 5,
+    /// internal
+    ///
+    /// This corresponds to `Z3_UNKNOWN_AST` in the C API.
+    Unknown = 1000,
+}
+
 /// The different kinds of interpreted function kinds.
+///
+/// This corresponds to `Z3_decl_kind` in the C API.
 ///
 /// - Z3_OP_TRUE The constant true.
 ///
@@ -1187,7 +1026,7 @@ pub const Z3_OP_UNINTERPRETED: Z3_decl_kind = 2354;
 /// for [`Z3_OP_RA_UNION`](const.Z3_OP_RA_UNION.html) to perform destructive updates to the first argument.
 ///
 ///
-/// - Z3_OP_FD_LT: A less than predicate over the finite domain Z3_FINITE_DOMAIN_SORT.
+/// - Z3_OP_FD_LT: A less than predicate over the finite domain `SortKind::FiniteDomain`.
 ///
 /// - Z3_OP_LABEL: A label (used by the Boogie Verification condition generator).
 /// The label has two parameters, a string and a Boolean polarity.
@@ -1322,79 +1161,406 @@ pub const Z3_OP_UNINTERPRETED: Z3_decl_kind = 2354;
 /// function declaration to obtain more information.
 ///
 /// - Z3_OP_UNINTERPRETED: kind used for uninterpreted symbols.
-pub type Z3_decl_kind = u32;
-pub const Z3_PK_UINT: Z3_param_kind = 0;
-pub const Z3_PK_BOOL: Z3_param_kind = 1;
-pub const Z3_PK_DOUBLE: Z3_param_kind = 2;
-pub const Z3_PK_SYMBOL: Z3_param_kind = 3;
-pub const Z3_PK_STRING: Z3_param_kind = 4;
-pub const Z3_PK_OTHER: Z3_param_kind = 5;
-pub const Z3_PK_INVALID: Z3_param_kind = 6;
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum DeclKind {
+    TRUE = 256,
+    FALSE = 257,
+    EQ = 258,
+    DISTINCT = 259,
+    ITE = 260,
+    AND = 261,
+    OR = 262,
+    IFF = 263,
+    XOR = 264,
+    NOT = 265,
+    IMPLIES = 266,
+    OEQ = 267,
+    INTERP = 268,
+    ANUM = 512,
+    AGNUM = 513,
+    LE = 514,
+    GE = 515,
+    LT = 516,
+    GT = 517,
+    ADD = 518,
+    SUB = 519,
+    UMINUS = 520,
+    MUL = 521,
+    DIV = 522,
+    IDIV = 523,
+    REM = 524,
+    MOD = 525,
+    TO_REAL = 526,
+    TO_INT = 527,
+    IS_INT = 528,
+    POWER = 529,
+    STORE = 768,
+    SELECT = 769,
+    CONST_ARRAY = 770,
+    ARRAY_MAP = 771,
+    ARRAY_DEFAULT = 772,
+    SET_UNION = 773,
+    SET_INTERSECT = 774,
+    SET_DIFFERENCE = 775,
+    SET_COMPLEMENT = 776,
+    SET_SUBSET = 777,
+    AS_ARRAY = 778,
+    ARRAY_EXT = 779,
+    BNUM = 1024,
+    BIT1 = 1025,
+    BIT0 = 1026,
+    BNEG = 1027,
+    BADD = 1028,
+    BSUB = 1029,
+    BMUL = 1030,
+    BSDIV = 1031,
+    BUDIV = 1032,
+    BSREM = 1033,
+    BUREM = 1034,
+    BSMOD = 1035,
+    BSDIV0 = 1036,
+    BUDIV0 = 1037,
+    BSREM0 = 1038,
+    BUREM0 = 1039,
+    BSMOD0 = 1040,
+    ULEQ = 1041,
+    SLEQ = 1042,
+    UGEQ = 1043,
+    SGEQ = 1044,
+    ULT = 1045,
+    SLT = 1046,
+    UGT = 1047,
+    SGT = 1048,
+    BAND = 1049,
+    BOR = 1050,
+    BNOT = 1051,
+    BXOR = 1052,
+    BNAND = 1053,
+    BNOR = 1054,
+    BXNOR = 1055,
+    CONCAT = 1056,
+    SIGN_EXT = 1057,
+    ZERO_EXT = 1058,
+    EXTRACT = 1059,
+    REPEAT = 1060,
+    BREDOR = 1061,
+    BREDAND = 1062,
+    BCOMP = 1063,
+    BSHL = 1064,
+    BLSHR = 1065,
+    BASHR = 1066,
+    ROTATE_LEFT = 1067,
+    ROTATE_RIGHT = 1068,
+    EXT_ROTATE_LEFT = 1069,
+    EXT_ROTATE_RIGHT = 1070,
+    BIT2BOOL = 1071,
+    INT2BV = 1072,
+    BV2INT = 1073,
+    CARRY = 1074,
+    XOR3 = 1075,
+    BSMUL_NO_OVFL = 1076,
+    BUMUL_NO_OVFL = 1077,
+    BSMUL_NO_UDFL = 1078,
+    BSDIV_I = 1079,
+    BUDIV_I = 1080,
+    BSREM_I = 1081,
+    BUREM_I = 1082,
+    BSMOD_I = 1083,
+    PR_UNDEF = 1280,
+    PR_TRUE = 1281,
+    PR_ASSERTED = 1282,
+    PR_GOAL = 1283,
+    PR_MODUS_PONENS = 1284,
+    PR_REFLEXIVITY = 1285,
+    PR_SYMMETRY = 1286,
+    PR_TRANSITIVITY = 1287,
+    PR_TRANSITIVITY_STAR = 1288,
+    PR_MONOTONICITY = 1289,
+    PR_QUANT_INTRO = 1290,
+    PR_DISTRIBUTIVITY = 1291,
+    PR_AND_ELIM = 1292,
+    PR_NOT_OR_ELIM = 1293,
+    PR_REWRITE = 1294,
+    PR_REWRITE_STAR = 1295,
+    PR_PULL_QUANT = 1296,
+    PR_PULL_QUANT_STAR = 1297,
+    PR_PUSH_QUANT = 1298,
+    PR_ELIM_UNUSED_VARS = 1299,
+    PR_DER = 1300,
+    PR_QUANT_INST = 1301,
+    PR_HYPOTHESIS = 1302,
+    PR_LEMMA = 1303,
+    PR_UNIT_RESOLUTION = 1304,
+    PR_IFF_TRUE = 1305,
+    PR_IFF_FALSE = 1306,
+    PR_COMMUTATIVITY = 1307,
+    PR_DEF_AXIOM = 1308,
+    PR_DEF_INTRO = 1309,
+    PR_APPLY_DEF = 1310,
+    PR_IFF_OEQ = 1311,
+    PR_NNF_POS = 1312,
+    PR_NNF_NEG = 1313,
+    PR_NNF_STAR = 1314,
+    PR_CNF_STAR = 1315,
+    PR_SKOLEMIZE = 1316,
+    PR_MODUS_PONENS_OEQ = 1317,
+    PR_TH_LEMMA = 1318,
+    PR_HYPER_RESOLVE = 1319,
+    RA_STORE = 1536,
+    RA_EMPTY = 1537,
+    RA_IS_EMPTY = 1538,
+    RA_JOIN = 1539,
+    RA_UNION = 1540,
+    RA_WIDEN = 1541,
+    RA_PROJECT = 1542,
+    RA_FILTER = 1543,
+    RA_NEGATION_FILTER = 1544,
+    RA_RENAME = 1545,
+    RA_COMPLEMENT = 1546,
+    RA_SELECT = 1547,
+    RA_CLONE = 1548,
+    FD_CONSTANT = 1549,
+    FD_LT = 1550,
+    SEQ_UNIT = 1551,
+    SEQ_EMPTY = 1552,
+    SEQ_CONCAT = 1553,
+    SEQ_PREFIX = 1554,
+    SEQ_SUFFIX = 1555,
+    SEQ_CONTAINS = 1556,
+    SEQ_EXTRACT = 1557,
+    SEQ_REPLACE = 1558,
+    SEQ_AT = 1559,
+    SEQ_LENGTH = 1560,
+    SEQ_INDEX = 1561,
+    SEQ_TO_RE = 1562,
+    SEQ_IN_RE = 1563,
+    STR_TO_INT = 1564,
+    INT_TO_STR = 1565,
+    RE_PLUS = 1566,
+    RE_STAR = 1567,
+    RE_OPTION = 1568,
+    RE_CONCAT = 1569,
+    RE_UNION = 1570,
+    RE_RANGE = 1571,
+    RE_LOOP = 1572,
+    RE_INTERSECT = 1573,
+    RE_EMPTY_SET = 1574,
+    RE_FULL_SET = 1575,
+    RE_COMPLEMENT = 1576,
+    LABEL = 1792,
+    LABEL_LIT = 1793,
+    DT_CONSTRUCTOR = 2048,
+    DT_RECOGNISER = 2049,
+    DT_ACCESSOR = 2050,
+    DT_UPDATE_FIELD = 2051,
+    PB_AT_MOST = 2304,
+    PB_AT_LEAST = 2305,
+    PB_LE = 2306,
+    PB_GE = 2307,
+    PB_EQ = 2308,
+    FPA_RM_NEAREST_TIES_TO_EVEN = 2309,
+    FPA_RM_NEAREST_TIES_TO_AWAY = 2310,
+    FPA_RM_TOWARD_POSITIVE = 2311,
+    FPA_RM_TOWARD_NEGATIVE = 2312,
+    FPA_RM_TOWARD_ZERO = 2313,
+    FPA_NUM = 2314,
+    FPA_PLUS_INF = 2315,
+    FPA_MINUS_INF = 2316,
+    FPA_NAN = 2317,
+    FPA_PLUS_ZERO = 2318,
+    FPA_MINUS_ZERO = 2319,
+    FPA_ADD = 2320,
+    FPA_SUB = 2321,
+    FPA_NEG = 2322,
+    FPA_MUL = 2323,
+    FPA_DIV = 2324,
+    FPA_REM = 2325,
+    FPA_ABS = 2326,
+    FPA_MIN = 2327,
+    FPA_MAX = 2328,
+    FPA_FMA = 2329,
+    FPA_SQRT = 2330,
+    FPA_ROUND_TO_INTEGRAL = 2331,
+    FPA_EQ = 2332,
+    FPA_LT = 2333,
+    FPA_GT = 2334,
+    FPA_LE = 2335,
+    FPA_GE = 2336,
+    FPA_IS_NAN = 2337,
+    FPA_IS_INF = 2338,
+    FPA_IS_ZERO = 2339,
+    FPA_IS_NORMAL = 2340,
+    FPA_IS_SUBNORMAL = 2341,
+    FPA_IS_NEGATIVE = 2342,
+    FPA_IS_POSITIVE = 2343,
+    FPA_FP = 2344,
+    FPA_TO_FP = 2345,
+    FPA_TO_FP_UNSIGNED = 2346,
+    FPA_TO_UBV = 2347,
+    FPA_TO_SBV = 2348,
+    FPA_TO_REAL = 2349,
+    FPA_TO_IEEE_BV = 2350,
+    FPA_BVWRAP = 2351,
+    FPA_BV2RM = 2352,
+    INTERNAL = 2353,
+    UNINTERPRETED = 2354,
+}
+
 /// The different kinds of parameters that can be associated with parameter sets.
 /// (see [`Z3_mk_params`](fn.Z3_mk_params.html)).
 ///
-/// - Z3_PK_UINT integer parameters.
-/// - Z3_PK_BOOL boolean parameters.
-/// - Z3_PK_DOUBLE double parameters.
-/// - Z3_PK_SYMBOL symbol parameters.
-/// - Z3_PK_STRING string parameters.
-/// - Z3_PK_OTHER all internal parameter kinds which are not exposed in the API.
-/// - Z3_PK_INVALID invalid parameter.
-pub type Z3_param_kind = u32;
-pub const Z3_PRINT_SMTLIB_FULL: Z3_ast_print_mode = 0;
-pub const Z3_PRINT_LOW_LEVEL: Z3_ast_print_mode = 1;
-pub const Z3_PRINT_SMTLIB2_COMPLIANT: Z3_ast_print_mode = 2;
+/// This corresponds to `Z3_param_kind` in the C API.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ParamKind {
+    /// integer parameters.
+    ///
+    /// This corresponds to `Z3_PK_UINT` in the C API.
+    UInt = 0,
+    /// boolean parameters.
+    ///
+    /// This corresponds to `Z3_PK_BOOL` in the C API.
+    Bool = 1,
+    /// double parameters.
+    ///
+    /// This corresponds to `Z3_PK_DOUBLE` in the C API.
+    Double = 2,
+    /// symbol parameters.
+    ///
+    /// This corresponds to `Z3_PK_SYMBOL` in the C API.
+    Symbol = 3,
+    /// string parameters.
+    ///
+    /// This corresponds to `Z3_PK_STRING` in the C API.
+    String = 4,
+    /// all internal parameter kinds which are not exposed in the API.
+    ///
+    /// This corresponds to `Z3_PK_OTHER` in the C API.
+    Other = 5,
+    /// invalid parameter.
+    ///
+    /// This corresponds to `Z3_PK_INVALID` in the C API.
+    Invalid = 6,
+}
+
 /// Z3 pretty printing modes (See [`Z3_set_ast_print_mode`](fn.Z3_set_ast_print_mode.html)).
 ///
-/// - Z3_PRINT_SMTLIB_FULL:   Print AST nodes in SMTLIB verbose format.
-/// - Z3_PRINT_LOW_LEVEL:     Print AST nodes using a low-level format.
-/// - Z3_PRINT_SMTLIB2_COMPLIANT: Print AST nodes in SMTLIB 2.x compliant format.
-pub type Z3_ast_print_mode = u32;
-pub const Z3_OK: Z3_error_code = 0;
-pub const Z3_SORT_ERROR: Z3_error_code = 1;
-pub const Z3_IOB: Z3_error_code = 2;
-pub const Z3_INVALID_ARG: Z3_error_code = 3;
-pub const Z3_PARSER_ERROR: Z3_error_code = 4;
-pub const Z3_NO_PARSER: Z3_error_code = 5;
-pub const Z3_INVALID_PATTERN: Z3_error_code = 6;
-pub const Z3_MEMOUT_FAIL: Z3_error_code = 7;
-pub const Z3_FILE_ACCESS_ERROR: Z3_error_code = 8;
-pub const Z3_INTERNAL_FATAL: Z3_error_code = 9;
-pub const Z3_INVALID_USAGE: Z3_error_code = 10;
-pub const Z3_DEC_REF_ERROR: Z3_error_code = 11;
-pub const Z3_EXCEPTION: Z3_error_code = 12;
+/// This corresponds to `Z3_ast_print_mode` in the C API.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum AstPrintMode {
+    /// Print AST nodes in SMTLIB verbose format.
+    ///
+    /// This corresponds to `Z3_PRINT_SMTLIB_FULL` in the C API.
+    SmtLibFull = 0,
+    /// Print AST nodes using a low-level format.
+    ///
+    /// This corresponds to `Z3_PRINT_LOW_LEVEL` in the C API.
+    LowLevel = 1,
+    /// Print AST nodes in SMTLIB 2.x compliant format.
+    ///
+    /// This corresponds to `Z3_PRINT_SMTLIB2_COMPLIANT` in the C API.
+    SmtLib2Compliant = 2,
+}
+
 /// Z3 error codes (See [`Z3_get_error_code`](fn.Z3_get_error_code.html)).
 ///
-/// - Z3_OK:            No error.
-/// - Z3_SORT_ERROR:    User tried to build an invalid (type incorrect) AST.
-/// - Z3_IOB:           Index out of bounds.
-/// - Z3_INVALID_ARG:   Invalid argument was provided.
-/// - Z3_PARSER_ERROR:  An error occurred when parsing a string or file.
-/// - Z3_NO_PARSER:     Parser output is not available, that is, user didn't invoke [`Z3_parse_smtlib_string`](fn.Z3_parse_smtlib_string.html) or [`Z3_parse_smtlib_file`](fn.Z3_parse_smtlib_file.html).
-/// - Z3_INVALID_PATTERN: Invalid pattern was used to build a quantifier.
-/// - Z3_MEMOUT_FAIL:   A memory allocation failure was encountered.
-/// - Z3_FILE_ACCESS_ERRROR: A file could not be accessed.
-/// - Z3_INVALID_USAGE:   API call is invalid in the current state.
-/// - Z3_INTERNAL_FATAL: An error internal to Z3 occurred.
-/// - Z3_DEC_REF_ERROR: Trying to decrement the reference counter of an AST that was deleted or the reference counter was not initialized with [`Z3_inc_ref`](fn.Z3_inc_ref.html).
-/// - Z3_EXCEPTION:     Internal Z3 exception. Additional details can be retrieved using [`Z3_get_error_msg`](fn.Z3_get_error_msg.html).
-pub type Z3_error_code = u32;
+/// This corresponds to `Z3_error_code` in the C API.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum ErrorCode {
+    /// No error.
+    ///
+    /// This corresponds to `ErrorCode::OK` in the C API.
+    OK = 0,
+    /// User tried to build an invalid (type incorrect) AST.
+    ///
+    /// This corresponds to `Z3_SORT_ERROR` in the C API.
+    SortError = 1,
+    /// Index out of bounds.
+    ///
+    /// This corresponds to `Z3_IOB` in the C API.
+    IOB = 2,
+    /// Invalid argument was provided.
+    ///
+    /// This corresponds to `Z3_INVALID_ARG` in the C API.
+    InvalidArg = 3,
+    /// An error occurred when parsing a string or file.
+    ///
+    /// This corresponds to `Z3_PARSER_ERROR` in the C API.
+    ParserError = 4,
+    /// Parser output is not available, that is, user didn't invoke
+    /// [`Z3_parse_smtlib_string`](fn.Z3_parse_smtlib_string.html) or
+    /// [`Z3_parse_smtlib_file`](fn.Z3_parse_smtlib_file.html).
+    ///
+    /// This corresponds to `Z3_NO_PARSER` in the C API.
+    NoParser = 5,
+    /// Invalid pattern was used to build a quantifier.
+    ///
+    /// This corresponds to `Z3_INVALID_PATTERN` in the C API.
+    InvalidPattern = 6,
+    /// A memory allocation failure was encountered.
+    ///
+    /// This corresponds to `Z3_MEMOUT_FAIL` in the C API.
+    MemoutFail = 7,
+    /// A file could not be accessed.
+    ///
+    /// This corresponds to `Z3_FILE_ACCESS_ERRROR` in the C API.
+    FileAccessError = 8,
+    /// An error internal to Z3 occurred.
+    ///
+    /// This corresponds to `Z3_INTERNAL_FATAL` in the C API.
+    InternalFatal = 9,
+    /// API call is invalid in the current state.
+    ///
+    /// This corresponds to `Z3_INVALID_USAGE` in the C API.
+    InvalidUsage = 10,
+    /// Trying to decrement the reference counter of an AST that was
+    /// deleted or the reference counter was not initialized with
+    /// [`Z3_inc_ref`](fn.Z3_inc_ref.html).
+    ///
+    /// This corresponds to `Z3_DEC_REF_ERROR` in the C API.
+    DecRefError = 11,
+    /// Internal Z3 exception. Additional details can be retrieved
+    /// using [`Z3_get_error_msg`](fn.Z3_get_error_msg.html).
+    ///
+    /// This corresponds to `Z3_EXCEPTION` in the C API.
+    Exception = 12,
+}
+
 /// Z3 custom error handler (See [`Z3_set_error_handler`](fn.Z3_set_error_handler.html)).
 pub type Z3_error_handler =
-    ::std::option::Option<unsafe extern "C" fn(c: Z3_context, e: Z3_error_code)>;
-pub const Z3_GOAL_PRECISE: Z3_goal_prec = 0;
-pub const Z3_GOAL_UNDER: Z3_goal_prec = 1;
-pub const Z3_GOAL_OVER: Z3_goal_prec = 2;
-pub const Z3_GOAL_UNDER_OVER: Z3_goal_prec = 3;
+    ::std::option::Option<unsafe extern "C" fn(c: Z3_context, e: ErrorCode)>;
+
 /// A Goal is essentially a set of formulas.
 /// Z3 provide APIs for building strategies/tactics for solving and transforming Goals.
 /// Some of these transformations apply under/over approximations.
 ///
-/// - Z3_GOAL_PRECISE:    Approximations/Relaxations were not applied on the goal (sat and unsat answers were preserved).
-/// - Z3_GOAL_UNDER:      Goal is the product of a under-approximation (sat answers are preserved).
-/// - Z3_GOAL_OVER:       Goal is the product of an over-approximation (unsat answers are preserved).
-/// - Z3_GOAL_UNDER_OVER: Goal is garbage (it is the product of over- and under-approximations, sat and unsat answers are not preserved).
-pub type Z3_goal_prec = u32;
+/// This corresponds to `Z3_goal_prec` in the C API.
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+pub enum GoalPrec {
+    /// Approximations/Relaxations were not applied on the goal
+    /// (sat and unsat answers were preserved).
+    ///
+    /// This corresponds to `Z3_GOAL_PRECISE` in the C API.
+    Precise = 0,
+    /// Goal is the product of a under-approximation (sat answers are preserved).
+    ///
+    /// This corresponds to `Z3_GOAL_UNDER` in the C API.
+    Under = 1,
+    /// Goal is the product of an over-approximation (unsat answers are preserved).
+    ///
+    /// This corresponds to `Z3_GOAL_OVER` in the C API.
+    Over = 2,
+    /// Goal is garbage (it is the product of over- and under-approximations,
+    /// sat and unsat answers are not preserved).
+    ///
+    /// This corresponds to `Z3_GOAL_UNDER_OVER` in the C API.
+    UnderOver = 3,
+}
+
 #[link(name = "z3")]
 extern "C" {
     /// Set a global (or module) parameter.
@@ -1607,7 +1773,7 @@ extern "C" {
         c: Z3_context,
         p: Z3_param_descrs,
         n: Z3_symbol,
-    ) -> Z3_param_kind;
+    ) -> ParamKind;
 
     /// Return the number of parameters in the given parameter description set.
     pub fn Z3_param_descrs_size(c: Z3_context, p: Z3_param_descrs) -> ::std::os::raw::c_uint;
@@ -3151,14 +3317,15 @@ extern "C" {
         body: Z3_ast,
     ) -> Z3_ast;
 
-    /// Return `Z3_INT_SYMBOL` if the symbol was constructed
-    /// using [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html), and `Z3_STRING_SYMBOL` if the symbol
+    /// Return `SymbolKind::Int` if the symbol was constructed
+    /// using [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html),
+    /// and `SymbolKind::String` if the symbol
     /// was constructed using [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html).
-    pub fn Z3_get_symbol_kind(c: Z3_context, s: Z3_symbol) -> Z3_symbol_kind;
+    pub fn Z3_get_symbol_kind(c: Z3_context, s: Z3_symbol) -> SymbolKind;
 
     /// Return the symbol int value.
     ///
-    /// Precondition: `Z3_get_symbol_kind(s) == Z3_INT_SYMBOL`
+    /// Precondition: `Z3_get_symbol_kind(s) == SymbolKind::Int`
     ///
     /// See also:
     ///
@@ -3167,7 +3334,7 @@ extern "C" {
 
     /// Return the symbol name.
     ///
-    /// Precondition: `Z3_get_symbol_string(s) == Z3_STRING_SYMBOL`
+    /// Precondition: `Z3_get_symbol_string(s) == SymbolKind::String`
     ///
     /// Warning: The returned buffer is statically allocated by Z3. It will
     /// be automatically deallocated when [`Z3_del_context`](fn.Z3_del_context.html) is invoked.
@@ -3194,12 +3361,12 @@ extern "C" {
     ///
     /// See also:
     ///
-    /// - [`Z3_sort_kind`](fn.Z3_sort_kind.html)
-    pub fn Z3_get_sort_kind(c: Z3_context, t: Z3_sort) -> Z3_sort_kind;
+    /// - [`SortKind`](enum.SortKind.html)
+    pub fn Z3_get_sort_kind(c: Z3_context, t: Z3_sort) -> SortKind;
 
     /// Return the size of the given bit-vector sort.
     ///
-    /// Precondition: `Z3_get_sort_kind(c, t) == Z3_BV_SORT`
+    /// Precondition: `Z3_get_sort_kind(c, t) == SortKind::BV`
     ///
     /// See also:
     ///
@@ -3208,7 +3375,7 @@ extern "C" {
     pub fn Z3_get_bv_sort_size(c: Z3_context, t: Z3_sort) -> ::std::os::raw::c_uint;
 
     /// Store the size of the sort in `r`. Return `Z3_FALSE` if the call failed.
-    /// That is, `Z3_get_sort_kind(s) == Z3_FINITE_DOMAIN_SORT`
+    /// That is, `Z3_get_sort_kind(s) == SortKind::FiniteDomain`
     pub fn Z3_get_finite_domain_sort_size(
         c: Z3_context,
         s: Z3_sort,
@@ -3220,7 +3387,7 @@ extern "C" {
     /// In the case of a multi-dimensional array, this function
     /// returns the sort of the first dimension.
     ///
-    /// Precondition: `Z3_get_sort_kind(c, t) == Z3_ARRAY_SORT`
+    /// Precondition: `Z3_get_sort_kind(c, t) == SortKind::Array`
     ///
     /// See also:
     ///
@@ -3230,7 +3397,7 @@ extern "C" {
 
     /// Return the range of the given array sort.
     ///
-    /// Precondition: `Z3_get_sort_kind(c, t) == Z3_ARRAY_SORT`
+    /// Precondition: `Z3_get_sort_kind(c, t) == SortKind::Array`
     ///
     /// See also:
     ///
@@ -3241,7 +3408,7 @@ extern "C" {
     /// Return the constructor declaration of the given tuple
     /// sort.
     ///
-    /// Precondition: `Z3_get_sort_kind(c, t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(c, t) == SortKind::Datatype`
     ///
     /// See also:
     ///
@@ -3251,7 +3418,7 @@ extern "C" {
 
     /// Return the number of fields of the given tuple sort.
     ///
-    /// Precondition: `Z3_get_sort_kind(c, t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(c, t) == SortKind::Datatype`
     ///
     /// See also:
     ///
@@ -3262,7 +3429,7 @@ extern "C" {
     /// Return the i-th field declaration (i.e., projection function declaration)
     /// of the given tuple sort.
     ///
-    /// Precondition: `Z3_get_sort_kind(t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// Precondition: `i < Z3_get_tuple_sort_num_fields(c, t)`
     ///
     /// See also:
@@ -3277,7 +3444,7 @@ extern "C" {
 
     /// Return number of constructors for datatype.
     ///
-    /// Precondition: `Z3_get_sort_kind(t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     ///
     /// See also:
     ///
@@ -3291,7 +3458,7 @@ extern "C" {
 
     /// Return idx'th constructor.
     ///
-    /// Precondition: `Z3_get_sort_kind(t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// Precondition: `idx < Z3_get_datatype_sort_num_constructors(c, t)`
     ///
     /// See also:
@@ -3307,7 +3474,7 @@ extern "C" {
 
     /// Return idx'th recognizer.
     ///
-    /// Precondition: `Z3_get_sort_kind(t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// Precondition: `idx < Z3_get_datatype_sort_num_constructors(c, t)`
     ///
     /// See also:
@@ -3323,7 +3490,7 @@ extern "C" {
 
     /// Return idx_a'th accessor for the idx_c'th constructor.
     ///
-    /// Precondition: `Z3_get_sort_kind(t) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// Precondition: `idx_c < Z3_get_datatype_sort_num_constructors(c, t)`
     /// Precondition: `idx_a < Z3_get_domain_size(c, Z3_get_datatype_sort_constructor(c, idx_c))`
     ///
@@ -3351,7 +3518,7 @@ extern "C" {
     /// while `((_ update-field car)` (cons 2 nil) 1) is (cons 1 nil).
     ///
     ///
-    /// Precondition: `Z3_get_sort_kind(Z3_get_sort(c, t)) == Z3_get_domain(c, field_access, 1) == Z3_DATATYPE_SORT`
+    /// Precondition: `Z3_get_sort_kind(Z3_get_sort(c, t)) == Z3_get_domain(c, field_access, 1) == SortKind::Datatype`
     /// Precondition: `Z3_get_sort(c, value) == Z3_get_range(c, field_access)`
     pub fn Z3_datatype_update_field(
         c: Z3_context,
@@ -3362,7 +3529,7 @@ extern "C" {
 
     /// Return arity of relation.
     ///
-    /// Precondition: `Z3_get_sort_kind(s) == Z3_RELATION_SORT`
+    /// Precondition: `Z3_get_sort_kind(s) == SortKind::Relation`
     ///
     /// See also:
     ///
@@ -3371,7 +3538,7 @@ extern "C" {
 
     /// Return sort at i'th column of relation sort.
     ///
-    /// Precondition: `Z3_get_sort_kind(c, s) == Z3_RELATION_SORT`
+    /// Precondition: `Z3_get_sort_kind(c, s) == SortKind::Relation`
     /// Precondition: `col < Z3_get_relation_arity(c, s)`
     ///
     /// See also:
@@ -3449,7 +3616,7 @@ extern "C" {
     pub fn Z3_get_decl_name(c: Z3_context, d: Z3_func_decl) -> Z3_symbol;
 
     /// Return declaration kind corresponding to declaration.
-    pub fn Z3_get_decl_kind(c: Z3_context, d: Z3_func_decl) -> Z3_decl_kind;
+    pub fn Z3_get_decl_kind(c: Z3_context, d: Z3_func_decl) -> DeclKind;
 
     /// Return the number of parameters of the given declaration.
     ///
@@ -3487,16 +3654,17 @@ extern "C" {
     ///
     /// - `c`: the context
     /// - `d`: the function declaration
-    /// - `idx`: is the index of the named parameter it should be between 0 and the number of parameters.
+    /// - `idx`: is the index of the named parameter it should be between 0 and
+    ///   the number of parameters.
     pub fn Z3_get_decl_parameter_kind(
         c: Z3_context,
         d: Z3_func_decl,
         idx: ::std::os::raw::c_uint,
-    ) -> Z3_parameter_kind;
+    ) -> ParameterKind;
 
     /// Return the integer value associated with an integer parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_INT`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::Int`
     pub fn Z3_get_decl_int_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3505,7 +3673,7 @@ extern "C" {
 
     /// Return the double value associated with an double parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_DOUBLE`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::Double`
     pub fn Z3_get_decl_double_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3514,7 +3682,7 @@ extern "C" {
 
     /// Return the double value associated with an double parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_SYMBOL`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::Symbol`
     pub fn Z3_get_decl_symbol_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3523,7 +3691,7 @@ extern "C" {
 
     /// Return the sort value associated with a sort parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_SORT`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::Sort`
     pub fn Z3_get_decl_sort_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3532,7 +3700,7 @@ extern "C" {
 
     /// Return the expression value associated with an expression parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_AST`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::AST`
     pub fn Z3_get_decl_ast_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3541,7 +3709,7 @@ extern "C" {
 
     /// Return the expression value associated with an expression parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_FUNC_DECL`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::FuncDecl`
     pub fn Z3_get_decl_func_decl_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3550,7 +3718,7 @@ extern "C" {
 
     /// Return the rational value, as a string, associated with a rational parameter.
     ///
-    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == Z3_PARAMETER_RATIONAL`
+    /// Precondition: `Z3_get_decl_parameter_kind(c, d, idx) == ParameterKind::Rational`
     pub fn Z3_get_decl_rational_parameter(
         c: Z3_context,
         d: Z3_func_decl,
@@ -3606,7 +3774,7 @@ extern "C" {
     pub fn Z3_get_bool_value(c: Z3_context, a: Z3_ast) -> Z3_lbool;
 
     /// Return the kind of the given AST.
-    pub fn Z3_get_ast_kind(c: Z3_context, a: Z3_ast) -> Z3_ast_kind;
+    pub fn Z3_get_ast_kind(c: Z3_context, a: Z3_ast) -> AstKind;
 
     pub fn Z3_is_app(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
@@ -3615,25 +3783,25 @@ extern "C" {
     /// Return true if the give AST is a real algebraic number.
     pub fn Z3_is_algebraic_number(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
-    /// Convert an `ast` into an `APP_AST`. This is just type casting.
+    /// Convert an `ast` into an `Z3_App`. This is just type casting.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, a) == Z3_APP_AST`
+    /// Precondition: `Z3_get_ast_kind(c, a) == AstKind::App`
     pub fn Z3_to_app(c: Z3_context, a: Z3_ast) -> Z3_app;
 
-    /// Convert an AST into a FUNC_DECL_AST. This is just type casting.
+    /// Convert an AST into a `Z3_fund_decl`. This is just type casting.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, a) == Z3_FUNC_DECL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, a) == AstKind::FuncDecl`
     pub fn Z3_to_func_decl(c: Z3_context, a: Z3_ast) -> Z3_func_decl;
 
     /// Return numeral value, as a string of a numeric constant term
     ///
-    /// Precondition: `Z3_get_ast_kind(c, a) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
     pub fn Z3_get_numeral_string(c: Z3_context, a: Z3_ast) -> Z3_string;
 
     /// Return numeral as a string in decimal notation.
     /// The result has at most `precision` decimal places.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, a) == Z3_NUMERAL_AST || Z3_is_algebraic_number(c, a)`
+    /// Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral || Z3_is_algebraic_number(c, a)`
     pub fn Z3_get_numeral_decimal_string(
         c: Z3_context,
         a: Z3_ast,
@@ -3642,12 +3810,12 @@ extern "C" {
 
     /// Return the numerator (as a numeral AST) of a numeral AST of sort Real.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, a) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
     pub fn Z3_get_numerator(c: Z3_context, a: Z3_ast) -> Z3_ast;
 
     /// Return the denominator (as a numeral AST) of a numeral AST of sort Real.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, a) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
     pub fn Z3_get_denominator(c: Z3_context, a: Z3_ast) -> Z3_ast;
 
     /// Return numeral value, as a pair of 64 bit numbers if the representation fits.
@@ -3659,7 +3827,7 @@ extern "C" {
     ///
     /// Return `Z3_TRUE` if the numeral value fits in 64 bit numerals, `Z3_FALSE` otherwise.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Numeral`
     pub fn Z3_get_numeral_small(
         c: Z3_context,
         a: Z3_ast,
@@ -3670,7 +3838,7 @@ extern "C" {
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html), but only succeeds if
     /// the value can fit in a machine int. Return `Z3_TRUE` if the call succeeded.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, v) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
     /// See also:
     ///
@@ -3681,7 +3849,7 @@ extern "C" {
     /// but only succeeds if the value can fit in a machine unsigned int.
     /// Return `Z3_TRUE` if the call succeeded.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, v) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
     /// See also:
     ///
@@ -3693,7 +3861,7 @@ extern "C" {
     /// but only succeeds if the value can fit in a machine __uint64 int.
     /// Return `Z3_TRUE` if the call succeeded.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, v) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
     /// See also:
     ///
@@ -3708,7 +3876,7 @@ extern "C" {
     /// but only succeeds if the value can fit in a machine __int64 int.
     /// Return `Z3_TRUE` if the call succeeded.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, v) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
     /// See also:
     ///
@@ -3723,7 +3891,7 @@ extern "C" {
     /// but only succeeds if the value can fit as a rational number as
     /// machine __int64 int. Return `Z3_TRUE` if the call succeeded.
     ///
-    /// Precondition: `Z3_get_ast_kind(c, v) == Z3_NUMERAL_AST`
+    /// Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
     /// See also:
     ///
@@ -3770,27 +3938,27 @@ extern "C" {
 
     /// Return index of de-Bruijn bound variable.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_VAR_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Var`
     pub fn Z3_get_index_value(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_uint;
 
     /// Determine if quantifier is universal.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_is_quantifier_forall(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
     /// Obtain weight of quantifier.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_weight(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_uint;
 
     /// Return number of patterns used in quantifier.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_num_patterns(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_uint;
 
     /// Return i'th pattern.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_pattern_ast(
         c: Z3_context,
         a: Z3_ast,
@@ -3799,12 +3967,12 @@ extern "C" {
 
     /// Return number of no_patterns used in quantifier.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_num_no_patterns(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_uint;
 
     /// Return i'th no_pattern.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_no_pattern_ast(
         c: Z3_context,
         a: Z3_ast,
@@ -3813,12 +3981,12 @@ extern "C" {
 
     /// Return number of bound variables of quantifier.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_num_bound(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_uint;
 
     /// Return symbol of the i'th bound variable.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_bound_name(
         c: Z3_context,
         a: Z3_ast,
@@ -3827,7 +3995,7 @@ extern "C" {
 
     /// Return sort of the i'th bound variable.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_bound_sort(
         c: Z3_context,
         a: Z3_ast,
@@ -3836,7 +4004,7 @@ extern "C" {
 
     /// Return body of quantifier.
     ///
-    /// Precondition: `Z3_get_ast_kind(a) == Z3_QUANTIFIER_AST`
+    /// Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_get_quantifier_body(c: Z3_context, a: Z3_ast) -> Z3_ast;
 
     /// Interface to simplifier.
@@ -4197,19 +4365,21 @@ extern "C" {
     ///
     /// The default mode for pretty printing AST nodes is to produce
     /// SMT-LIB style output where common subexpressions are printed
-    /// at each occurrence. The mode is called `Z3_PRINT_SMTLIB_FULL`.
+    /// at each occurrence. The mode is called `AstPrintMode::SmtLibFull`.
+    ///
     /// To print shared common subexpressions only once,
-    /// use the `Z3_PRINT_LOW_LEVEL` mode.
+    /// use the `AstPrintMode::LowLevel` mode.
+    ///
     /// To print in way that conforms to SMT-LIB standards and uses let
     /// expressions to share common sub-expressions use
-    /// `Z3_PRINT_SMTLIB2_COMPLIANT`.
+    /// `AstPrintMode::SmtLib2Compliant`.
     ///
     /// See also:
     ///
     /// - [`Z3_ast_to_string`](fn.Z3_ast_to_string.html)
     /// - [`Z3_pattern_to_string`](fn.Z3_pattern_to_string.html)
     /// - [`Z3_func_decl_to_string`](fn.Z3_func_decl_to_string.html)
-    pub fn Z3_set_ast_print_mode(c: Z3_context, mode: Z3_ast_print_mode);
+    pub fn Z3_set_ast_print_mode(c: Z3_context, mode: AstPrintMode);
 
     /// Convert the given AST node into a string.
     ///
@@ -4293,17 +4463,17 @@ extern "C" {
 
     /// Return the error code for the last API call.
     ///
-    /// A call to a Z3 function may return a non `Z3_OK` error code,
+    /// A call to a Z3 function may return a non `ErrorCode::OK` error code,
     /// when it is not used correctly.
     ///
     /// See also:
     ///
     /// - [`Z3_set_error_handler`](fn.Z3_set_error_handler.html)
-    pub fn Z3_get_error_code(c: Z3_context) -> Z3_error_code;
+    pub fn Z3_get_error_code(c: Z3_context) -> ErrorCode;
 
     /// Register a Z3 error handler.
     ///
-    /// A call to a Z3 function may return a non `Z3_OK` error code, when
+    /// A call to a Z3 function may return a non `ErrorCode::OK` error code, when
     /// it is not used correctly.  An error handler can be registered
     /// and will be called in this case.  To disable the use of the
     /// error handler, simply register with `h`=NULL.
@@ -4317,15 +4487,15 @@ extern "C" {
     pub fn Z3_set_error_handler(c: Z3_context, h: Z3_error_handler);
 
     /// Set an error.
-    pub fn Z3_set_error(c: Z3_context, e: Z3_error_code);
+    pub fn Z3_set_error(c: Z3_context, e: ErrorCode);
 
     /// Return a string describing the given error code.
-    pub fn Z3_get_error_msg(c: Z3_context, err: Z3_error_code) -> Z3_string;
+    pub fn Z3_get_error_msg(c: Z3_context, err: ErrorCode) -> Z3_string;
 
     /// Return a string describing the given error code.
     ///
     /// Retained function name for backwards compatibility within v4.1
-    pub fn Z3_get_error_msg_ex(c: Z3_context, err: Z3_error_code) -> Z3_string;
+    pub fn Z3_get_error_msg_ex(c: Z3_context, err: ErrorCode) -> Z3_string;
 
     /// Return Z3 version number information.
     pub fn Z3_get_version(
@@ -4391,7 +4561,7 @@ extern "C" {
     /// Return the "precision" of the given goal. Goals can be transformed using over and under approximations.
     /// A under approximation is applied when the objective is to find a model for a given goal.
     /// An over approximation is applied when the objective is to find a proof for a given goal.
-    pub fn Z3_goal_precision(c: Z3_context, g: Z3_goal) -> Z3_goal_prec;
+    pub fn Z3_goal_precision(c: Z3_context, g: Z3_goal) -> GoalPrec;
 
     /// Add a new formula `a` to the given goal.
     /// The formula is split according to the following procedure that is applied
@@ -6537,7 +6707,7 @@ extern "C" {
     /// - `n`: pointer to output uint64
     ///
     /// Remarks: This function extracts the significand bits in `t`, without the
-    /// hidden bit or normalization. Sets the Z3_INVALID_ARG error code if the
+    /// hidden bit or normalization. Sets the `ErrorCode::InvalidArg` error code if the
     /// significand does not fit into a uint64. NaN is an invalid argument.
     pub fn Z3_fpa_get_numeral_significand_uint64(
         c: Z3_context,
