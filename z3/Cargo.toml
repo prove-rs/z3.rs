@@ -6,9 +6,10 @@ authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchene
 description = "High-level rust bindings for the Z3 SMT solver from Microsoft Research"
 license = "MIT"
 keywords = ["FFI", "SMT", "satisfiability", "solver"]
+categories = ["api-bindings"]
 readme = "README.md"
-homepage = "https://github.com/graydon/z3-rs"
-repository = "https://github.com/graydon/z3-rs.git"
+homepage = "https://github.com/endoli/z3.rs"
+repository = "https://github.com/endoli/z3.rs.git"
 
 [dependencies]
 libc = "0.2"
