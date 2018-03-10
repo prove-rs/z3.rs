@@ -3915,7 +3915,7 @@ extern "C" {
         precision: ::std::os::raw::c_uint,
     ) -> Z3_ast;
 
-    /// Return a upper bound for the given real algebraic number.
+    /// Return an upper bound for the given real algebraic number.
     ///
     /// The interval isolating the number is smaller than 1/10^precision.
     /// The result is a numeral AST of sort Real.
@@ -4190,7 +4190,7 @@ extern "C" {
     /// - [`Z3_model_get_sort_universe`](fn.Z3_model_get_sort_universe.html)
     pub fn Z3_model_get_num_sorts(c: Z3_context, m: Z3_model) -> ::std::os::raw::c_uint;
 
-    /// Return a uninterpreted sort that `m` assigns an interpretation.
+    /// Return an uninterpreted sort that `m` assigns an interpretation.
     ///
     /// Precondition: `i < Z3_model_get_num_sorts(c, m)`
     ///
