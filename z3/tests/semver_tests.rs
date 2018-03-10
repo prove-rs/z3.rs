@@ -72,7 +72,7 @@ fn test_solve_simple_semver_example() {
     // might someday want to. It uses the optimizer portion of Z3.
     // see: https://github.com/rust-lang/cargo/issues/2064
 
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
 
     let mut smap : SpecMap = HashMap::new();
 

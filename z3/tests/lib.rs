@@ -7,14 +7,14 @@ use z3::*;
 
 #[test]
 fn test_config() {
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut c = Config::new();
     c.set_proof_generation(true);
 }
 
 #[test]
 fn test_context() {
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let mut cfg = Config::new();
     cfg.set_proof_generation(true);
     let _ = Context::new(&cfg);
@@ -22,7 +22,7 @@ fn test_context() {
 
 #[test]
 fn test_sorts_and_symbols() {
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let _ = ctx.named_int_const("x");
@@ -31,7 +31,7 @@ fn test_sorts_and_symbols() {
 
 #[test]
 fn test_solving() {
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let x = ctx.named_int_const("x");
@@ -44,7 +44,7 @@ fn test_solving() {
 
 #[test]
 fn test_solving_for_model() {
-    let _ = env_logger::init();
+    let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let x = ctx.named_int_const("x");
