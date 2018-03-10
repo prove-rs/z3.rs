@@ -63,7 +63,7 @@ impl Context {
     }
 
     pub fn fresh_const<'ctx>(&'ctx self, prefix: &str, sort: &'ctx Sort) -> Ast<'ctx> {
-        Ast::fresh_const(&self, prefix, sort)
+        Ast::fresh_const(self, prefix, sort)
     }
 
     pub fn named_bool_const(&self, s: &str) -> Ast {
@@ -75,7 +75,7 @@ impl Context {
     }
 
     pub fn fresh_bool_const<'ctx>(&'ctx self, prefix: &str) -> Ast<'ctx> {
-        Ast::fresh_const(&self, prefix, &self.bool_sort())
+        Ast::fresh_const(self, prefix, &self.bool_sort())
     }
 
     pub fn named_int_const(&self, s: &str) -> Ast {
@@ -87,7 +87,7 @@ impl Context {
     }
 
     pub fn fresh_int_const<'ctx>(&'ctx self, prefix: &str) -> Ast<'ctx> {
-        Ast::fresh_const(&self, prefix, &self.int_sort())
+        Ast::fresh_const(self, prefix, &self.int_sort())
     }
 
     pub fn named_real_const(&self, s: &str) -> Ast {
@@ -99,7 +99,7 @@ impl Context {
     }
 
     pub fn fresh_real_const<'ctx>(&'ctx self, prefix: &str) -> Ast<'ctx> {
-        Ast::fresh_const(&self, prefix, &self.real_sort())
+        Ast::fresh_const(self, prefix, &self.real_sort())
     }
 
     pub fn named_bitvector_const(&self, s: &str, sz: u32) -> Ast {
@@ -111,7 +111,7 @@ impl Context {
     }
 
     pub fn fresh_bitvector_const<'ctx>(&'ctx self, prefix: &str, sz: u32) -> Ast<'ctx> {
-        Ast::fresh_const(&self, prefix, &self.bitvector_sort(sz))
+        Ast::fresh_const(self, prefix, &self.bitvector_sort(sz))
     }
 
     pub fn from_bool(&self, b: bool) -> Ast {

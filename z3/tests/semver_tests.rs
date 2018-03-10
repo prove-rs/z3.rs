@@ -34,7 +34,7 @@ type SpecMap = HashMap<String, Vec<Spec>>;
 fn get_version(sm: &SpecMap, pkg: &str, ver: usize) -> Option<Version> {
     match sm.get(pkg) {
         None => None,
-        Some(ref specs) => Some(specs[ver].vers.clone())
+        Some(specs) => Some(specs[ver].vers.clone())
     }
 }
 
@@ -42,7 +42,7 @@ fn version_index(sm: &SpecMap, pkg: &str, ver: &str) -> Option<usize> {
     let ver = Version::parse(ver).unwrap();
     match sm.get(pkg) {
         None => None,
-        Some(ref specs) =>
+        Some(specs) =>
             specs.iter().position(|spec| spec.vers == ver)
     }
 }
@@ -51,7 +51,7 @@ fn first_version_req_index(sm: &SpecMap, pkg: &str,
                            req: &VersionReq) -> Option<usize> {
     match sm.get(pkg) {
         None => None,
-        Some(ref specs) =>
+        Some(specs) =>
             specs.iter().position(|spec| req.matches(&spec.vers))
     }
 }
@@ -60,7 +60,7 @@ fn last_version_req_index(sm: &SpecMap, pkg: &str,
                           req: &VersionReq) -> Option<usize> {
     match sm.get(pkg) {
         None => None,
-        Some(ref specs) =>
+        Some(specs) =>
             specs.iter().rposition(|spec| req.matches(&spec.vers))
     }
 }
@@ -217,7 +217,7 @@ fn test_solve_simple_semver_example() {
     // its required package is inside the acceptable range.
     for (k, specs) in &smap {
         let k_ast = asts.get(k).unwrap();
-        for (n, spec) in (&specs).iter().enumerate() {
+        for (n, spec) in (specs).iter().enumerate() {
             for (r, req) in &spec.reqs {
                 let r_ast = asts.get(r).unwrap();
                 match first_version_req_index(&smap, r, req) {
@@ -249,7 +249,7 @@ fn test_solve_simple_semver_example() {
 
     for k in root.keys() {
         let ast = asts.get(k).unwrap();
-        let idx = model.eval(&ast).unwrap().as_i64().unwrap();
+        let idx = model.eval(ast).unwrap().as_i64().unwrap();
         info!("solved: {}: #{} = {}",
               k, idx, get_version(&smap, k, idx as usize).unwrap());
     }
@@ -257,8 +257,8 @@ fn test_solve_simple_semver_example() {
     let pg_a = asts.get("postgres").unwrap();
     let r2_a = asts.get("r2d2-postgres").unwrap();
 
-    let pg_v = model.eval(&pg_a).unwrap().as_i64().unwrap() as usize;
-    let r2_v = model.eval(&r2_a).unwrap().as_i64().unwrap() as usize;
+    let pg_v = model.eval(pg_a).unwrap().as_i64().unwrap() as usize;
+    let r2_v = model.eval(r2_a).unwrap().as_i64().unwrap() as usize;
 
     assert!(get_version(&smap, "postgres", pg_v).unwrap() ==
             Version::parse("0.9.6").unwrap());
