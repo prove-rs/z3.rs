@@ -50,7 +50,7 @@ macro_rules! varop {
                 for a in other {
                     tmp.push(a.z3_ast)
                 }
-                assert!(tmp.len() <= 0xffffffff);
+                assert!(tmp.len() <= 0xffff_ffff);
                 $z3fn(self.ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
             })
     }
