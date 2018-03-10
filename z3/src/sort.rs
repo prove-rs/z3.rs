@@ -51,7 +51,7 @@ impl<'ctx> Sort<'ctx> {
             ctx: ctx,
             z3_sort: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_bv_sort(ctx.z3_ctx, sz as ::libc::c_uint)
+                Z3_mk_bv_sort(ctx.z3_ctx, sz as ::std::os::raw::c_uint)
             }
         }
     }

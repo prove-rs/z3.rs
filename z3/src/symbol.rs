@@ -11,7 +11,7 @@ impl<'ctx> Symbol<'ctx> {
             cst: None,
             z3_sym: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_int_symbol(ctx.z3_ctx, i as ::libc::c_int)
+                Z3_mk_int_symbol(ctx.z3_ctx, i as ::std::os::raw::c_int)
             }
         }
     }

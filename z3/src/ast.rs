@@ -122,8 +122,8 @@ impl<'ctx> Ast<'ctx> {
             Ast::new(ctx, unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
                 Z3_mk_real(ctx.z3_ctx,
-                           num as ::libc::c_int,
-                           den as ::libc::c_int)
+                           num as ::std::os::raw::c_int,
+                           den as ::std::os::raw::c_int)
             })
     }
 
@@ -141,7 +141,7 @@ impl<'ctx> Ast<'ctx> {
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp : ::libc::c_longlong = 0;
+            let mut tmp : ::std::os::raw::c_longlong = 0;
             if Z3_TRUE == Z3_get_numeral_int64(self.ctx.z3_ctx,
                                                self.z3_ast, &mut tmp) {
                 Some(tmp)
@@ -154,7 +154,7 @@ impl<'ctx> Ast<'ctx> {
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp : ::libc::c_ulonglong = 0;
+            let mut tmp : ::std::os::raw::c_ulonglong = 0;
             if Z3_TRUE == Z3_get_numeral_uint64(self.ctx.z3_ctx,
                                                 self.z3_ast, &mut tmp) {
                 Some(tmp)

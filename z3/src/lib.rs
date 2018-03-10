@@ -8,7 +8,6 @@ extern crate log;
 extern crate lazy_static;
 
 extern crate z3_sys;
-extern crate libc;
 
 use std::sync::Mutex;
 use std::ffi::CString;
