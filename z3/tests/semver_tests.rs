@@ -216,10 +216,10 @@ fn test_solve_simple_semver_example() {
     // an implication that whenever a package is of some version,
     // its required package is inside the acceptable range.
     for (k, specs) in &smap {
-        let k_ast = asts.get(k).unwrap();
+        let k_ast = &asts[k];
         for (n, spec) in (specs).iter().enumerate() {
             for (r, req) in &spec.reqs {
-                let r_ast = asts.get(r).unwrap();
+                let r_ast = &asts[r];
                 match first_version_req_index(&smap, r, req) {
                     None => (),
                     Some(low) => {
@@ -248,14 +248,14 @@ fn test_solve_simple_semver_example() {
     let model = opt.get_model();
 
     for k in root.keys() {
-        let ast = asts.get(k).unwrap();
+        let ast = &asts[k];
         let idx = model.eval(ast).unwrap().as_i64().unwrap();
         info!("solved: {}: #{} = {}",
               k, idx, get_version(&smap, k, idx as usize).unwrap());
     }
 
-    let pg_a = asts.get("postgres").unwrap();
-    let r2_a = asts.get("r2d2-postgres").unwrap();
+    let pg_a = &asts["postgres"];
+    let r2_a = &asts["r2d2-postgres"];
 
     let pg_v = model.eval(pg_a).unwrap().as_i64().unwrap() as usize;
     let r2_v = model.eval(r2_a).unwrap().as_i64().unwrap() as usize;
