@@ -155,7 +155,7 @@ fn test_solve_simple_semver_example() {
                         ].iter().map(|&(v,r)| Spec::new(v,r)).collect());
 
 
-    let mut cfg = Config::new();
+    let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let opt = Optimize::new(&ctx);
 
