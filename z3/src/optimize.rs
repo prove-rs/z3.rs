@@ -8,7 +8,7 @@ use Z3_MUTEX;
 impl<'ctx> Optimize<'ctx> {
     pub fn new(ctx: &'ctx Context) -> Optimize<'ctx> {
         Optimize {
-            ctx: ctx,
+            ctx,
             z3_opt: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
                 let opt = Z3_mk_optimize(ctx.z3_ctx);

@@ -62,7 +62,7 @@ impl<'ctx> Ast<'ctx> {
     pub fn new(ctx: &Context, ast: Z3_ast) -> Ast {
         assert!(!ast.is_null());
         Ast {
-            ctx: ctx,
+            ctx,
             z3_ast: unsafe {
                 debug!("new ast {:p}", ast);
                 let guard = Z3_MUTEX.lock().unwrap();

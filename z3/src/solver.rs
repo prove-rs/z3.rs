@@ -8,7 +8,7 @@ use Z3_MUTEX;
 impl<'ctx> Solver<'ctx> {
     pub fn new(ctx: &Context) -> Solver {
         Solver {
-            ctx: ctx,
+            ctx,
             z3_slv: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
                 let s = Z3_mk_solver(ctx.z3_ctx);
