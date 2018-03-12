@@ -3,6 +3,8 @@
 #![allow(non_camel_case_types)]
 #![cfg_attr(feature = "cargo-clippy", allow(unreadable_literal))]
 
+mod generated;
+
 pub const Z3_TRUE: i32 = 1;
 pub const Z3_FALSE: i32 = 0;
 
@@ -294,11 +296,11 @@ pub enum SymbolKind {
     /// An integer symbol.
     ///
     /// This corresponds to `Z3_INT_SYMBOL` in the C API.
-    Int = 0,
+    Int = generated::Z3_symbol_kind::Z3_INT_SYMBOL as u32,
     /// A string symbol.
     ///
     /// This corresponds to `Z3_STRING_SYMBOL` in the C API.
-    String = 1,
+    String = generated::Z3_symbol_kind::Z3_STRING_SYMBOL as u32,
 }
 
 /// The different kinds of parameters that can be associated with function symbols.
@@ -315,31 +317,31 @@ pub enum ParameterKind {
     /// An integer parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_INT` in the C API.
-    Int = 0,
+    Int = generated::Z3_parameter_kind::Z3_PARAMETER_INT as u32,
     /// A double parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_DOUBLE` in the C API.
-    Double = 1,
+    Double = generated::Z3_parameter_kind::Z3_PARAMETER_DOUBLE as u32,
     /// A rational number parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_RATIONAL` in the C API.
-    Rational = 2,
+    Rational = generated::Z3_parameter_kind::Z3_PARAMETER_RATIONAL as u32,
     /// A symbol parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_SYMBOL` in the C API.
-    Symbol = 3,
+    Symbol = generated::Z3_parameter_kind::Z3_PARAMETER_SYMBOL as u32,
     /// A sort parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_SORT` in the C API.
-    Sort = 4,
+    Sort = generated::Z3_parameter_kind::Z3_PARAMETER_SORT as u32,
     /// An expression parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_AST` in the C API.
-    AST = 5,
+    AST = generated::Z3_parameter_kind::Z3_PARAMETER_AST as u32,
     /// A function declaration parameter.
     ///
     /// This corresponds to `Z3_PARAMETER_FUNC_DECL` in the C API.
-    FuncDecl = 6,
+    FuncDecl = generated::Z3_parameter_kind::Z3_PARAMETER_FUNC_DECL as u32,
 }
 
 /// The different kinds of Z3 types (See [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)).
@@ -349,33 +351,33 @@ pub enum ParameterKind {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum SortKind {
     /// This corresponds to `Z3_UINTERPRETED_SORT` in the C API.
-    Uninterpreted = 0,
+    Uninterpreted = generated::Z3_sort_kind::Z3_UNINTERPRETED_SORT as u32,
     /// This corresponds to `Z3_BOOL_SORT` in the C API.
-    Bool = 1,
+    Bool = generated::Z3_sort_kind::Z3_BOOL_SORT as u32,
     /// This corresponds to `Z3_INT_SORT` in the C API.
-    Int = 2,
+    Int = generated::Z3_sort_kind::Z3_INT_SORT as u32,
     /// This corresponds to `Z3_REAL_SORT` in the C API.
-    Real = 3,
+    Real = generated::Z3_sort_kind::Z3_REAL_SORT as u32,
     /// This corresponds to `Z3_BV_SORT` in the C API.
-    BV = 4,
+    BV = generated::Z3_sort_kind::Z3_BV_SORT as u32,
     /// This corresponds to `Z3_ARRAY_SORT` in the C API.
-    Array = 5,
+    Array = generated::Z3_sort_kind::Z3_ARRAY_SORT as u32,
     /// This corresponds to `Z3_DATATYPE_SORT` in the C API.
-    Datatype = 6,
+    Datatype = generated::Z3_sort_kind::Z3_DATATYPE_SORT as u32,
     /// This corresponds to `Z3_RELATION_SORT` in the C API.
-    Relation = 7,
+    Relation = generated::Z3_sort_kind::Z3_RELATION_SORT as u32,
     /// This corresponds to `Z3_FINITE_DOMAIN_SORT` in the C API.
-    FiniteDomain = 8,
+    FiniteDomain = generated::Z3_sort_kind::Z3_FINITE_DOMAIN_SORT as u32,
     /// This corresponds to `Z3_FLOATING_POINT_SORT` in the C API.
-    FloatingPoint = 9,
+    FloatingPoint = generated::Z3_sort_kind::Z3_FLOATING_POINT_SORT as u32,
     /// This corresponds to `Z3_ROUNDING_MODE_SORT` in the C API.
-    RoundingMode = 10,
+    RoundingMode = generated::Z3_sort_kind::Z3_ROUNDING_MODE_SORT as u32,
     /// This corresponds to `Z3_SEQ_SORT` in the C API.
-    Seq = 11,
+    Seq = generated::Z3_sort_kind::Z3_SEQ_SORT as u32,
     /// This corresponds to `Z3_RE_SORT` in the C API.
-    RE = 12,
+    RE = generated::Z3_sort_kind::Z3_RE_SORT as u32,
     /// This corresponds to `Z3_UNKNOWN_SORT` in the C API.
-    Unknown = 1000,
+    Unknown = generated::Z3_sort_kind::Z3_UNKNOWN_SORT as u32,
 }
 
 /// The different kinds of Z3 AST (abstract syntax trees). That is, terms, formulas and types.
@@ -387,31 +389,31 @@ pub enum AstKind {
     /// numeral constants
     ///
     /// This corresponds to `Z3_NUMERAL_AST` in the C API.
-    Numeral = 0,
+    Numeral = generated::Z3_ast_kind::Z3_NUMERAL_AST as u32,
     /// constant and applications
     ///
     /// This corresponds to `Z3_APP_AST` in the C API.
-    App = 1,
+    App = generated::Z3_ast_kind::Z3_APP_AST as u32,
     /// bound variables
     ///
     /// This corresponds to `Z3_VAR_AST` in the C API.
-    Var = 2,
+    Var = generated::Z3_ast_kind::Z3_VAR_AST as u32,
     /// quantifiers
     ///
     /// This corresponds to `Z3_QUANTIFIER_AST` in the C API.
-    Quantifier = 3,
+    Quantifier = generated::Z3_ast_kind::Z3_QUANTIFIER_AST as u32,
     /// sort
     ///
     /// This corresponds to `Z3_SORT_AST` in the C API.
-    Sort = 4,
+    Sort = generated::Z3_ast_kind::Z3_SORT_AST as u32,
     /// function declaration
     ///
     /// This corresponds to `Z3_FUNC_DECL_AST` in the C API.
-    FuncDecl = 5,
+    FuncDecl = generated::Z3_ast_kind::Z3_FUNC_DECL_AST as u32,
     /// internal
     ///
     /// This corresponds to `Z3_UNKNOWN_AST` in the C API.
-    Unknown = 1000,
+    Unknown = generated::Z3_ast_kind::Z3_UNKNOWN_AST as u32,
 }
 
 /// The different kinds of interpreted function kinds.
@@ -421,216 +423,216 @@ pub enum AstKind {
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum DeclKind {
     /// The constant `true`.
-    TRUE = 256,
+    TRUE = generated::Z3_decl_kind::Z3_OP_TRUE as u32,
     /// The constant `false`.
-    FALSE = 257,
+    FALSE = generated::Z3_decl_kind::Z3_OP_FALSE as u32,
     /// The equality predicate.
-    EQ = 258,
+    EQ = generated::Z3_decl_kind::Z3_OP_EQ as u32,
     /// The n-ary distinct predicate (every argument is mutually distinct).
-    DISTINCT = 259,
+    DISTINCT = generated::Z3_decl_kind::Z3_OP_DISTINCT as u32,
     /// The ternary if-then-else term.
-    ITE = 260,
+    ITE = generated::Z3_decl_kind::Z3_OP_ITE as u32,
     /// n-ary conjunction.
-    AND = 261,
+    AND = generated::Z3_decl_kind::Z3_OP_AND as u32,
     /// n-ary disjunction.
-    OR = 262,
+    OR = generated::Z3_decl_kind::Z3_OP_OR as u32,
     /// equivalence (binary).
-    IFF = 263,
+    IFF = generated::Z3_decl_kind::Z3_OP_IFF as u32,
     /// Exclusive or.
-    XOR = 264,
+    XOR = generated::Z3_decl_kind::Z3_OP_XOR as u32,
     /// Negation.
-    NOT = 265,
+    NOT = generated::Z3_decl_kind::Z3_OP_NOT as u32,
     /// Implication.
-    IMPLIES = 266,
+    IMPLIES = generated::Z3_decl_kind::Z3_OP_IMPLIES as u32,
     /// Binary equivalence modulo namings. This binary predicate is used
     /// in proof terms. It captures equisatisfiability and equivalence
     /// modulo renamings.
-    OEQ = 267,
+    OEQ = generated::Z3_decl_kind::Z3_OP_OEQ as u32,
     /// Marks a sub-formula for interpolation.
-    INTERP = 268,
+    INTERP = generated::Z3_decl_kind::Z3_OP_INTERP as u32,
     /// Arithmetic numeral.
-    ANUM = 512,
+    ANUM = generated::Z3_decl_kind::Z3_OP_ANUM as u32,
     /// Arithmetic algebraic numeral. Algebraic numbers are used to
     /// represent irrational numbers in Z3.
-    AGNUM = 513,
+    AGNUM = generated::Z3_decl_kind::Z3_OP_AGNUM as u32,
     /// `<=`.
-    LE = 514,
+    LE = generated::Z3_decl_kind::Z3_OP_LE as u32,
     /// `>=`.
-    GE = 515,
+    GE = generated::Z3_decl_kind::Z3_OP_GE as u32,
     /// `<`.
-    LT = 516,
+    LT = generated::Z3_decl_kind::Z3_OP_LT as u32,
     /// `>`.
-    GT = 517,
+    GT = generated::Z3_decl_kind::Z3_OP_GT as u32,
     /// Addition - Binary.
-    ADD = 518,
+    ADD = generated::Z3_decl_kind::Z3_OP_ADD as u32,
     /// Binary subtraction.
-    SUB = 519,
+    SUB = generated::Z3_decl_kind::Z3_OP_SUB as u32,
     /// Unary minus.
-    UMINUS = 520,
+    UMINUS = generated::Z3_decl_kind::Z3_OP_UMINUS as u32,
     /// Multiplication - Binary.
-    MUL = 521,
+    MUL = generated::Z3_decl_kind::Z3_OP_MUL as u32,
     /// Division - Binary.
-    DIV = 522,
+    DIV = generated::Z3_decl_kind::Z3_OP_DIV as u32,
     /// Integer division - Binary.
-    IDIV = 523,
+    IDIV = generated::Z3_decl_kind::Z3_OP_IDIV as u32,
     /// Remainder - Binary.
-    REM = 524,
+    REM = generated::Z3_decl_kind::Z3_OP_REM as u32,
     /// Modulus - Binary.
-    MOD = 525,
+    MOD = generated::Z3_decl_kind::Z3_OP_MOD as u32,
     /// Coercion of integer to real - Unary.
-    TO_REAL = 526,
+    TO_REAL = generated::Z3_decl_kind::Z3_OP_TO_REAL as u32,
     /// Coercion of real to integer - Unary.
-    TO_INT = 527,
+    TO_INT = generated::Z3_decl_kind::Z3_OP_TO_INT as u32,
     /// Check if real is also an integer - Unary.
-    IS_INT = 528,
+    IS_INT = generated::Z3_decl_kind::Z3_OP_IS_INT as u32,
     /// Power operator `x^y`.
-    POWER = 529,
+    POWER = generated::Z3_decl_kind::Z3_OP_POWER as u32,
     /// Array store. It satisfies `select(store(a,i,v),j) = if i = j then v else select(a,j)`.
     /// Array store takes at least 3 arguments.
-    STORE = 768,
+    STORE = generated::Z3_decl_kind::Z3_OP_STORE as u32,
     /// Array select.
-    SELECT = 769,
+    SELECT = generated::Z3_decl_kind::Z3_OP_SELECT as u32,
     /// The constant array. For example, `select(const(v),i) = v`
     /// holds for every `v` and `i`. The function is unary.
-    CONST_ARRAY = 770,
+    CONST_ARRAY = generated::Z3_decl_kind::Z3_OP_CONST_ARRAY as u32,
     /// Array map operator.
     /// It satisfies `map[f](a1,..,a_n)[i] = f(a1[i],...,a_n[i])` for every `i`.
-    ARRAY_MAP = 771,
+    ARRAY_MAP = generated::Z3_decl_kind::Z3_OP_ARRAY_MAP as u32,
     /// Default value of arrays. For example `default(const(v)) = v`. The function is unary.
-    ARRAY_DEFAULT = 772,
+    ARRAY_DEFAULT = generated::Z3_decl_kind::Z3_OP_ARRAY_DEFAULT as u32,
     /// Set union between two Boolean arrays (two arrays whose range
     /// type is Boolean). The function is binary.
-    SET_UNION = 773,
+    SET_UNION = generated::Z3_decl_kind::Z3_OP_SET_UNION as u32,
     /// Set intersection between two Boolean arrays. The function is binary.
-    SET_INTERSECT = 774,
+    SET_INTERSECT = generated::Z3_decl_kind::Z3_OP_SET_INTERSECT as u32,
     /// Set difference between two Boolean arrays. The function is binary.
-    SET_DIFFERENCE = 775,
+    SET_DIFFERENCE = generated::Z3_decl_kind::Z3_OP_SET_DIFFERENCE as u32,
     /// Set complement of a Boolean array. The function is unary.
-    SET_COMPLEMENT = 776,
+    SET_COMPLEMENT = generated::Z3_decl_kind::Z3_OP_SET_COMPLEMENT as u32,
     /// Subset predicate between two Boolean arrays. The relation is binary.
-    SET_SUBSET = 777,
+    SET_SUBSET = generated::Z3_decl_kind::Z3_OP_SET_SUBSET as u32,
     /// An array value that behaves as the function graph of the
     /// function passed as parameter.
-    AS_ARRAY = 778,
+    AS_ARRAY = generated::Z3_decl_kind::Z3_OP_AS_ARRAY as u32,
     /// Array extensionality function. It takes two arrays as arguments and
     /// produces an index, such that the arrays
     /// are different if they are different on the index.
-    ARRAY_EXT = 779,
+    ARRAY_EXT = generated::Z3_decl_kind::Z3_OP_ARRAY_EXT as u32,
     /// Bit-vector numeral.
-    BNUM = 1024,
+    BNUM = generated::Z3_decl_kind::Z3_OP_BNUM as u32,
     /// One bit bit-vector.
-    BIT1 = 1025,
+    BIT1 = generated::Z3_decl_kind::Z3_OP_BIT1 as u32,
     /// Zero bit bit-vector.
-    BIT0 = 1026,
+    BIT0 = generated::Z3_decl_kind::Z3_OP_BIT0 as u32,
     /// Unary minus.
-    BNEG = 1027,
+    BNEG = generated::Z3_decl_kind::Z3_OP_BNEG as u32,
     /// Binary addition.
-    BADD = 1028,
+    BADD = generated::Z3_decl_kind::Z3_OP_BADD as u32,
     /// Binary subtraction.
-    BSUB = 1029,
+    BSUB = generated::Z3_decl_kind::Z3_OP_BSUB as u32,
     /// Binary multiplication.
-    BMUL = 1030,
+    BMUL = generated::Z3_decl_kind::Z3_OP_BMUL as u32,
     /// Binary signed division.
-    BSDIV = 1031,
+    BSDIV = generated::Z3_decl_kind::Z3_OP_BSDIV as u32,
     /// Binary unsigned division.
-    BUDIV = 1032,
+    BUDIV = generated::Z3_decl_kind::Z3_OP_BUDIV as u32,
     /// Binary signed remainder.
-    BSREM = 1033,
+    BSREM = generated::Z3_decl_kind::Z3_OP_BSREM as u32,
     /// Binary unsigned remainder.
-    BUREM = 1034,
+    BUREM = generated::Z3_decl_kind::Z3_OP_BUREM as u32,
     /// Binary signed modulus.
-    BSMOD = 1035,
+    BSMOD = generated::Z3_decl_kind::Z3_OP_BSMOD as u32,
     /// Unary function. `bsdiv(x, 0)` is congruent to `bsdiv0(x)`.
-    BSDIV0 = 1036,
+    BSDIV0 = generated::Z3_decl_kind::Z3_OP_BSDIV0 as u32,
     /// Unary function. `budiv(x, 0)` is congruent to `budiv0(x)`.
-    BUDIV0 = 1037,
+    BUDIV0 = generated::Z3_decl_kind::Z3_OP_BUDIV0 as u32,
     /// Unary function. `bsrem(x, 0)` is congruent to `bsrem0(x)`.
-    BSREM0 = 1038,
+    BSREM0 = generated::Z3_decl_kind::Z3_OP_BSREM0 as u32,
     /// Unary function. `burem(x, 0)` is congruent to `burem0(x)`.
-    BUREM0 = 1039,
+    BUREM0 = generated::Z3_decl_kind::Z3_OP_BUREM0 as u32,
     /// Unary function. `bsmod(x, 0)` is congruent to `bsmod0(x)`.
-    BSMOD0 = 1040,
+    BSMOD0 = generated::Z3_decl_kind::Z3_OP_BSMOD0 as u32,
     /// Unsigned bit-vector <= - Binary relation.
-    ULEQ = 1041,
+    ULEQ = generated::Z3_decl_kind::Z3_OP_ULEQ as u32,
     /// Signed bit-vector  <= - Binary relation.
-    SLEQ = 1042,
+    SLEQ = generated::Z3_decl_kind::Z3_OP_SLEQ as u32,
     /// Unsigned bit-vector  >= - Binary relation.
-    UGEQ = 1043,
+    UGEQ = generated::Z3_decl_kind::Z3_OP_UGEQ as u32,
     /// Signed bit-vector  >= - Binary relation.
-    SGEQ = 1044,
+    SGEQ = generated::Z3_decl_kind::Z3_OP_SGEQ as u32,
     /// Unsigned bit-vector  < - Binary relation.
-    ULT = 1045,
+    ULT = generated::Z3_decl_kind::Z3_OP_ULT as u32,
     /// Signed bit-vector < - Binary relation.
-    SLT = 1046,
+    SLT = generated::Z3_decl_kind::Z3_OP_SLT as u32,
     /// Unsigned bit-vector > - Binary relation.
-    UGT = 1047,
+    UGT = generated::Z3_decl_kind::Z3_OP_UGT as u32,
     /// Signed bit-vector > - Binary relation.
-    SGT = 1048,
+    SGT = generated::Z3_decl_kind::Z3_OP_SGT as u32,
     /// Bit-wise and - Binary.
-    BAND = 1049,
+    BAND = generated::Z3_decl_kind::Z3_OP_BAND as u32,
     /// Bit-wise or - Binary.
-    BOR = 1050,
+    BOR = generated::Z3_decl_kind::Z3_OP_BOR as u32,
     /// Bit-wise not - Unary.
-    BNOT = 1051,
+    BNOT = generated::Z3_decl_kind::Z3_OP_BNOT as u32,
     /// Bit-wise xor - Binary.
-    BXOR = 1052,
+    BXOR = generated::Z3_decl_kind::Z3_OP_BXOR as u32,
     /// Bit-wise nand - Binary.
-    BNAND = 1053,
+    BNAND = generated::Z3_decl_kind::Z3_OP_BNAND as u32,
     /// Bit-wise nor - Binary.
-    BNOR = 1054,
+    BNOR = generated::Z3_decl_kind::Z3_OP_BNOR as u32,
     /// Bit-wise xnor - Binary.
-    BXNOR = 1055,
+    BXNOR = generated::Z3_decl_kind::Z3_OP_BXNOR as u32,
     /// Bit-vector concatenation - Binary.
-    CONCAT = 1056,
+    CONCAT = generated::Z3_decl_kind::Z3_OP_CONCAT as u32,
     /// Bit-vector sign extension.
-    SIGN_EXT = 1057,
+    SIGN_EXT = generated::Z3_decl_kind::Z3_OP_SIGN_EXT as u32,
     /// Bit-vector zero extension.
-    ZERO_EXT = 1058,
+    ZERO_EXT = generated::Z3_decl_kind::Z3_OP_ZERO_EXT as u32,
     /// Bit-vector extraction.
-    EXTRACT = 1059,
+    EXTRACT = generated::Z3_decl_kind::Z3_OP_EXTRACT as u32,
     /// Repeat bit-vector n times.
-    REPEAT = 1060,
+    REPEAT = generated::Z3_decl_kind::Z3_OP_REPEAT as u32,
     /// Bit-vector reduce or - Unary.
-    BREDOR = 1061,
+    BREDOR = generated::Z3_decl_kind::Z3_OP_BREDOR as u32,
     /// Bit-vector reduce and - Unary.
-    BREDAND = 1062,
-    BCOMP = 1063,
+    BREDAND = generated::Z3_decl_kind::Z3_OP_BREDAND as u32,
+    BCOMP = generated::Z3_decl_kind::Z3_OP_BCOMP as u32,
     /// Shift left.
-    BSHL = 1064,
+    BSHL = generated::Z3_decl_kind::Z3_OP_BSHL as u32,
     /// Logical shift right.
-    BLSHR = 1065,
+    BLSHR = generated::Z3_decl_kind::Z3_OP_BLSHR as u32,
     /// Arithmetical shift right.
-    BASHR = 1066,
+    BASHR = generated::Z3_decl_kind::Z3_OP_BASHR as u32,
     /// Left rotation.
-    ROTATE_LEFT = 1067,
+    ROTATE_LEFT = generated::Z3_decl_kind::Z3_OP_ROTATE_LEFT as u32,
     /// Right rotation.
-    ROTATE_RIGHT = 1068,
+    ROTATE_RIGHT = generated::Z3_decl_kind::Z3_OP_ROTATE_RIGHT as u32,
     /// (extended) Left rotation. Similar to `DeclKind::ROTATE_LEFT`,
     /// but it is a binary operator instead of a parametric one.
-    EXT_ROTATE_LEFT = 1069,
+    EXT_ROTATE_LEFT = generated::Z3_decl_kind::Z3_OP_EXT_ROTATE_LEFT as u32,
     /// (extended) Right rotation. Similar to `DeclKind::ROTATE_RIGHT`,
     /// but it is a binary operator instead of a parametric one.
-    EXT_ROTATE_RIGHT = 1070,
-    BIT2BOOL = 1071,
+    EXT_ROTATE_RIGHT = generated::Z3_decl_kind::Z3_OP_EXT_ROTATE_RIGHT as u32,
+    BIT2BOOL = generated::Z3_decl_kind::Z3_OP_BIT2BOOL as u32,
     /// Coerce integer to bit-vector.
     ///
     /// NB. This function is not supported by the decision procedures.
     /// Only the most rudimentary simplification rules are applied to
     /// this function.
-    INT2BV = 1072,
+    INT2BV = generated::Z3_decl_kind::Z3_OP_INT2BV as u32,
     /// Coerce bit-vector to integer.
     ///
     /// NB. This function is not supported by the decision procedures.
     /// Only the most rudimentary simplification rules are applied to
     /// this function.
-    BV2INT = 1073,
+    BV2INT = generated::Z3_decl_kind::Z3_OP_BV2INT as u32,
     /// Compute the carry bit in a full-adder.
     /// The meaning is given by the equivalence:
     ///
     /// ```text
     /// (carry l1 l2 l3) <=> (or (and l1 l2) (and l1 l3) (and l2 l3)))
     /// ```
-    CARRY = 1074,
+    CARRY = generated::Z3_decl_kind::Z3_OP_CARRY as u32,
     /// Compute ternary XOR.
     ///
     /// The meaning is given by the equivalence:
@@ -638,7 +640,7 @@ pub enum DeclKind {
     /// ```text
     /// (xor3 l1 l2 l3) <=> (xor (xor l1 l2) l3)
     /// ```
-    XOR3 = 1075,
+    XOR3 = generated::Z3_decl_kind::Z3_OP_XOR3 as u32,
     /// Check that bit-wise signed multiplication does not overflow.
     ///
     /// Signed multiplication overflows if the operands have the
@@ -648,7 +650,7 @@ pub enum DeclKind {
     /// See also:
     ///
     /// - [`Z3_mk_bvmul_no_overflow`](fn.Z3_mk_bvmul_no_overflow.html)
-    BSMUL_NO_OVFL = 1076,
+    BSMUL_NO_OVFL = generated::Z3_decl_kind::Z3_OP_BSMUL_NO_OVFL as u32,
     /// Check that bit-wise unsigned multiplication does not overflow.
     ///
     /// Unsigned multiplication overflows if the result does not fit
@@ -657,7 +659,7 @@ pub enum DeclKind {
     /// See also:
     ///
     /// - [`Z3_mk_bvmul_no_overflow`](fn.Z3_mk_bvmul_no_overflow.html)
-    BUMUL_NO_OVFL = 1077,
+    BUMUL_NO_OVFL = generated::Z3_decl_kind::Z3_OP_BUMUL_NO_OVFL as u32,
     /// Check that bit-wise signed multiplication does not underflow.
     ///
     /// Signed multiplication underflows if the operands have opposite
@@ -667,40 +669,40 @@ pub enum DeclKind {
     /// See also:
     ///
     /// - [`Z3_mk_bvmul_no_underflow`](Z3_mk_bvmul_no_underflow)
-    BSMUL_NO_UDFL = 1078,
+    BSMUL_NO_UDFL = generated::Z3_decl_kind::Z3_OP_BSMUL_NO_UDFL as u32,
     /// Binary signed division.
     ///
     /// It has the same semantics as `DeclKind::BSDIV`, but created in
     /// a context where the second operand can be assumed to be non-zero.
-    BSDIV_I = 1079,
+    BSDIV_I = generated::Z3_decl_kind::Z3_OP_BSDIV_I as u32,
     /// Binary unsigned division.
     ///
     /// It has the same semantics as `DeclKind::BUDIV`, but created in a
     /// context where the second operand can be assumed to be non-zero.
-    BUDIV_I = 1080,
+    BUDIV_I = generated::Z3_decl_kind::Z3_OP_BUDIV_I as u32,
     /// Binary signed remainder.
     ///
     /// It has the same semantics as `DeclKind::BSREM`, but created in a
     /// context where the second operand can be assumed to be non-zero.
-    BSREM_I = 1081,
+    BSREM_I = generated::Z3_decl_kind::Z3_OP_BSREM_I as u32,
     /// Binary unsigned remainder.
     ///
     /// It has the same semantics as `DeclKind::BUREM`, but created in a
     /// context where the second operand can be assumed to be non-zero.
-    BUREM_I = 1082,
+    BUREM_I = generated::Z3_decl_kind::Z3_OP_BUREM_I as u32,
     /// Binary signed modulus.
     ///
     /// It has the same semantics as `DeclKind::BSMOD`, but created in a
     /// context where the second operand can be assumed to be non-zero.
-    BSMOD_I = 1083,
+    BSMOD_I = generated::Z3_decl_kind::Z3_OP_BSMOD_I as u32,
     /// Undef/Null proof object.
-    PR_UNDEF = 1280,
+    PR_UNDEF = generated::Z3_decl_kind::Z3_OP_PR_UNDEF as u32,
     /// Proof for the expression 'true'.
-    PR_TRUE = 1281,
+    PR_TRUE = generated::Z3_decl_kind::Z3_OP_PR_TRUE as u32,
     /// Proof for a fact asserted by the user.
-    PR_ASSERTED = 1282,
+    PR_ASSERTED = generated::Z3_decl_kind::Z3_OP_PR_ASSERTED as u32,
     /// Proof for a fact (tagged as goal) asserted by the user.
-    PR_GOAL = 1283,
+    PR_GOAL = generated::Z3_decl_kind::Z3_OP_PR_GOAL as u32,
     /// Given a proof for p and a proof for (implies p q), produces a proof for q.
     ///
     /// ```text
@@ -710,7 +712,7 @@ pub enum DeclKind {
     /// ```
     ///
     /// The second antecedents may also be a proof for `(iff p q)`.
-    PR_MODUS_PONENS = 1284,
+    PR_MODUS_PONENS = generated::Z3_decl_kind::Z3_OP_PR_MODUS_PONENS as u32,
     /// A proof for `(R t t)`, where `R` is a reflexive relation.
     ///
     /// This proof object has no antecedents.
@@ -718,7 +720,7 @@ pub enum DeclKind {
     /// The only reflexive relations that are used are
     /// equivalence modulo namings, equality and equivalence.
     /// That is, `R` is either `~`, `=` or `iff`.
-    PR_REFLEXIVITY = 1285,
+    PR_REFLEXIVITY = generated::Z3_decl_kind::Z3_OP_PR_REFLEXIVITY as u32,
     /// Given an symmetric relation `R` and a proof for `(R t s)`,
     /// produces a proof for `(R s t)`.
     ///
@@ -728,7 +730,7 @@ pub enum DeclKind {
     /// ```
     ///
     /// `T1` is the antecedent of this proof object.
-    PR_SYMMETRY = 1286,
+    PR_SYMMETRY = generated::Z3_decl_kind::Z3_OP_PR_SYMMETRY as u32,
     /// Given a transitive relation `R`, and proofs for `(R t s)` and
     /// `(R s u)`, produces a proof for `(R t u)`.
     ///
@@ -737,7 +739,7 @@ pub enum DeclKind {
     /// T2: (R s u)
     /// [trans T1 T2]: (R t u)
     /// ```
-    PR_TRANSITIVITY = 1287,
+    PR_TRANSITIVITY = generated::Z3_decl_kind::Z3_OP_PR_TRANSITIVITY as u32,
     /// Condensed transitivity proof. This proof object is only
     /// used if the parameter `PROOF_MODE` is `1`.
     ///
@@ -759,7 +761,7 @@ pub enum DeclKind {
     /// using the antecedents, symmetry and transitivity.  That is,
     /// if there is a path from `s` to `t`, if we view every
     /// antecedent `(R a b)` as an edge between `a` and `b`.
-    PR_TRANSITIVITY_STAR = 1288,
+    PR_TRANSITIVITY_STAR = generated::Z3_decl_kind::Z3_OP_PR_TRANSITIVITY_STAR as u32,
     /// Monotonicity proof object.
     ///
     /// ```text
@@ -771,7 +773,7 @@ pub enum DeclKind {
     ///
     /// Remark: if `t_i == s_i`, then the antecedent `Ti` is suppressed.
     /// That is, reflexivity proofs are suppressed to save space.
-    PR_MONOTONICITY = 1289,
+    PR_MONOTONICITY = generated::Z3_decl_kind::Z3_OP_PR_MONOTONICITY as u32,
     /// Given a proof for `(~ p q)`, produces a proof for
     /// `(~ (forall (x) p) (forall (x) q))`.
     ///
@@ -779,7 +781,7 @@ pub enum DeclKind {
     /// T1: (~ p q)
     /// [quant-intro T1]: (~ (forall (x) p) (forall (x) q))
     /// ```
-    PR_QUANT_INTRO = 1290,
+    PR_QUANT_INTRO = generated::Z3_decl_kind::Z3_OP_PR_QUANT_INTRO as u32,
     /// Distributivity proof object.
     ///
     /// Given that `f (= or)` distributes over `g (= and)`, produces a proof for
@@ -802,7 +804,7 @@ pub enum DeclKind {
     ///
     /// Remark: This rule is used by the CNF conversion pass and
     /// instantiated by `f = or`, and `g = and`.
-    PR_DISTRIBUTIVITY = 1291,
+    PR_DISTRIBUTIVITY = generated::Z3_decl_kind::Z3_OP_PR_DISTRIBUTIVITY as u32,
     /// Given a proof for `(and l_1 ... l_n)`, produces a proof
     /// for `l_i`.
     ///
@@ -810,7 +812,7 @@ pub enum DeclKind {
     /// T1: (and l_1 ... l_n)
     /// [and-elim T1]: l_i
     /// ```
-    PR_AND_ELIM = 1292,
+    PR_AND_ELIM = generated::Z3_decl_kind::Z3_OP_PR_AND_ELIM as u32,
     /// Given a proof for `(not (or l_1 ... l_n))`, produces a
     /// proof for `(not l_i)`.
     ///
@@ -818,7 +820,7 @@ pub enum DeclKind {
     /// T1: (not (or l_1 ... l_n))
     /// [not-or-elim T1]: (not l_i)
     /// ```
-    PR_NOT_OR_ELIM = 1293,
+    PR_NOT_OR_ELIM = generated::Z3_decl_kind::Z3_OP_PR_NOT_OR_ELIM as u32,
     /// A proof for a local rewriting step `(= t s)`.
     ///
     /// The head function symbol of `t` is interpreted.
@@ -837,7 +839,7 @@ pub enum DeclKind {
     /// (= (+ x 1 2) (+ 3 x))
     /// (iff (or x false) x)
     /// ```
-    PR_REWRITE = 1294,
+    PR_REWRITE = generated::Z3_decl_kind::Z3_OP_PR_REWRITE as u32,
     /// A proof for rewriting an expression `t` into an expression `s`.
     ///
     /// This proof object is used if the parameter `PROOF_MODE` is `1`.
@@ -851,17 +853,17 @@ pub enum DeclKind {
     /// - When applying contextual simplification `(CONTEXT_SIMPLIFIER=true)`.
     /// - When converting bit-vectors to Booleans `(BIT2BOOL=true)`.
     /// - When pulling `ite` expression up `(PULL_CHEAP_ITE_TREES=true)`.
-    PR_REWRITE_STAR = 1295,
+    PR_REWRITE_STAR = generated::Z3_decl_kind::Z3_OP_PR_REWRITE_STAR as u32,
     /// A proof for `(iff (f (forall (x) q(x)) r) (forall (x) (f (q x) r)))`.
     ///
     /// This proof object has no antecedents.
-    PR_PULL_QUANT = 1296,
+    PR_PULL_QUANT = generated::Z3_decl_kind::Z3_OP_PR_PULL_QUANT as u32,
     /// A proof for `(iff P Q)` where `Q` is in prenex normal form.
     ///
     /// This proof object is only used if the parameter `PROOF_MODE` is `1`.
     ///
     /// This proof object has no antecedents.
-    PR_PULL_QUANT_STAR = 1297,
+    PR_PULL_QUANT_STAR = generated::Z3_decl_kind::Z3_OP_PR_PULL_QUANT_STAR as u32,
     /// A proof for:
     ///
     /// ```text
@@ -872,7 +874,7 @@ pub enum DeclKind {
     /// ```
     ///
     /// This proof object has no antecedents.
-    PR_PUSH_QUANT = 1298,
+    PR_PUSH_QUANT = generated::Z3_decl_kind::Z3_OP_PR_PUSH_QUANT as u32,
     /// A proof for
     ///
     /// ```text
@@ -883,7 +885,7 @@ pub enum DeclKind {
     /// It is used to justify the elimination of unused variables.
     ///
     /// This proof object has no antecedents.
-    PR_ELIM_UNUSED_VARS = 1299,
+    PR_ELIM_UNUSED_VARS = generated::Z3_decl_kind::Z3_OP_PR_ELIM_UNUSED_VARS as u32,
     /// A proof for destructive equality resolution:
     ///
     /// ```text
@@ -895,11 +897,11 @@ pub enum DeclKind {
     /// This proof object has no antecedents.
     ///
     /// Several variables can be eliminated simultaneously.
-    PR_DER = 1300,
+    PR_DER = generated::Z3_decl_kind::Z3_OP_PR_DER as u32,
     /// A proof of `(or (not (forall (x) (P x))) (P a))`.
-    PR_QUANT_INST = 1301,
+    PR_QUANT_INST = generated::Z3_decl_kind::Z3_OP_PR_QUANT_INST as u32,
     /// Mark a hypothesis in a natural deduction style proof.
-    PR_HYPOTHESIS = 1302,
+    PR_HYPOTHESIS = generated::Z3_decl_kind::Z3_OP_PR_HYPOTHESIS as u32,
     /// ```text
     /// T1: false
     /// [lemma T1]: (or (not l_1) ... (not l_n))
@@ -914,7 +916,7 @@ pub enum DeclKind {
     ///
     /// Furthermore, there are no other open hypotheses in the subtree covered by
     /// the lemma.
-    PR_LEMMA = 1303,
+    PR_LEMMA = generated::Z3_decl_kind::Z3_OP_PR_LEMMA as u32,
     /// ```text
     /// T1:      (or l_1 ... l_n l_1' ... l_m')
     /// T2:      (not l_1)
@@ -922,17 +924,17 @@ pub enum DeclKind {
     /// T(n+1):  (not l_n)
     /// [unit-resolution T1 ... T(n+1)]: (or l_1' ... l_m')
     /// ```
-    PR_UNIT_RESOLUTION = 1304,
+    PR_UNIT_RESOLUTION = generated::Z3_decl_kind::Z3_OP_PR_UNIT_RESOLUTION as u32,
     /// ```text
     /// T1: p
     /// [iff-true T1]: (iff p true)
     /// ```
-    PR_IFF_TRUE = 1305,
+    PR_IFF_TRUE = generated::Z3_decl_kind::Z3_OP_PR_IFF_TRUE as u32,
     /// ```text
     /// T1: (not p)
     /// [iff-false T1]: (iff p false)
     /// ```
-    PR_IFF_FALSE = 1306,
+    PR_IFF_FALSE = generated::Z3_decl_kind::Z3_OP_PR_IFF_FALSE as u32,
     /// ```text
     /// [comm]: (= (f a b) (f b a))
     /// ```
@@ -942,7 +944,7 @@ pub enum DeclKind {
     /// This proof object has no antecedents.
     ///
     /// Remark: if `f` is `bool`, then `=` is `iff`.
-    PR_COMMUTATIVITY = 1307,
+    PR_COMMUTATIVITY = generated::Z3_decl_kind::Z3_OP_PR_COMMUTATIVITY as u32,
     /// Proof object used to justify Tseitin's like axioms:
     ///
     /// ```text
@@ -975,7 +977,7 @@ pub enum DeclKind {
     /// You can recover the propositional tautologies by
     /// unfolding the Boolean connectives in the axioms a small
     /// bounded number of steps `(=3)`.
-    PR_DEF_AXIOM = 1308,
+    PR_DEF_AXIOM = generated::Z3_decl_kind::Z3_OP_PR_DEF_AXIOM as u32,
     /// Introduces a name for a formula/term.
     ///
     /// Suppose `e` is an expression with free variables `x`, and
@@ -1006,19 +1008,19 @@ pub enum DeclKind {
     /// ```text
     /// [def-intro]: (= n e)
     /// ```
-    PR_DEF_INTRO = 1309,
+    PR_DEF_INTRO = generated::Z3_decl_kind::Z3_OP_PR_DEF_INTRO as u32,
     /// ```text
     /// [apply-def T1]: F ~ n
     /// ```
     ///
     /// `F` is 'equivalent' to `n`, given that `T1` is a proof that
     /// `n` is a name for `F`.
-    PR_APPLY_DEF = 1310,
+    PR_APPLY_DEF = generated::Z3_decl_kind::Z3_OP_PR_APPLY_DEF as u32,
     /// ```text
     /// T1: (iff p q)
     /// [iff~ T1]: (~ p q)
     /// ```
-    PR_IFF_OEQ = 1311,
+    PR_IFF_OEQ = generated::Z3_decl_kind::Z3_OP_PR_IFF_OEQ as u32,
     /// Proof for a (positive) NNF step. Example:
     ///
     /// ```text
@@ -1045,7 +1047,7 @@ pub enum DeclKind {
     ///   for `NNF_POS` are `implies`, `iff`, `xor`, `ite`.
     ///   `NNF_NEG` furthermore handles the case where negation is pushed
     ///   over Boolean connectives `and` and `or`.
-    PR_NNF_POS = 1312,
+    PR_NNF_POS = generated::Z3_decl_kind::Z3_OP_PR_NNF_POS as u32,
     /// Proof for a (negative) NNF step. Examples:
     ///
     /// ```text
@@ -1074,19 +1076,19 @@ pub enum DeclKind {
     /// [nnf-neg T1 T2 T3 T4]: (~ (not (iff s_1 s_2))
     /// (and (or r_1 r_2) (or r_1' r_2')))
     /// ```
-    PR_NNF_NEG = 1313,
+    PR_NNF_NEG = generated::Z3_decl_kind::Z3_OP_PR_NNF_NEG as u32,
     /// A proof for `(~ P Q)` where `Q` is in negation normal form.
     ///
     /// This proof object is only used if the parameter `PROOF_MODE` is `1`.
     ///
     /// This proof object may have n antecedents. Each antecedent is a `PR_DEF_INTRO`.
-    PR_NNF_STAR = 1314,
+    PR_NNF_STAR = generated::Z3_decl_kind::Z3_OP_PR_NNF_STAR as u32,
     /// A proof for `(~ P Q)` where `Q` is in conjunctive normal form.
     ///
     /// This proof object is only used if the parameter `PROOF_MODE` is `1`.
     ///
     /// This proof object may have n antecedents. Each antecedent is a `PR_DEF_INTRO`.
-    PR_CNF_STAR = 1315,
+    PR_CNF_STAR = generated::Z3_decl_kind::Z3_OP_PR_CNF_STAR as u32,
     /// Proof for:
     ///
     /// ```text
@@ -1095,7 +1097,7 @@ pub enum DeclKind {
     /// ```
     ///
     /// This proof object has no antecedents.
-    PR_SKOLEMIZE = 1316,
+    PR_SKOLEMIZE = generated::Z3_decl_kind::Z3_OP_PR_SKOLEMIZE as u32,
     /// Modus ponens style rule for equi-satisfiability.
     ///
     /// ```text
@@ -1103,7 +1105,7 @@ pub enum DeclKind {
     /// T2: (~ p q)
     /// [mp~ T1 T2]: q
     /// ```
-    PR_MODUS_PONENS_OEQ = 1317,
+    PR_MODUS_PONENS_OEQ = generated::Z3_decl_kind::Z3_OP_PR_MODUS_PONENS_OEQ as u32,
     /// Generic proof for theory lemmas.
     ///
     /// The theory lemma function comes with one or more parameters.
@@ -1122,7 +1124,7 @@ pub enum DeclKind {
     ///   (iff (= t1 t2) (and (<= t1 t2) (<= t2 t1)))
     ///   ```
     /// - `gcd-test` - Indicates an integer linear arithmetic lemma that uses a gcd test.
-    PR_TH_LEMMA = 1318,
+    PR_TH_LEMMA = generated::Z3_decl_kind::Z3_OP_PR_TH_LEMMA as u32,
     /// Hyper-resolution rule.
     ///
     /// The premises of the rules is a sequence of clauses.
@@ -1168,31 +1170,31 @@ pub enum DeclKind {
     /// The hyper-resolution rule takes a sequence of parameters.
     /// The parameters are substitutions of bound variables separated by pairs
     /// of literal positions from the main clause and side clause.
-    PR_HYPER_RESOLVE = 1319,
+    PR_HYPER_RESOLVE = generated::Z3_decl_kind::Z3_OP_PR_HYPER_RESOLVE as u32,
     /// Insert a record into a relation.
     ///
     /// The function takes `n`+1 arguments, where the first argument
     /// is the relation and the remaining `n` elements
     /// correspond to the `n` columns of the relation.
-    RA_STORE = 1536,
+    RA_STORE = generated::Z3_decl_kind::Z3_OP_RA_STORE as u32,
     /// Creates the empty relation.
-    RA_EMPTY = 1537,
+    RA_EMPTY = generated::Z3_decl_kind::Z3_OP_RA_EMPTY as u32,
     /// Tests if the relation is empty.
-    RA_IS_EMPTY = 1538,
+    RA_IS_EMPTY = generated::Z3_decl_kind::Z3_OP_RA_IS_EMPTY as u32,
     /// Create the relational join.
-    RA_JOIN = 1539,
+    RA_JOIN = generated::Z3_decl_kind::Z3_OP_RA_JOIN as u32,
     /// Create the union or convex hull of two relations.
     ///
     /// The function takes two arguments.
-    RA_UNION = 1540,
+    RA_UNION = generated::Z3_decl_kind::Z3_OP_RA_UNION as u32,
     /// Widen two relations.
     ///
     /// The function takes two arguments.
-    RA_WIDEN = 1541,
+    RA_WIDEN = generated::Z3_decl_kind::Z3_OP_RA_WIDEN as u32,
     /// Project the columns (provided as numbers in the parameters).
     ///
     /// The function takes one argument.
-    RA_PROJECT = 1542,
+    RA_PROJECT = generated::Z3_decl_kind::Z3_OP_RA_PROJECT as u32,
     /// Filter (restrict) a relation with respect to a predicate.
     ///
     /// The first argument is a relation.
@@ -1201,7 +1203,7 @@ pub enum DeclKind {
     /// corresponding to the columns of the relation.
     ///
     /// So the first column in the relation has index 0.
-    RA_FILTER = 1543,
+    RA_FILTER = generated::Z3_decl_kind::Z3_OP_RA_FILTER as u32,
     /// Intersect the first relation with respect to negation
     /// of the second relation (the function takes two arguments).
     ///
@@ -1215,182 +1217,182 @@ pub enum DeclKind {
     /// from `pos` and `neg`, such that target are elements in `x` in `pos`,
     /// such that there is no `y` in `neg` that agrees with
     /// `x` on the columns `c1`, `d1`, .., `cN`, `dN`.
-    RA_NEGATION_FILTER = 1544,
+    RA_NEGATION_FILTER = generated::Z3_decl_kind::Z3_OP_RA_NEGATION_FILTER as u32,
     /// Rename columns in the relation.
     ///
     /// The function takes one argument.
     ///
     /// The parameters contain the renaming as a cycle.
-    RA_RENAME = 1545,
+    RA_RENAME = generated::Z3_decl_kind::Z3_OP_RA_RENAME as u32,
     /// Complement the relation.
-    RA_COMPLEMENT = 1546,
+    RA_COMPLEMENT = generated::Z3_decl_kind::Z3_OP_RA_COMPLEMENT as u32,
     /// Check if a record is an element of the relation.
     ///
     /// The function takes `n`+1 arguments, where the first argument is a relation,
     /// and the remaining `n` arguments correspond to a record.
-    RA_SELECT = 1547,
+    RA_SELECT = generated::Z3_decl_kind::Z3_OP_RA_SELECT as u32,
     /// Create a fresh copy (clone) of a relation.
     ///
     /// The function is logically the identity, but
     /// in the context of a register machine allows
     /// for [`DeclKind::RA_UNION`](#variant.RA_UNION)
     /// to perform destructive updates to the first argument.
-    RA_CLONE = 1548,
-    FD_CONSTANT = 1549,
+    RA_CLONE = generated::Z3_decl_kind::Z3_OP_RA_CLONE as u32,
+    FD_CONSTANT = generated::Z3_decl_kind::Z3_OP_FD_CONSTANT as u32,
     /// A less than predicate over the finite domain `SortKind::FiniteDomain`.
-    FD_LT = 1550,
-    SEQ_UNIT = 1551,
-    SEQ_EMPTY = 1552,
-    SEQ_CONCAT = 1553,
-    SEQ_PREFIX = 1554,
-    SEQ_SUFFIX = 1555,
-    SEQ_CONTAINS = 1556,
-    SEQ_EXTRACT = 1557,
-    SEQ_REPLACE = 1558,
-    SEQ_AT = 1559,
-    SEQ_LENGTH = 1560,
-    SEQ_INDEX = 1561,
-    SEQ_TO_RE = 1562,
-    SEQ_IN_RE = 1563,
-    STR_TO_INT = 1564,
-    INT_TO_STR = 1565,
-    RE_PLUS = 1566,
-    RE_STAR = 1567,
-    RE_OPTION = 1568,
-    RE_CONCAT = 1569,
-    RE_UNION = 1570,
-    RE_RANGE = 1571,
-    RE_LOOP = 1572,
-    RE_INTERSECT = 1573,
-    RE_EMPTY_SET = 1574,
-    RE_FULL_SET = 1575,
-    RE_COMPLEMENT = 1576,
+    FD_LT = generated::Z3_decl_kind::Z3_OP_FD_LT as u32,
+    SEQ_UNIT = generated::Z3_decl_kind::Z3_OP_SEQ_UNIT as u32,
+    SEQ_EMPTY = generated::Z3_decl_kind::Z3_OP_SEQ_EMPTY as u32,
+    SEQ_CONCAT = generated::Z3_decl_kind::Z3_OP_SEQ_CONCAT as u32,
+    SEQ_PREFIX = generated::Z3_decl_kind::Z3_OP_SEQ_PREFIX as u32,
+    SEQ_SUFFIX = generated::Z3_decl_kind::Z3_OP_SEQ_SUFFIX as u32,
+    SEQ_CONTAINS = generated::Z3_decl_kind::Z3_OP_SEQ_CONTAINS as u32,
+    SEQ_EXTRACT = generated::Z3_decl_kind::Z3_OP_SEQ_EXTRACT as u32,
+    SEQ_REPLACE = generated::Z3_decl_kind::Z3_OP_SEQ_REPLACE as u32,
+    SEQ_AT = generated::Z3_decl_kind::Z3_OP_SEQ_AT as u32,
+    SEQ_LENGTH = generated::Z3_decl_kind::Z3_OP_SEQ_LENGTH as u32,
+    SEQ_INDEX = generated::Z3_decl_kind::Z3_OP_SEQ_INDEX as u32,
+    SEQ_TO_RE = generated::Z3_decl_kind::Z3_OP_SEQ_TO_RE as u32,
+    SEQ_IN_RE = generated::Z3_decl_kind::Z3_OP_SEQ_IN_RE as u32,
+    STR_TO_INT = generated::Z3_decl_kind::Z3_OP_STR_TO_INT as u32,
+    INT_TO_STR = generated::Z3_decl_kind::Z3_OP_INT_TO_STR as u32,
+    RE_PLUS = generated::Z3_decl_kind::Z3_OP_RE_PLUS as u32,
+    RE_STAR = generated::Z3_decl_kind::Z3_OP_RE_STAR as u32,
+    RE_OPTION = generated::Z3_decl_kind::Z3_OP_RE_OPTION as u32,
+    RE_CONCAT = generated::Z3_decl_kind::Z3_OP_RE_CONCAT as u32,
+    RE_UNION = generated::Z3_decl_kind::Z3_OP_RE_UNION as u32,
+    RE_RANGE = generated::Z3_decl_kind::Z3_OP_RE_RANGE as u32,
+    RE_LOOP = generated::Z3_decl_kind::Z3_OP_RE_LOOP as u32,
+    RE_INTERSECT = generated::Z3_decl_kind::Z3_OP_RE_INTERSECT as u32,
+    RE_EMPTY_SET = generated::Z3_decl_kind::Z3_OP_RE_EMPTY_SET as u32,
+    RE_FULL_SET = generated::Z3_decl_kind::Z3_OP_RE_FULL_SET as u32,
+    RE_COMPLEMENT = generated::Z3_decl_kind::Z3_OP_RE_COMPLEMENT as u32,
     /// A label (used by the Boogie Verification condition generator).
     ///
     /// The label has two parameters, a string and a Boolean polarity.
     ///
     /// It takes one argument, a formula.
-    LABEL = 1792,
+    LABEL = generated::Z3_decl_kind::Z3_OP_LABEL as u32,
     /// A label literal (used by the Boogie Verification condition generator).
     ///
     /// A label literal has a set of string parameters. It takes no arguments.
-    LABEL_LIT = 1793,
+    LABEL_LIT = generated::Z3_decl_kind::Z3_OP_LABEL_LIT as u32,
     /// Datatype constructor.
-    DT_CONSTRUCTOR = 2048,
+    DT_CONSTRUCTOR = generated::Z3_decl_kind::Z3_OP_DT_CONSTRUCTOR as u32,
     /// Datatype recognizer.
-    DT_RECOGNISER = 2049,
+    DT_RECOGNISER = generated::Z3_decl_kind::Z3_OP_DT_RECOGNISER as u32,
     /// Datatype accessor.
-    DT_ACCESSOR = 2050,
+    DT_ACCESSOR = generated::Z3_decl_kind::Z3_OP_DT_ACCESSOR as u32,
     /// Datatype field update.
-    DT_UPDATE_FIELD = 2051,
+    DT_UPDATE_FIELD = generated::Z3_decl_kind::Z3_OP_DT_UPDATE_FIELD as u32,
     /// Cardinality constraint.
     ///
     /// Example: `x + y + z <= 2`
-    PB_AT_MOST = 2304,
+    PB_AT_MOST = generated::Z3_decl_kind::Z3_OP_PB_AT_MOST as u32,
     /// Cardinality constraint.
     ///
     /// Example: `x + y + z >= 2`
-    PB_AT_LEAST = 2305,
+    PB_AT_LEAST = generated::Z3_decl_kind::Z3_OP_PB_AT_LEAST as u32,
     /// Generalized Pseudo-Boolean cardinality constraint.
     ///
     /// Example: `2*x + 3*y <= 4`
-    PB_LE = 2306,
+    PB_LE = generated::Z3_decl_kind::Z3_OP_PB_LE as u32,
     /// Generalized Pseudo-Boolean cardinality constraint.
     ///
     /// Example: `2*x + 3*y + 2*z >= 4`
-    PB_GE = 2307,
+    PB_GE = generated::Z3_decl_kind::Z3_OP_PB_GE as u32,
     /// Generalized Pseudo-Boolean equality constraint.
     ///
     /// Example: `2*x + 1*y + 2*z + 1*u = 4`
-    PB_EQ = 2308,
+    PB_EQ = generated::Z3_decl_kind::Z3_OP_PB_EQ as u32,
     /// Floating-point rounding mode RNE
-    FPA_RM_NEAREST_TIES_TO_EVEN = 2309,
+    FPA_RM_NEAREST_TIES_TO_EVEN = generated::Z3_decl_kind::Z3_OP_FPA_RM_NEAREST_TIES_TO_EVEN as u32,
     /// Floating-point rounding mode RNA
-    FPA_RM_NEAREST_TIES_TO_AWAY = 2310,
+    FPA_RM_NEAREST_TIES_TO_AWAY = generated::Z3_decl_kind::Z3_OP_FPA_RM_NEAREST_TIES_TO_AWAY as u32,
     /// Floating-point rounding mode RTP
-    FPA_RM_TOWARD_POSITIVE = 2311,
+    FPA_RM_TOWARD_POSITIVE = generated::Z3_decl_kind::Z3_OP_FPA_RM_TOWARD_POSITIVE as u32,
     /// Floating-point rounding mode RTN
-    FPA_RM_TOWARD_NEGATIVE = 2312,
+    FPA_RM_TOWARD_NEGATIVE = generated::Z3_decl_kind::Z3_OP_FPA_RM_TOWARD_NEGATIVE as u32,
     /// Floating-point rounding mode RTZ
-    FPA_RM_TOWARD_ZERO = 2313,
+    FPA_RM_TOWARD_ZERO = generated::Z3_decl_kind::Z3_OP_FPA_RM_TOWARD_ZERO as u32,
     /// Floating-point value
-    FPA_NUM = 2314,
+    FPA_NUM = generated::Z3_decl_kind::Z3_OP_FPA_NUM as u32,
     /// Floating-point +oo
-    FPA_PLUS_INF = 2315,
+    FPA_PLUS_INF = generated::Z3_decl_kind::Z3_OP_FPA_PLUS_INF as u32,
     /// Floating-point -oo
-    FPA_MINUS_INF = 2316,
+    FPA_MINUS_INF = generated::Z3_decl_kind::Z3_OP_FPA_MINUS_INF as u32,
     /// Floating-point NaN
-    FPA_NAN = 2317,
+    FPA_NAN = generated::Z3_decl_kind::Z3_OP_FPA_NAN as u32,
     /// Floating-point +zero
-    FPA_PLUS_ZERO = 2318,
+    FPA_PLUS_ZERO = generated::Z3_decl_kind::Z3_OP_FPA_PLUS_ZERO as u32,
     /// Floating-point -zero
-    FPA_MINUS_ZERO = 2319,
+    FPA_MINUS_ZERO = generated::Z3_decl_kind::Z3_OP_FPA_MINUS_ZERO as u32,
     /// Floating-point addition
-    FPA_ADD = 2320,
+    FPA_ADD = generated::Z3_decl_kind::Z3_OP_FPA_ADD as u32,
     /// Floating-point subtraction
-    FPA_SUB = 2321,
+    FPA_SUB = generated::Z3_decl_kind::Z3_OP_FPA_SUB as u32,
     /// Floating-point negation
-    FPA_NEG = 2322,
+    FPA_NEG = generated::Z3_decl_kind::Z3_OP_FPA_NEG as u32,
     /// Floating-point multiplication
-    FPA_MUL = 2323,
+    FPA_MUL = generated::Z3_decl_kind::Z3_OP_FPA_MUL as u32,
     /// Floating-point division
-    FPA_DIV = 2324,
+    FPA_DIV = generated::Z3_decl_kind::Z3_OP_FPA_DIV as u32,
     /// Floating-point remainder
-    FPA_REM = 2325,
+    FPA_REM = generated::Z3_decl_kind::Z3_OP_FPA_REM as u32,
     /// Floating-point absolute value
-    FPA_ABS = 2326,
+    FPA_ABS = generated::Z3_decl_kind::Z3_OP_FPA_ABS as u32,
     /// Floating-point minimum
-    FPA_MIN = 2327,
+    FPA_MIN = generated::Z3_decl_kind::Z3_OP_FPA_MIN as u32,
     /// Floating-point maximum
-    FPA_MAX = 2328,
+    FPA_MAX = generated::Z3_decl_kind::Z3_OP_FPA_MAX as u32,
     /// Floating-point fused multiply-add
-    FPA_FMA = 2329,
+    FPA_FMA = generated::Z3_decl_kind::Z3_OP_FPA_FMA as u32,
     /// Floating-point square root
-    FPA_SQRT = 2330,
+    FPA_SQRT = generated::Z3_decl_kind::Z3_OP_FPA_SQRT as u32,
     /// Floating-point round to integral
-    FPA_ROUND_TO_INTEGRAL = 2331,
+    FPA_ROUND_TO_INTEGRAL = generated::Z3_decl_kind::Z3_OP_FPA_ROUND_TO_INTEGRAL as u32,
     /// Floating-point equality
-    FPA_EQ = 2332,
+    FPA_EQ = generated::Z3_decl_kind::Z3_OP_FPA_EQ as u32,
     /// Floating-point less than
-    FPA_LT = 2333,
+    FPA_LT = generated::Z3_decl_kind::Z3_OP_FPA_LT as u32,
     /// Floating-point greater than
-    FPA_GT = 2334,
+    FPA_GT = generated::Z3_decl_kind::Z3_OP_FPA_GT as u32,
     /// Floating-point less than or equal
-    FPA_LE = 2335,
+    FPA_LE = generated::Z3_decl_kind::Z3_OP_FPA_LE as u32,
     /// Floating-point greater than or equal
-    FPA_GE = 2336,
+    FPA_GE = generated::Z3_decl_kind::Z3_OP_FPA_GE as u32,
     /// Floating-point isNaN
-    FPA_IS_NAN = 2337,
+    FPA_IS_NAN = generated::Z3_decl_kind::Z3_OP_FPA_IS_NAN as u32,
     /// Floating-point isInfinite
-    FPA_IS_INF = 2338,
+    FPA_IS_INF = generated::Z3_decl_kind::Z3_OP_FPA_IS_INF as u32,
     /// Floating-point isZero
-    FPA_IS_ZERO = 2339,
+    FPA_IS_ZERO = generated::Z3_decl_kind::Z3_OP_FPA_IS_ZERO as u32,
     /// Floating-point isNormal
-    FPA_IS_NORMAL = 2340,
+    FPA_IS_NORMAL = generated::Z3_decl_kind::Z3_OP_FPA_IS_NORMAL as u32,
     /// Floating-point isSubnormal
-    FPA_IS_SUBNORMAL = 2341,
+    FPA_IS_SUBNORMAL = generated::Z3_decl_kind::Z3_OP_FPA_IS_SUBNORMAL as u32,
     /// Floating-point isNegative
-    FPA_IS_NEGATIVE = 2342,
+    FPA_IS_NEGATIVE = generated::Z3_decl_kind::Z3_OP_FPA_IS_NEGATIVE as u32,
     /// Floating-point isPositive
-    FPA_IS_POSITIVE = 2343,
+    FPA_IS_POSITIVE = generated::Z3_decl_kind::Z3_OP_FPA_IS_POSITIVE as u32,
     /// Floating-point constructor from 3 bit-vectors
-    FPA_FP = 2344,
+    FPA_FP = generated::Z3_decl_kind::Z3_OP_FPA_FP as u32,
     /// Floating-point conversion (various)
-    FPA_TO_FP = 2345,
+    FPA_TO_FP = generated::Z3_decl_kind::Z3_OP_FPA_TO_FP as u32,
     /// Floating-point conversion from unsigned bit-vector
-    FPA_TO_FP_UNSIGNED = 2346,
+    FPA_TO_FP_UNSIGNED = generated::Z3_decl_kind::Z3_OP_FPA_TO_FP_UNSIGNED as u32,
     /// Floating-point conversion to unsigned bit-vector
-    FPA_TO_UBV = 2347,
+    FPA_TO_UBV = generated::Z3_decl_kind::Z3_OP_FPA_TO_UBV as u32,
     /// Floating-point conversion to signed bit-vector
-    FPA_TO_SBV = 2348,
+    FPA_TO_SBV = generated::Z3_decl_kind::Z3_OP_FPA_TO_SBV as u32,
     /// Floating-point conversion to real number
-    FPA_TO_REAL = 2349,
+    FPA_TO_REAL = generated::Z3_decl_kind::Z3_OP_FPA_TO_REAL as u32,
     /// Floating-point conversion to IEEE-754 bit-vector
-    FPA_TO_IEEE_BV = 2350,
+    FPA_TO_IEEE_BV = generated::Z3_decl_kind::Z3_OP_FPA_TO_IEEE_BV as u32,
     /// Implicitly) represents the internal bitvector-representation
     /// of a floating-point term (used for the lazy encoding
     /// of non-relevant terms in theory_fpa)
-    FPA_BVWRAP = 2351,
+    FPA_BVWRAP = generated::Z3_decl_kind::Z3_OP_FPA_BVWRAP as u32,
     /// Conversion of a 3-bit bit-vector term to a
     /// floating-point rounding-mode term.
     ///
@@ -1401,14 +1403,14 @@ pub enum DeclKind {
     /// 2 = 010 = `DeclKind::FPA_RM_TOWARD_POSITIVE`,
     /// 3 = 011 = `DeclKind::FPA_RM_TOWARD_NEGATIVE`,
     /// 4 = 100 = `DeclKind::FPA_RM_TOWARD_ZERO`.
-    FPA_BV2RM = 2352,
+    FPA_BV2RM = generated::Z3_decl_kind::Z3_OP_FPA_BV2RM as u32,
     /// Internal (often interpreted) symbol, but no additional
     /// information is exposed. Tools may use the string
     /// representation of the function declaration to obtain
     /// more information.
-    INTERNAL = 2353,
+    INTERNAL = generated::Z3_decl_kind::Z3_OP_INTERNAL as u32,
     /// Kind used for uninterpreted symbols.
-    UNINTERPRETED = 2354,
+    UNINTERPRETED = generated::Z3_decl_kind::Z3_OP_UNINTERPRETED as u32,
 }
 
 /// The different kinds of parameters that can be associated with parameter sets.
@@ -1421,31 +1423,31 @@ pub enum ParamKind {
     /// integer parameters.
     ///
     /// This corresponds to `Z3_PK_UINT` in the C API.
-    UInt = 0,
+    UInt = generated::Z3_param_kind::Z3_PK_UINT as u32,
     /// boolean parameters.
     ///
     /// This corresponds to `Z3_PK_BOOL` in the C API.
-    Bool = 1,
+    Bool = generated::Z3_param_kind::Z3_PK_BOOL as u32,
     /// double parameters.
     ///
     /// This corresponds to `Z3_PK_DOUBLE` in the C API.
-    Double = 2,
+    Double = generated::Z3_param_kind::Z3_PK_DOUBLE as u32,
     /// symbol parameters.
     ///
     /// This corresponds to `Z3_PK_SYMBOL` in the C API.
-    Symbol = 3,
+    Symbol = generated::Z3_param_kind::Z3_PK_SYMBOL as u32,
     /// string parameters.
     ///
     /// This corresponds to `Z3_PK_STRING` in the C API.
-    String = 4,
+    String = generated::Z3_param_kind::Z3_PK_STRING as u32,
     /// all internal parameter kinds which are not exposed in the API.
     ///
     /// This corresponds to `Z3_PK_OTHER` in the C API.
-    Other = 5,
+    Other = generated::Z3_param_kind::Z3_PK_OTHER as u32,
     /// invalid parameter.
     ///
     /// This corresponds to `Z3_PK_INVALID` in the C API.
-    Invalid = 6,
+    Invalid = generated::Z3_param_kind::Z3_PK_INVALID as u32,
 }
 
 /// Z3 pretty printing modes (See [`Z3_set_ast_print_mode`](fn.Z3_set_ast_print_mode.html)).
@@ -1457,15 +1459,15 @@ pub enum AstPrintMode {
     /// Print AST nodes in SMTLIB verbose format.
     ///
     /// This corresponds to `Z3_PRINT_SMTLIB_FULL` in the C API.
-    SmtLibFull = 0,
+    SmtLibFull = generated::Z3_ast_print_mode::Z3_PRINT_SMTLIB_FULL as u32,
     /// Print AST nodes using a low-level format.
     ///
     /// This corresponds to `Z3_PRINT_LOW_LEVEL` in the C API.
-    LowLevel = 1,
+    LowLevel = generated::Z3_ast_print_mode::Z3_PRINT_LOW_LEVEL as u32,
     /// Print AST nodes in SMTLIB 2.x compliant format.
     ///
     /// This corresponds to `Z3_PRINT_SMTLIB2_COMPLIANT` in the C API.
-    SmtLib2Compliant = 2,
+    SmtLib2Compliant = generated::Z3_ast_print_mode::Z3_PRINT_SMTLIB2_COMPLIANT as u32,
 }
 
 /// Z3 error codes (See [`Z3_get_error_code`](fn.Z3_get_error_code.html)).
@@ -1476,61 +1478,61 @@ pub enum AstPrintMode {
 pub enum ErrorCode {
     /// No error.
     ///
-    /// This corresponds to `ErrorCode::OK` in the C API.
-    OK = 0,
+    /// This corresponds to `Z3_OK` in the C API.
+    OK = generated::Z3_error_code::Z3_OK as u32,
     /// User tried to build an invalid (type incorrect) AST.
     ///
     /// This corresponds to `Z3_SORT_ERROR` in the C API.
-    SortError = 1,
+    SortError = generated::Z3_error_code::Z3_SORT_ERROR as u32,
     /// Index out of bounds.
     ///
     /// This corresponds to `Z3_IOB` in the C API.
-    IOB = 2,
+    IOB = generated::Z3_error_code::Z3_IOB as u32,
     /// Invalid argument was provided.
     ///
     /// This corresponds to `Z3_INVALID_ARG` in the C API.
-    InvalidArg = 3,
+    InvalidArg = generated::Z3_error_code::Z3_INVALID_ARG as u32,
     /// An error occurred when parsing a string or file.
     ///
     /// This corresponds to `Z3_PARSER_ERROR` in the C API.
-    ParserError = 4,
+    ParserError = generated::Z3_error_code::Z3_PARSER_ERROR as u32,
     /// Parser output is not available, that is, user didn't invoke
     /// [`Z3_parse_smtlib_string`](fn.Z3_parse_smtlib_string.html) or
     /// [`Z3_parse_smtlib_file`](fn.Z3_parse_smtlib_file.html).
     ///
     /// This corresponds to `Z3_NO_PARSER` in the C API.
-    NoParser = 5,
+    NoParser = generated::Z3_error_code::Z3_NO_PARSER as u32,
     /// Invalid pattern was used to build a quantifier.
     ///
     /// This corresponds to `Z3_INVALID_PATTERN` in the C API.
-    InvalidPattern = 6,
+    InvalidPattern = generated::Z3_error_code::Z3_INVALID_PATTERN as u32,
     /// A memory allocation failure was encountered.
     ///
     /// This corresponds to `Z3_MEMOUT_FAIL` in the C API.
-    MemoutFail = 7,
+    MemoutFail = generated::Z3_error_code::Z3_MEMOUT_FAIL as u32,
     /// A file could not be accessed.
     ///
     /// This corresponds to `Z3_FILE_ACCESS_ERRROR` in the C API.
-    FileAccessError = 8,
+    FileAccessError = generated::Z3_error_code::Z3_FILE_ACCESS_ERROR as u32,
     /// An error internal to Z3 occurred.
     ///
     /// This corresponds to `Z3_INTERNAL_FATAL` in the C API.
-    InternalFatal = 9,
+    InternalFatal = generated::Z3_error_code::Z3_INTERNAL_FATAL as u32,
     /// API call is invalid in the current state.
     ///
     /// This corresponds to `Z3_INVALID_USAGE` in the C API.
-    InvalidUsage = 10,
+    InvalidUsage = generated::Z3_error_code::Z3_INVALID_USAGE as u32,
     /// Trying to decrement the reference counter of an AST that was
     /// deleted or the reference counter was not initialized with
     /// [`Z3_inc_ref`](fn.Z3_inc_ref.html).
     ///
     /// This corresponds to `Z3_DEC_REF_ERROR` in the C API.
-    DecRefError = 11,
+    DecRefError = generated::Z3_error_code::Z3_DEC_REF_ERROR as u32,
     /// Internal Z3 exception. Additional details can be retrieved
     /// using [`Z3_get_error_msg`](fn.Z3_get_error_msg.html).
     ///
     /// This corresponds to `Z3_EXCEPTION` in the C API.
-    Exception = 12,
+    Exception = generated::Z3_error_code::Z3_EXCEPTION as u32,
 }
 
 /// Z3 custom error handler (See [`Z3_set_error_handler`](fn.Z3_set_error_handler.html)).
@@ -1549,20 +1551,20 @@ pub enum GoalPrec {
     /// (sat and unsat answers were preserved).
     ///
     /// This corresponds to `Z3_GOAL_PRECISE` in the C API.
-    Precise = 0,
+    Precise = generated::Z3_goal_prec::Z3_GOAL_PRECISE as u32,
     /// Goal is the product of a under-approximation (sat answers are preserved).
     ///
     /// This corresponds to `Z3_GOAL_UNDER` in the C API.
-    Under = 1,
+    Under = generated::Z3_goal_prec::Z3_GOAL_UNDER as u32,
     /// Goal is the product of an over-approximation (unsat answers are preserved).
     ///
     /// This corresponds to `Z3_GOAL_OVER` in the C API.
-    Over = 2,
+    Over = generated::Z3_goal_prec::Z3_GOAL_OVER as u32,
     /// Goal is garbage (it is the product of over- and under-approximations,
     /// sat and unsat answers are not preserved).
     ///
     /// This corresponds to `Z3_GOAL_UNDER_OVER` in the C API.
-    UnderOver = 3,
+    UnderOver = generated::Z3_goal_prec::Z3_GOAL_UNDER_OVER as u32,
 }
 
 #[link(name = "z3")]
