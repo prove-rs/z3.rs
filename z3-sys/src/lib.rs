@@ -3782,7 +3782,7 @@ extern "C" {
 
     pub fn Z3_is_numeral_ast(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
-    /// Return true if the give AST is a real algebraic number.
+    /// Return true if the given AST is a real algebraic number.
     pub fn Z3_is_algebraic_number(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
     /// Convert an `ast` into an `Z3_App`. This is just type casting.
@@ -5190,7 +5190,7 @@ extern "C" {
     /// Convert the given map into a string.
     pub fn Z3_ast_map_to_string(c: Z3_context, m: Z3_ast_map) -> Z3_string;
 
-    /// Return `Z3_TRUE` if `can` be used as value in the Z3 real algebraic
+    /// Return `Z3_TRUE` if `a` can be used as value in the Z3 real algebraic
     /// number package.
     pub fn Z3_algebraic_is_value(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
