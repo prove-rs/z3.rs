@@ -3788,22 +3788,43 @@ extern "C" {
     /// Convert an `ast` into an `Z3_App`. This is just type casting.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::App`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::App`](enum.AstKind.html#variant.App)
     pub fn Z3_to_app(c: Z3_context, a: Z3_ast) -> Z3_app;
 
-    /// Convert an AST into a `Z3_fund_decl`. This is just type casting.
+    /// Convert an AST into a `Z3_func_decl`. This is just type casting.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::FuncDecl`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::FuncDecl`](enum.AstKind.html#variant.FuncDecl)
     pub fn Z3_to_func_decl(c: Z3_context, a: Z3_ast) -> Z3_func_decl;
 
     /// Return numeral value, as a string of a numeric constant term
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_string(c: Z3_context, a: Z3_ast) -> Z3_string;
 
     /// Return numeral as a string in decimal notation.
     /// The result has at most `precision` decimal places.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral || Z3_is_algebraic_number(c, a)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`Z3_is_algebraic_number`](fn.Z3_is_algebraic_number.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_decimal_string(
         c: Z3_context,
         a: Z3_ast,
@@ -3813,11 +3834,21 @@ extern "C" {
     /// Return the numerator (as a numeral AST) of a numeral AST of sort Real.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numerator(c: Z3_context, a: Z3_ast) -> Z3_ast;
 
     /// Return the denominator (as a numeral AST) of a numeral AST of sort Real.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_denominator(c: Z3_context, a: Z3_ast) -> Z3_ast;
 
     /// Return numeral value, as a pair of 64 bit numbers if the representation fits.
@@ -3830,6 +3861,11 @@ extern "C" {
     /// Return `Z3_TRUE` if the numeral value fits in 64 bit numerals, `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_get_ast_kind(a) == AstKind::Numeral`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_small(
         c: Z3_context,
         a: Z3_ast,
@@ -3845,6 +3881,8 @@ extern "C" {
     /// See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_int(c: Z3_context, v: Z3_ast, i: *mut ::std::os::raw::c_int) -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
@@ -3856,6 +3894,8 @@ extern "C" {
     /// See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_uint(c: Z3_context, v: Z3_ast, u: *mut ::std::os::raw::c_uint)
         -> Z3_bool;
 
@@ -3868,6 +3908,8 @@ extern "C" {
     /// See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_uint64(
         c: Z3_context,
         v: Z3_ast,
@@ -3875,7 +3917,7 @@ extern "C" {
     ) -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
-    /// but only succeeds if the value can fit in a machine __int64 int.
+    /// but only succeeds if the value can fit in a machine `__int64` int.
     /// Return `Z3_TRUE` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
@@ -3883,6 +3925,8 @@ extern "C" {
     /// See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_int64(
         c: Z3_context,
         v: Z3_ast,
@@ -3891,13 +3935,15 @@ extern "C" {
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit as a rational number as
-    /// machine __int64 int. Return `Z3_TRUE` if the call succeeded.
+    /// machine `__int64` int. Return `Z3_TRUE` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
     /// See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
     pub fn Z3_get_numeral_rational_int64(
         c: Z3_context,
         v: Z3_ast,
@@ -3911,6 +3957,10 @@ extern "C" {
     /// The result is a numeral AST of sort Real.
     ///
     /// * Precondition: `Z3_is_algebraic_number(c, a)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_is_algebraic_number`](fn.Z3_is_algebraic_number.html)
     pub fn Z3_get_algebraic_number_lower(
         c: Z3_context,
         a: Z3_ast,
@@ -3923,6 +3973,10 @@ extern "C" {
     /// The result is a numeral AST of sort Real.
     ///
     /// * Precondition: `Z3_is_algebraic_number(c, a)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_is_algebraic_number`](fn.Z3_is_algebraic_number.html)
     pub fn Z3_get_algebraic_number_upper(
         c: Z3_context,
         a: Z3_ast,
@@ -5197,21 +5251,37 @@ extern "C" {
     /// Return `Z3_TRUE` if `a` is positive, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_pos(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a` is negative, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_neg(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a` is zero, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_zero(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
     /// Return 1 if `a` is positive, 0 if `a` is zero, and -1 if `a` is negative.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_sign(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_int;
 
     /// Return the value `a + b`.
@@ -5219,6 +5289,10 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_add(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
 
     /// Return the value `a - b`.
@@ -5226,6 +5300,10 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_sub(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
 
     /// Return the value `a * b`.
@@ -5233,6 +5311,10 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_mul(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
 
     /// Return the value `a / b`.
@@ -5241,6 +5323,11 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Precondition: `!Z3_algebraic_is_zero(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
+    /// - [`Z3_algebraic_is_zero`](fn.Z3_algebraic_is_zero.html)
     pub fn Z3_algebraic_div(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
 
     /// Return the `a^(1/k)`
@@ -5248,48 +5335,81 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: k is even => `!Z3_algebraic_is_neg(c, a)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_neg`](fn.Z3_algebraic_is_neg.html)
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_root(c: Z3_context, a: Z3_ast, k: ::std::os::raw::c_uint) -> Z3_ast;
 
     /// Return the `a^k`
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_power(c: Z3_context, a: Z3_ast, k: ::std::os::raw::c_uint) -> Z3_ast;
 
     /// Return `Z3_TRUE` if `a < b`, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_lt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a > b`, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_gt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a <= b`, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_le(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a >= b`, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_ge(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a == b`, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_eq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
     /// Return `Z3_TRUE` if `a != b`, and `Z3_FALSE` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_neq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
     /// Given a multivariate polynomial `p(x_0, ..., x_{n-1}, x_n)`, returns the
@@ -5298,6 +5418,10 @@ extern "C" {
     /// * Precondition: `p` is a Z3 expression that contains only arithmetic terms and free variables.
     /// * Precondition: `forall i in [0, n) Z3_algebraic_is_value(c, a[i])`
     /// * Postcondition: `forall r in result Z3_algebraic_is_value(c, result)`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_roots(
         c: Z3_context,
         p: Z3_ast,
@@ -5310,6 +5434,10 @@ extern "C" {
     ///
     /// * Precondition: `p` is a Z3 expression that contains only arithmetic terms and free variables.
     /// * Precondition: `forall i in [0, n) Z3_algebraic_is_value(c, a[i])`
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_eval(
         c: Z3_context,
         p: Z3_ast,
