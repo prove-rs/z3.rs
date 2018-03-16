@@ -14,7 +14,7 @@ impl Context {
                 let p = Z3_mk_context_rc(cfg.z3_cfg);
                 debug!("new context {:p}", p);
                 p
-            }
+            },
         }
     }
 
@@ -36,9 +36,7 @@ impl Context {
         Sort::bitvector(self, sz)
     }
 
-    pub fn array_sort<'ctx>(&'ctx self,
-                            domain: &Sort<'ctx>,
-                            range: &Sort<'ctx>) -> Sort<'ctx> {
+    pub fn array_sort<'ctx>(&'ctx self, domain: &Sort<'ctx>, range: &Sort<'ctx>) -> Sort<'ctx> {
         Sort::array(self, domain, range)
     }
 

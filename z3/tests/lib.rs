@@ -1,6 +1,6 @@
+extern crate env_logger;
 #[macro_use]
 extern crate log;
-extern crate env_logger;
 
 extern crate z3;
 use z3::*;
@@ -69,4 +69,3 @@ fn test_solving_for_model() {
     assert!(yv % 7 == 2);
     assert!(xv + 2 > 7);
 }
-

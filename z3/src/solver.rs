@@ -14,24 +14,21 @@ impl<'ctx> Solver<'ctx> {
                 let s = Z3_mk_solver(ctx.z3_ctx);
                 Z3_solver_inc_ref(ctx.z3_ctx, s);
                 s
-            }
+            },
         }
     }
 
     pub fn assert(&self, ast: &Ast<'ctx>) {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_solver_assert(self.ctx.z3_ctx,
-                             self.z3_slv,
-                             ast.z3_ast);
+            Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast);
         }
     }
 
     pub fn check(&self) -> bool {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_solver_check(self.ctx.z3_ctx,
-                            self.z3_slv) == Z3_TRUE
+            Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_TRUE
         }
     }
 
@@ -39,7 +36,6 @@ impl<'ctx> Solver<'ctx> {
         Model::of_solver(self)
     }
 }
-
 
 impl<'ctx> Drop for Solver<'ctx> {
     fn drop(&mut self) {

@@ -5,7 +5,7 @@ use Symbol;
 use Ast;
 use Z3_MUTEX;
 use std::hash::{Hash, Hasher};
-use std::cmp::{PartialEq, Eq};
+use std::cmp::{Eq, PartialEq};
 use std::ffi::CString;
 
 macro_rules! unop {
@@ -58,7 +58,6 @@ macro_rules! varop {
 }
 
 impl<'ctx> Ast<'ctx> {
-
     pub fn new(ctx: &Context, ast: Z3_ast) -> Ast {
         assert!(!ast.is_null());
         Ast {
@@ -68,21 +67,18 @@ impl<'ctx> Ast<'ctx> {
                 let guard = Z3_MUTEX.lock().unwrap();
                 Z3_inc_ref(ctx.z3_ctx, ast);
                 ast
-            }
+            },
         }
     }
 
-    pub fn new_const(sym: &Symbol<'ctx>,
-                     sort: &Sort<'ctx>) -> Ast<'ctx> {
+    pub fn new_const(sym: &Symbol<'ctx>, sort: &Sort<'ctx>) -> Ast<'ctx> {
         Ast::new(sym.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(sym.ctx.z3_ctx, sym.z3_sym, sort.z3_sort)
         })
     }
 
-    pub fn fresh_const(ctx: &'ctx Context,
-                       prefix: &str,
-                       sort: &Sort<'ctx>) -> Ast<'ctx> {
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Ast<'ctx> {
         Ast::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
@@ -92,39 +88,41 @@ impl<'ctx> Ast<'ctx> {
     }
 
     pub fn from_bool(ctx: &'ctx Context, b: bool) -> Ast<'ctx> {
-            Ast::new(ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                if b {
-                    Z3_mk_true(ctx.z3_ctx)
-                } else {
-                    Z3_mk_false(ctx.z3_ctx)
-                }
-            })
+        Ast::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            if b {
+                Z3_mk_true(ctx.z3_ctx)
+            } else {
+                Z3_mk_false(ctx.z3_ctx)
+            }
+        })
     }
 
     pub fn from_i64(ctx: &'ctx Context, i: i64) -> Ast<'ctx> {
-            Ast::new(ctx, unsafe {
-                let sort = ctx.int_sort();
-                let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)
-            })
+        Ast::new(ctx, unsafe {
+            let sort = ctx.int_sort();
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)
+        })
     }
 
     pub fn from_u64(ctx: &'ctx Context, u: u64) -> Ast<'ctx> {
-            Ast::new(ctx, unsafe {
-                let sort = ctx.int_sort();
-                let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)
-            })
+        Ast::new(ctx, unsafe {
+            let sort = ctx.int_sort();
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)
+        })
     }
 
     pub fn from_real(ctx: &'ctx Context, num: i32, den: i32) -> Ast<'ctx> {
-            Ast::new(ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_real(ctx.z3_ctx,
-                           num as ::std::os::raw::c_int,
-                           den as ::std::os::raw::c_int)
-            })
+        Ast::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_real(
+                ctx.z3_ctx,
+                num as ::std::os::raw::c_int,
+                den as ::std::os::raw::c_int,
+            )
+        })
     }
 
     pub fn as_bool(&self) -> Option<bool> {
@@ -133,7 +131,7 @@ impl<'ctx> Ast<'ctx> {
             match Z3_get_bool_value(self.ctx.z3_ctx, self.z3_ast) {
                 Z3_L_TRUE => Some(true),
                 Z3_L_FALSE => Some(false),
-                _ => None
+                _ => None,
             }
         }
     }
@@ -141,9 +139,8 @@ impl<'ctx> Ast<'ctx> {
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp : ::std::os::raw::c_longlong = 0;
-            if Z3_TRUE == Z3_get_numeral_int64(self.ctx.z3_ctx,
-                                               self.z3_ast, &mut tmp) {
+            let mut tmp: ::std::os::raw::c_longlong = 0;
+            if Z3_TRUE == Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -154,9 +151,8 @@ impl<'ctx> Ast<'ctx> {
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp : ::std::os::raw::c_ulonglong = 0;
-            if Z3_TRUE == Z3_get_numeral_uint64(self.ctx.z3_ctx,
-                                                self.z3_ast, &mut tmp) {
+            let mut tmp: ::std::os::raw::c_ulonglong = 0;
+            if Z3_TRUE == Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -164,15 +160,13 @@ impl<'ctx> Ast<'ctx> {
         }
     }
 
-    pub fn as_real(&self) -> Option<(i64,i64)> {
+    pub fn as_real(&self) -> Option<(i64, i64)> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut num : i64 = 0;
-            let mut den : i64 = 0;
-            if Z3_TRUE == Z3_get_numeral_small(self.ctx.z3_ctx,
-                                               self.z3_ast,
-                                               &mut num, &mut den) {
-                Some((num,den))
+            let mut num: i64 = 0;
+            let mut den: i64 = 0;
+            if Z3_TRUE == Z3_get_numeral_small(self.ctx.z3_ctx, self.z3_ast, &mut num, &mut den) {
+                Some((num, den))
             } else {
                 None
             }
@@ -275,12 +269,8 @@ impl<'ctx> Hash for Ast<'ctx> {
 
 impl<'ctx> PartialEq<Ast<'ctx>> for Ast<'ctx> {
     fn eq(&self, other: &Ast<'ctx>) -> bool {
-        unsafe {
-            Z3_TRUE == Z3_is_eq_ast(self.ctx.z3_ctx,
-                                    self.z3_ast,
-                                    other.z3_ast)
-        }
+        unsafe { Z3_TRUE == Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
     }
 }
 
-impl<'ctx> Eq for Ast<'ctx> { }
+impl<'ctx> Eq for Ast<'ctx> {}
