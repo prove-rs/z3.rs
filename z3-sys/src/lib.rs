@@ -2100,9 +2100,9 @@ extern "C" {
     ///
     /// This function is a shorthand for:
     ///
-    /// ```ignore
+    /// ```c
     /// Z3_func_decl d = Z3_mk_func_decl(c, s, 0, 0, ty);
-    /// Z3_ast n            = Z3_mk_app(c, d, 0, 0);
+    /// Z3_ast n             = Z3_mk_app(c, d, 0, 0);
     /// ```
     ///
     /// See also:
@@ -2132,7 +2132,7 @@ extern "C" {
     /// Declare and create a fresh constant.
     ///
     /// This function is a shorthand for:
-    /// ```ignore
+    /// ```c
     /// Z3_func_decl d = Z3_mk_fresh_func_decl(c, prefix, 0, 0, ty);
     /// Z3_ast n = Z3_mk_app(c, d, 0, 0);
     /// ```
@@ -2466,7 +2466,7 @@ extern "C" {
     /// Two's complement signed less than.
     ///
     /// It abbreviates:
-    /// ```ignore
+    /// ```text
     /// (or (and (= (extract[|m-1|:|m-1|] t1) bit1)
     /// (= (extract[|m-1|:|m-1|] t2) bit0))
     /// (and (= (extract[|m-1|:|m-1|] t1) (extract[|m-1|:|m-1|] t2))
@@ -3092,7 +3092,7 @@ extern "C" {
     /// the meaning of de-Bruijn indices by indicating the compilation process from
     /// non-de-Bruijn formulas to de-Bruijn format.
     ///
-    /// ```ignore
+    /// ```text
     /// abs(forall (x1) phi) = forall (x1) abs1(phi, x1, 0)
     /// abs(forall (x1, x2) phi) = abs(forall (x1) abs(forall (x2) phi))
     /// abs1(x, x, n) = b_n
@@ -5439,7 +5439,7 @@ extern "C" {
     /// Add a universal Horn clause as a named rule.
     /// The `horn_rule` should be of the form:
     ///
-    /// ```ignore
+    /// ```text
     /// horn_rule ::= (forall (bound-vars) horn_rule)
     /// |  (=> atoms horn_rule)
     /// |  atom
@@ -5475,7 +5475,7 @@ extern "C" {
 
     /// Pose a query against the asserted rules.
     ///
-    /// ```ignore
+    /// ```text
     /// query ::= (exists (bound-vars) query)
     /// |  literals
     /// ```
@@ -6811,7 +6811,7 @@ extern "C" {
 
     /// Pose a query against the asserted rules at the given level.
     ///
-    /// ```ignore
+    /// ```text
     /// query ::= (exists (bound-vars) query)
     /// |  literals
     /// ```
