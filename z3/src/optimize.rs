@@ -42,7 +42,7 @@ impl<'ctx> Optimize<'ctx> {
     pub fn check(&self) -> bool {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_optimize_check(self.ctx.z3_ctx, self.z3_opt) == Z3_TRUE
+            Z3_optimize_check(self.ctx.z3_ctx, self.z3_opt) == Z3_L_TRUE
         }
     }
 

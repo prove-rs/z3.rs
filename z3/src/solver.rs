@@ -28,7 +28,7 @@ impl<'ctx> Solver<'ctx> {
     pub fn check(&self) -> bool {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_TRUE
+            Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_L_TRUE
         }
     }
 
