@@ -5,8 +5,8 @@
 
 mod generated;
 
-pub const Z3_TRUE: i32 = 1;
-pub const Z3_FALSE: i32 = 0;
+pub const Z3_TRUE: bool = true;
+pub const Z3_FALSE: bool = false;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -265,8 +265,8 @@ pub struct _Z3_rcf_num {
 }
 pub type Z3_rcf_num = *mut _Z3_rcf_num;
 
-/// Z3 Boolean type. It is just an alias for `int`.
-pub type Z3_bool = ::std::os::raw::c_int;
+/// Z3 Boolean type. It is just an alias for `bool`.
+pub type Z3_bool = bool;
 
 /// Z3 string type. It is just an alias for `const char *`.
 pub type Z3_string = *const ::std::os::raw::c_char;
@@ -740,8 +740,7 @@ pub enum DeclKind {
     /// [trans T1 T2]: (R t u)
     /// ```
     PR_TRANSITIVITY = generated::Z3_decl_kind::Z3_OP_PR_TRANSITIVITY as u32,
-    /// Condensed transitivity proof. This proof object is only
-    /// used if the parameter `PROOF_MODE` is `1`.
+    /// Condensed transitivity proof.
     ///
     /// It combines several symmetry and transitivity proofs.
     ///
@@ -842,28 +841,18 @@ pub enum DeclKind {
     PR_REWRITE = generated::Z3_decl_kind::Z3_OP_PR_REWRITE as u32,
     /// A proof for rewriting an expression `t` into an expression `s`.
     ///
-    /// This proof object is used if the parameter `PROOF_MODE` is `1`.
-    ///
-    /// This proof object can have n antecedents. The antecedents are
+    /// This proof object can have `n` antecedents. The antecedents are
     /// proofs for equalities used as substitution rules.
     ///
-    /// The object is also used in a few cases if the parameter `PROOF_MODE` is `2`.
-    /// The cases are:
+    /// The object is also used in a few cases. The cases are:
     ///
     /// - When applying contextual simplification `(CONTEXT_SIMPLIFIER=true)`.
     /// - When converting bit-vectors to Booleans `(BIT2BOOL=true)`.
-    /// - When pulling `ite` expression up `(PULL_CHEAP_ITE_TREES=true)`.
     PR_REWRITE_STAR = generated::Z3_decl_kind::Z3_OP_PR_REWRITE_STAR as u32,
     /// A proof for `(iff (f (forall (x) q(x)) r) (forall (x) (f (q x) r)))`.
     ///
     /// This proof object has no antecedents.
     PR_PULL_QUANT = generated::Z3_decl_kind::Z3_OP_PR_PULL_QUANT as u32,
-    /// A proof for `(iff P Q)` where `Q` is in prenex normal form.
-    ///
-    /// This proof object is only used if the parameter `PROOF_MODE` is `1`.
-    ///
-    /// This proof object has no antecedents.
-    PR_PULL_QUANT_STAR = generated::Z3_decl_kind::Z3_OP_PR_PULL_QUANT_STAR as u32,
     /// A proof for:
     ///
     /// ```text
@@ -1077,18 +1066,6 @@ pub enum DeclKind {
     /// (and (or r_1 r_2) (or r_1' r_2')))
     /// ```
     PR_NNF_NEG = generated::Z3_decl_kind::Z3_OP_PR_NNF_NEG as u32,
-    /// A proof for `(~ P Q)` where `Q` is in negation normal form.
-    ///
-    /// This proof object is only used if the parameter `PROOF_MODE` is `1`.
-    ///
-    /// This proof object may have n antecedents. Each antecedent is a `PR_DEF_INTRO`.
-    PR_NNF_STAR = generated::Z3_decl_kind::Z3_OP_PR_NNF_STAR as u32,
-    /// A proof for `(~ P Q)` where `Q` is in conjunctive normal form.
-    ///
-    /// This proof object is only used if the parameter `PROOF_MODE` is `1`.
-    ///
-    /// This proof object may have n antecedents. Each antecedent is a `PR_DEF_INTRO`.
-    PR_CNF_STAR = generated::Z3_decl_kind::Z3_OP_PR_CNF_STAR as u32,
     /// Proof for:
     ///
     /// ```text
@@ -1281,6 +1258,8 @@ pub enum DeclKind {
     DT_CONSTRUCTOR = generated::Z3_decl_kind::Z3_OP_DT_CONSTRUCTOR as u32,
     /// Datatype recognizer.
     DT_RECOGNISER = generated::Z3_decl_kind::Z3_OP_DT_RECOGNISER as u32,
+    /// Datatype recognizer.
+    DT_IS = generated::Z3_decl_kind::Z3_OP_DT_IS as u32,
     /// Datatype accessor.
     DT_ACCESSOR = generated::Z3_decl_kind::Z3_OP_DT_ACCESSOR as u32,
     /// Datatype field update.
@@ -1865,11 +1844,7 @@ extern "C" {
     /// See also:
     ///
     /// - [`Z3_get_finite_domain_sort_size`](fn.Z3_get_finite_domain_sort_size.html)
-    pub fn Z3_mk_finite_domain_sort(
-        c: Z3_context,
-        name: Z3_symbol,
-        size: ::std::os::raw::c_ulonglong,
-    ) -> Z3_sort;
+    pub fn Z3_mk_finite_domain_sort(c: Z3_context, name: Z3_symbol, size: u64) -> Z3_sort;
 
     /// Create an array type.
     ///
@@ -2603,9 +2578,8 @@ extern "C" {
 
     /// Create an `n` bit bit-vector from the integer argument `t1`.
     ///
-    /// NB. This function is essentially treated as uninterpreted.
-    /// So you cannot expect Z3 to precisely reflect the semantics of this function
-    /// when solving constraints with this function.
+    /// The resulting bit-vector has `n` bits, where the i'th bit (counting
+    /// from `0` to `n-1`) is `1` if `(t1 div 2^i) mod 2` is `1`.
     ///
     /// The node `t1` must have integer sort.
     pub fn Z3_mk_int2bv(c: Z3_context, n: ::std::os::raw::c_uint, t1: Z3_ast) -> Z3_ast;
@@ -2615,10 +2589,6 @@ extern "C" {
     /// So the result is non-negative
     /// and in the range `[0..2^N-1]`, where N are the number of bits in `t1`.
     /// If `is_signed` is true, `t1` is treated as a signed bit-vector.
-    ///
-    /// This function is essentially treated as uninterpreted.
-    /// So you cannot expect Z3 to precisely reflect the semantics of this function
-    /// when solving constraints with this function.
     ///
     /// The node `t1` must have a bit-vector sort.
     pub fn Z3_mk_bv2int(c: Z3_context, t1: Z3_ast, is_signed: Z3_bool) -> Z3_ast;
@@ -2880,27 +2850,23 @@ extern "C" {
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
-    /// This function can be use to create numerals that fit in a machine __int64 integer.
+    /// This function can be use to create numerals that fit in a machine `int64_t` integer.
     /// It is slightly faster than [`Z3_mk_numeral`](fn.Z3_mk_numeral.html) since it is not necessary to parse a string.
     ///
     /// See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
-    pub fn Z3_mk_int64(c: Z3_context, v: ::std::os::raw::c_longlong, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_int64(c: Z3_context, v: i64, ty: Z3_sort) -> Z3_ast;
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
-    /// This function can be use to create numerals that fit in a machine __uint64 integer.
+    /// This function can be use to create numerals that fit in a machine `uint64_t` integer.
     /// It is slightly faster than [`Z3_mk_numeral`](fn.Z3_mk_numeral.html) since it is not necessary to parse a string.
     ///
     /// See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
-    pub fn Z3_mk_unsigned_int64(
-        c: Z3_context,
-        v: ::std::os::raw::c_ulonglong,
-        ty: Z3_sort,
-    ) -> Z3_ast;
+    pub fn Z3_mk_unsigned_int64(c: Z3_context, v: u64, ty: Z3_sort) -> Z3_ast;
 
     /// create a bit-vector numeral from a vector of Booleans.
     ///
@@ -3378,11 +3344,7 @@ extern "C" {
 
     /// Store the size of the sort in `r`. Return `Z3_FALSE` if the call failed.
     /// That is, `Z3_get_sort_kind(s) == SortKind::FiniteDomain`
-    pub fn Z3_get_finite_domain_sort_size(
-        c: Z3_context,
-        s: Z3_sort,
-        r: *mut ::std::os::raw::c_ulonglong,
-    ) -> Z3_bool;
+    pub fn Z3_get_finite_domain_sort_size(c: Z3_context, s: Z3_sort, r: *mut u64) -> Z3_bool;
 
     /// Return the domain of the given array sort.
     ///
@@ -3866,12 +3828,7 @@ extern "C" {
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_small(
-        c: Z3_context,
-        a: Z3_ast,
-        num: *mut ::std::os::raw::c_longlong,
-        den: *mut ::std::os::raw::c_longlong,
-    ) -> Z3_bool;
+    pub fn Z3_get_numeral_small(c: Z3_context, a: Z3_ast, num: *mut i64, den: *mut i64) -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html), but only succeeds if
     /// the value can fit in a machine int. Return `Z3_TRUE` if the call succeeded.
@@ -3900,7 +3857,7 @@ extern "C" {
         -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
-    /// but only succeeds if the value can fit in a machine __uint64 int.
+    /// but only succeeds if the value can fit in a machine `uint64_t` int.
     /// Return `Z3_TRUE` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
@@ -3910,14 +3867,10 @@ extern "C" {
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_uint64(
-        c: Z3_context,
-        v: Z3_ast,
-        u: *mut ::std::os::raw::c_ulonglong,
-    ) -> Z3_bool;
+    pub fn Z3_get_numeral_uint64(c: Z3_context, v: Z3_ast, u: *mut u64) -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
-    /// but only succeeds if the value can fit in a machine `__int64` int.
+    /// but only succeeds if the value can fit in a machine `int64_t` int.
     /// Return `Z3_TRUE` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
@@ -3927,15 +3880,11 @@ extern "C" {
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_int64(
-        c: Z3_context,
-        v: Z3_ast,
-        i: *mut ::std::os::raw::c_longlong,
-    ) -> Z3_bool;
+    pub fn Z3_get_numeral_int64(c: Z3_context, v: Z3_ast, i: *mut i64) -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit as a rational number as
-    /// machine `__int64` int. Return `Z3_TRUE` if the call succeeded.
+    /// machine `int64_t` int. Return `Z3_TRUE` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
@@ -3947,8 +3896,8 @@ extern "C" {
     pub fn Z3_get_numeral_rational_int64(
         c: Z3_context,
         v: Z3_ast,
-        num: *mut ::std::os::raw::c_longlong,
-        den: *mut ::std::os::raw::c_longlong,
+        num: *mut i64,
+        den: *mut i64,
     ) -> Z3_bool;
 
     /// Return a lower bound for the given real algebraic number.
@@ -4264,6 +4213,9 @@ extern "C" {
     /// - [`Z3_model_get_sort`](fn.Z3_model_get_sort.html)
     pub fn Z3_model_get_sort_universe(c: Z3_context, m: Z3_model, s: Z3_sort) -> Z3_ast_vector;
 
+    /// Translate model from context `c` to context `dst`.
+    pub fn Z3_model_translate(c: Z3_context, m: Z3_model, dst: Z3_context) -> Z3_model;
+
     /// The `(_ as-array f)` AST node is a construct for assigning interpretations
     /// for arrays in Z3.
     ///
@@ -4526,6 +4478,12 @@ extern "C" {
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
     ) -> Z3_ast;
+
+    /// Parse and evaluate and SMT-LIB2 command sequence. The state from a previous
+    /// call is saved so the next evaluation builds on top of the previous call.
+    ///
+    /// Returns output generated from processing commands.
+    pub fn Z3_eval_smtlib2_string(arg1: Z3_context, str: Z3_string) -> Z3_string;
 
     /// Retrieve that last error message information generated from parsing.
     pub fn Z3_get_parser_error(c: Z3_context) -> Z3_string;
@@ -4949,7 +4907,7 @@ extern "C" {
     /// Even if the context was created using [`Z3_mk_context`](fn.Z3_mk_context.html) instead of [`Z3_mk_context_rc`](fn.Z3_mk_context_rc.html).
     pub fn Z3_mk_solver_from_tactic(c: Z3_context, t: Z3_tactic) -> Z3_solver;
 
-    /// Copy a solver `s` from the context `source` to a the context `target`.
+    /// Copy a solver `s` from the context `source` to the context `target`.
     pub fn Z3_solver_translate(source: Z3_context, s: Z3_solver, target: Z3_context) -> Z3_solver;
 
     /// Return a string describing all solver available parameters.
@@ -5166,7 +5124,7 @@ extern "C" {
     ) -> f64;
 
     /// Return the estimated allocated memory in bytes.
-    pub fn Z3_get_estimated_alloc_size() -> ::std::os::raw::c_ulonglong;
+    pub fn Z3_get_estimated_alloc_size() -> u64;
 
     /// Return an empty AST vector.
     ///
@@ -6300,13 +6258,13 @@ extern "C" {
     /// - `c`: logical context
     pub fn Z3_mk_fpa_sort_128(c: Z3_context) -> Z3_sort;
 
-    /// Create a floating-point NaN of sort s.
+    /// Create a floating-point NaN of sort `s`.
     ///
     /// - `c`: logical context
     /// - `s`: target sort
     pub fn Z3_mk_fpa_nan(c: Z3_context, s: Z3_sort) -> Z3_ast;
 
-    /// Create a floating-point infinity of sort s.
+    /// Create a floating-point infinity of sort `s`.
     ///
     /// - `c`: logical context
     /// - `s`: target sort
@@ -6315,7 +6273,7 @@ extern "C" {
     /// When `negative` is true, -oo will be generated instead of +oo.
     pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: Z3_bool) -> Z3_ast;
 
-    /// Create a floating-point zero of sort s.
+    /// Create a floating-point zero of sort `s`.
     ///
     /// - `c`: logical context
     /// - `s`: target sort
@@ -6420,8 +6378,8 @@ extern "C" {
     pub fn Z3_mk_fpa_numeral_int64_uint64(
         c: Z3_context,
         sgn: Z3_bool,
-        exp: ::std::os::raw::c_longlong,
-        sig: ::std::os::raw::c_ulonglong,
+        exp: i64,
+        sig: u64,
         ty: Z3_sort,
     ) -> Z3_ast;
 
@@ -6444,7 +6402,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// rm must be of RoundingMode sort, t1 and t2 must have the same FloatingPoint sort.
+    /// `rm` must be of RoundingMode sort, `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_add(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point subtraction
@@ -6454,7 +6412,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// rm must be of RoundingMode sort, t1 and t2 must have the same FloatingPoint sort.
+    /// `rm` must be of RoundingMode sort, `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_sub(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point multiplication
@@ -6464,7 +6422,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// rm must be of RoundingMode sort, t1 and t2 must have the same FloatingPoint sort.
+    /// `rm` must be of RoundingMode sort, `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_mul(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point division
@@ -6474,7 +6432,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort.
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// The nodes rm must be of RoundingMode sort t1 and t2 must have the same FloatingPoint sort.
+    /// The nodes `rm` must be of RoundingMode sort, `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_div(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point fused multiply-add.
@@ -6482,12 +6440,12 @@ extern "C" {
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
     /// - `t1`: term of FloatingPoint sort
-    /// - `t2`: term of FloatingPoint sor
+    /// - `t2`: term of FloatingPoint sort
     /// - `t3`: term of FloatingPoint sort
     ///
     /// The result is round((t1 * t2) + t3)
     ///
-    /// rm must be of RoundingMode sort, t1, t2, and t3 must have the same FloatingPoint sort.
+    /// `rm` must be of RoundingMode sort, `t1`, `t2`, and `t3` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_fma(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast, t3: Z3_ast) -> Z3_ast;
 
     /// Floating-point square root
@@ -6496,7 +6454,7 @@ extern "C" {
     /// - `rm`: term of RoundingMode sort
     /// - `t`: term of FloatingPoint sort
     ///
-    /// rm must be of RoundingMode sort, t must have FloatingPoint sort.
+    /// `rm` must be of RoundingMode sort, `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_sqrt(c: Z3_context, rm: Z3_ast, t: Z3_ast) -> Z3_ast;
 
     /// Floating-point remainder
@@ -6505,7 +6463,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1 and t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_rem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point roundToIntegral. Rounds a floating-point number to
@@ -6515,7 +6473,7 @@ extern "C" {
     /// - `rm`: term of RoundingMode sort
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must be of FloatingPoint sort.
+    /// `t` must be of FloatingPoint sort.
     pub fn Z3_mk_fpa_round_to_integral(c: Z3_context, rm: Z3_ast, t: Z3_ast) -> Z3_ast;
 
     /// Minimum of floating-point numbers.
@@ -6524,7 +6482,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1, t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_min(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Maximum of floating-point numbers.
@@ -6533,7 +6491,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1, t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_max(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point less than or equal.
@@ -6542,7 +6500,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1 and t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_leq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point less than.
@@ -6551,7 +6509,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1 and t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_lt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point greater than or equal.
@@ -6560,7 +6518,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1 and t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_geq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point greater than.
@@ -6569,7 +6527,7 @@ extern "C" {
     /// - `t1`: term of FloatingPoint sort
     /// - `t2`: term of FloatingPoint sort
     ///
-    /// t1 and t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_gt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point equality.
@@ -6580,142 +6538,146 @@ extern "C" {
     ///
     /// Note that this is IEEE 754 equality (as opposed to SMT-LIB =).
     ///
-    /// t1 and t2 must have the same FloatingPoint sort.
+    /// `t1` and `t2` must have the same FloatingPoint sort.
     pub fn Z3_mk_fpa_eq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a normal floating-point number.
+    /// Predicate indicating whether `t` is a normal floating-point number.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_normal(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a subnormal floating-point number.
+    /// Predicate indicating whether `t` is a subnormal floating-point number.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_subnormal(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a floating-point number with zero value, i.e., +zero or -zero.
+    /// Predicate indicating whether `t` is a floating-point number with zero value, i.e., +zero or -zero.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_zero(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a floating-point number representing +oo or -oo.
+    /// Predicate indicating whether `t` is a floating-point number representing +oo or -oo.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_infinite(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a NaN.
+    /// Predicate indicating whether `t` is a NaN.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_nan(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a negative floating-point number.
+    /// Predicate indicating whether `t` is a negative floating-point number.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_negative(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
-    /// Predicate indicating whether t is a positive floating-point number.
+    /// Predicate indicating whether `t` is a positive floating-point number.
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort.
+    /// `t` must have FloatingPoint sort.
     pub fn Z3_mk_fpa_is_positive(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Conversion of a single IEEE 754-2008 bit-vector into a floating-point number.
     ///
-    /// Produces a term that represents the conversion of a bit-vector term bv to a
-    /// floating-point term of sort s.
+    /// Produces a term that represents the conversion of a bit-vector term `bv` to a
+    /// floating-point term of sort `s`.
     ///
     /// - `c`: logical context
     /// - `bv`: a bit-vector term
     /// - `s`: floating-point sort
     ///
-    /// s must be a FloatingPoint sort, t must be of bit-vector sort, and the bit-vector
-    /// size of bv must be equal to ebits+sbits of s. The format of the bit-vector is
+    /// `s` must be a FloatingPoint sort, `t` must be of bit-vector sort, and the bit-vector
+    /// size of `bv` must be equal to ebits+sbits of `s`. The format of the bit-vector is
     /// as defined by the IEEE 754-2008 interchange format.
     pub fn Z3_mk_fpa_to_fp_bv(c: Z3_context, bv: Z3_ast, s: Z3_sort) -> Z3_ast;
 
     /// Conversion of a FloatingPoint term into another term of different FloatingPoint sort.
     ///
-    /// Produces a term that represents the conversion of a floating-point term t to a
-    /// floating-point term of sort s. If necessary, the result will be rounded according
-    /// to rounding mode rm.
+    /// Produces a term that represents the conversion of a floating-point term `t` to a
+    /// floating-point term of sort `s`. If necessary, the result will be rounded according
+    /// to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
     /// - `t`: term of FloatingPoint sort
     /// - `s`: floating-point sort
     ///
-    /// s must be a FloatingPoint sort, rm must be of RoundingMode sort, t must be of floating-point sort.
+    /// `s` must be a FloatingPoint sort, `rm` must be of RoundingMode sort, `t` must be
+    /// of floating-point sort.
     pub fn Z3_mk_fpa_to_fp_float(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
 
     /// Conversion of a term of real sort into a term of FloatingPoint sort.
     ///
-    /// Produces a term that represents the conversion of term t of real sort into a
-    /// floating-point term of sort s. If necessary, the result will be rounded according
-    /// to rounding mode rm.
+    /// Produces a term that represents the conversion of term `t` of real sort into a
+    /// floating-point term of sort `s`. If necessary, the result will be rounded according
+    /// to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
     /// - `t`: term of Real sort
     /// - `s`: floating-point sort
     ///
-    /// s must be a FloatingPoint sort, rm must be of RoundingMode sort, t must be of real sort.
+    /// `s` must be a FloatingPoint sort, `rm` must be of RoundingMode sort, `t` must be of
+    /// Real sort.
     pub fn Z3_mk_fpa_to_fp_real(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
 
     /// Conversion of a 2's complement signed bit-vector term into a term of FloatingPoint sort.
     ///
-    /// Produces a term that represents the conversion of the bit-vector term t into a
-    /// floating-point term of sort s. The bit-vector t is taken to be in signed
+    /// Produces a term that represents the conversion of the bit-vector term `t` into a
+    /// floating-point term of sort `s`. The bit-vector `t` is taken to be in signed
     /// 2's complement format. If necessary, the result will be rounded according
-    /// to rounding mode rm.
+    /// to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
     /// - `t`: term of bit-vector sort
     /// - `s`: floating-point sort
     ///
-    /// s must be a FloatingPoint sort, rm must be of RoundingMode sort, t must be of bit-vector sort.
+    /// `s` must be a FloatingPoint sort, `rm` must be of RoundingMode sort, `t` must be
+    /// of bit-vector sort.
     pub fn Z3_mk_fpa_to_fp_signed(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
 
     /// Conversion of a 2's complement unsigned bit-vector term into a term of FloatingPoint sort.
     ///
-    /// Produces a term that represents the conversion of the bit-vector term t into a
-    /// floating-point term of sort s. The bit-vector t is taken to be in unsigned
+    /// Produces a term that represents the conversion of the bit-vector term `t` into a
+    /// floating-point term of sort `s`. The bit-vector `t` is taken to be in unsigned
     /// 2's complement format. If necessary, the result will be rounded according
-    /// to rounding mode rm.
+    /// to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
     /// - `t`: term of bit-vector sort
     /// - `s`: floating-point sort
     ///
-    /// s must be a FloatingPoint sort, rm must be of RoundingMode sort, t must be of bit-vector sort.
+    /// `s` must be a FloatingPoint sort, `rm` must be of RoundingMode sort, `t` must be
+    /// of bit-vector sort.
     pub fn Z3_mk_fpa_to_fp_unsigned(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
 
     /// Conversion of a floating-point term into an unsigned bit-vector.
     ///
-    /// Produces a term that represents the conversion of the floating-poiunt term t into a
-    /// bit-vector term of size sz in unsigned 2's complement format. If necessary, the result
-    /// will be rounded according to rounding mode rm.
+    /// Produces a term that represents the conversion of the floating-point term `t` into a
+    /// bit-vector term of size `sz` in unsigned 2's complement format. If necessary, the result
+    /// will be rounded according to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
@@ -6730,9 +6692,9 @@ extern "C" {
 
     /// Conversion of a floating-point term into a signed bit-vector.
     ///
-    /// Produces a term that represents the conversion of the floating-poiunt term t into a
-    /// bit-vector term of size sz in signed 2's complement format. If necessary, the result
-    /// will be rounded according to rounding mode rm.
+    /// Produces a term that represents the conversion of the floating-point term `t` into a
+    /// bit-vector term of size `sz` in signed 2's complement format. If necessary, the result
+    /// will be rounded according to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
@@ -6747,7 +6709,7 @@ extern "C" {
 
     /// Conversion of a floating-point term into a real-numbered term.
     ///
-    /// Produces a term that represents the conversion of the floating-poiunt term t into a
+    /// Produces a term that represents the conversion of the floating-point term `t` into a
     /// real number. Note that this type of conversion will often result in non-linear
     /// constraints over real terms.
     ///
@@ -6857,11 +6819,7 @@ extern "C" {
     /// Remarks: This function extracts the significand bits in `t`, without the
     /// hidden bit or normalization. Sets the `ErrorCode::InvalidArg` error code if the
     /// significand does not fit into a uint64. NaN is an invalid argument.
-    pub fn Z3_fpa_get_numeral_significand_uint64(
-        c: Z3_context,
-        t: Z3_ast,
-        n: *mut ::std::os::raw::c_ulonglong,
-    ) -> Z3_bool;
+    pub fn Z3_fpa_get_numeral_significand_uint64(c: Z3_context, t: Z3_ast, n: *mut u64) -> Z3_bool;
 
     /// Return the exponent value of a floating-point numeral as a string.
     ///
@@ -6889,7 +6847,7 @@ extern "C" {
     pub fn Z3_fpa_get_numeral_exponent_int64(
         c: Z3_context,
         t: Z3_ast,
-        n: *mut ::std::os::raw::c_longlong,
+        n: *mut i64,
         biased: Z3_bool,
     ) -> Z3_bool;
 
@@ -6908,7 +6866,7 @@ extern "C" {
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
     ///
-    /// t must have FloatingPoint sort. The size of the resulting bit-vector is automatically
+    /// `t` must have FloatingPoint sort. The size of the resulting bit-vector is automatically
     /// determined.
     ///
     /// Note that IEEE 754-2008 allows multiple different representations of NaN. This conversion
@@ -6919,8 +6877,8 @@ extern "C" {
     /// Conversion of a real-sorted significand and an integer-sorted exponent into a term of FloatingPoint sort.
     ///
     /// Produces a term that represents the conversion of sig * 2^exp into a
-    /// floating-point term of sort s. If necessary, the result will be rounded
-    /// according to rounding mode rm.
+    /// floating-point term of sort `s`. If necessary, the result will be rounded
+    /// according to rounding mode `rm`.
     ///
     /// - `c`: logical context
     /// - `rm`: term of RoundingMode sort
@@ -6928,7 +6886,8 @@ extern "C" {
     /// - `sig`: significand term of Real sort
     /// - `s`: FloatingPoint sort
     ///
-    /// s must be a FloatingPoint sort, rm must be of RoundingMode sort, exp must be of int sort, sig must be of real sort.
+    /// `s` must be a FloatingPoint sort, `rm` must be of RoundingMode sort,
+    /// `exp` must be of int sort, `sig` must be of real sort.
     pub fn Z3_mk_fpa_to_fp_int_real(
         c: Z3_context,
         rm: Z3_ast,
@@ -6945,9 +6904,10 @@ extern "C" {
     /// ```
     ///
     /// query returns
-    /// - Z3_L_FALSE if the query is unsatisfiable.
-    /// - Z3_L_TRUE if the query is satisfiable. Obtain the answer by calling [`Z3_fixedpoint_get_answer`](fn.Z3_fixedpoint_get_answer.html).
-    /// - Z3_L_UNDEF if the query was interrupted, timed out or otherwise failed.
+    /// - `Z3_L_FALSE` if the query is unsatisfiable.
+    /// - `Z3_L_TRUE` if the query is satisfiable. Obtain the answer by
+    ///   calling [`Z3_fixedpoint_get_answer`](fn.Z3_fixedpoint_get_answer.html).
+    /// - `Z3_L_UNDEF` if the query was interrupted, timed out or otherwise failed.
     pub fn Z3_fixedpoint_query_from_lvl(
         c: Z3_context,
         d: Z3_fixedpoint,
@@ -6957,7 +6917,8 @@ extern "C" {
 
     /// Retrieve a bottom-up (from query) sequence of ground facts
     ///
-    /// The previous call to Z3_fixedpoint_query must have returned Z3_L_TRUE.
+    /// The previous call to [`Z3_fixedpoint_query`](fn.Z3_fixedpoint_query.html)
+    /// must have returned `Z3_L_TRUE`.
     pub fn Z3_fixedpoint_get_ground_sat_answer(c: Z3_context, d: Z3_fixedpoint) -> Z3_ast;
 
     /// Obtain the list of rules along the counterexample trace.
