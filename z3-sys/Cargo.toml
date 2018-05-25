@@ -9,7 +9,7 @@ keywords = ["FFI", "SMT", "satisfiability", "solver"]
 categories = ["external-ffi-bindings"]
 readme = "README.md"
 documentation = "https://docs.rs/z3-sys/"
-homepage = "https://github.com/endoli/z3.rs"
-repository = "https://github.com/endoli/z3.rs.git"
+homepage = "https://github.com/prove-rs/z3.rs"
+repository = "https://github.com/prove-rs/z3.rs.git"
 
 [dependencies]
