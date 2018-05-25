@@ -1,6 +1,6 @@
 [package]
 name = "z3-sys"
-version = "0.2.0"
+version = "0.3.0"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>"]
 
 description = "Low-level rust-bindgen bindings for the Z3 SMT solver from Microsoft Research"
