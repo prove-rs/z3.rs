@@ -448,8 +448,6 @@ pub enum DeclKind {
     /// in proof terms. It captures equisatisfiability and equivalence
     /// modulo renamings.
     OEQ = generated::Z3_decl_kind::Z3_OP_OEQ as u32,
-    /// Marks a sub-formula for interpolation.
-    INTERP = generated::Z3_decl_kind::Z3_OP_INTERP as u32,
     /// Arithmetic numeral.
     ANUM = generated::Z3_decl_kind::Z3_OP_ANUM as u32,
     /// Arithmetic algebraic numeral. Algebraic numbers are used to
@@ -781,6 +779,15 @@ pub enum DeclKind {
     /// [quant-intro T1]: (~ (forall (x) p) (forall (x) q))
     /// ```
     PR_QUANT_INTRO = generated::Z3_decl_kind::Z3_OP_PR_QUANT_INTRO as u32,
+
+    /// Given a proof `p`, produces a proof of `lambda x . p`, where `x` are free
+    /// variables in `p`.
+    ///
+    /// ```text
+    /// T1: f
+    /// [proof-bind T1] forall (x) f
+    /// ```
+    PR_BIND = generated::Z3_decl_kind::Z3_OP_PR_BIND as u32,
     /// Distributivity proof object.
     ///
     /// Given that `f (= or)` distributes over `g (= and)`, produces a proof for
