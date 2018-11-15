@@ -1,3 +1,5 @@
+use std::ffi::CString;
+use std::fmt;
 use z3_sys::*;
 use Ast;
 use Context;
@@ -34,6 +36,21 @@ impl<'ctx> Solver<'ctx> {
 
     pub fn get_model(&self) -> Model<'ctx> {
         Model::of_solver(self)
+    }
+}
+
+impl<'ctx> fmt::Display for Solver<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let p = unsafe {
+            CString::from_raw(Z3_solver_to_string(self.ctx.z3_ctx, self.z3_slv) as *mut i8)
+        };
+        if p.as_ptr().is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match p.into_string() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => return Result::Err(fmt::Error),
+        }
     }
 }
 

@@ -1,3 +1,5 @@
+use std::ffi::CString;
+use std::fmt;
 use z3_sys::*;
 use Context;
 use Sort;
@@ -72,6 +74,21 @@ impl<'ctx> Sort<'ctx> {
                 let guard = Z3_MUTEX.lock().unwrap();
                 Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort)
             },
+        }
+    }
+}
+
+impl<'ctx> fmt::Display for Sort<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let p = unsafe {
+            CString::from_raw(Z3_sort_to_string(self.ctx.z3_ctx, self.z3_sort) as *mut i8)
+        };
+        if p.as_ptr().is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match p.into_string() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => return Result::Err(fmt::Error),
         }
     }
 }

@@ -1,5 +1,6 @@
 use std::cmp::{Eq, PartialEq};
 use std::ffi::CString;
+use std::fmt;
 use std::hash::{Hash, Hasher};
 use z3_sys::*;
 use Ast;
@@ -246,6 +247,20 @@ impl<'ctx> Ast<'ctx> {
     binop!(set_member, Z3_mk_set_member);
     binop!(set_subset, Z3_mk_set_subset);
     unop!(set_complement, Z3_mk_set_complement);
+}
+
+impl<'ctx> fmt::Display for Ast<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let p =
+            unsafe { CString::from_raw(Z3_ast_to_string(self.ctx.z3_ctx, self.z3_ast) as *mut i8) };
+        if p.as_ptr().is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match p.into_string() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => return Result::Err(fmt::Error),
+        }
+    }
 }
 
 impl<'ctx> Drop for Ast<'ctx> {
