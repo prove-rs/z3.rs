@@ -1,8 +1,8 @@
 use z3_sys::*;
-use Solver;
-use Optimize;
-use Model;
 use Ast;
+use Model;
+use Optimize;
+use Solver;
 use Z3_MUTEX;
 
 impl<'ctx> Model<'ctx> {

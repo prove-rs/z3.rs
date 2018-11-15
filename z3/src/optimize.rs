@@ -1,8 +1,8 @@
 use z3_sys::*;
-use Context;
-use Optimize;
-use Model;
 use Ast;
+use Context;
+use Model;
+use Optimize;
 use Z3_MUTEX;
 
 impl<'ctx> Optimize<'ctx> {

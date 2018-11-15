@@ -1,7 +1,7 @@
 use z3_sys::*;
 use Context;
-use Symbol;
 use Sort;
+use Symbol;
 use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {

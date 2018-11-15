@@ -1,8 +1,8 @@
-use z3_sys::*;
-use Symbol;
-use Context;
-use Z3_MUTEX;
 use std::ffi::CString;
+use z3_sys::*;
+use Context;
+use Symbol;
+use Z3_MUTEX;
 
 impl<'ctx> Symbol<'ctx> {
     pub fn from_int(ctx: &Context, i: u32) -> Symbol {

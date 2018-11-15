@@ -1,12 +1,12 @@
+use std::cmp::{Eq, PartialEq};
+use std::ffi::CString;
+use std::hash::{Hash, Hasher};
 use z3_sys::*;
+use Ast;
 use Context;
 use Sort;
 use Symbol;
-use Ast;
 use Z3_MUTEX;
-use std::hash::{Hash, Hasher};
-use std::cmp::{Eq, PartialEq};
-use std::ffi::CString;
 
 macro_rules! unop {
     ( $f:ident, $z3fn:ident ) => {

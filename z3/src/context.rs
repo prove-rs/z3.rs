@@ -1,9 +1,9 @@
 use z3_sys::*;
+use Ast;
 use Config;
 use Context;
 use Sort;
 use Symbol;
-use Ast;
 use Z3_MUTEX;
 
 impl Context {

@@ -7,9 +7,9 @@ extern crate log;
 extern crate semver;
 extern crate z3;
 
-use z3::*;
 use semver::{Version, VersionReq};
 use std::collections::HashMap;
+use z3::*;
 
 struct Spec {
     vers: Version,
@@ -130,9 +130,10 @@ fn test_solve_simple_semver_example() {
             ("0.10.0", &[]),
             ("0.10.1", &[]),
             ("0.10.2", &[]),
-        ].iter()
-            .map(|&(v, r)| Spec::new(v, r))
-            .collect(),
+        ]
+        .iter()
+        .map(|&(v, r)| Spec::new(v, r))
+        .collect(),
     );
 
     smap.insert(
@@ -151,9 +152,10 @@ fn test_solve_simple_semver_example() {
             ("0.9.1", &[("postgres", "^0.9")]),
             ("0.9.2", &[("postgres", "^0.9")]),
             ("0.9.3", &[("postgres", "^0.10")]),
-        ].iter()
-            .map(|&(v, r)| Spec::new(v, r))
-            .collect(),
+        ]
+        .iter()
+        .map(|&(v, r)| Spec::new(v, r))
+        .collect(),
     );
 
     let cfg = Config::new();
@@ -233,9 +235,11 @@ fn test_solve_simple_semver_example() {
                             low,
                             get_version(&smap, r, low as usize).unwrap()
                         );
-                        opt.assert(&k_ast
-                            ._eq(&ctx.from_u64(n as u64))
-                            .implies(&r_ast.ge(&ctx.from_u64(low as u64))))
+                        opt.assert(
+                            &k_ast
+                                ._eq(&ctx.from_u64(n as u64))
+                                .implies(&r_ast.ge(&ctx.from_u64(low as u64))),
+                        )
                     }
                 }
                 match last_version_req_index(&smap, r, req) {
@@ -250,9 +254,11 @@ fn test_solve_simple_semver_example() {
                             high,
                             get_version(&smap, r, high as usize).unwrap()
                         );
-                        opt.assert(&k_ast
-                            ._eq(&ctx.from_u64(n as u64))
-                            .implies(&r_ast.le(&ctx.from_u64(high as u64))))
+                        opt.assert(
+                            &k_ast
+                                ._eq(&ctx.from_u64(n as u64))
+                                .implies(&r_ast.le(&ctx.from_u64(high as u64))),
+                        )
                     }
                 }
             }

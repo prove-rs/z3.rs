@@ -1,7 +1,7 @@
+use std::ffi::CString;
 use z3_sys::*;
 use Config;
 use Z3_MUTEX;
-use std::ffi::CString;
 
 impl Config {
     pub fn new() -> Config {
