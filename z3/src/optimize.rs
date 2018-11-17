@@ -63,7 +63,7 @@ impl<'ctx> fmt::Display for Optimize<'ctx> {
         }
         match p.into_string() {
             Ok(s) => write!(f, "{}", s),
-            Err(_) => return Result::Err(fmt::Error),
+            Err(_) => Result::Err(fmt::Error),
         }
     }
 }
