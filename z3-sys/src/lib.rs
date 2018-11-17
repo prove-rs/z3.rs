@@ -4013,6 +4013,14 @@ extern "C" {
     /// * Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
     pub fn Z3_is_quantifier_forall(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
+    /// Determine if ast is an existential quantifier.
+    pub fn Z3_is_quantifier_exists(c: Z3_context, a: Z3_ast) -> Z3_bool;
+
+    /// Determine if ast is a lambda expression.
+    ///
+    /// * Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
+    pub fn Z3_is_lambda(c: Z3_context, a: Z3_ast) -> Z3_bool;
+
     /// Obtain weight of quantifier.
     ///
     /// * Precondition: `Z3_get_ast_kind(a) == AstKind::Quantifier`
