@@ -3292,6 +3292,61 @@ extern "C" {
         body: Z3_ast,
     ) -> Z3_ast;
 
+    /// Create a lambda expression.
+    ///
+    /// It takes an expression `body` that contains bound variables of
+    /// the same sorts as the sorts listed in the array `sorts`. The
+    /// bound variables are de-Bruijn indices created using [`Z3_mk_bound`](fn.Z3_mk_bound.html).
+    /// The array `decl_names` contains the names that the quantified
+    /// formula uses for the bound variables. Z3 applies the convention
+    /// that the last element in the `decl_names` and `sorts` array
+    /// refers to the variable with index `0`, the second to last element
+    /// of `decl_names` and `sorts` refers to the variable with index `1`, etc.
+    ///
+    /// The sort of the resulting expression is `(Array sorts range)` where
+    /// `range` is the sort of `body`. For example, if the lambda binds two
+    /// variables of sort `Int` and `Bool`, and the `body` has sort `Real`,
+    /// the sort of the expression is `(Array Int Bool Real)`.
+    ///
+    /// - `c`: logical context
+    /// - `num_decls`: number of variables to be bound.
+    /// - `sorts`: the sorts of the bound variables.
+    /// - `decl_names`: names of the bound variables
+    /// - `body`: the body of the lambda expression.
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
+    /// - [`Z3_mk_forall`](fn.Z3_mk_forall.html)
+    /// - [`Z3_mk_lambda_const`](fn.Z3_mk_lambda_const.html)
+    pub fn Z3_mk_lambda(
+        c: Z3_context,
+        num_decls: ::std::os::raw::c_uint,
+        sorts: *const Z3_sort,
+        decl_names: *const Z3_symbol,
+        body: Z3_ast,
+    ) -> Z3_ast;
+
+    /// Create a lambda expression using a list of constants that form the set
+    /// of bound variables
+    ///
+    /// - `c`: logical context.
+    /// - `num_bound`: number of constants to be abstracted into bound variables.
+    /// - `bound`: array of constants to be abstracted into bound variables.
+    /// - `body`: the body of the lambda expression.
+    ///
+    /// See also:
+    ///
+    /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
+    /// - [`Z3_mk_forall`](fn.Z3_mk_forall.html)
+    /// - [`Z3_mk_lambda`](fn.Z3_mk_lambda.html)
+    pub fn Z3_mk_lambda_const(
+        c: Z3_context,
+        num_bound: ::std::os::raw::c_uint,
+        bound: *const Z3_app,
+        body: Z3_ast,
+    ) -> Z3_ast;
+
     /// Return `SymbolKind::Int` if the symbol was constructed
     /// using [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html),
     /// and `SymbolKind::String` if the symbol
