@@ -4699,8 +4699,21 @@ extern "C" {
     /// Copy a goal `g` from the context `source` to the context `target`.
     pub fn Z3_goal_translate(source: Z3_context, g: Z3_goal, target: Z3_context) -> Z3_goal;
 
+    /// Convert a model of the formulas of a goal to a model of an original goal.
+    /// The model may be null, in which case the returned model is valid if the goal was
+    /// established satisfiable.
+    pub fn Z3_goal_convert_model(c: Z3_context, g: Z3_goal, m: Z3_model) -> Z3_model;
+
     /// Convert a goal into a string.
     pub fn Z3_goal_to_string(c: Z3_context, g: Z3_goal) -> Z3_string;
+
+    /// Convert a goal into a DIMACS formatted string.
+    /// The goal must be in CNF. You can convert a goal to CNF
+    /// by applying the tseitin-cnf tactic. Bit-vectors are not automatically
+    /// converted to Booleans either, so the if caller intends to
+    /// preserve satisfiability, it should apply bit-blasting tactics.
+    /// Quantifiers and theory atoms will not be encoded.
+    pub fn Z3_goal_to_dimacs_string(c: Z3_context, g: Z3_goal) -> Z3_string;
 
     /// Return a tactic associated with the given name.
     ///
@@ -4975,6 +4988,9 @@ extern "C" {
     /// Copy a solver `s` from the context `source` to the context `target`.
     pub fn Z3_solver_translate(source: Z3_context, s: Z3_solver, target: Z3_context) -> Z3_solver;
 
+    /// Ad-hoc method for importing model conversion from solver.
+    pub fn Z3_solver_import_model_converter(ctx: Z3_context, src: Z3_solver, dst: Z3_solver);
+
     /// Return a string describing all solver available parameters.
     pub fn Z3_solver_get_help(c: Z3_context, s: Z3_solver) -> Z3_string;
 
@@ -5040,14 +5056,20 @@ extern "C" {
     /// * Precondition: `p` must be a Boolean constant (aka variable).
     pub fn Z3_solver_assert_and_track(c: Z3_context, s: Z3_solver, a: Z3_ast, p: Z3_ast);
 
-    /// Return the set of asserted formulas on the solver.
-    pub fn Z3_solver_get_assertions(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
-
     /// load solver assertions from a file.
     pub fn Z3_solver_from_file(c: Z3_context, s: Z3_solver, file_name: Z3_string);
 
     /// load solver assertions from a string.
     pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, file_name: Z3_string);
+
+    /// Return the set of asserted formulas on the solver.
+    pub fn Z3_solver_get_assertions(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
+
+    /// Return the set of units modulo model conversion.
+    pub fn Z3_solver_get_units(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
+
+    /// Return the set of non units in the solver state.
+    pub fn Z3_solver_get_non_units(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
 
     /// Check whether the assertions in a given solver are consistent or not.
     ///
@@ -5113,6 +5135,26 @@ extern "C" {
         variables: Z3_ast_vector,
         consequences: Z3_ast_vector,
     ) -> Z3_lbool;
+
+    /// Extract a next cube for a solver. The last cube is the constant `true` or `false`.
+    /// The number of (non-constant) cubes is by default 1. For the sat solver cubing is controlled
+    /// using parameters sat.lookahead.cube.cutoff and sat.lookahead.cube.fraction.
+    ///
+    /// The third argument is a vector of variables that may be used for cubing.
+    /// The contents of the vector is only used in the first call. The initial list of variables
+    /// is used in subsequent calls until it returns the unsatisfiable cube.
+    /// The vector is modified to contain a set of Autarky variables that occur in clauses that
+    /// are affected by the (last literal in the) cube. These variables could be used by a different
+    /// cuber (on a different solver object) for further recursive cubing.
+    ///
+    /// The last argument is a backtracking level. It instructs the cube process to backtrack below
+    /// the indicated level for the next cube.
+    pub fn Z3_solver_cube(
+        c: Z3_context,
+        s: Z3_solver,
+        vars: Z3_ast_vector,
+        backtrack_level: ::std::os::raw::c_uint,
+    ) -> Z3_ast_vector;
 
     /// Retrieve the model for the last [`Z3_solver_check`](fn.Z3_solver_check.html) or [`Z3_solver_check_assumptions`](fn.Z3_solver_check_assumptions.html)
     ///
