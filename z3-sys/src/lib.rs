@@ -4526,11 +4526,6 @@ extern "C" {
     /// Return a string describing the given error code.
     pub fn Z3_get_error_msg(c: Z3_context, err: ErrorCode) -> Z3_string;
 
-    /// Return a string describing the given error code.
-    ///
-    /// Retained function name for backwards compatibility within v4.1
-    pub fn Z3_get_error_msg_ex(c: Z3_context, err: ErrorCode) -> Z3_string;
-
     /// Return Z3 version number information.
     pub fn Z3_get_version(
         major: *mut ::std::os::raw::c_uint,
