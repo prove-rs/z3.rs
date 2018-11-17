@@ -5883,6 +5883,37 @@ extern "C" {
         d: Z3_fixedpoint,
         cb: Z3_fixedpoint_reduce_app_callback_fptr,
     );
+}
+
+pub type Z3_fixedpoint_new_lemma_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        state: *mut ::std::os::raw::c_void,
+        lemma: Z3_ast,
+        level: ::std::os::raw::c_uint,
+    ),
+>;
+pub type Z3_fixedpoint_predecessor_eh =
+    ::std::option::Option<unsafe extern "C" fn(state: *mut ::std::os::raw::c_void)>;
+pub type Z3_fixedpoint_unfold_eh =
+    ::std::option::Option<unsafe extern "C" fn(state: *mut ::std::os::raw::c_void)>;
+
+extern "C" {
+    /// Set export callback for lemmas.
+    pub fn Z3_fixedpoint_add_callback(
+        ctx: Z3_context,
+        f: Z3_fixedpoint,
+        state: *mut ::std::os::raw::c_void,
+        new_lemma_eh: Z3_fixedpoint_new_lemma_eh,
+        predecessor_eh: Z3_fixedpoint_predecessor_eh,
+        unfold_eh: Z3_fixedpoint_unfold_eh,
+    );
+
+    pub fn Z3_fixedpoint_add_constraint(
+        c: Z3_context,
+        d: Z3_fixedpoint,
+        e: Z3_ast,
+        lvl: ::std::os::raw::c_uint,
+    );
 
     /// Create a new optimize context.
     ///
