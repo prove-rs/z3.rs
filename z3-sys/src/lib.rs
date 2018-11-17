@@ -5963,6 +5963,11 @@ extern "C" {
     /// solver, or if the result was `Z3_L_FALSE`.
     pub fn Z3_optimize_get_model(c: Z3_context, o: Z3_optimize) -> Z3_model;
 
+    /// Retrieve the unsat core for the last [`Z3_optimize_check`](fn.Z3_optimize_check.html).
+    ///
+    /// The unsat core is a subset of the assumptions \c a.
+    pub fn Z3_optimize_get_unsat_core(c: Z3_context, o: Z3_optimize) -> Z3_ast_vector;
+
     /// Set parameters on optimization context.
     ///
     /// - `c`: - context
