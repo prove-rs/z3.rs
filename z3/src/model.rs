@@ -31,27 +31,22 @@ impl<'ctx> Model<'ctx> {
     }
 
     pub fn eval(&self, ast: &Ast<'ctx>) -> Option<Ast<'ctx>> {
-        unsafe {
-            let mut tmp: Z3_ast = ast.z3_ast;
-            let res;
-            {
-                let guard = Z3_MUTEX.lock().unwrap();
-                res = Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.z3_ast, Z3_TRUE, &mut tmp)
-            }
-            if res == Z3_TRUE {
-                Some(Ast::new(self.ctx, tmp))
-            } else {
-                None
-            }
+        let mut tmp: Z3_ast = ast.z3_ast;
+        let res = {
+            let guard = Z3_MUTEX.lock().unwrap();
+            unsafe { Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.z3_ast, Z3_TRUE, &mut tmp) }
+        };
+        if res == Z3_TRUE {
+            Some(Ast::new(self.ctx, tmp))
+        } else {
+            None
         }
     }
 }
 
 impl<'ctx> Drop for Model<'ctx> {
     fn drop(&mut self) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
     }
 }

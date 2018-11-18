@@ -131,9 +131,6 @@ impl Context {
 
 impl Drop for Context {
     fn drop(&mut self) {
-        unsafe {
-            debug!("drop context {:p}", self.z3_ctx);
-            Z3_del_context(self.z3_ctx);
-        }
+        unsafe { Z3_del_context(self.z3_ctx) };
     }
 }

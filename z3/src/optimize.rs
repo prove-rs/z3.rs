@@ -21,31 +21,23 @@ impl<'ctx> Optimize<'ctx> {
     }
 
     pub fn assert(&self, ast: &Ast<'ctx>) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
     }
 
     pub fn maximize(&self, ast: &Ast<'ctx>) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
     }
 
     pub fn minimize(&self, ast: &Ast<'ctx>) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
     }
 
     pub fn check(&self) -> bool {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_optimize_check(self.ctx.z3_ctx, self.z3_opt) == Z3_L_TRUE
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_check(self.ctx.z3_ctx, self.z3_opt) == Z3_L_TRUE }
     }
 
     pub fn get_model(&self) -> Model<'ctx> {
@@ -70,9 +62,7 @@ impl<'ctx> fmt::Display for Optimize<'ctx> {
 
 impl<'ctx> Drop for Optimize<'ctx> {
     fn drop(&mut self) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_optimize_dec_ref(self.ctx.z3_ctx, self.z3_opt);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx, self.z3_opt) };
     }
 }

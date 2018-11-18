@@ -19,14 +19,14 @@ impl Config {
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
         self.kvs.push((ks, vs));
+        let guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_set_param_value(
                 self.z3_cfg,
                 self.kvs.last().unwrap().0.as_ptr(),
                 self.kvs.last().unwrap().1.as_ptr(),
-            );
-        }
+            )
+        };
     }
 
     pub fn set_bool_param_value(&mut self, k: &str, v: bool) {
@@ -53,10 +53,7 @@ impl Config {
 
 impl Drop for Config {
     fn drop(&mut self) {
-        unsafe {
-            debug!("drop config {:p}", self.z3_cfg);
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_del_config(self.z3_cfg);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_del_config(self.z3_cfg) };
     }
 }

@@ -21,17 +21,13 @@ impl<'ctx> Solver<'ctx> {
     }
 
     pub fn assert(&self, ast: &Ast<'ctx>) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
     }
 
     pub fn check(&self) -> bool {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_L_TRUE
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_L_TRUE }
     }
 
     pub fn get_model(&self) -> Model<'ctx> {
@@ -56,9 +52,7 @@ impl<'ctx> fmt::Display for Solver<'ctx> {
 
 impl<'ctx> Drop for Solver<'ctx> {
     fn drop(&mut self) {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv);
-        }
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv) };
     }
 }

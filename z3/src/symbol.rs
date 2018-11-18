@@ -9,9 +9,9 @@ impl<'ctx> Symbol<'ctx> {
         Symbol {
             ctx,
             cst: None,
-            z3_sym: unsafe {
+            z3_sym: {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_int_symbol(ctx.z3_ctx, i as ::std::os::raw::c_int)
+                unsafe { Z3_mk_int_symbol(ctx.z3_ctx, i as ::std::os::raw::c_int) }
             },
         }
     }
