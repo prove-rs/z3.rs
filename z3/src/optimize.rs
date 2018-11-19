@@ -54,6 +54,35 @@ impl<'ctx> Optimize<'ctx> {
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
     }
 
+    /// Create a backtracking point.
+    ///
+    /// The optimize solver contains a set of rules, added facts and assertions.
+    /// The set of rules, facts and assertions are restored upon calling
+    /// [`Optimize::pop()`](#method.pop).
+    ///
+    /// # See also:
+    ///
+    /// - [`Optimize::pop()`](#method.pop)
+    pub fn push(&self) {
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_push(self.ctx.z3_ctx, self.z3_opt) };
+    }
+
+    /// Backtrack one level.
+    ///
+    /// # Preconditions:
+    ///
+    /// - The number of calls to [`Optimize::pop`] cannot exceed the number of calls to
+    ///   [`Optimize::push()`](#method.push).
+    ///
+    /// # See also:
+    ///
+    /// - [`Optimize::push()`](#method.push)
+    pub fn pop(&self) {
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_optimize_pop(self.ctx.z3_ctx, self.z3_opt) };
+    }
+
     /// Check consistency and produce optimal values.
     ///
     /// # See also:
