@@ -16,6 +16,14 @@ pub struct _Z3_symbol {
 }
 /// Lisp-like symbol used to name types, constants, and functions.
 /// A symbol can be created using string or integers.
+///
+/// # See also:
+///
+/// - [`Z3_get_symbol_int`](fn.Z3_get_symbol_int.html)
+/// - [`Z3_get_symbol_kind`](fn.Z3_get_symbol_kind.html)
+/// - [`Z3_get_symbol_string`](fn.Z3_get_symbol_string.html)
+/// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
+/// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
 pub type Z3_symbol = *mut _Z3_symbol;
 
 #[doc(hidden)]
@@ -282,7 +290,7 @@ pub type Z3_lbool = i32;
 
 /// The different kinds of symbol.
 /// In Z3, a symbol can be represented using integers and
-/// strings (See [`Z3_get_symbol_kind`](fn.Z3_get_symbol_kind.html)).
+/// strings. See [`Z3_get_symbol_kind`](fn.Z3_get_symbol_kind.html).
 ///
 /// This corresponds to `Z3_symbol_kind` in the C API.
 ///
@@ -290,6 +298,7 @@ pub type Z3_lbool = i32;
 ///
 /// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
 /// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
+/// - [`Z3_symbol`](type.Z3_symbol.html)
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum SymbolKind {
@@ -1795,6 +1804,7 @@ extern "C" {
     ///
     /// See also:
     ///
+    /// - [`Z3_get_symbol_int`](fn.Z3_get_symbol_int.html)
     /// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
     pub fn Z3_mk_int_symbol(c: Z3_context, i: ::std::os::raw::c_int) -> Z3_symbol;
 
@@ -1804,6 +1814,7 @@ extern "C" {
     ///
     /// See also:
     ///
+    /// - [`Z3_get_symbol_string`](fn.Z3_get_symbol_string.html)
     /// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
     pub fn Z3_mk_string_symbol(c: Z3_context, s: Z3_string) -> Z3_symbol;
 
@@ -3355,22 +3366,26 @@ extern "C" {
 
     /// Return the symbol int value.
     ///
-    /// * Precondition: `Z3_get_symbol_kind(s) == SymbolKind::Int`
+    /// # Preconditions:
     ///
-    /// See also:
+    /// - `Z3_get_symbol_kind(s) == SymbolKind::Int`
+    ///
+    /// # See also:
     ///
     /// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
     pub fn Z3_get_symbol_int(c: Z3_context, s: Z3_symbol) -> ::std::os::raw::c_int;
 
     /// Return the symbol name.
     ///
-    /// * Precondition: `Z3_get_symbol_string(s) == SymbolKind::String`
-    ///
     /// Warning: The returned buffer is statically allocated by Z3. It will
     /// be automatically deallocated when [`Z3_del_context`](fn.Z3_del_context.html) is invoked.
     /// So, the buffer is invalidated in the next call to `Z3_get_symbol_string`.
     ///
-    /// See also:
+    /// # Preconditions:
+    ///
+    /// - `Z3_get_symbol_kind(s) == SymbolKind::String`
+    ///
+    /// # See also:
     ///
     /// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
     pub fn Z3_get_symbol_string(c: Z3_context, s: Z3_symbol) -> Z3_string;
