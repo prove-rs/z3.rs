@@ -1584,7 +1584,7 @@ extern "C" {
 
     /// Get a global (or module) parameter.
     ///
-    /// Returns `Z3_FALSE` if the parameter value does not exist.
+    /// Returns `false` if the parameter value does not exist.
     ///
     /// See also:
     ///
@@ -3404,7 +3404,7 @@ extern "C" {
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
     pub fn Z3_get_bv_sort_size(c: Z3_context, t: Z3_sort) -> ::std::os::raw::c_uint;
 
-    /// Store the size of the sort in `r`. Return `Z3_FALSE` if the call failed.
+    /// Store the size of the sort in `r`. Return `false` if the call failed.
     /// That is, `Z3_get_sort_kind(s) == SortKind::FiniteDomain`
     pub fn Z3_get_finite_domain_sort_size(c: Z3_context, s: Z3_sort, r: *mut u64) -> Z3_bool;
 
@@ -3882,7 +3882,7 @@ extern "C" {
     /// - `num`: numerator.
     /// - `den`: denominator.
     ///
-    /// Return `Z3_TRUE` if the numeral value fits in 64 bit numerals, `Z3_FALSE` otherwise.
+    /// Return `true` if the numeral value fits in 64 bit numerals, `false` otherwise.
     ///
     /// * Precondition: `Z3_get_ast_kind(a) == AstKind::Numeral`
     ///
@@ -3893,7 +3893,7 @@ extern "C" {
     pub fn Z3_get_numeral_small(c: Z3_context, a: Z3_ast, num: *mut i64, den: *mut i64) -> Z3_bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html), but only succeeds if
-    /// the value can fit in a machine int. Return `Z3_TRUE` if the call succeeded.
+    /// the value can fit in a machine int. Return `true` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
@@ -3906,7 +3906,7 @@ extern "C" {
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit in a machine unsigned int.
-    /// Return `Z3_TRUE` if the call succeeded.
+    /// Return `true` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
@@ -3920,7 +3920,7 @@ extern "C" {
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit in a machine `uint64_t` int.
-    /// Return `Z3_TRUE` if the call succeeded.
+    /// Return `true` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
@@ -3933,7 +3933,7 @@ extern "C" {
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit in a machine `int64_t` int.
-    /// Return `Z3_TRUE` if the call succeeded.
+    /// Return `true` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
@@ -3946,7 +3946,7 @@ extern "C" {
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit as a rational number as
-    /// machine `int64_t` int. Return `Z3_TRUE` if the call succeeded.
+    /// machine `int64_t` int. Return `true` if the call succeeded.
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
@@ -4161,14 +4161,14 @@ extern "C" {
     pub fn Z3_model_dec_ref(c: Z3_context, m: Z3_model);
 
     /// Evaluate the AST node `t` in the given model.
-    /// Return `Z3_TRUE` if succeeded, and store the result in `v`.
+    /// Return `true` if succeeded, and store the result in `v`.
     ///
-    /// If `model_completion` is `Z3_TRUE`, then Z3 will assign an
+    /// If `model_completion` is `true`, then Z3 will assign an
     /// interpretation for any constant or function that does
     /// not have an interpretation in `m`. These constants and
     /// functions were essentially don't cares.
     ///
-    /// If `model_completion` is `Z3_FALSE`, then Z3 will not assign
+    /// If `model_completion` is `false`, then Z3 will not assign
     /// interpretations to constants for functions that do not have
     /// interpretations in `m`. Evaluation behaves as the identify
     /// function in this case.
@@ -4291,7 +4291,7 @@ extern "C" {
     ///
     /// It is the array such that forall indices `i` we have that
     /// `(select (_ as-array f) i)` is equal to `(f i)`. This procedure
-    /// returns `Z3_TRUE` if the `a` is an `as`-array AST node.
+    /// returns `true` if the `a` is an `as`-array AST node.
     ///
     /// Z3 current solvers have minimal support for `as_array` nodes.
     ///
@@ -5202,12 +5202,12 @@ extern "C" {
     /// * Precondition: `idx < Z3_stats_size(c, s)`
     pub fn Z3_stats_get_key(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> Z3_string;
 
-    /// Return `Z3_TRUE` if the given statistical data is a unsigned integer.
+    /// Return `true` if the given statistical data is a unsigned integer.
     ///
     /// * Precondition: `idx < Z3_stats_size(c, s)`
     pub fn Z3_stats_is_uint(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if the given statistical data is a double.
+    /// Return `true` if the given statistical data is a double.
     ///
     /// * Precondition: `idx < Z3_stats_size(c, s)`
     pub fn Z3_stats_is_double(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> Z3_bool;
@@ -5309,11 +5309,11 @@ extern "C" {
     /// Convert the given map into a string.
     pub fn Z3_ast_map_to_string(c: Z3_context, m: Z3_ast_map) -> Z3_string;
 
-    /// Return `Z3_TRUE` if `a` can be used as value in the Z3 real algebraic
+    /// Return `true` if `a` can be used as value in the Z3 real algebraic
     /// number package.
     pub fn Z3_algebraic_is_value(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a` is positive, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a` is positive, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     ///
@@ -5322,7 +5322,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_pos(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a` is negative, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a` is negative, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     ///
@@ -5331,7 +5331,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_neg(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a` is zero, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a` is zero, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     ///
@@ -5417,7 +5417,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_power(c: Z3_context, a: Z3_ast, k: ::std::os::raw::c_uint) -> Z3_ast;
 
-    /// Return `Z3_TRUE` if `a < b`, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a < b`, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
@@ -5427,7 +5427,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_lt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a > b`, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a > b`, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
@@ -5437,7 +5437,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_gt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a <= b`, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a <= b`, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
@@ -5447,7 +5447,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_le(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a >= b`, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a >= b`, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
@@ -5457,7 +5457,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_ge(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a == b`, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a == b`, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
@@ -5467,7 +5467,7 @@ extern "C" {
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_eq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if `a != b`, and `Z3_FALSE` otherwise.
+    /// Return `true` if `a != b`, and `false` otherwise.
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
@@ -5574,22 +5574,22 @@ extern "C" {
     /// Return the value a^k
     pub fn Z3_rcf_power(c: Z3_context, a: Z3_rcf_num, k: ::std::os::raw::c_uint) -> Z3_rcf_num;
 
-    /// Return `Z3_TRUE` if a < b
+    /// Return `true` if a < b
     pub fn Z3_rcf_lt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if a > b
+    /// Return `true` if a > b
     pub fn Z3_rcf_gt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if a <= b
+    /// Return `true` if a <= b
     pub fn Z3_rcf_le(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if a >= b
+    /// Return `true` if a >= b
     pub fn Z3_rcf_ge(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if a == b
+    /// Return `true` if a == b
     pub fn Z3_rcf_eq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `Z3_TRUE` if a != b
+    /// Return `true` if a != b
     pub fn Z3_rcf_neq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
     /// Convert the RCF numeral into a string.
