@@ -83,8 +83,8 @@ impl<'ctx> Solver<'ctx> {
     /// [`Solver::check_assumptions()`](#method.check_assumptions).
     ///
     /// # Preconditions:
-    /// * `a` must be a Boolean expression
-    /// * `p` must be a Boolean constant (aka variable).
+    /// - `a` must be a Boolean expression
+    /// - `p` must be a Boolean constant (aka variable).
     ///
     /// # See also:
     ///
@@ -149,7 +149,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// # See also:
     ///
-    /// * [`Solver::pop()`](#method.pop)
+    /// - [`Solver::pop()`](#method.pop)
     pub fn push(&self) {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_push(self.ctx.z3_ctx, self.z3_slv) };
@@ -159,7 +159,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// # See also:
     ///
-    /// * [`Solver::push()`](#method.push)
+    /// - [`Solver::push()`](#method.push)
     pub fn pop(&self, n: u32) {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_pop(self.ctx.z3_ctx, self.z3_slv, n) };
