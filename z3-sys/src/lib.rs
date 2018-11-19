@@ -5553,43 +5553,43 @@ extern "C" {
         roots: *mut Z3_rcf_num,
     ) -> ::std::os::raw::c_uint;
 
-    /// Return the value a + b.
+    /// Return the value `a + b`.
     pub fn Z3_rcf_add(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
 
-    /// Return the value a - b.
+    /// Return the value `a - b`.
     pub fn Z3_rcf_sub(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
 
-    /// Return the value a * b.
+    /// Return the value `a * b`.
     pub fn Z3_rcf_mul(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
 
-    /// Return the value a / b.
+    /// Return the value `a / b`.
     pub fn Z3_rcf_div(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
 
-    /// Return the value -a
+    /// Return the value `-a`.
     pub fn Z3_rcf_neg(c: Z3_context, a: Z3_rcf_num) -> Z3_rcf_num;
 
-    /// Return the value 1/a
+    /// Return the value `1/a`.
     pub fn Z3_rcf_inv(c: Z3_context, a: Z3_rcf_num) -> Z3_rcf_num;
 
-    /// Return the value a^k
+    /// Return the value `a^k`.
     pub fn Z3_rcf_power(c: Z3_context, a: Z3_rcf_num, k: ::std::os::raw::c_uint) -> Z3_rcf_num;
 
-    /// Return `true` if a < b
+    /// Return `true` if `a < b`.
     pub fn Z3_rcf_lt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `true` if a > b
+    /// Return `true` if `a > b`.
     pub fn Z3_rcf_gt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `true` if a <= b
+    /// Return `true` if `a <= b`.
     pub fn Z3_rcf_le(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `true` if a >= b
+    /// Return `true` if `a >= b`.
     pub fn Z3_rcf_ge(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `true` if a == b
+    /// Return `true` if `a == b`.
     pub fn Z3_rcf_eq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
-    /// Return `true` if a != b
+    /// Return `true` if `a != b`.
     pub fn Z3_rcf_neq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
 
     /// Convert the RCF numeral into a string.
