@@ -92,3 +92,11 @@ impl<'ctx> fmt::Display for Sort<'ctx> {
         }
     }
 }
+
+impl<'ctx> PartialEq<Sort<'ctx>> for Sort<'ctx> {
+    fn eq(&self, other: &Sort<'ctx>) -> bool {
+        unsafe { Z3_is_eq_sort(self.ctx.z3_ctx, self.z3_sort, other.z3_sort) }
+    }
+}
+
+impl<'ctx> Eq for Sort<'ctx> {}
