@@ -263,6 +263,13 @@ impl<'ctx> fmt::Display for Ast<'ctx> {
     }
 }
 
+impl<'ctx> Clone for Ast<'ctx> {
+    fn clone(&self) -> Ast<'ctx> {
+        debug!("clone ast {:p}", self.z3_ast);
+        Ast::new(self.ctx, self.z3_ast)
+    }
+}
+
 impl<'ctx> Drop for Ast<'ctx> {
     fn drop(&mut self) {
         unsafe {

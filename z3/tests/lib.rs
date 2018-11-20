@@ -69,3 +69,23 @@ fn test_solving_for_model() {
     assert!(yv % 7 == 2);
     assert!(xv + 2 > 7);
 }
+
+#[test]
+fn test_cloning_ast() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ctx.named_int_const("x");
+    let y = x.clone();
+    let zero = ctx.from_i64(0);
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&x._eq(&zero));
+    assert!(solver.check());
+
+    let model = solver.get_model();
+    let xv = model.eval(&x).unwrap().as_i64().unwrap();
+    let yv = model.eval(&y).unwrap().as_i64().unwrap();
+    assert_eq!(xv, 0);
+    assert_eq!(yv, 0);
+}
