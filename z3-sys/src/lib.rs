@@ -4103,6 +4103,10 @@ extern "C" {
     /// It returns an AST object which is equal to the argument.
     /// The returned AST is simplified using algebraic simplification rules,
     /// such as constant propagation (propagating true/false over logical connectives).
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_simplify_ex`](fn.Z3_simplify_ex.html)
     pub fn Z3_simplify(c: Z3_context, a: Z3_ast) -> Z3_ast;
 
     /// Interface to simplifier.
@@ -4111,12 +4115,28 @@ extern "C" {
     /// This procedure is similar to [`Z3_simplify`](fn.Z3_simplify.html),
     /// but the behavior of the simplifier can be configured using the
     /// given parameter set.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_simplify`](fn.Z3_simplify.html)
+    /// - [`Z3_simplify_get_help`](fn.Z3_simplify_get_help.html)
+    /// - [`Z3_simplify_get_param_descrs`](fn.Z3_simplify_get_param_descrs.html)
     pub fn Z3_simplify_ex(c: Z3_context, a: Z3_ast, p: Z3_params) -> Z3_ast;
 
     /// Return a string describing all available parameters.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_simplify_ex`](fn.Z3_simplify_ex.html)
+    /// - [`Z3_simplify_get_param_descrs`](fn.Z3_simplify_get_param_descrs.html)
     pub fn Z3_simplify_get_help(c: Z3_context) -> Z3_string;
 
     /// Return the parameter description set for the simplify procedure.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_simplify_ex`](fn.Z3_simplify_ex.html)
+    /// - [`Z3_simplify_get_help`](fn.Z3_simplify_get_help.html)
     pub fn Z3_simplify_get_param_descrs(c: Z3_context) -> Z3_param_descrs;
 
     /// Update the arguments of term `a` using the arguments `args`.
