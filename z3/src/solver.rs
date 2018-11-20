@@ -33,11 +33,12 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// The function [`Solver::get_model()`] retrieves a model if the
     /// assertions is satisfiable (i.e., the result is
-    /// `Z3_L_TRUE`) and model construction is enabled.
+    /// `Z3_L_TRUE`) and [model construction is enabled].
     /// The function [`Solver::get_model()`] can also be used even
     /// if the result is `Z3_L_UNDEF`, but the returned model
     /// is not guaranteed to satisfy quantified assertions.
     ///
+    /// [model construction is enabled]: struct.Config.html#method.set_model_generation
     /// [`Solver::assert()`]: #method.assert
     /// [`Solver::assert_and_track()`]: #method.assert_and_track
     /// [`Solver::get_model()`]: #method.get_model
@@ -104,20 +105,25 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// The function [`Solver::get_model()`](#method.get_model)
     /// retrieves a model if the assertions is satisfiable (i.e., the
-    /// result is `Z3_L_TRUE`) and model construction is enabled.
+    /// result is `Z3_L_TRUE`) and [model construction is enabled].
     /// Note that if the call returns `Z3_L_UNDEF`, Z3 does not
     /// ensure that calls to [`Solver::get_model()`](#method.get_model)
     /// succeed and any models produced in this case are not guaranteed
     /// to satisfy the assertions.
     ///
     /// The function [`Solver::get_proof()`](#method.get_proof)
-    /// retrieves a proof if proof generation was enabled when the context
+    /// retrieves a proof if [proof generation was enabled] when the context
     /// was created, and the assertions are unsatisfiable (i.e., the result
     /// is `Z3_L_FALSE`).
     ///
     /// # See also:
     ///
+    /// - [`Config::set_model_generation()`](struct.Config.html#method.set_model_generation)
+    /// - [`Config::set_proof_generation()`](struct.Config.html#method.set_proof_generation)
     /// - [`Solver::check_assumptions()`](#method.check_assumptions)
+    ///
+    /// [model construction is enabled]: struct.Config.html#method.set_model_generation
+    /// [proof generation was enabled]: struct.Config.html#method.set_proof_generation
     pub fn check(&self) -> bool {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_L_TRUE }
@@ -178,9 +184,15 @@ impl<'ctx> Solver<'ctx> {
     /// Retrieve the proof for the last [`Solver::check()`](#method.check)
     /// or [`Solver::check_assumptions()`](#method.check_assumptions)
     ///
-    /// The error handler is invoked if proof generation is not enabled,
+    /// The error handler is invoked if [proof generation is not enabled],
     /// or if the commands above were not invoked for the given solver,
     /// or if the result was different from `Z3_L_FALSE`.
+    ///
+    /// # See also:
+    ///
+    /// - [`Config::set_proof_generation()`](struct.Config.html#method.set_proof_generation)
+    ///
+    /// [proof generation is not enabled]: struct.Config.html#method.set_proof_generation
     pub fn get_proof(&self) -> Ast<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
         Ast::new(self.ctx, unsafe {
