@@ -34,9 +34,9 @@ impl<'ctx> Model<'ctx> {
         let mut tmp: Z3_ast = ast.z3_ast;
         let res = {
             let guard = Z3_MUTEX.lock().unwrap();
-            unsafe { Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.z3_ast, Z3_TRUE, &mut tmp) }
+            unsafe { Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.z3_ast, true, &mut tmp) }
         };
-        if res == Z3_TRUE {
+        if res {
             Some(Ast::new(self.ctx, tmp))
         } else {
             None

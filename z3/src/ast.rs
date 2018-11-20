@@ -141,7 +141,7 @@ impl<'ctx> Ast<'ctx> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_TRUE == Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -153,7 +153,7 @@ impl<'ctx> Ast<'ctx> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_TRUE == Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -166,7 +166,7 @@ impl<'ctx> Ast<'ctx> {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut num: i64 = 0;
             let mut den: i64 = 0;
-            if Z3_TRUE == Z3_get_numeral_small(self.ctx.z3_ctx, self.z3_ast, &mut num, &mut den) {
+            if Z3_get_numeral_small(self.ctx.z3_ctx, self.z3_ast, &mut num, &mut den) {
                 Some((num, den))
             } else {
                 None
@@ -291,7 +291,7 @@ impl<'ctx> Hash for Ast<'ctx> {
 
 impl<'ctx> PartialEq<Ast<'ctx>> for Ast<'ctx> {
     fn eq(&self, other: &Ast<'ctx>) -> bool {
-        unsafe { Z3_TRUE == Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
+        unsafe { Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
     }
 }
 
