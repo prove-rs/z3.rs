@@ -17,7 +17,7 @@ log = "0.4"
 lazy_static = "1"
 
 [dev-dependencies]
-env_logger = "0.5"
+env_logger = "0.6"
 semver = "0.9"
 
 [dependencies.z3-sys]
