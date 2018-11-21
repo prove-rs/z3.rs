@@ -5952,8 +5952,15 @@ extern "C" {
 
     /// Create a new optimize context.
     ///
-    /// NOTE: User must use [`Z3_optimize_inc_ref`](fn.Z3_optimize_inc_ref.html) and [`Z3_optimize_dec_ref`](fn.Z3_optimize_dec_ref.html) to manage optimize objects.
-    /// Even if the context was created using [`Z3_mk_context`](fn.Z3_mk_context.html) instead of [`Z3_mk_context_rc`](fn.Z3_mk_context_rc.html).
+    /// NOTE: User must use [`Z3_optimize_inc_ref`]
+    /// and [`Z3_optimize_dec_ref`] to manage optimize objects,
+    /// even if the context was created using [`Z3_mk_context`]
+    /// instead of [`Z3_mk_context_rc`].
+
+    /// [`Z3_mk_context`]: fn.Z3_mk_context.html
+    /// [`Z3_mk_context_rc`]: fn.Z3_mk_context_rc.html
+    /// [`Z3_optimize_dec_ref`]: fn.Z3_optimize_dec_ref.html)
+    /// [`Z3_optimize_inc_ref`]: fn.Z3_optimize_inc_ref.html)
     pub fn Z3_mk_optimize(c: Z3_context) -> Z3_optimize;
 
     /// Increment the reference counter of the given optimize context
@@ -5963,6 +5970,10 @@ extern "C" {
     pub fn Z3_optimize_dec_ref(c: Z3_context, d: Z3_optimize);
 
     /// Assert hard constraint to the optimization context.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_assert_soft`](fn.Z3_optimize_assert_soft.html)
     pub fn Z3_optimize_assert(c: Z3_context, o: Z3_optimize, a: Z3_ast);
 
     /// Assert soft constraint to the optimization context.
@@ -5971,6 +5982,10 @@ extern "C" {
     /// - `a`: - formula
     /// - `weight`: - a positive weight, penalty for violating soft constraint
     /// - `id`: - optional identifier to group soft constraints
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_assert`](fn.Z3_optimize_assert.html)
     pub fn Z3_optimize_assert_soft(
         c: Z3_context,
         o: Z3_optimize,
@@ -5983,6 +5998,10 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `t`: - arithmetical term
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_minimize`](fn.Z3_optimize_minimize.html)
     pub fn Z3_optimize_maximize(c: Z3_context, o: Z3_optimize, t: Z3_ast)
         -> ::std::os::raw::c_uint;
 
@@ -5990,6 +6009,10 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `t`: - arithmetical term
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_maximize`](fn.Z3_optimize_maximize.html)
     pub fn Z3_optimize_minimize(c: Z3_context, o: Z3_optimize, t: Z3_ast)
         -> ::std::os::raw::c_uint;
 
@@ -6015,6 +6038,13 @@ extern "C" {
     /// Check consistency and produce optimal values.
     /// - `c`: - context
     /// - `o`: - optimization context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_reason_unknown`](fn.Z3_optimize_get_reason_unknown.html)
+    /// - [`Z3_optimize_get_model`](fn.Z3_optimize_get_model.html)
+    /// - [`Z3_optimize_get_statistics`](fn.Z3_optimize_get_statistics.html)
+    /// - [`Z3_optimize_get_unsat_core`](fn.Z3_optimize_get_unsat_core.html)
     pub fn Z3_optimize_check(c: Z3_context, o: Z3_optimize) -> Z3_lbool;
 
     /// Retrieve a string that describes the last status returned by [`Z3_optimize_check`](fn.Z3_optimize_check.html).
@@ -6039,12 +6069,22 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `p`: - parameters
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_help`](fn.Z3_optimize_get_help.html)
+    /// - [`Z3_optimize_get_param_descrs`](fn.Z3_optimize_get_param_descrs.html)
     pub fn Z3_optimize_set_params(c: Z3_context, o: Z3_optimize, p: Z3_params);
 
     /// Return the parameter description set for the given optimize object.
     ///
     /// - `c`: - context
     /// - `o`: - optimization context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_help`](fn.Z3_optimize_get_help.html)
+    /// - [`Z3_optimize_set_params`](fn.Z3_optimize_set_params.html)
     pub fn Z3_optimize_get_param_descrs(c: Z3_context, o: Z3_optimize) -> Z3_param_descrs;
 
     /// Retrieve lower bound value or approximation for the i'th optimization objective.
@@ -6052,6 +6092,12 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `idx`: - index of optimization objective
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_upper`](fn.Z3_optimize_get_upper.html)
+    /// - [`Z3_optimize_get_lower_as_vector`](fn.Z3_optimize_get_lower_as_vector.html)
+    /// - [`Z3_optimize_get_upper_as_vector`](fn.Z3_optimize_get_upper_as_vector.html)
     pub fn Z3_optimize_get_lower(
         c: Z3_context,
         o: Z3_optimize,
@@ -6063,6 +6109,12 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `idx`: - index of optimization objective
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_lower`](fn.Z3_optimize_get_lower.html)
+    /// - [`Z3_optimize_get_lower_as_vector`](fn.Z3_optimize_get_lower_as_vector.html)
+    /// - [`Z3_optimize_get_upper_as_vector`](fn.Z3_optimize_get_upper_as_vector.html)
     pub fn Z3_optimize_get_upper(
         c: Z3_context,
         o: Z3_optimize,
@@ -6077,6 +6129,12 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `idx`: - index of optimization objective
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_lower`](fn.Z3_optimize_get_lower.html)
+    /// - [`Z3_optimize_get_upper`](fn.Z3_optimize_get_upper.html)
+    /// - [`Z3_optimize_get_upper_as_vector`](fn.Z3_optimize_get_upper_as_vector.html)
     pub fn Z3_optimize_get_lower_as_vector(
         c: Z3_context,
         o: Z3_optimize,
@@ -6088,6 +6146,12 @@ extern "C" {
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `idx`: - index of optimization objective
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_lower`](fn.Z3_optimize_get_lower.html)
+    /// - [`Z3_optimize_get_upper`](fn.Z3_optimize_get_upper.html)
+    /// - [`Z3_optimize_get_lower_as_vector`](fn.Z3_optimize_get_lower_as_vector.html)
     pub fn Z3_optimize_get_upper_as_vector(
         c: Z3_context,
         o: Z3_optimize,
@@ -6097,6 +6161,11 @@ extern "C" {
     /// Print the current context as a string.
     /// - `c`: - context.
     /// - `o`: - optimization context.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_from_file`](fn.Z3_optimize_from_file.html)
+    /// - [`Z3_optimize_from_string`](fn.Z3_optimize_from_string.html)
     pub fn Z3_optimize_to_string(c: Z3_context, o: Z3_optimize) -> Z3_string;
 
     /// Parse an SMT-LIB2 string with assertions,
@@ -6106,6 +6175,11 @@ extern "C" {
     /// - `c`: - context.
     /// - `o`: - optimize context.
     /// - `s`: - string containing SMT2 specification.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_from_file`](fn.Z3_optimize_from_file.html)
+    /// - [`Z3_optimize_to_string`](fn.Z3_optimize_to_string.html)
     pub fn Z3_optimize_from_string(c: Z3_context, o: Z3_optimize, s: Z3_string);
 
     /// Parse an SMT-LIB2 file with assertions,
@@ -6115,9 +6189,19 @@ extern "C" {
     /// - `c`: - context.
     /// - `o`: - optimize context.
     /// - `s`: - string containing SMT2 specification.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_from_string`](fn.Z3_optimize_from_string.html)
+    /// - [`Z3_optimize_to_string`](fn.Z3_optimize_to_string.html)
     pub fn Z3_optimize_from_file(c: Z3_context, o: Z3_optimize, s: Z3_string);
 
     /// Return a string containing a description of parameters accepted by optimize.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_get_param_descrs`](fn.Z3_optimize_get_param_descrs.html)
+    /// - [`Z3_optimize_set_params`](fn.Z3_optimize_set_params.html)
     pub fn Z3_optimize_get_help(c: Z3_context, t: Z3_optimize) -> Z3_string;
 
     /// Retrieve statistics information from the last call to [`Z3_optimize_check`](fn.Z3_optimize_check.html)
