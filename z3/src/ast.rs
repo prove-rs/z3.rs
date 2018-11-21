@@ -1,5 +1,5 @@
 use std::cmp::{Eq, PartialEq};
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use std::hash::{Hash, Hasher};
 use z3_sys::*;
@@ -252,11 +252,11 @@ impl<'ctx> Ast<'ctx> {
 impl<'ctx> fmt::Display for Ast<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p =
-            unsafe { CString::from_raw(Z3_ast_to_string(self.ctx.z3_ctx, self.z3_ast) as *mut i8) };
+            unsafe { CStr::from_ptr(Z3_ast_to_string(self.ctx.z3_ctx, self.z3_ast) as *mut i8) };
         if p.as_ptr().is_null() {
             return Result::Err(fmt::Error);
         }
-        match p.into_string() {
+        match p.to_str() {
             Ok(s) => write!(f, "{}", s),
             Err(_) => Result::Err(fmt::Error),
         }
