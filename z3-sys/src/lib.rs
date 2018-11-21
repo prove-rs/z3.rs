@@ -294,7 +294,7 @@ pub type Z3_lbool = i32;
 ///
 /// This corresponds to `Z3_symbol_kind` in the C API.
 ///
-/// See also:
+/// # See also:
 ///
 /// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
 /// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
@@ -316,7 +316,7 @@ pub enum SymbolKind {
 ///
 /// This corresponds to `Z3_parameter_kind` in the C API.
 ///
-/// See also:
+/// # See also:
 ///
 /// - [`Z3_get_decl_num_parameters`](fn.Z3_get_decl_num_parameters.html)
 /// - [`Z3_get_decl_parameter_kind`](fn.Z3_get_decl_parameter_kind.html)
@@ -654,7 +654,7 @@ pub enum DeclKind {
     /// same sign and the result of multiplication does not fit
     /// within the available bits.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bvmul_no_overflow`](fn.Z3_mk_bvmul_no_overflow.html)
     BSMUL_NO_OVFL = generated::Z3_decl_kind::Z3_OP_BSMUL_NO_OVFL as u32,
@@ -663,7 +663,7 @@ pub enum DeclKind {
     /// Unsigned multiplication overflows if the result does not fit
     /// within the available bits.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bvmul_no_overflow`](fn.Z3_mk_bvmul_no_overflow.html)
     BUMUL_NO_OVFL = generated::Z3_decl_kind::Z3_OP_BUMUL_NO_OVFL as u32,
@@ -673,7 +673,7 @@ pub enum DeclKind {
     /// signs and the result of multiplication does not fit within the
     /// available bits.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bvmul_no_underflow`](Z3_mk_bvmul_no_underflow)
     BSMUL_NO_UDFL = generated::Z3_decl_kind::Z3_OP_BSMUL_NO_UDFL as u32,
@@ -1586,7 +1586,7 @@ extern "C" {
     /// Restore the value of all global (and module) parameters.
     /// This command will not affect already created objects (such as tactics and solvers).
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_global_param_set`](fn.Z3_global_param_set.html)
     pub fn Z3_global_param_reset_all();
@@ -1595,7 +1595,7 @@ extern "C" {
     ///
     /// Returns `false` if the parameter value does not exist.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_global_param_set`](fn.Z3_global_param_set.html)
     ///
@@ -1627,7 +1627,7 @@ extern "C" {
     /// - model_validate             validate models produced by solvers
     /// - unsat_core                 unsat-core generation for solvers, this parameter can be overwritten when creating a solver
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_set_param_value`](fn.Z3_set_param_value.html)
     /// - [`Z3_del_config`](fn.Z3_del_config.html)
@@ -1635,7 +1635,7 @@ extern "C" {
 
     /// Delete the given configuration object.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_config`](fn.Z3_mk_config.html)
     pub fn Z3_del_config(c: Z3_config);
@@ -1644,7 +1644,7 @@ extern "C" {
     ///
     /// The following parameters can be set for
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_config`](fn.Z3_mk_config.html)
     pub fn Z3_set_param_value(c: Z3_config, param_id: Z3_string, param_value: Z3_string);
@@ -1673,7 +1673,7 @@ extern "C" {
     /// - Z3 uses hash-consing, i.e., when the same `Z3_ast` is created twice,
     ///   Z3 will return the same pointer twice.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_del_context`](fn.Z3_del_context.html)
     pub fn Z3_mk_context(c: Z3_config) -> Z3_context;
@@ -1700,7 +1700,7 @@ extern "C" {
 
     /// Delete the given logical context.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_context`](fn.Z3_mk_context.html)
     pub fn Z3_del_context(c: Z3_context);
@@ -1717,7 +1717,7 @@ extern "C" {
 
     /// Set a value of a context parameter.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_global_param_set`](fn.Z3_global_param_set.html)
     pub fn Z3_update_param_value(c: Z3_context, param_id: Z3_string, param_value: Z3_string);
@@ -1802,7 +1802,7 @@ extern "C" {
     /// NB. Not all integers can be passed to this function.
     /// The legal range of unsigned integers is 0 to 2^30-1.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_symbol_int`](fn.Z3_get_symbol_int.html)
     /// - [`Z3_mk_string_symbol`](fn.Z3_mk_string_symbol.html)
@@ -1812,7 +1812,7 @@ extern "C" {
     ///
     /// Symbols are used to name several term and type constructors.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_symbol_string`](fn.Z3_get_symbol_string.html)
     /// - [`Z3_mk_int_symbol`](fn.Z3_mk_int_symbol.html)
@@ -1834,7 +1834,7 @@ extern "C" {
     /// A machine integer can be represented using bit-vectors. The function
     /// [`Z3_mk_bv_sort`](fn.Z3_mk_bv_sort.html) creates a bit-vector type.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bv_sort`](fn.Z3_mk_bv_sort.html)
     pub fn Z3_mk_int_sort(c: Z3_context) -> Z3_sort;
@@ -1859,7 +1859,7 @@ extern "C" {
     /// The numeric constant should be between 0 and the less
     /// than the size of the domain.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_finite_domain_sort_size`](fn.Z3_get_finite_domain_sort_size.html)
     pub fn Z3_mk_finite_domain_sort(c: Z3_context, name: Z3_symbol, size: u64) -> Z3_sort;
@@ -1869,7 +1869,7 @@ extern "C" {
     /// We usually represent the array type as: `[domain -> range]`.
     /// Arrays are usually used to model the heap/memory in software verification.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_select`](fn.Z3_mk_select.html)
     /// - [`Z3_mk_store`](fn.Z3_mk_store.html)
@@ -1877,7 +1877,7 @@ extern "C" {
 
     /// Create an array type with N arguments
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_select_n`](fn.Z3_mk_select_n.html)
     /// - [`Z3_mk_store_n`](fn.Z3_mk_store_n.html)
@@ -2066,7 +2066,7 @@ extern "C" {
     /// [`Z3_mk_app`](fn.Z3_mk_app.html) can be used to create a constant or function
     /// application.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
     pub fn Z3_mk_func_decl(
@@ -2079,7 +2079,7 @@ extern "C" {
 
     /// Create a constant or function application.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     pub fn Z3_mk_app(
@@ -2098,7 +2098,7 @@ extern "C" {
     /// Z3_ast n             = Z3_mk_app(c, d, 0, 0);
     /// ```
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
@@ -2111,7 +2111,7 @@ extern "C" {
     ///
     /// NOTE: If `prefix` is `NULL`, then it is assumed to be the empty string.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     pub fn Z3_mk_fresh_func_decl(
@@ -2132,7 +2132,7 @@ extern "C" {
     ///
     /// NOTE: If `prefix` is `NULL`, then it is assumed to be the empty string.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
@@ -2305,7 +2305,7 @@ extern "C" {
     ///
     /// The node `t1` must have sort integer.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_real2int`](fn.Z3_mk_real2int.html)
     /// - [`Z3_mk_is_int`](fn.Z3_mk_is_int.html)
@@ -2316,7 +2316,7 @@ extern "C" {
     /// The semantics of this function follows the SMT-LIB standard
     /// for the function to_int
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_int2real`](fn.Z3_mk_int2real.html)
     /// - [`Z3_mk_is_int`](fn.Z3_mk_is_int.html)
@@ -2324,7 +2324,7 @@ extern "C" {
 
     /// Check if a real number is an integer.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_int2real`](fn.Z3_mk_int2real.html)
     /// - [`Z3_mk_real2int`](fn.Z3_mk_real2int.html)
@@ -2435,7 +2435,7 @@ extern "C" {
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bvsmod`](fn.Z3_mk_bvsmod.html)
     pub fn Z3_mk_bvsrem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
@@ -2446,7 +2446,7 @@ extern "C" {
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bvsrem`](fn.Z3_mk_bvsrem.html)
     pub fn Z3_mk_bvsmod(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
@@ -2681,7 +2681,7 @@ extern "C" {
     /// and `i` must have the sort `domain`.
     /// The sort of the result is `range`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_array_sort`](fn.Z3_mk_array_sort.html)
     /// - [`Z3_mk_store`](fn.Z3_mk_store.html)
@@ -2706,7 +2706,7 @@ extern "C" {
     /// on all indices except for `i`, where it maps to `v` (and the `select` of `a` with
     /// respect to `i` may be a different value).
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_array_sort`](fn.Z3_mk_array_sort.html)
     /// - [`Z3_mk_select`](fn.Z3_mk_select.html)
@@ -2737,7 +2737,7 @@ extern "C" {
     /// The function declaration `f` must have type `range_1 .. range_n -> range`.
     /// `v` must have sort range. The sort of the result is `[domain_i -> range]`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_array_sort`](fn.Z3_mk_array_sort.html)
     /// - [`Z3_mk_store`](fn.Z3_mk_store.html)
@@ -2821,7 +2821,7 @@ extern "C" {
     /// If the given sort is a real, then the numeral can be a rational, that is, a string of the form `[num]* / [num]*` .
     /// - `ty`: The sort of the numeral. In the current implementation, the given sort can be an int, real, finite-domain, or bit-vectors of arbitrary size.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_int`](fn.Z3_mk_int.html)
     /// - [`Z3_mk_unsigned_int`](fn.Z3_mk_unsigned_int.html)
@@ -2835,7 +2835,7 @@ extern "C" {
     ///
     /// * Precondition: `den != 0`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     /// - [`Z3_mk_int`](fn.Z3_mk_int.html)
@@ -2851,7 +2851,7 @@ extern "C" {
     /// This function can be use to create numerals that fit in a machine integer.
     /// It is slightly faster than [`Z3_mk_numeral`](fn.Z3_mk_numeral.html) since it is not necessary to parse a string.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_int(c: Z3_context, v: ::std::os::raw::c_int, ty: Z3_sort) -> Z3_ast;
@@ -2861,7 +2861,7 @@ extern "C" {
     /// This function can be use to create numerals that fit in a machine unsinged integer.
     /// It is slightly faster than [`Z3_mk_numeral`](fn.Z3_mk_numeral.html) since it is not necessary to parse a string.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_unsigned_int(c: Z3_context, v: ::std::os::raw::c_uint, ty: Z3_sort) -> Z3_ast;
@@ -2871,7 +2871,7 @@ extern "C" {
     /// This function can be use to create numerals that fit in a machine `int64_t` integer.
     /// It is slightly faster than [`Z3_mk_numeral`](fn.Z3_mk_numeral.html) since it is not necessary to parse a string.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_int64(c: Z3_context, v: i64, ty: Z3_sort) -> Z3_ast;
@@ -2881,14 +2881,14 @@ extern "C" {
     /// This function can be use to create numerals that fit in a machine `uint64_t` integer.
     /// It is slightly faster than [`Z3_mk_numeral`](fn.Z3_mk_numeral.html) since it is not necessary to parse a string.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_unsigned_int64(c: Z3_context, v: u64, ty: Z3_sort) -> Z3_ast;
 
     /// create a bit-vector numeral from a vector of Booleans.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_bv_numeral(
@@ -3060,7 +3060,7 @@ extern "C" {
     /// In general, one can pass in a list of (multi-)patterns in the
     /// quantifier constructor.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_forall`](fn.Z3_mk_forall.html)
     /// - [`Z3_mk_exists`](fn.Z3_mk_exists.html)
@@ -3093,7 +3093,7 @@ extern "C" {
     /// - `index`: de-Bruijn index
     /// - `ty`: sort of the bound variable
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_forall`](fn.Z3_mk_forall.html)
     /// - [`Z3_mk_exists`](fn.Z3_mk_exists.html)
@@ -3115,7 +3115,7 @@ extern "C" {
     /// - `decl_names`: names of the bound variables
     /// - `body`: the body of the quantifier.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_pattern`](fn.Z3_mk_pattern.html)
     /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
@@ -3133,7 +3133,7 @@ extern "C" {
 
     /// Create an exists formula. Similar to [`Z3_mk_forall`](fn.Z3_mk_forall.html).
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_pattern`](fn.Z3_mk_pattern.html)
     /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
@@ -3163,7 +3163,7 @@ extern "C" {
     /// - `decl_names`: names of the bound variables.
     /// - `body`: the body of the quantifier.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_pattern`](fn.Z3_mk_pattern.html)
     /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
@@ -3197,7 +3197,7 @@ extern "C" {
     /// - `decl_names`: names of the bound variables.
     /// - `body`: the body of the quantifier.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_pattern`](fn.Z3_mk_pattern.html)
     /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
@@ -3231,7 +3231,7 @@ extern "C" {
     /// - `patterns`: array containing the patterns created using [`Z3_mk_pattern`](fn.Z3_mk_pattern.html).
     /// - `body`: the body of the quantifier.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_pattern`](fn.Z3_mk_pattern.html)
     /// - [`Z3_mk_exists_const`](fn.Z3_mk_exists_const.html)
@@ -3259,7 +3259,7 @@ extern "C" {
     /// - `patterns`: array containing the patterns created using [`Z3_mk_pattern`](fn.Z3_mk_pattern.html).
     /// - `body`: the body of the quantifier.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_pattern`](fn.Z3_mk_pattern.html)
     /// - [`Z3_mk_forall_const`](fn.Z3_mk_forall_const.html)
@@ -3325,7 +3325,7 @@ extern "C" {
     /// - `decl_names`: names of the bound variables
     /// - `body`: the body of the lambda expression.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
     /// - [`Z3_mk_forall`](fn.Z3_mk_forall.html)
@@ -3346,7 +3346,7 @@ extern "C" {
     /// - `bound`: array of constants to be abstracted into bound variables.
     /// - `body`: the body of the lambda expression.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bound`](fn.Z3_mk_bound.html)
     /// - [`Z3_mk_forall`](fn.Z3_mk_forall.html)
@@ -3404,7 +3404,7 @@ extern "C" {
 
     /// Return the sort kind (e.g., array, tuple, int, bool, etc).
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`SortKind`](enum.SortKind.html)
     pub fn Z3_get_sort_kind(c: Z3_context, t: Z3_sort) -> SortKind;
@@ -3413,7 +3413,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(c, t) == SortKind::BV`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_bv_sort`](fn.Z3_mk_bv_sort.html)
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
@@ -3430,7 +3430,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(c, t) == SortKind::Array`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_array_sort`](fn.Z3_mk_array_sort.html)
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
@@ -3440,7 +3440,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(c, t) == SortKind::Array`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_array_sort`](fn.Z3_mk_array_sort.html)
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
@@ -3451,7 +3451,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(c, t) == SortKind::Datatype`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_tuple_sort`](fn.Z3_mk_tuple_sort.html)
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
@@ -3461,7 +3461,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(c, t) == SortKind::Datatype`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_tuple_sort`](fn.Z3_mk_tuple_sort.html)
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
@@ -3473,7 +3473,7 @@ extern "C" {
     /// * Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// * Precondition: `i < Z3_get_tuple_sort_num_fields(c, t)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_tuple_sort`](fn.Z3_mk_tuple_sort.html)
     /// - [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)
@@ -3487,7 +3487,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_datatype_sort_constructor`](fn.Z3_get_datatype_sort_constructor.html)
     /// - [`Z3_get_datatype_sort_recognizer`](fn.Z3_get_datatype_sort_recognizer.html)
@@ -3502,7 +3502,7 @@ extern "C" {
     /// * Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// * Precondition: `idx < Z3_get_datatype_sort_num_constructors(c, t)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_datatype_sort_num_constructors`](fn.Z3_get_datatype_sort_num_constructors.html)
     /// - [`Z3_get_datatype_sort_recognizer`](fn.Z3_get_datatype_sort_recognizer.html)
@@ -3518,7 +3518,7 @@ extern "C" {
     /// * Precondition: `Z3_get_sort_kind(t) == SortKind::Datatype`
     /// * Precondition: `idx < Z3_get_datatype_sort_num_constructors(c, t)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_datatype_sort_num_constructors`](fn.Z3_get_datatype_sort_num_constructors.html)
     /// - [`Z3_get_datatype_sort_constructor`](fn.Z3_get_datatype_sort_constructor.html)
@@ -3535,7 +3535,7 @@ extern "C" {
     /// * Precondition: `idx_c < Z3_get_datatype_sort_num_constructors(c, t)`
     /// * Precondition: `idx_a < Z3_get_domain_size(c, Z3_get_datatype_sort_constructor(c, idx_c))`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_datatype_sort_num_constructors`](fn.Z3_get_datatype_sort_num_constructors.html)
     /// - [`Z3_get_datatype_sort_constructor`](fn.Z3_get_datatype_sort_constructor.html)
@@ -3572,7 +3572,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_sort_kind(s) == SortKind::Relation`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_relation_column`](fn.Z3_get_relation_column.html)
     pub fn Z3_get_relation_arity(c: Z3_context, s: Z3_sort) -> ::std::os::raw::c_uint;
@@ -3582,7 +3582,7 @@ extern "C" {
     /// * Precondition: `Z3_get_sort_kind(c, s) == SortKind::Relation`
     /// * Precondition: `col < Z3_get_relation_arity(c, s)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_relation_arity`](fn.Z3_get_relation_arity.html)
     pub fn Z3_get_relation_column(
@@ -3661,14 +3661,14 @@ extern "C" {
 
     /// Return the number of parameters of the given declaration.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_arity`](fn.Z3_get_arity.html)
     pub fn Z3_get_domain_size(c: Z3_context, d: Z3_func_decl) -> ::std::os::raw::c_uint;
 
     /// Alias for `Z3_get_domain_size`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_domain_size`](fn.Z3_get_domain_size.html)
     pub fn Z3_get_arity(c: Z3_context, d: Z3_func_decl) -> ::std::os::raw::c_uint;
@@ -3677,7 +3677,7 @@ extern "C" {
     ///
     /// * Precondition: `i < Z3_get_domain_size(d)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_domain_size`](fn.Z3_get_domain_size.html)
     pub fn Z3_get_domain(c: Z3_context, d: Z3_func_decl, i: ::std::os::raw::c_uint) -> Z3_sort;
@@ -3828,7 +3828,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::App`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::App`](enum.AstKind.html#variant.App)
@@ -3838,7 +3838,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::FuncDecl`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::FuncDecl`](enum.AstKind.html#variant.FuncDecl)
@@ -3848,7 +3848,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
@@ -3859,7 +3859,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral || Z3_is_algebraic_number(c, a)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`Z3_is_algebraic_number`](fn.Z3_is_algebraic_number.html)
@@ -3874,7 +3874,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
@@ -3884,7 +3884,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, a) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
@@ -3901,7 +3901,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(a) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
@@ -3912,7 +3912,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
@@ -3925,7 +3925,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
@@ -3939,7 +3939,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
@@ -3952,7 +3952,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
@@ -3965,7 +3965,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_get_ast_kind(c, v) == AstKind::Numeral`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
@@ -3984,7 +3984,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_is_algebraic_number(c, a)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_is_algebraic_number`](fn.Z3_is_algebraic_number.html)
     pub fn Z3_get_algebraic_number_lower(
@@ -4000,7 +4000,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_is_algebraic_number(c, a)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_is_algebraic_number`](fn.Z3_is_algebraic_number.html)
     pub fn Z3_get_algebraic_number_upper(
@@ -4250,7 +4250,7 @@ extern "C" {
 
     /// Return the number of constants assigned by the given model.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_model_get_const_decl`](fn.Z3_model_get_const_decl.html)
     pub fn Z3_model_get_num_consts(c: Z3_context, m: Z3_model) -> ::std::os::raw::c_uint;
@@ -4259,7 +4259,7 @@ extern "C" {
     ///
     /// * Precondition: `i < Z3_model_get_num_consts(c, m)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_model_eval`](fn.Z3_model_eval.html)
     pub fn Z3_model_get_const_decl(
@@ -4278,7 +4278,7 @@ extern "C" {
     ///
     /// * Precondition: `i < Z3_model_get_num_funcs(c, m)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_model_get_num_funcs`](fn.Z3_model_get_num_funcs.html)
     pub fn Z3_model_get_func_decl(
@@ -4294,7 +4294,7 @@ extern "C" {
     /// a formula. The interpretation for a sort `s` is a finite set of
     /// distinct values. We say this finite set is the "universe" of `s`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_model_get_sort`](fn.Z3_model_get_sort.html)
     /// - [`Z3_model_get_sort_universe`](fn.Z3_model_get_sort_universe.html)
@@ -4304,7 +4304,7 @@ extern "C" {
     ///
     /// * Precondition: `i < Z3_model_get_num_sorts(c, m)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_model_get_num_sorts`](fn.Z3_model_get_num_sorts.html)
     /// - [`Z3_model_get_sort_universe`](fn.Z3_model_get_sort_universe.html)
@@ -4312,7 +4312,7 @@ extern "C" {
 
     /// Return the finite set of distinct values that represent the interpretation for sort `s`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_model_get_num_sorts`](fn.Z3_model_get_num_sorts.html)
     /// - [`Z3_model_get_sort`](fn.Z3_model_get_sort.html)
@@ -4330,14 +4330,14 @@ extern "C" {
     ///
     /// Z3 current solvers have minimal support for `as_array` nodes.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_as_array_func_decl`](fn.Z3_get_as_array_func_decl.html)
     pub fn Z3_is_as_array(c: Z3_context, a: Z3_ast) -> Z3_bool;
 
     /// Return the function declaration `f` associated with a `(_ as_array f)` node.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_is_as_array`](fn.Z3_is_as_array.html)
     pub fn Z3_get_as_array_func_decl(c: Z3_context, a: Z3_ast) -> Z3_func_decl;
@@ -4381,7 +4381,7 @@ extern "C" {
     ///
     /// * Precondition: `i < Z3_func_interp_get_num_entries(c, f)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_func_interp_get_num_entries`](fn.Z3_func_interp_get_num_entries.html)
     pub fn Z3_func_interp_get_entry(
@@ -4436,14 +4436,14 @@ extern "C" {
     /// A `Z3_func_entry` object represents an element in the finite map used
     /// to encode a function interpretation.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_func_interp_get_entry`](fn.Z3_func_interp_get_entry.html)
     pub fn Z3_func_entry_get_value(c: Z3_context, e: Z3_func_entry) -> Z3_ast;
 
     /// Return the number of arguments in a `Z3_func_entry` object.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_func_interp_get_entry`](fn.Z3_func_interp_get_entry.html)
     pub fn Z3_func_entry_get_num_args(c: Z3_context, e: Z3_func_entry) -> ::std::os::raw::c_uint;
@@ -4452,7 +4452,7 @@ extern "C" {
     ///
     /// * Precondition: `i < Z3_func_entry_get_num_args(c, e)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_func_interp_get_entry`](fn.Z3_func_interp_get_entry.html)
     pub fn Z3_func_entry_get_arg(
@@ -4494,7 +4494,7 @@ extern "C" {
     /// expressions to share common sub-expressions use
     /// `AstPrintMode::SmtLib2Compliant`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_ast_to_string`](fn.Z3_ast_to_string.html)
     /// - [`Z3_pattern_to_string`](fn.Z3_pattern_to_string.html)
@@ -4509,7 +4509,7 @@ extern "C" {
     /// So, the buffer is invalidated in the next call to
     /// `Z3_ast_to_string`.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_pattern_to_string`](fn.Z3_pattern_to_string.html)
     /// - [`Z3_sort_to_string`](fn.Z3_sort_to_string.html)
@@ -4598,7 +4598,7 @@ extern "C" {
     /// A call to a Z3 function may return a non `ErrorCode::OK` error code,
     /// when it is not used correctly.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_set_error_handler`](fn.Z3_set_error_handler.html)
     pub fn Z3_get_error_code(c: Z3_context) -> ErrorCode;
@@ -4613,7 +4613,7 @@ extern "C" {
     /// Warning: Log files, created using [`Z3_open_log`](fn.Z3_open_log.html),
     /// may be potentially incomplete/incorrect if error handlers are used.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_get_error_code`](fn.Z3_get_error_code.html)
     pub fn Z3_set_error_handler(c: Z3_context, h: Z3_error_handler);
@@ -5045,14 +5045,14 @@ extern "C" {
     ///
     /// The solver contains a stack of assertions.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_solver_pop`](fn.Z3_solver_pop.html)
     pub fn Z3_solver_push(c: Z3_context, s: Z3_solver);
 
     /// Backtrack `n` backtracking points.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_solver_push`](fn.Z3_solver_push.html)
     ///
@@ -5064,7 +5064,7 @@ extern "C" {
 
     /// Return the number of backtracking points.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_solver_push`](fn.Z3_solver_push.html)
     /// - [`Z3_solver_pop`](fn.Z3_solver_pop.html)
@@ -5130,7 +5130,7 @@ extern "C" {
     /// retrieves the subset of the assumptions used in the
     /// unsatisfiability proof produced by Z3.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_solver_check`](fn.Z3_solver_check.html)
     pub fn Z3_solver_check_assumptions(
@@ -5352,7 +5352,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_pos(c: Z3_context, a: Z3_ast) -> Z3_bool;
@@ -5361,7 +5361,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_neg(c: Z3_context, a: Z3_ast) -> Z3_bool;
@@ -5370,7 +5370,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_is_zero(c: Z3_context, a: Z3_ast) -> Z3_bool;
@@ -5379,7 +5379,7 @@ extern "C" {
     ///
     /// * Precondition: `Z3_algebraic_is_value(c, a)
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_sign(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_int;
@@ -5390,7 +5390,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_add(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
@@ -5401,7 +5401,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_sub(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
@@ -5412,7 +5412,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_mul(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
@@ -5424,7 +5424,7 @@ extern "C" {
     /// * Precondition: `!Z3_algebraic_is_zero(c, b)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     /// - [`Z3_algebraic_is_zero`](fn.Z3_algebraic_is_zero.html)
@@ -5436,7 +5436,7 @@ extern "C" {
     /// * Precondition: k is even => `!Z3_algebraic_is_neg(c, a)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_neg`](fn.Z3_algebraic_is_neg.html)
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
@@ -5447,7 +5447,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Postcondition: `Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_power(c: Z3_context, a: Z3_ast, k: ::std::os::raw::c_uint) -> Z3_ast;
@@ -5457,7 +5457,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_lt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
@@ -5467,7 +5467,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_gt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
@@ -5477,7 +5477,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_le(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
@@ -5487,7 +5487,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_ge(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
@@ -5497,7 +5497,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_eq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
@@ -5507,7 +5507,7 @@ extern "C" {
     /// * Precondition: `Z3_algebraic_is_value(c, a)`
     /// * Precondition: `Z3_algebraic_is_value(c, b)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_neq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
@@ -5519,7 +5519,7 @@ extern "C" {
     /// * Precondition: `forall i in [0, n) Z3_algebraic_is_value(c, a[i])`
     /// * Postcondition: `forall r in result Z3_algebraic_is_value(c, result)`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_roots(
@@ -5535,7 +5535,7 @@ extern "C" {
     /// * Precondition: `p` is a Z3 expression that contains only arithmetic terms and free variables.
     /// * Precondition: `forall i in [0, n) Z3_algebraic_is_value(c, a[i])`
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
     pub fn Z3_algebraic_eval(
@@ -5865,14 +5865,14 @@ extern "C" {
     /// The fixedpoint solver contains a set of rules, added facts and assertions.
     /// The set of rules, facts and assertions are restored upon calling [`Z3_fixedpoint_pop`](fn.Z3_fixedpoint_pop.html).
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_fixedpoint_pop`](fn.Z3_fixedpoint_pop.html)
     pub fn Z3_fixedpoint_push(c: Z3_context, d: Z3_fixedpoint);
 
     /// Backtrack one backtracking point.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_fixedpoint_push`](fn.Z3_fixedpoint_push.html)
     ///
@@ -5998,14 +5998,14 @@ extern "C" {
     /// The optimize solver contains a set of rules, added facts and assertions.
     /// The set of rules, facts and assertions are restored upon calling [`Z3_optimize_pop`](fn.Z3_optimize_pop.html).
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_optimize_pop`](fn.Z3_optimize_pop.html)
     pub fn Z3_optimize_push(c: Z3_context, d: Z3_optimize);
 
     /// Backtrack one level.
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_optimize_push`](fn.Z3_optimize_push.html)
     ///
@@ -6031,7 +6031,7 @@ extern "C" {
 
     /// Retrieve the unsat core for the last [`Z3_optimize_check`](fn.Z3_optimize_check.html).
     ///
-    /// The unsat core is a subset of the assumptions \c a.
+    /// The unsat core is a subset of the assumptions `a`.
     pub fn Z3_optimize_get_unsat_core(c: Z3_context, o: Z3_optimize) -> Z3_ast_vector;
 
     /// Set parameters on optimization context.
@@ -6291,7 +6291,7 @@ extern "C" {
     ///
     /// ty must be a FloatingPoint sort
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_float(c: Z3_context, v: f32, ty: Z3_sort) -> Z3_ast;
@@ -6307,7 +6307,7 @@ extern "C" {
     ///
     /// ty must be a FloatingPoint sort
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_double(c: Z3_context, v: f64, ty: Z3_sort) -> Z3_ast;
@@ -6320,7 +6320,7 @@ extern "C" {
     ///
     /// ty must be a FloatingPoint sort
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int(c: Z3_context, v: ::std::os::raw::c_int, ty: Z3_sort) -> Z3_ast;
@@ -6335,7 +6335,7 @@ extern "C" {
     ///
     /// ty must be a FloatingPoint sort
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int_uint(
@@ -6356,7 +6356,7 @@ extern "C" {
     ///
     /// ty must be a FloatingPoint sort
     ///
-    /// See also:
+    /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int64_uint64(
