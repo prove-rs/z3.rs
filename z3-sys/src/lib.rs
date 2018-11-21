@@ -5027,12 +5027,27 @@ extern "C" {
     pub fn Z3_solver_import_model_converter(ctx: Z3_context, src: Z3_solver, dst: Z3_solver);
 
     /// Return a string describing all solver available parameters.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_get_param_descrs`](fn.Z3_solver_get_param_descrs.html)
+    /// - [`Z3_solver_set_params`](fn.Z3_solver_set_params.html)
     pub fn Z3_solver_get_help(c: Z3_context, s: Z3_solver) -> Z3_string;
 
     /// Return the parameter description set for the given solver object.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_get_help`](fn.Z3_solver_get_help.html)
+    /// - [`Z3_solver_set_params`](fn.Z3_solver_set_params.html)
     pub fn Z3_solver_get_param_descrs(c: Z3_context, s: Z3_solver) -> Z3_param_descrs;
 
     /// Set the given solver using the given parameters.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_get_help`](fn.Z3_solver_get_help.html)
+    /// - [`Z3_solver_get_param_descrs`](fn.Z3_solver_get_param_descrs.html)
     pub fn Z3_solver_set_params(c: Z3_context, s: Z3_solver, p: Z3_params);
 
     /// Increment the reference counter of the given solver.
@@ -5060,6 +5075,11 @@ extern "C" {
     pub fn Z3_solver_pop(c: Z3_context, s: Z3_solver, n: ::std::os::raw::c_uint);
 
     /// Remove all assertions from the solver.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_assert`](fn.Z3_solver_assert.html)
+    /// - [`Z3_solver_assert_and_track`](fn.Z3_solver_assert_and_track.html)
     pub fn Z3_solver_reset(c: Z3_context, s: Z3_solver);
 
     /// Return the number of backtracking points.
@@ -5074,6 +5094,11 @@ extern "C" {
     ///
     /// The functions [`Z3_solver_check`](fn.Z3_solver_check.html) and [`Z3_solver_check_assumptions`](fn.Z3_solver_check_assumptions.html) should be
     /// used to check whether the logical context is consistent or not.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_assert_and_track`](fn.Z3_solver_assert_and_track.html)
+    /// - [`Z3_solver_reset`](fn.Z3_solver_reset.html)
     pub fn Z3_solver_assert(c: Z3_context, s: Z3_solver, a: Z3_ast);
 
     /// Assert a constraint `a` into the solver, and track it (in the
@@ -5087,14 +5112,31 @@ extern "C" {
     /// and the Boolean literals provided using
     /// [`Z3_solver_check_assumptions`](fn.Z3_solver_check_assumptions.html).
     ///
-    /// * Precondition: `a` must be a Boolean expression
-    /// * Precondition: `p` must be a Boolean constant (aka variable).
+    /// # Preconditions:
+    ///
+    /// * `a` must be a Boolean expression
+    /// * `p` must be a Boolean constant (aka variable).
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_assert`](fn.Z3_solver_assert.html)
+    /// - [`Z3_solver_reset`](fn.Z3_solver_reset.html)
     pub fn Z3_solver_assert_and_track(c: Z3_context, s: Z3_solver, a: Z3_ast, p: Z3_ast);
 
     /// load solver assertions from a file.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_from_string`](fn.Z3_solver_from_string.html)
+    /// - [`Z3_solver_to_string`](fn.Z3_solver_to_string.html)
     pub fn Z3_solver_from_file(c: Z3_context, s: Z3_solver, file_name: Z3_string);
 
     /// load solver assertions from a string.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_from_file`](fn.Z3_solver_from_file.html)
+    /// - [`Z3_solver_to_string`](fn.Z3_solver_to_string.html)
     pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, file_name: Z3_string);
 
     /// Return the set of asserted formulas on the solver.
@@ -5120,6 +5162,10 @@ extern "C" {
     /// retrieves a proof if proof generation was enabled when the context
     /// was created, and the assertions are unsatisfiable (i.e., the result
     /// is `Z3_L_FALSE`).
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_check_assumptions`](fn.Z3_solver_check_assumptions.html)
     pub fn Z3_solver_check(c: Z3_context, s: Z3_solver) -> Z3_lbool;
 
     /// Check whether the assertions in the given solver and
@@ -5218,6 +5264,11 @@ extern "C" {
     pub fn Z3_solver_get_statistics(c: Z3_context, s: Z3_solver) -> Z3_stats;
 
     /// Convert a solver into a string.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_solver_from_file`](fn.Z3_solver_from_file.html)
+    /// - [`Z3_solver_from_string`](fn.Z3_solver_from_string.html)
     pub fn Z3_solver_to_string(c: Z3_context, s: Z3_solver) -> Z3_string;
 
     /// Convert a statistics into a string.
@@ -5818,12 +5869,27 @@ extern "C" {
     pub fn Z3_fixedpoint_get_assertions(c: Z3_context, f: Z3_fixedpoint) -> Z3_ast_vector;
 
     /// Set parameters on fixedpoint context.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fixedpoint_get_help`](fn.Z3_fixedpoint_get_help.html)
+    /// - [`Z3_fixedpoint_get_param_descrs`](fn.Z3_fixedpoint_get_param_descrs.html)
     pub fn Z3_fixedpoint_set_params(c: Z3_context, f: Z3_fixedpoint, p: Z3_params);
 
     /// Return a string describing all fixedpoint available parameters.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fixedpoint_get_param_descrs`](fn.Z3_fixedpoint_get_param_descrs.html)
+    /// - [`Z3_fixedpoint_set_params`](fn.Z3_fixedpoint_set_params.html)
     pub fn Z3_fixedpoint_get_help(c: Z3_context, f: Z3_fixedpoint) -> Z3_string;
 
     /// Return the parameter description set for the given fixedpoint object.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fixedpoint_get_help`](fn.Z3_fixedpoint_get_help.html)
+    /// - [`Z3_fixedpoint_set_params`](fn.Z3_fixedpoint_set_params.html)
     pub fn Z3_fixedpoint_get_param_descrs(c: Z3_context, f: Z3_fixedpoint) -> Z3_param_descrs;
 
     /// Print the current rules and background axioms as a string.
@@ -5831,6 +5897,11 @@ extern "C" {
     /// - `f`: - fixedpoint context.
     /// - `num_queries`: - number of additional queries to print.
     /// - `queries`: - additional queries.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fixedpoint_from_file`](fn.Z3_fixedpoint_from_file.html)
+    /// - [`Z3_fixedpoint_from_string`](fn.Z3_fixedpoint_from_string.html)
     pub fn Z3_fixedpoint_to_string(
         c: Z3_context,
         f: Z3_fixedpoint,
@@ -5845,6 +5916,11 @@ extern "C" {
     /// - `c`: - context.
     /// - `f`: - fixedpoint context.
     /// - `s`: - string containing SMT2 specification.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fixedpoint_from_file`](fn.Z3_fixedpoint_from_file.html)
+    /// - [`Z3_fixedpoint_to_string`](fn.Z3_fixedpoint_to_string.html)
     pub fn Z3_fixedpoint_from_string(
         c: Z3_context,
         f: Z3_fixedpoint,
@@ -5857,7 +5933,12 @@ extern "C" {
     ///
     /// - `c`: - context.
     /// - `f`: - fixedpoint context.
-    /// - `s`: - string containing SMT2 specification.
+    /// - `s`: - path to file containing SMT2 specification.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fixedpoint_from_string`](fn.Z3_fixedpoint_from_string.html)
+    /// - [`Z3_fixedpoint_to_string`](fn.Z3_fixedpoint_to_string.html)
     pub fn Z3_fixedpoint_from_file(c: Z3_context, f: Z3_fixedpoint, s: Z3_string) -> Z3_ast_vector;
 
     /// Create a backtracking point.
