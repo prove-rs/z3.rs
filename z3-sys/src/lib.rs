@@ -3868,8 +3868,7 @@ extern "C" {
     ///
     /// The hash code is structural. You can use
     /// [`Z3_get_ast_id`](fn.Z3.get_ast_id.html)
-    /// interchangably with
-    /// this function.
+    /// interchangeably with this function.
     pub fn Z3_get_ast_hash(c: Z3_context, a: Z3_ast) -> ::std::os::raw::c_uint;
 
     /// Return the sort of an AST node.
