@@ -1,4 +1,4 @@
-use std::ffi::CString;
+use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 use Ast;
@@ -106,12 +106,12 @@ impl<'ctx> Optimize<'ctx> {
 impl<'ctx> fmt::Display for Optimize<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe {
-            CString::from_raw(Z3_optimize_to_string(self.ctx.z3_ctx, self.z3_opt) as *mut i8)
+            CStr::from_ptr(Z3_optimize_to_string(self.ctx.z3_ctx, self.z3_opt) as *mut i8)
         };
         if p.as_ptr().is_null() {
             return Result::Err(fmt::Error);
         }
-        match p.into_string() {
+        match p.to_str() {
             Ok(s) => write!(f, "{}", s),
             Err(_) => Result::Err(fmt::Error),
         }

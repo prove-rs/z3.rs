@@ -89,3 +89,14 @@ fn test_cloning_ast() {
     assert_eq!(xv, 0);
     assert_eq!(yv, 0);
 }
+
+#[test]
+fn test_format() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let ast = ctx.named_int_const("x");
+    assert_eq!("x", format!("{}", ast));
+
+    let int = ctx.int_sort();
+    assert_eq!("Int", format!("{}", int));
+}
