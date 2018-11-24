@@ -51,6 +51,12 @@ impl Config {
     }
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl Drop for Config {
     fn drop(&mut self) {
         let guard = Z3_MUTEX.lock().unwrap();
