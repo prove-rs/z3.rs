@@ -247,6 +247,62 @@ impl<'ctx> Ast<'ctx> {
     binop!(set_member, Z3_mk_set_member);
     binop!(set_subset, Z3_mk_set_subset);
     unop!(set_complement, Z3_mk_set_complement);
+
+    // pseudoboolean ops
+    pub fn pb_le(&self, other: &[&Ast<'ctx>], coeffs: Vec<i32>, k: i32) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let mut tmp = vec![self.z3_ast];
+            for a in other {
+                tmp.push(a.z3_ast)
+            }
+            assert!(tmp.len() <= 0xffffffff);
+            let mut tmp_coeffs = coeffs.clone();
+            Z3_mk_pble(
+                self.ctx.z3_ctx,
+                tmp.len() as u32,
+                tmp.as_ptr(),
+                tmp_coeffs.as_mut_ptr(),
+                k,
+            )
+        })
+    }
+    pub fn pb_ge(&self, other: &[&Ast<'ctx>], coeffs: Vec<i32>, k: i32) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let mut tmp = vec![self.z3_ast];
+            for a in other {
+                tmp.push(a.z3_ast)
+            }
+            assert!(tmp.len() <= 0xffffffff);
+            let mut tmp_coeffs = coeffs.clone();
+            Z3_mk_pbge(
+                self.ctx.z3_ctx,
+                tmp.len() as u32,
+                tmp.as_ptr(),
+                tmp_coeffs.as_mut_ptr(),
+                k,
+            )
+        })
+    }
+    pub fn pb_eq(&self, other: &[&Ast<'ctx>], coeffs: Vec<i32>, k: i32) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let mut tmp = vec![self.z3_ast];
+            for a in other {
+                tmp.push(a.z3_ast)
+            }
+            assert!(tmp.len() <= 0xffffffff);
+            let mut tmp_coeffs = coeffs.clone();
+            Z3_mk_pbeq(
+                self.ctx.z3_ctx,
+                tmp.len() as u32,
+                tmp.as_ptr(),
+                tmp_coeffs.as_mut_ptr(),
+                k,
+            )
+        })
+    }
 }
 
 impl<'ctx> fmt::Display for Ast<'ctx> {

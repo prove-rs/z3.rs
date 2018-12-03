@@ -100,3 +100,24 @@ fn test_format() {
     let int = ctx.int_sort();
     assert_eq!("Int", format!("{}", int));
 }
+
+#[test]
+fn test_pb_ops_model() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ctx.named_bool_const("x");
+    let y = ctx.named_bool_const("y");
+
+    let coeffs = vec![1, 1];
+    let other_args = vec![&y];
+    let solver = Solver::new(&ctx);
+    solver.assert(&x.pb_eq(&other_args[..], coeffs, 1));
+    assert!(solver.check());
+    let model = solver.get_model();
+    let xv = model.eval(&x).unwrap().as_bool().unwrap();
+    let yv = model.eval(&y).unwrap().as_bool().unwrap();
+    info!("x: {}", xv);
+    info!("y: {}", yv);
+    assert!(xv > yv);
+    assert!((xv && !yv) || (!xv && yv));
+}
