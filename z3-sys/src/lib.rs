@@ -2140,6 +2140,53 @@ extern "C" {
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
     pub fn Z3_mk_fresh_const(c: Z3_context, prefix: Z3_string, ty: Z3_sort) -> Z3_ast;
 
+    /// Declare a recursive function
+    ///
+    /// * `c`: logical context.
+    /// * `s`: name of the function.
+    /// * `domain_size`: number of arguments. It should be greater than 0.
+    /// * `domain`: array containing the sort of each argument. The array must contain domain_size elements.
+    /// * `range`: sort of the constant or the return sort of the function.
+    ///
+    /// After declaring recursive function, it should be associated with a recursive
+    /// definition with [`Z3_add_rec_def`](fn.Z3_add_rec_def.html). The function
+    /// [`Z3_mk_app`](fn.Z3_mk_app.html) can be used to create a constant or function
+    /// application.
+    ///
+    /// # See also:
+    ///
+    /// * [`Z3_mk_app`](fn.Z3_mk_app.html)
+    /// * [`Z3_add_rec_def`](fn.Z3_add_rec_def.html)
+    pub fn Z3_mk_rec_func_decl(
+        c: Z3_context,
+        s: Z3_symbol,
+        domain_size: ::std::os::raw::c_uint,
+        domain: *const Z3_sort,
+        range: Z3_sort,
+    ) -> Z3_func_decl;
+
+    /// Define the body of a recursive function.
+    ///
+    /// * `c`: logical context.
+    /// * `f`: function declaration.
+    /// * `n`: number of arguments to the function
+    /// * `args`: constants that are used as arguments to the recursive function in the definition.
+    /// * `body`: body of the recursive function
+    ///
+    /// After declaring a recursive function or a collection of  mutually recursive functions, use
+    /// this function to provide the definition for the recursive function.
+    ///
+    /// # See also:
+    ///
+    /// * [`Z3_mk_rec_func_decl`](fn.Z3_mk_rec_func_decl.html)
+    pub fn Z3_add_rec_def(
+        c: Z3_context,
+        f: Z3_func_decl,
+        n: ::std::os::raw::c_uint,
+        args: *mut Z3_ast,
+        body: Z3_ast,
+    );
+
     /// Create an AST node representing `true`.
     pub fn Z3_mk_true(c: Z3_context) -> Z3_ast;
 
