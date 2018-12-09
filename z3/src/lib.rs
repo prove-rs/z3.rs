@@ -28,11 +28,13 @@ lazy_static! {
     static ref Z3_MUTEX: Mutex<()> = Mutex::new(());
 }
 
+/// Configuration used to initialize logical contexts.
 pub struct Config {
     kvs: Vec<(CString, CString)>,
     z3_cfg: Z3_config,
 }
 
+/// Manager of all other Z3 objects, global configuration options, etc.
 pub struct Context {
     z3_ctx: Z3_context,
 }
@@ -52,26 +54,32 @@ pub struct Symbol<'ctx> {
     z3_sym: Z3_symbol,
 }
 
+/// Kind of [`Ast`](struct.Ast.html) used to represent types.
 pub struct Sort<'ctx> {
     ctx: &'ctx Context,
     z3_sort: Z3_sort,
 }
 
+/// Abstract syntax tree node. That is, the data structure used in Z3
+/// to represent terms, formulas, and types.
 pub struct Ast<'ctx> {
     ctx: &'ctx Context,
     z3_ast: Z3_ast,
 }
 
+/// (Incremental) solver, possibly specialized by a particular tactic or logic.
 pub struct Solver<'ctx> {
     ctx: &'ctx Context,
     z3_slv: Z3_solver,
 }
 
+/// Model for the constraints inserted into the logical context.
 pub struct Model<'ctx> {
     ctx: &'ctx Context,
     z3_mdl: Z3_model,
 }
 
+/// Context for solving optimization queries.
 pub struct Optimize<'ctx> {
     ctx: &'ctx Context,
     z3_opt: Z3_optimize,
