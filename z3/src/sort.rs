@@ -4,6 +4,7 @@ use z3_sys::*;
 use Context;
 use Sort;
 use Symbol;
+use Ast;
 use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {
@@ -87,6 +88,68 @@ impl<'ctx> Sort<'ctx> {
                 s
             },
         }
+    }
+
+    /// Converts an unsigned integer to an `Ast` of the given `Sort`
+    ///
+    /// `self` must be an integer, bit-vector, or finite-domain sort.
+    ///
+    /// # Example
+    ///
+    /// This example checks that bitvector arithmetic is wrapping
+    /// by solving for an 8-bit value `x` such that `x + 1 == 0`.
+    ///
+    /// ```
+    /// use z3::*;
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    ///
+    /// let x = ctx.named_bitvector_const("b", 8);
+    /// let bv_sort = ctx.bitvector_sort(8);
+    ///
+    /// let solver = Solver::new(&ctx);
+    /// solver.assert(&x.bvadd(&bv_sort.from_u64(1))
+    ///     ._eq(&bv_sort.from_u64(0)));
+    /// assert!(solver.check());
+    ///
+    /// let model = solver.get_model();
+    /// assert!(model.eval(&x).and_then(|i| i.as_u64()).unwrap_or(0) == 0xFF);
+    /// ```
+    pub fn from_u64(&self, u: u64) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_unsigned_int64(self.ctx.z3_ctx, u, self.z3_sort)
+        })
+    }
+
+    /// Converts a signed integer to an `Ast` of the given `Sort`
+    ///
+    /// `self` must be an integer, bit-vector, or finite-domain sort.
+    ///
+    /// # Example
+    ///
+    /// Checking that multiplication of signed 8-bit values overflows mod 256
+    ///
+    /// ```
+    /// use z3::*;
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    ///
+    /// let bv_sort = ctx.bitvector_sort(8);
+    ///
+    /// let solver = Solver::new(&ctx);
+    /// solver.assert(&bv_sort.from_i64(-5)
+    ///     .bvmul(&bv_sort.from_i64(-100))
+    ///     ._eq(&bv_sort.from_i64((-5 * -100) % 256)));
+    /// assert!(solver.check());
+    /// ```
+    pub fn from_i64(&self, i: i64) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_int64(self.ctx.z3_ctx, i, self.z3_sort)
+        })
     }
 }
 
