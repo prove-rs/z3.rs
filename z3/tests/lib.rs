@@ -118,6 +118,5 @@ fn test_pb_ops_model() {
     let yv = model.eval(&y).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
     info!("y: {}", yv);
-    assert!(xv > yv);
     assert!((xv && !yv) || (!xv && yv));
 }
