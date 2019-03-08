@@ -119,6 +119,26 @@ fn test_ast_translate() {
 }
 
 #[test]
+fn test_solver_translate() {
+    let cfg = Config::new();
+    let source = Context::new(&cfg);
+    let a = source.named_int_const("a");
+
+    let destination  = Context::new(&cfg);
+    let translated_a = a.translate(&destination);
+
+    let slv = Solver::new(&destination);
+    slv.assert(&translated_a._eq(&destination.from_u64(2)));
+    assert!(slv.check());
+
+    let translated_slv = slv.translate(&source);
+    // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
+    slv.assert(&translated_a._eq(&destination.from_u64(3)));
+    assert!(! slv.check());
+    assert!(translated_slv.check());
+}
+
+#[test]
 fn test_pb_ops_model() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
