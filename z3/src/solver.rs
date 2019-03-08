@@ -58,6 +58,16 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
+    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Solver<'dest_ctx> {
+        Solver {
+            ctx: dest,
+            z3_slv: unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                Z3_solver_translate(self.ctx.z3_ctx, self.z3_slv, dest.z3_ctx)
+            }
+        }
+    }
+
     /// Assert a constraint into the solver.
     ///
     /// The functions [`Solver::check()`](#method.check) and
