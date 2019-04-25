@@ -12,4 +12,5 @@ documentation = "https://docs.rs/z3-sys/"
 homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
-[dependencies]
+[build-dependencies]
+bindgen = "0.49.0"
