@@ -6,6 +6,9 @@ fn main() {
 
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
+        .prepend_enum_name(false)
+        .blacklist_item("Z3_TRUE")
+        .blacklist_item("Z3_FALSE")
         .generate()
         .expect("Unable to generate bindings");
 
