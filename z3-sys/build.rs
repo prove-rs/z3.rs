@@ -51,6 +51,10 @@ fn main() {
         .expect("Unable to install z3");
 
     println!("cargo:rustc-link-lib=z3");
+    println!(
+        "cargo:rustc-link-search={}",
+        out_path.join("vendor_install").join("lib").display()
+    );
 
     let bindings = bindgen::Builder::default()
         .header("src/wrapper.h")
