@@ -11,6 +11,9 @@ fn update_dir(from: &Path, to: &Path) {
     for entry in read_dir(from).expect(&format!("Unable to open directory {}", from.display())) {
         let entry = entry.unwrap();
         let path = entry.path();
+
+        println!("cargo:rerun-if-changed={}", path.display());
+
         let path = path.file_name().unwrap();
         let from_path = from.join(&path);
         let to_path = to.join(path);
