@@ -53,15 +53,15 @@ impl Context {
         Symbol::from_string(self, s)
     }
 
-    pub fn named_const<'ctx>(&'ctx self, s: &str, sort: &'ctx Sort) -> Ast<'ctx> {
+    pub fn named_const<'ctx>(&'ctx self, s: &str, sort: &Sort<'ctx>) -> Ast<'ctx> {
         Ast::new_const(&self.str_sym(s), sort)
     }
 
-    pub fn numbered_const<'ctx>(&'ctx self, i: u32, sort: &'ctx Sort) -> Ast<'ctx> {
+    pub fn numbered_const<'ctx>(&'ctx self, i: u32, sort: &Sort<'ctx>) -> Ast<'ctx> {
         Ast::new_const(&self.int_sym(i), sort)
     }
 
-    pub fn fresh_const<'ctx>(&'ctx self, prefix: &str, sort: &'ctx Sort) -> Ast<'ctx> {
+    pub fn fresh_const<'ctx>(&'ctx self, prefix: &str, sort: &Sort<'ctx>) -> Ast<'ctx> {
         Ast::fresh_const(self, prefix, sort)
     }
 
