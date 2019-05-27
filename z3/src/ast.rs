@@ -182,6 +182,60 @@ impl<'ctx> Ast<'ctx> {
         }
     }
 
+    /// Create a bit vector from an integer
+    ///
+    /// The bit vector has width `n`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let i = ctx.named_int_const("x");
+    /// solver.assert(&i._eq(&ctx.from_i64(-3)));
+    ///
+    /// let x = i.int2bv(32).bv2int(true);
+    ///
+    /// assert!(solver.check());
+    /// let model = solver.get_model();
+    ///
+    /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().unwrap());
+    /// ```
+    pub fn int2bv(&self, n: u64) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_int2bv(self.ctx.z3_ctx, n.try_into().unwrap(), self.z3_ast)
+        })
+    }
+
+    /// Create an integer from a bit vector
+    ///
+    /// Signed and unsigned version.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let i = ctx.named_int_const("x");
+    /// solver.assert(&i._eq(&ctx.from_i64(-3)));
+    ///
+    /// let x = i.int2bv(32).bv2int(true);
+    ///
+    /// assert!(solver.check());
+    /// let model = solver.get_model();
+    ///
+    /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().unwrap());
+    /// ```
+    pub fn bv2int(&self, signed: bool) -> Ast<'ctx> {
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_bv2int(self.ctx.z3_ctx, self.z3_ast, signed)
+        })
+    }
+
     varop!(distinct, Z3_mk_distinct);
 
     // Boolean ops
