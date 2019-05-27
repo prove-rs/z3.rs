@@ -174,3 +174,14 @@ impl<'ctx> PartialEq<Sort<'ctx>> for Sort<'ctx> {
 }
 
 impl<'ctx> Eq for Sort<'ctx> {}
+
+impl<'ctx> Drop for Sort<'ctx> {
+    fn drop(&mut self) {
+        unsafe {
+            Z3_dec_ref(
+                self.ctx.z3_ctx,
+                Z3_sort_to_ast(self.ctx.z3_ctx, self.z3_sort),
+            );
+        }
+    }
+}
