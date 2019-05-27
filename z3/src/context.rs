@@ -137,6 +137,30 @@ impl Context {
     ) -> FuncDecl<'ctx> {
         FuncDecl::new(self, name, domain, range)
     }
+
+    /// Create a forall quantifier.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let f = ctx.func_decl(ctx.str_sym("f"), &[&ctx.int_sort()], &ctx.int_sort());
+    ///
+    /// let x = ctx.named_int_const("x");
+    /// let f_x = f.apply(&[&x]);
+    /// solver.assert(&ctx.forall_const(&[&x], &x._eq(&f_x)));
+    ///
+    /// assert!(solver.check());
+    /// let model = solver.get_model();
+    ///
+    /// let f_f_3 = f.apply(&[&f.apply(&[&ctx.from_u64(3)])]);
+    /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
+    /// ```
+    pub fn forall_const<'ctx>(&'ctx self, bounds: &[&Ast<'ctx>], body: &Ast<'ctx>) -> Ast<'ctx> {
+        Ast::forall_const(self, bounds, body)
+    }
 }
 
 impl Drop for Context {
