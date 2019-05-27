@@ -45,6 +45,47 @@ impl Context {
         Sort::set(self, elt)
     }
 
+    /// Create an enumeration sort.
+    ///
+    /// Creates a Z3 enumeration sort with the given `name`.
+    /// The enum variants will have the names in `enum_names`.
+    /// Three things are returned:
+    /// - the created `Sort`,
+    /// - constants to create the variants,
+    /// - and testers to check if a value is equal to a variant.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let (colors, color_consts, color_testers) = ctx.enumeration_sort(
+    ///     &ctx.str_sym("Color"),
+    ///     &[
+    ///         &ctx.str_sym("Red"),
+    ///         &ctx.str_sym("Green"),
+    ///         &ctx.str_sym("Blue"),
+    ///     ],
+    /// );
+    ///
+    /// let red_const = color_consts[0].apply(&[]);
+    /// let red_tester = &color_testers[0];
+    /// let eq = red_tester.apply(&[&red_const]);
+    ///
+    /// assert!(solver.check());
+    /// let model = solver.get_model();
+    ///
+    /// assert!(model.eval(&eq).unwrap().as_bool().unwrap());
+    /// ```
+    pub fn enumeration_sort<'ctx>(
+        &'ctx self,
+        name: &Symbol<'ctx>,
+        enum_names: &[&Symbol<'ctx>],
+    ) -> (Sort<'ctx>, Vec<FuncDecl<'ctx>>, Vec<FuncDecl<'ctx>>) {
+        Sort::enumeration(self, name, enum_names)
+    }
+
     pub fn int_sym(&self, i: u32) -> Symbol {
         Symbol::from_int(self, i)
     }
