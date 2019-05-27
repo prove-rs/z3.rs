@@ -1,8 +1,10 @@
+use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 use Ast;
 use Context;
+use FuncDecl;
 use Sort;
 use Symbol;
 use Z3_MUTEX;
@@ -88,6 +90,65 @@ impl<'ctx> Sort<'ctx> {
                 s
             },
         }
+    }
+
+    pub fn enumeration(
+        ctx: &'ctx Context,
+        name: &Symbol<'ctx>,
+        enum_names: &[&Symbol<'ctx>],
+    ) -> (Sort<'ctx>, Vec<FuncDecl<'ctx>>, Vec<FuncDecl<'ctx>>) {
+        assert_eq!(ctx.z3_ctx, name.ctx.z3_ctx);
+        assert!(enum_names.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
+
+        let enum_names: Vec<_> = enum_names.iter().map(|s| s.z3_sym).collect();
+        let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
+        let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
+
+        let sort = Sort {
+            ctx,
+            z3_sort: unsafe {
+                let s = Z3_mk_enumeration_sort(
+                    ctx.z3_ctx,
+                    name.z3_sym,
+                    enum_names.len().try_into().unwrap(),
+                    enum_names.as_ptr(),
+                    enum_consts.as_mut_ptr(),
+                    enum_testers.as_mut_ptr(),
+                );
+                Z3_inc_ref(ctx.z3_ctx, s as Z3_ast);
+                s
+            },
+        };
+
+        // increase ref counts
+        for i in &enum_consts {
+            unsafe {
+                Z3_inc_ref(ctx.z3_ctx, *i as Z3_ast);
+            }
+        }
+        for i in &enum_testers {
+            unsafe {
+                Z3_inc_ref(ctx.z3_ctx, *i as Z3_ast);
+            }
+        }
+
+        // convert to Rust types
+        let enum_consts: Vec<_> = enum_consts
+            .iter()
+            .map(|z3_func_decl| FuncDecl {
+                ctx,
+                z3_func_decl: *z3_func_decl,
+            })
+            .collect();
+        let enum_testers: Vec<_> = enum_testers
+            .iter()
+            .map(|z3_func_decl| FuncDecl {
+                ctx,
+                z3_func_decl: *z3_func_decl,
+            })
+            .collect();
+
+        (sort, enum_consts, enum_testers)
     }
 
     /// Converts an unsigned integer to an `Ast` of the given `Sort`
