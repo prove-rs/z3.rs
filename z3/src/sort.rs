@@ -1,10 +1,10 @@
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
+use Ast;
 use Context;
 use Sort;
 use Symbol;
-use Ast;
 use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {
