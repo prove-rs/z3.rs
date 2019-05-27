@@ -73,12 +73,10 @@ impl<'ctx> Ast<'ctx> {
     }
 
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Ast<'dest_ctx> {
-        Ast::new(
-            dest,unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-            }
-        )
+        Ast::new(dest, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
+        })
     }
 
     pub fn new_const(sym: &Symbol<'ctx>, sort: &Sort<'ctx>) -> Ast<'ctx> {
