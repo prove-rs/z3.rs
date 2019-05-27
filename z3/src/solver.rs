@@ -63,7 +63,9 @@ impl<'ctx> Solver<'ctx> {
             ctx: dest,
             z3_slv: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_solver_translate(self.ctx.z3_ctx, self.z3_slv, dest.z3_ctx)
+                let s = Z3_solver_translate(self.ctx.z3_ctx, self.z3_slv, dest.z3_ctx);
+                Z3_solver_inc_ref(dest.z3_ctx, s);
+                s
             },
         }
     }
