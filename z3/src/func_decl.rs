@@ -19,13 +19,21 @@ impl<'ctx> FuncDecl<'ctx> {
             ctx,
             z3_func_decl: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_func_decl(
+
+                for d in domain.iter() {
+                    Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, *d));
+                }
+                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, range.z3_sort));
+
+                let f = Z3_mk_func_decl(
                     ctx.z3_ctx,
                     name.z3_sym,
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
-                )
+                );
+                Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, f));
+                f
             },
         }
     }
@@ -35,17 +43,37 @@ impl<'ctx> FuncDecl<'ctx> {
 
         let args: Vec<_> = args.iter().map(|a| a.z3_ast).collect();
 
-        Ast {
-            ctx: self.ctx,
-            z3_ast: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_app(
-                    self.ctx.z3_ctx,
-                    self.z3_func_decl,
-                    args.len().try_into().unwrap(),
-                    args.as_ptr(),
-                )
-            },
+        Ast::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_app(
+                self.ctx.z3_ctx,
+                self.z3_func_decl,
+                args.len().try_into().unwrap(),
+                args.as_ptr(),
+            )
+        })
+    }
+}
+
+impl<'ctx> std::fmt::Display for FuncDecl<'ctx> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx, self.z3_func_decl) };
+        if p.is_null() {
+            Err(std::fmt::Error)
+        } else {
+            let s = unsafe { std::ffi::CStr::from_ptr(p) };
+            write!(f, "{:?}", s)
+        }
+    }
+}
+
+impl<'ctx> Drop for FuncDecl<'ctx> {
+    fn drop(&mut self) {
+        unsafe {
+            Z3_dec_ref(
+                self.ctx.z3_ctx,
+                Z3_func_decl_to_ast(self.ctx.z3_ctx, self.z3_func_decl),
+            );
         }
     }
 }
