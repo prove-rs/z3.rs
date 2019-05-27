@@ -16,6 +16,7 @@ use z3_sys::*;
 mod ast;
 mod config;
 mod context;
+mod func_decl;
 mod model;
 mod optimize;
 mod solver;
@@ -83,4 +84,9 @@ pub struct Model<'ctx> {
 pub struct Optimize<'ctx> {
     ctx: &'ctx Context,
     z3_opt: Z3_optimize,
+}
+
+pub struct FuncDecl<'ctx> {
+    ctx: &'ctx Context,
+    z3_func_decl: Z3_func_decl,
 }

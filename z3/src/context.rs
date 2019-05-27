@@ -2,6 +2,7 @@ use z3_sys::*;
 use Ast;
 use Config;
 use Context;
+use FuncDecl;
 use Sort;
 use Symbol;
 use Z3_MUTEX;
@@ -126,6 +127,15 @@ impl Context {
 
     pub fn from_real(&self, num: i32, den: i32) -> Ast {
         Ast::from_real(self, num, den)
+    }
+
+    pub fn func_decl<'ctx>(
+        &'ctx self,
+        name: Symbol<'ctx>,
+        domain: &[&Sort<'ctx>],
+        range: &Sort<'ctx>,
+    ) -> FuncDecl<'ctx> {
+        FuncDecl::new(self, name, domain, range)
     }
 }
 
