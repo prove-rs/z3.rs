@@ -370,6 +370,10 @@ impl<'ctx> Ast<'ctx> {
         assert!(bounds.iter().all(|a| a.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, body.ctx.z3_ctx);
 
+        if bounds.is_empty() {
+            return body.clone();
+        }
+
         let bounds: Vec<_> = bounds.iter().map(|a| a.z3_ast).collect();
 
         Ast::new(ctx, unsafe {
