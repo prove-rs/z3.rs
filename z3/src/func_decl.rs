@@ -20,11 +20,6 @@ impl<'ctx> FuncDecl<'ctx> {
             z3_func_decl: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
 
-                for d in domain.iter() {
-                    Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, *d));
-                }
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, range.z3_sort));
-
                 let f = Z3_mk_func_decl(
                     ctx.z3_ctx,
                     name.z3_sym,
