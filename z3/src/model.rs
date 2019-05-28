@@ -44,6 +44,17 @@ impl<'ctx> Model<'ctx> {
     }
 }
 
+impl<'ctx> std::fmt::Display for Model<'ctx> {
+    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+        let p = unsafe { Z3_model_to_string(self.ctx.z3_ctx, self.z3_mdl) };
+        if p.is_null() {
+            Err(std::fmt::Error)
+        } else {
+            write!(f, "{}", unsafe { std::ffi::CStr::from_ptr(p) }.to_str().unwrap())
+        }
+    }
+}
+
 impl<'ctx> Drop for Model<'ctx> {
     fn drop(&mut self) {
         let guard = Z3_MUTEX.lock().unwrap();
