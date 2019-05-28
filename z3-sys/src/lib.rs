@@ -273,9 +273,6 @@ pub struct _Z3_rcf_num {
 }
 pub type Z3_rcf_num = *mut _Z3_rcf_num;
 
-/// Z3 Boolean type. It is just an alias for `bool`.
-pub type Z3_bool = bool;
-
 /// Z3 string type. It is just an alias for `const char *`.
 pub type Z3_string = *const ::std::os::raw::c_char;
 
@@ -1601,7 +1598,7 @@ extern "C" {
     ///
     /// NOTE: This function cannot be invoked simultaneously from different threads without synchronization.
     /// The result string stored in param_value is stored in shared location.
-    pub fn Z3_global_param_get(param_id: Z3_string, param_value: Z3_string_ptr) -> Z3_bool;
+    pub fn Z3_global_param_get(param_id: Z3_string, param_value: Z3_string_ptr) -> bool;
 
     /// Create a configuration object for the Z3 context object.
     ///
@@ -1743,7 +1740,7 @@ extern "C" {
     pub fn Z3_params_dec_ref(c: Z3_context, p: Z3_params);
 
     /// Add a Boolean parameter `k` with value `v` to the parameter set `p`.
-    pub fn Z3_params_set_bool(c: Z3_context, p: Z3_params, k: Z3_symbol, v: Z3_bool);
+    pub fn Z3_params_set_bool(c: Z3_context, p: Z3_params, k: Z3_symbol, v: bool);
 
     /// Add a unsigned parameter `k` with value `v` to the parameter set `p`.
     pub fn Z3_params_set_uint(c: Z3_context, p: Z3_params, k: Z3_symbol, v: ::std::os::raw::c_uint);
@@ -2658,7 +2655,7 @@ extern "C" {
     /// If `is_signed` is true, `t1` is treated as a signed bit-vector.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_bv2int(c: Z3_context, t1: Z3_ast, is_signed: Z3_bool) -> Z3_ast;
+    pub fn Z3_mk_bv2int(c: Z3_context, t1: Z3_ast, is_signed: bool) -> Z3_ast;
 
     /// Create a predicate that checks that the bit-wise addition
     /// of `t1` and `t2` does not overflow.
@@ -2668,7 +2665,7 @@ extern "C" {
         c: Z3_context,
         t1: Z3_ast,
         t2: Z3_ast,
-        is_signed: Z3_bool,
+        is_signed: bool,
     ) -> Z3_ast;
 
     /// Create a predicate that checks that the bit-wise signed addition
@@ -2691,7 +2688,7 @@ extern "C" {
         c: Z3_context,
         t1: Z3_ast,
         t2: Z3_ast,
-        is_signed: Z3_bool,
+        is_signed: bool,
     ) -> Z3_ast;
 
     /// Create a predicate that checks that the bit-wise signed division
@@ -2714,7 +2711,7 @@ extern "C" {
         c: Z3_context,
         t1: Z3_ast,
         t2: Z3_ast,
-        is_signed: Z3_bool,
+        is_signed: bool,
     ) -> Z3_ast;
 
     /// Create a predicate that checks that the bit-wise signed multiplication
@@ -2942,23 +2939,20 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
-    pub fn Z3_mk_bv_numeral(
-        c: Z3_context,
-        sz: ::std::os::raw::c_uint,
-        bits: *const Z3_bool,
-    ) -> Z3_ast;
+    pub fn Z3_mk_bv_numeral(c: Z3_context, sz: ::std::os::raw::c_uint, bits: *const bool)
+        -> Z3_ast;
 
     /// Create a sequence sort out of the sort for the elements.
     pub fn Z3_mk_seq_sort(c: Z3_context, s: Z3_sort) -> Z3_sort;
 
     /// Check if `s` is a sequence sort.
-    pub fn Z3_is_seq_sort(c: Z3_context, s: Z3_sort) -> Z3_bool;
+    pub fn Z3_is_seq_sort(c: Z3_context, s: Z3_sort) -> bool;
 
     /// Create a regular expression sort out of a sequence sort.
     pub fn Z3_mk_re_sort(c: Z3_context, seq: Z3_sort) -> Z3_sort;
 
     /// Check if `s` is a regular expression sort.
-    pub fn Z3_is_re_sort(c: Z3_context, s: Z3_sort) -> Z3_bool;
+    pub fn Z3_is_re_sort(c: Z3_context, s: Z3_sort) -> bool;
 
     /// Create a sort for 8 bit strings.
     ///
@@ -2967,13 +2961,13 @@ extern "C" {
     pub fn Z3_mk_string_sort(c: Z3_context) -> Z3_sort;
 
     /// Check if `s` is a string sort.
-    pub fn Z3_is_string_sort(c: Z3_context, s: Z3_sort) -> Z3_bool;
+    pub fn Z3_is_string_sort(c: Z3_context, s: Z3_sort) -> bool;
 
     /// Create a string constant out of the string that is passed in
     pub fn Z3_mk_string(c: Z3_context, s: Z3_string) -> Z3_ast;
 
     /// Determine if `s` is a string constant.
-    pub fn Z3_is_string(c: Z3_context, s: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_string(c: Z3_context, s: Z3_ast) -> bool;
 
     /// Retrieve the string constant stored in `s`.
     ///
@@ -3244,7 +3238,7 @@ extern "C" {
     /// - [`Z3_mk_exists`](fn.Z3_mk_exists.html)
     pub fn Z3_mk_quantifier(
         c: Z3_context,
-        is_forall: Z3_bool,
+        is_forall: bool,
         weight: ::std::os::raw::c_uint,
         num_patterns: ::std::os::raw::c_uint,
         patterns: *const Z3_pattern,
@@ -3278,7 +3272,7 @@ extern "C" {
     /// - [`Z3_mk_exists`](fn.Z3_mk_exists.html)
     pub fn Z3_mk_quantifier_ex(
         c: Z3_context,
-        is_forall: Z3_bool,
+        is_forall: bool,
         weight: ::std::os::raw::c_uint,
         quantifier_id: Z3_symbol,
         skolem_id: Z3_symbol,
@@ -3350,7 +3344,7 @@ extern "C" {
     /// constants that will form the set of bound variables.
     pub fn Z3_mk_quantifier_const(
         c: Z3_context,
-        is_forall: Z3_bool,
+        is_forall: bool,
         weight: ::std::os::raw::c_uint,
         num_bound: ::std::os::raw::c_uint,
         bound: *const Z3_app,
@@ -3363,7 +3357,7 @@ extern "C" {
     /// constants that will form the set of bound variables.
     pub fn Z3_mk_quantifier_const_ex(
         c: Z3_context,
-        is_forall: Z3_bool,
+        is_forall: bool,
         weight: ::std::os::raw::c_uint,
         quantifier_id: Z3_symbol,
         skolem_id: Z3_symbol,
@@ -3473,7 +3467,7 @@ extern "C" {
     pub fn Z3_sort_to_ast(c: Z3_context, s: Z3_sort) -> Z3_ast;
 
     /// compare sorts.
-    pub fn Z3_is_eq_sort(c: Z3_context, s1: Z3_sort, s2: Z3_sort) -> Z3_bool;
+    pub fn Z3_is_eq_sort(c: Z3_context, s1: Z3_sort, s2: Z3_sort) -> bool;
 
     /// Return the sort kind (e.g., array, tuple, int, bool, etc).
     ///
@@ -3496,7 +3490,7 @@ extern "C" {
 
     /// Store the size of the sort in `r`. Return `false` if the call failed.
     /// That is, `Z3_get_sort_kind(s) == SortKind::FiniteDomain`
-    pub fn Z3_get_finite_domain_sort_size(c: Z3_context, s: Z3_sort, r: *mut u64) -> Z3_bool;
+    pub fn Z3_get_finite_domain_sort_size(c: Z3_context, s: Z3_sort, r: *mut u64) -> bool;
 
     /// Return the domain of the given array sort.
     ///
@@ -3747,7 +3741,7 @@ extern "C" {
     pub fn Z3_func_decl_to_ast(c: Z3_context, f: Z3_func_decl) -> Z3_ast;
 
     /// Compare terms.
-    pub fn Z3_is_eq_func_decl(c: Z3_context, f1: Z3_func_decl, f2: Z3_func_decl) -> Z3_bool;
+    pub fn Z3_is_eq_func_decl(c: Z3_context, f1: Z3_func_decl, f2: Z3_func_decl) -> bool;
 
     /// Return a unique identifier for `f`.
     pub fn Z3_get_func_decl_id(c: Z3_context, f: Z3_func_decl) -> ::std::os::raw::c_uint;
@@ -3899,7 +3893,7 @@ extern "C" {
     pub fn Z3_get_app_arg(c: Z3_context, a: Z3_app, i: ::std::os::raw::c_uint) -> Z3_ast;
 
     /// Compare terms.
-    pub fn Z3_is_eq_ast(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_eq_ast(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> bool;
 
     /// Return a unique identifier for `t`.
     ///
@@ -3924,7 +3918,7 @@ extern "C" {
     pub fn Z3_get_sort(c: Z3_context, a: Z3_ast) -> Z3_sort;
 
     /// Return true if the given expression `t` is well sorted.
-    pub fn Z3_is_well_sorted(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_well_sorted(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Return `Z3_L_TRUE` if `a` is true, `Z3_L_FALSE` if it is false,
     /// and `Z3_L_UNDEF` otherwise.
@@ -3933,12 +3927,12 @@ extern "C" {
     /// Return the kind of the given AST.
     pub fn Z3_get_ast_kind(c: Z3_context, a: Z3_ast) -> AstKind;
 
-    pub fn Z3_is_app(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_app(c: Z3_context, a: Z3_ast) -> bool;
 
-    pub fn Z3_is_numeral_ast(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_numeral_ast(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Return true if the given AST is a real algebraic number.
-    pub fn Z3_is_algebraic_number(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_algebraic_number(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Convert an `ast` into an `Z3_App`. This is just type casting.
     ///
@@ -4035,7 +4029,7 @@ extern "C" {
     ///
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_small(c: Z3_context, a: Z3_ast, num: *mut i64, den: *mut i64) -> Z3_bool;
+    pub fn Z3_get_numeral_small(c: Z3_context, a: Z3_ast, num: *mut i64, den: *mut i64) -> bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html), but only succeeds if
     /// the value can fit in a machine int. Return `true` if the call succeeded.
@@ -4049,7 +4043,7 @@ extern "C" {
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_int(c: Z3_context, v: Z3_ast, i: *mut ::std::os::raw::c_int) -> Z3_bool;
+    pub fn Z3_get_numeral_int(c: Z3_context, v: Z3_ast, i: *mut ::std::os::raw::c_int) -> bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit in a machine unsigned int.
@@ -4064,8 +4058,7 @@ extern "C" {
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_uint(c: Z3_context, v: Z3_ast, u: *mut ::std::os::raw::c_uint)
-        -> Z3_bool;
+    pub fn Z3_get_numeral_uint(c: Z3_context, v: Z3_ast, u: *mut ::std::os::raw::c_uint) -> bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit in a machine `uint64_t` int.
@@ -4080,7 +4073,7 @@ extern "C" {
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_uint64(c: Z3_context, v: Z3_ast, u: *mut u64) -> Z3_bool;
+    pub fn Z3_get_numeral_uint64(c: Z3_context, v: Z3_ast, u: *mut u64) -> bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit in a machine `int64_t` int.
@@ -4095,7 +4088,7 @@ extern "C" {
     /// - [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html)
     /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
     /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
-    pub fn Z3_get_numeral_int64(c: Z3_context, v: Z3_ast, i: *mut i64) -> Z3_bool;
+    pub fn Z3_get_numeral_int64(c: Z3_context, v: Z3_ast, i: *mut i64) -> bool;
 
     /// Similar to [`Z3_get_numeral_string`](fn.Z3_get_numeral_string.html),
     /// but only succeeds if the value can fit as a rational number as
@@ -4115,7 +4108,7 @@ extern "C" {
         v: Z3_ast,
         num: *mut i64,
         den: *mut i64,
-    ) -> Z3_bool;
+    ) -> bool;
 
     /// Return a lower bound for the given real algebraic number.
     ///
@@ -4174,17 +4167,17 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `Z3_get_ast_kind(a) == AstKind::Quantifier`
-    pub fn Z3_is_quantifier_forall(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_quantifier_forall(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Determine if ast is an existential quantifier.
-    pub fn Z3_is_quantifier_exists(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_quantifier_exists(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Determine if ast is a lambda expression.
     ///
     /// # Preconditions:
     ///
     /// - `Z3_get_ast_kind(a) == AstKind::Quantifier`
-    pub fn Z3_is_lambda(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_lambda(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Obtain weight of quantifier.
     ///
@@ -4390,9 +4383,9 @@ extern "C" {
         c: Z3_context,
         m: Z3_model,
         t: Z3_ast,
-        model_completion: Z3_bool,
+        model_completion: bool,
         v: *mut Z3_ast,
-    ) -> Z3_bool;
+    ) -> bool;
 
     /// Return the interpretation (i.e., assignment) of constant `a` in the model `m`.
     ///
@@ -4405,7 +4398,7 @@ extern "C" {
     pub fn Z3_model_get_const_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl) -> Z3_ast;
 
     /// Test if there exists an interpretation (i.e., assignment) for `a` in the model `m`.
-    pub fn Z3_model_has_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl) -> Z3_bool;
+    pub fn Z3_model_has_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl) -> bool;
 
     /// Return the interpretation of the function `f` in the model `m`.
     ///
@@ -4513,7 +4506,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_as_array_func_decl`](fn.Z3_get_as_array_func_decl.html)
-    pub fn Z3_is_as_array(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_is_as_array(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Return the function declaration `f` associated with a `(_ as_array f)` node.
     ///
@@ -4646,7 +4639,7 @@ extern "C" {
     ) -> Z3_ast;
 
     /// Log interaction to a file.
-    pub fn Z3_open_log(filename: Z3_string) -> Z3_bool;
+    pub fn Z3_open_log(filename: Z3_string) -> bool;
 
     /// Append user-defined string to interaction log.
     ///
@@ -4663,7 +4656,7 @@ extern "C" {
     ///
     /// Warnings are printed after passing `true`, warning messages are
     /// suppressed after calling this method with `false`.
-    pub fn Z3_toggle_warning_messages(enabled: Z3_bool);
+    pub fn Z3_toggle_warning_messages(enabled: bool);
 
     /// Select mode for the format used for pretty-printing AST nodes.
     ///
@@ -4861,12 +4854,7 @@ extern "C" {
     /// when the `Z3_context` was created using
     /// [`Z3_mk_context`](fn.Z3_mk_context.html) instead of
     /// [`Z3_mk_context_rc`](fn.Z3_mk_context_rc.html).
-    pub fn Z3_mk_goal(
-        c: Z3_context,
-        models: Z3_bool,
-        unsat_cores: Z3_bool,
-        proofs: Z3_bool,
-    ) -> Z3_goal;
+    pub fn Z3_mk_goal(c: Z3_context, models: bool, unsat_cores: bool, proofs: bool) -> Z3_goal;
 
     /// Increment the reference counter of the given goal.
     pub fn Z3_goal_inc_ref(c: Z3_context, g: Z3_goal);
@@ -4890,7 +4878,7 @@ extern "C" {
     pub fn Z3_goal_assert(c: Z3_context, g: Z3_goal, a: Z3_ast);
 
     /// Return true if the given goal contains the formula `false`.
-    pub fn Z3_goal_inconsistent(c: Z3_context, g: Z3_goal) -> Z3_bool;
+    pub fn Z3_goal_inconsistent(c: Z3_context, g: Z3_goal) -> bool;
 
     /// Return the depth of the given goal. It tracks how many transformations were applied to it.
     pub fn Z3_goal_depth(c: Z3_context, g: Z3_goal) -> ::std::os::raw::c_uint;
@@ -4912,10 +4900,10 @@ extern "C" {
     pub fn Z3_goal_num_exprs(c: Z3_context, g: Z3_goal) -> ::std::os::raw::c_uint;
 
     /// Return true if the goal is empty, and it is precise or the product of a under approximation.
-    pub fn Z3_goal_is_decided_sat(c: Z3_context, g: Z3_goal) -> Z3_bool;
+    pub fn Z3_goal_is_decided_sat(c: Z3_context, g: Z3_goal) -> bool;
 
     /// Return true if the goal contains false, and it is precise or the product of an over approximation.
-    pub fn Z3_goal_is_decided_unsat(c: Z3_context, g: Z3_goal) -> Z3_bool;
+    pub fn Z3_goal_is_decided_unsat(c: Z3_context, g: Z3_goal) -> bool;
 
     /// Copy a goal `g` from the context `source` to the context `target`.
     pub fn Z3_goal_translate(source: Z3_context, g: Z3_goal, target: Z3_context) -> Z3_goal;
@@ -5489,14 +5477,14 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `idx < Z3_stats_size(c, s)`
-    pub fn Z3_stats_is_uint(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> Z3_bool;
+    pub fn Z3_stats_is_uint(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> bool;
 
     /// Return `true` if the given statistical data is a double.
     ///
     /// # Preconditions:
     ///
     /// - `idx < Z3_stats_size(c, s)`
-    pub fn Z3_stats_is_double(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> Z3_bool;
+    pub fn Z3_stats_is_double(c: Z3_context, s: Z3_stats, idx: ::std::os::raw::c_uint) -> bool;
 
     /// Return the unsigned value of the given statistical data.
     ///
@@ -5578,7 +5566,7 @@ extern "C" {
     pub fn Z3_ast_map_dec_ref(c: Z3_context, m: Z3_ast_map);
 
     /// Return true if the map `m` contains the AST key `k`.
-    pub fn Z3_ast_map_contains(c: Z3_context, m: Z3_ast_map, k: Z3_ast) -> Z3_bool;
+    pub fn Z3_ast_map_contains(c: Z3_context, m: Z3_ast_map, k: Z3_ast) -> bool;
 
     /// Return the value associated with the key `k`.
     ///
@@ -5605,7 +5593,7 @@ extern "C" {
 
     /// Return `true` if `a` can be used as value in the Z3 real algebraic
     /// number package.
-    pub fn Z3_algebraic_is_value(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_is_value(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Return `true` if `a` is positive, and `false` otherwise.
     ///
@@ -5616,7 +5604,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_is_pos(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_is_pos(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Return `true` if `a` is negative, and `false` otherwise.
     ///
@@ -5627,7 +5615,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_is_neg(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_is_neg(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Return `true` if `a` is zero, and `false` otherwise.
     ///
@@ -5638,7 +5626,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_is_zero(c: Z3_context, a: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_is_zero(c: Z3_context, a: Z3_ast) -> bool;
 
     /// Return 1 if `a` is positive, 0 if `a` is zero, and -1 if `a` is negative.
     ///
@@ -5759,7 +5747,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_lt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_lt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
 
     /// Return `true` if `a > b`, and `false` otherwise.
     ///
@@ -5771,7 +5759,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_gt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_gt(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
 
     /// Return `true` if `a <= b`, and `false` otherwise.
     ///
@@ -5783,7 +5771,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_le(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_le(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
 
     /// Return `true` if `a >= b`, and `false` otherwise.
     ///
@@ -5795,7 +5783,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_ge(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_ge(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
 
     /// Return `true` if `a == b`, and `false` otherwise.
     ///
@@ -5807,7 +5795,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_eq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_eq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
 
     /// Return `true` if `a != b`, and `false` otherwise.
     ///
@@ -5819,7 +5807,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`](fn.Z3_algebraic_is_value.html)
-    pub fn Z3_algebraic_neq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_bool;
+    pub fn Z3_algebraic_neq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
 
     /// Given a multivariate polynomial `p(x_0, ..., x_{n-1}, x_n)`, returns the
     /// roots of the univariate polynomial `p(a[0], ..., a[n-1], x_n)`.
@@ -5931,29 +5919,29 @@ extern "C" {
     pub fn Z3_rcf_power(c: Z3_context, a: Z3_rcf_num, k: ::std::os::raw::c_uint) -> Z3_rcf_num;
 
     /// Return `true` if `a < b`.
-    pub fn Z3_rcf_lt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
+    pub fn Z3_rcf_lt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
 
     /// Return `true` if `a > b`.
-    pub fn Z3_rcf_gt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
+    pub fn Z3_rcf_gt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
 
     /// Return `true` if `a <= b`.
-    pub fn Z3_rcf_le(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
+    pub fn Z3_rcf_le(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
 
     /// Return `true` if `a >= b`.
-    pub fn Z3_rcf_ge(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
+    pub fn Z3_rcf_ge(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
 
     /// Return `true` if `a == b`.
-    pub fn Z3_rcf_eq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
+    pub fn Z3_rcf_eq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
 
     /// Return `true` if `a != b`.
-    pub fn Z3_rcf_neq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_bool;
+    pub fn Z3_rcf_neq(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
 
     /// Convert the RCF numeral into a string.
     pub fn Z3_rcf_num_to_string(
         c: Z3_context,
         a: Z3_rcf_num,
-        compact: Z3_bool,
-        html: Z3_bool,
+        compact: bool,
+        html: bool,
     ) -> Z3_string;
 
     /// Convert the RCF numeral into a string in decimal notation.
@@ -6694,7 +6682,7 @@ extern "C" {
     /// - `negative`: indicates whether the result should be negative
     ///
     /// When `negative` is true, -oo will be generated instead of +oo.
-    pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: Z3_bool) -> Z3_ast;
+    pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
 
     /// Create a floating-point zero of sort `s`.
     ///
@@ -6703,7 +6691,7 @@ extern "C" {
     /// - `negative`: indicates whether the result should be negative
     ///
     /// When `negative` is true, -zero will be generated instead of +zero.
-    pub fn Z3_mk_fpa_zero(c: Z3_context, s: Z3_sort, negative: Z3_bool) -> Z3_ast;
+    pub fn Z3_mk_fpa_zero(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
 
     /// Create an expression of FloatingPoint sort from three bit-vector expressions.
     ///
@@ -6779,7 +6767,7 @@ extern "C" {
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int_uint(
         c: Z3_context,
-        sgn: Z3_bool,
+        sgn: bool,
         exp: ::std::os::raw::c_int,
         sig: ::std::os::raw::c_uint,
         ty: Z3_sort,
@@ -6800,7 +6788,7 @@ extern "C" {
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int64_uint64(
         c: Z3_context,
-        sgn: Z3_bool,
+        sgn: bool,
         exp: i64,
         sig: u64,
         ty: Z3_sort,
@@ -7156,43 +7144,43 @@ extern "C" {
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_nan(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_nan(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is a +oo or -oo.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_inf(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_inf(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is +zero or -zero.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_zero(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_zero(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is normal.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_normal(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_normal(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is subnormal.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_subnormal(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_subnormal(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is positive.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_positive(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_positive(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is negative.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    pub fn Z3_fpa_is_numeral_negative(c: Z3_context, t: Z3_ast) -> Z3_bool;
+    pub fn Z3_fpa_is_numeral_negative(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Retrieves the sign of a floating-point literal as a bit-vector expression.
     ///
@@ -7222,7 +7210,7 @@ extern "C" {
         c: Z3_context,
         t: Z3_ast,
         sgn: *mut ::std::os::raw::c_int,
-    ) -> Z3_bool;
+    ) -> bool;
 
     /// Return the significand value of a floating-point numeral as a string.
     ///
@@ -7242,7 +7230,7 @@ extern "C" {
     /// Remarks: This function extracts the significand bits in `t`, without the
     /// hidden bit or normalization. Sets the `ErrorCode::InvalidArg` error code if the
     /// significand does not fit into a uint64. NaN is an invalid argument.
-    pub fn Z3_fpa_get_numeral_significand_uint64(c: Z3_context, t: Z3_ast, n: *mut u64) -> Z3_bool;
+    pub fn Z3_fpa_get_numeral_significand_uint64(c: Z3_context, t: Z3_ast, n: *mut u64) -> bool;
 
     /// Return the exponent value of a floating-point numeral as a string.
     ///
@@ -7252,11 +7240,7 @@ extern "C" {
     ///
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid argument.
-    pub fn Z3_fpa_get_numeral_exponent_string(
-        c: Z3_context,
-        t: Z3_ast,
-        biased: Z3_bool,
-    ) -> Z3_string;
+    pub fn Z3_fpa_get_numeral_exponent_string(c: Z3_context, t: Z3_ast, biased: bool) -> Z3_string;
 
     /// Return the exponent value of a floating-point numeral as a signed 64-bit integer
     ///
@@ -7271,8 +7255,8 @@ extern "C" {
         c: Z3_context,
         t: Z3_ast,
         n: *mut i64,
-        biased: Z3_bool,
-    ) -> Z3_bool;
+        biased: bool,
+    ) -> bool;
 
     /// Retrieves the exponent of a floating-point literal as a bit-vector expression.
     ///
@@ -7282,7 +7266,7 @@ extern "C" {
     ///
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid arguments.
-    pub fn Z3_fpa_get_numeral_exponent_bv(c: Z3_context, t: Z3_ast, biased: Z3_bool) -> Z3_ast;
+    pub fn Z3_fpa_get_numeral_exponent_bv(c: Z3_context, t: Z3_ast, biased: bool) -> Z3_ast;
 
     /// Conversion of a floating-point term into a bit-vector term in IEEE 754-2008 format.
     ///
