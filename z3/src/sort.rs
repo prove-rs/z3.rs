@@ -10,7 +10,7 @@ use Symbol;
 use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {
-    pub fn uninterpretd(ctx: &'ctx Context, sym: &Symbol<'ctx>) -> Sort<'ctx> {
+    pub fn uninterpreted(ctx: &'ctx Context, sym: &Symbol<'ctx>) -> Sort<'ctx> {
         Sort {
             ctx,
             z3_sort: unsafe {
