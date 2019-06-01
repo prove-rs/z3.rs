@@ -3988,6 +3988,15 @@ extern "C" {
         precision: ::std::os::raw::c_uint,
     ) -> Z3_string;
 
+    /// Return numeral as a double.
+    /// # Preconditions:
+    ///
+    /// - `Z3_get_ast_kind(c, a) == AstKind::Numeral || Z3_is_algebraic_number(c, a)`
+    ///
+    /// - [`Z3_get_ast_kind`](fn.Z3_get_ast_kind.html)
+    /// - [`AstKind::Numeral`](enum.AstKind.html#variant.Numeral)
+    pub fn Z3_get_numeral_double(c: Z3_context, a: Z3_ast) -> f64;
+
     /// Return the numerator (as a numeral AST) of a numeral AST of sort Real.
     ///
     /// # Preconditions:
