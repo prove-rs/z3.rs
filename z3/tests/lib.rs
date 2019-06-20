@@ -102,6 +102,28 @@ fn test_format() {
 }
 
 #[test]
+fn test_bitvectors() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let a = ctx.named_bitvector_const("a", 64);
+    let b = ctx.named_bitvector_const("b", 64);
+    let two = Ast::bitvector_from_i64(&ctx, 2, 64);
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&a.bvsgt(&b));
+    solver.assert(&b.bvsgt(&two));
+    solver.assert(&b.bvadd(&two).bvsgt(&a));
+    assert!(solver.check());
+
+    let model = solver.get_model();
+    let av = model.eval(&a).unwrap().as_i64().unwrap();
+    let bv = model.eval(&b).unwrap().as_i64().unwrap();
+    assert!(av > bv);
+    assert!(bv > 2);
+    assert!(bv + 2 > av);
+}
+
+#[test]
 fn test_ast_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
