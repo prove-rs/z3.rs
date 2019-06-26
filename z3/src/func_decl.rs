@@ -1,6 +1,8 @@
 use std::convert::TryInto;
 use z3_sys::*;
-use {Ast, Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
+use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
+use ast;
+use ast::Ast;
 
 impl<'ctx> FuncDecl<'ctx> {
     pub fn new(
@@ -33,12 +35,15 @@ impl<'ctx> FuncDecl<'ctx> {
         }
     }
 
-    pub fn apply(&self, args: &[&Ast<'ctx>]) -> Ast<'ctx> {
-        assert!(args.iter().all(|s| s.ctx.z3_ctx == self.ctx.z3_ctx));
+    /// Create a constant (if `args` has length 0) or function application (otherwise).
+    ///
+    /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
+    pub fn apply(&self, args: &[&ast::Dynamic<'ctx>]) -> ast::Dynamic<'ctx> {
+        assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
 
-        let args: Vec<_> = args.iter().map(|a| a.z3_ast).collect();
+        let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
-        Ast::new(self.ctx, unsafe {
+        ast::Dynamic::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_app(
                 self.ctx.z3_ctx,

@@ -1,5 +1,5 @@
 use z3_sys::*;
-use Ast;
+use ast::Ast;
 use Model;
 use Optimize;
 use Solver;
@@ -30,14 +30,14 @@ impl<'ctx> Model<'ctx> {
         }
     }
 
-    pub fn eval(&self, ast: &Ast<'ctx>) -> Option<Ast<'ctx>> {
-        let mut tmp: Z3_ast = ast.z3_ast;
+    pub fn eval<T>(&self, ast: &T) -> Option<T> where T: Ast<'ctx> {
+        let mut tmp: Z3_ast = ast.get_z3_ast();
         let res = {
             let guard = Z3_MUTEX.lock().unwrap();
-            unsafe { Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.z3_ast, true, &mut tmp) }
+            unsafe { Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.get_z3_ast(), true, &mut tmp) }
         };
         if res {
-            Some(Ast::new(self.ctx, tmp))
+            Some(T::new(self.ctx, tmp))
         } else {
             None
         }

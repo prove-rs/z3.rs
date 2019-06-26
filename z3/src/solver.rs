@@ -1,7 +1,8 @@
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
-use Ast;
+use ast;
+use ast::Ast;
 use Context;
 use Model;
 use Solver;
@@ -79,7 +80,7 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::assert_and_track()`](#method.assert_and_track)
-    pub fn assert(&self, ast: &Ast<'ctx>) {
+    pub fn assert(&self, ast: &ast::Bool<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
     }
@@ -95,14 +96,11 @@ impl<'ctx> Solver<'ctx> {
     /// and the Boolean literals provided using
     /// [`Solver::check_assumptions()`](#method.check_assumptions).
     ///
-    /// # Preconditions:
-    /// - `a` must be a Boolean expression
-    /// - `p` must be a Boolean constant (aka variable).
-    ///
     /// # See also:
     ///
     /// - [`Solver::assert()`](#method.assert)
-    pub fn assert_and_track(&self, ast: &Ast<'ctx>, p: &Ast<'ctx>) {
+    // TODO: noticed this method doesn't appear to use its 'p' parameter, which is suspicious
+    pub fn assert_and_track(&self, ast: &ast::Bool<'ctx>, p: &ast::Bool<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
     }
@@ -152,7 +150,7 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::check()`](#method.check)
-    pub fn check_assumptions(&self, assumptions: &[Ast<'ctx>]) -> bool {
+    pub fn check_assumptions(&self, assumptions: &[ast::Bool<'ctx>]) -> bool {
         let guard = Z3_MUTEX.lock().unwrap();
         let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         unsafe {
@@ -205,9 +203,12 @@ impl<'ctx> Solver<'ctx> {
     /// - [`Config::set_proof_generation()`](struct.Config.html#method.set_proof_generation)
     ///
     /// [proof generation is not enabled]: struct.Config.html#method.set_proof_generation
-    pub fn get_proof(&self) -> Ast<'ctx> {
+    //
+    // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
+    // have an Ast subtype for yet.
+    pub fn get_proof(&self) -> impl Ast<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
-        Ast::new(self.ctx, unsafe {
+        ast::Dynamic::new(self.ctx, unsafe {
             Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
         })
     }

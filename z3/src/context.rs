@@ -1,5 +1,5 @@
 use z3_sys::*;
-use Ast;
+use ast;
 use Config;
 use Context;
 use FuncDecl;
@@ -76,7 +76,7 @@ impl Context {
     /// assert!(solver.check());
     /// let model = solver.get_model();
     ///
-    /// assert!(model.eval(&eq).unwrap().as_bool().unwrap());
+    /// assert!(model.eval(&eq).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```
     pub fn enumeration_sort<'ctx>(
         &'ctx self,
@@ -94,80 +94,73 @@ impl Context {
         Symbol::from_string(self, s)
     }
 
-    pub fn named_const<'ctx>(&'ctx self, s: &str, sort: &Sort<'ctx>) -> Ast<'ctx> {
-        Ast::new_const(&self.str_sym(s), sort)
+    pub fn named_bool_const(&self, s: &str) -> ast::Bool {
+        ast::Bool::new_const(&self.str_sym(s))
     }
 
-    pub fn numbered_const<'ctx>(&'ctx self, i: u32, sort: &Sort<'ctx>) -> Ast<'ctx> {
-        Ast::new_const(&self.int_sym(i), sort)
+    pub fn numbered_bool_const(&self, i: u32) -> ast::Bool {
+        ast::Bool::new_const(&self.int_sym(i))
     }
 
-    pub fn fresh_const<'ctx>(&'ctx self, prefix: &str, sort: &Sort<'ctx>) -> Ast<'ctx> {
-        Ast::fresh_const(self, prefix, sort)
+    pub fn fresh_bool_const<'ctx>(&'ctx self, prefix: &str) -> ast::Bool<'ctx> {
+        ast::Bool::fresh_const(self, prefix)
     }
 
-    pub fn named_bool_const(&self, s: &str) -> Ast {
-        Ast::new_const(&self.str_sym(s), &self.bool_sort())
+    pub fn named_int_const(&self, s: &str) -> ast::Int {
+        ast::Int::new_const(&self.str_sym(s))
     }
 
-    pub fn numbered_bool_const(&self, i: u32) -> Ast {
-        Ast::new_const(&self.int_sym(i), &self.bool_sort())
+    pub fn numbered_int_const(&self, i: u32) -> ast::Int {
+        ast::Int::new_const(&self.int_sym(i))
     }
 
-    pub fn fresh_bool_const<'ctx>(&'ctx self, prefix: &str) -> Ast<'ctx> {
-        Ast::fresh_const(self, prefix, &self.bool_sort())
+    pub fn fresh_int_const<'ctx>(&'ctx self, prefix: &str) -> ast::Int<'ctx> {
+        ast::Int::fresh_const(self, prefix)
     }
 
-    pub fn named_int_const(&self, s: &str) -> Ast {
-        Ast::new_const(&self.str_sym(s), &self.int_sort())
+    pub fn named_real_const(&self, s: &str) -> ast::Real {
+        ast::Real::new_const(&self.str_sym(s))
     }
 
-    pub fn numbered_int_const(&self, i: u32) -> Ast {
-        Ast::new_const(&self.int_sym(i), &self.int_sort())
+    pub fn numbered_real_const(&self, i: u32) -> ast::Real {
+        ast::Real::new_const(&self.int_sym(i))
     }
 
-    pub fn fresh_int_const<'ctx>(&'ctx self, prefix: &str) -> Ast<'ctx> {
-        Ast::fresh_const(self, prefix, &self.int_sort())
+    pub fn fresh_real_const<'ctx>(&'ctx self, prefix: &str) -> ast::Real<'ctx> {
+        ast::Real::fresh_const(self, prefix)
     }
 
-    pub fn named_real_const(&self, s: &str) -> Ast {
-        Ast::new_const(&self.str_sym(s), &self.real_sort())
+    pub fn named_bitvector_const(&self, s: &str, sz: u32) -> ast::BV {
+        ast::BV::new_const(&self.str_sym(s), sz)
     }
 
-    pub fn numbered_real_const(&self, i: u32) -> Ast {
-        Ast::new_const(&self.int_sym(i), &self.real_sort())
+    pub fn numbered_bitvector_const(&self, i: u32, sz: u32) -> ast::BV {
+        ast::BV::new_const(&self.int_sym(i), sz)
     }
 
-    pub fn fresh_real_const<'ctx>(&'ctx self, prefix: &str) -> Ast<'ctx> {
-        Ast::fresh_const(self, prefix, &self.real_sort())
+    pub fn fresh_bitvector_const<'ctx>(&'ctx self, prefix: &str, sz: u32) -> ast::BV<'ctx> {
+        ast::BV::fresh_const(self, prefix, sz)
     }
 
-    pub fn named_bitvector_const(&self, s: &str, sz: u32) -> Ast {
-        Ast::new_const(&self.str_sym(s), &self.bitvector_sort(sz))
+    pub fn from_bool(&self, b: bool) -> ast::Bool {
+        ast::Bool::from_bool(self, b)
     }
 
-    pub fn numbered_bitvector_const(&self, i: u32, sz: u32) -> Ast {
-        Ast::new_const(&self.int_sym(i), &self.bitvector_sort(sz))
+    #[deprecated(
+        note = "Context::from_u64 is ambiguous; prefer ast::Int::from_u64() or ast::BV::from_u64()"
+    )]
+    pub fn from_u64(&self, u: u64) -> ast::Int {
+        ast::Int::from_u64(self, u)
+    }
+    #[deprecated(
+        note = "Context::from_i64 is ambiguous; prefer ast::Int::from_i64() or ast::BV::from_i64()"
+    )]
+    pub fn from_i64(&self, i: i64) -> ast::Int {
+        ast::Int::from_i64(self, i)
     }
 
-    pub fn fresh_bitvector_const<'ctx>(&'ctx self, prefix: &str, sz: u32) -> Ast<'ctx> {
-        Ast::fresh_const(self, prefix, &self.bitvector_sort(sz))
-    }
-
-    pub fn from_bool(&self, b: bool) -> Ast {
-        Ast::from_bool(self, b)
-    }
-
-    pub fn from_u64(&self, u: u64) -> Ast {
-        Ast::from_u64(self, u)
-    }
-
-    pub fn from_i64(&self, i: i64) -> Ast {
-        Ast::from_i64(self, i)
-    }
-
-    pub fn from_real(&self, num: i32, den: i32) -> Ast {
-        Ast::from_real(self, num, den)
+    pub fn from_real(&self, num: i32, den: i32) -> ast::Real {
+        ast::Real::from_real(self, num, den)
     }
 
     pub fn func_decl<'ctx>(
@@ -183,24 +176,27 @@ impl Context {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{Config, Context, Solver};
+    /// # use z3::{ast, Config, Context, Solver};
+    /// # use z3::ast::Ast;
+    /// # use std::convert::TryInto;
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
     /// let f = ctx.func_decl(ctx.str_sym("f"), &[&ctx.int_sort()], &ctx.int_sort());
     ///
-    /// let x = ctx.named_int_const("x");
-    /// let f_x = f.apply(&[&x]);
-    /// solver.assert(&ctx.forall_const(&[&x], &x._eq(&f_x)));
+    /// let x: ast::Int = ctx.named_int_const("x");
+    /// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
+    /// let forall: ast::Dynamic = ctx.forall_const(&[&x.clone().into()], &(x._eq(&f_x)).into());
+    /// solver.assert(&forall.try_into().unwrap());
     ///
     /// assert!(solver.check());
     /// let model = solver.get_model();
     ///
-    /// let f_f_3 = f.apply(&[&f.apply(&[&ctx.from_u64(3)])]);
+    /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ctx.from_u64(3).into()])]).try_into().unwrap();
     /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
     /// ```
-    pub fn forall_const<'ctx>(&'ctx self, bounds: &[&Ast<'ctx>], body: &Ast<'ctx>) -> Ast<'ctx> {
-        Ast::forall_const(self, bounds, body)
+    pub fn forall_const<'ctx>(&'ctx self, bounds: &[&ast::Dynamic<'ctx>], body: &ast::Dynamic<'ctx>) -> ast::Dynamic<'ctx> {
+        ast::forall_const(self, bounds, body)
     }
 }
 

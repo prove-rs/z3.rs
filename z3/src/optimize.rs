@@ -1,7 +1,7 @@
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
-use Ast;
+use ast::Ast;
 use Context;
 use Model;
 use Optimize;
@@ -27,9 +27,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// - [`Optimize::maximize()`](#method.maximize)
     /// - [`Optimize::minimize()`](#method.minimize)
-    pub fn assert(&self, ast: &Ast<'ctx>) {
+    pub fn assert(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
+        unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
     /// Add a maximization constraint.
@@ -38,9 +38,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// - [`Optimize::assert()`](#method.assert)
     /// - [`Optimize::minimize()`](#method.minimize)
-    pub fn maximize(&self, ast: &Ast<'ctx>) {
+    pub fn maximize(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
+        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
     /// Add a minimization constraint.
@@ -49,9 +49,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// - [`Optimize::assert()`](#method.assert)
     /// - [`Optimize::maximize()`](#method.maximize)
-    pub fn minimize(&self, ast: &Ast<'ctx>) {
+    pub fn minimize(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast) };
+        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
     /// Create a backtracking point.
