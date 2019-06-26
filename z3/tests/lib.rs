@@ -4,6 +4,7 @@ extern crate log;
 
 extern crate z3;
 use z3::*;
+use z3::ast::Ast;
 
 #[test]
 fn test_config() {
@@ -57,7 +58,8 @@ fn test_solving_for_model() {
     solver.assert(&x.gt(&y));
     solver.assert(&y.gt(&zero));
     solver.assert(&y.rem(&seven)._eq(&two));
-    solver.assert(&x.add(&[&two]).gt(&seven));
+    let x_plus_two = x.add(&[&two]);
+    solver.assert(&x_plus_two.gt(&seven));
     assert!(solver.check());
 
     let model = solver.get_model();
@@ -107,12 +109,13 @@ fn test_bitvectors() {
     let ctx = Context::new(&cfg);
     let a = ctx.named_bitvector_const("a", 64);
     let b = ctx.named_bitvector_const("b", 64);
-    let two = Ast::bitvector_from_i64(&ctx, 2, 64);
+    let two = ast::BV::from_i64(&ctx, 2, 64);
 
     let solver = Solver::new(&ctx);
     solver.assert(&a.bvsgt(&b));
     solver.assert(&b.bvsgt(&two));
-    solver.assert(&b.bvadd(&two).bvsgt(&a));
+    let b_plus_two = b.bvadd(&two);
+    solver.assert(&b_plus_two.bvsgt(&a));
     assert!(solver.check());
 
     let model = solver.get_model();

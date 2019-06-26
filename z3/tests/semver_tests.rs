@@ -10,6 +10,7 @@ extern crate z3;
 use semver::{Version, VersionReq};
 use std::collections::HashMap;
 use z3::*;
+use z3::ast::Ast;
 
 struct Spec {
     vers: Version,
@@ -163,7 +164,7 @@ fn test_solve_simple_semver_example() {
     let opt = Optimize::new(&ctx);
 
     let mut root: HashMap<String, VersionReq> = HashMap::new();
-    let mut asts: HashMap<String, Ast> = HashMap::new();
+    let mut asts: HashMap<String, ast::Int> = HashMap::new();
 
     root.insert("postgres".to_string(), VersionReq::parse("0.9").unwrap());
 
@@ -195,7 +196,7 @@ fn test_solve_simple_semver_example() {
     }
 
     // Tell the optimizer to maximizes the sum of the root constants.
-    opt.maximize(&ctx.from_i64(0).add(&asts.values().collect::<Vec<&Ast>>()));
+    opt.maximize(&ctx.from_i64(0).add(&asts.values().collect::<Vec<&ast::Int>>()));
 
     // Ensure we have a constant for every pkg _or_ dep listed
     for k in (&smap).keys() {

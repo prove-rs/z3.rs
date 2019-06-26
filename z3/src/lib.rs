@@ -13,7 +13,7 @@ use std::ffi::CString;
 use std::sync::Mutex;
 use z3_sys::*;
 
-mod ast;
+pub mod ast;
 mod config;
 mod context;
 mod func_decl;
@@ -55,17 +55,10 @@ pub struct Symbol<'ctx> {
     z3_sym: Z3_symbol,
 }
 
-/// Kind of [`Ast`](struct.Ast.html) used to represent types.
+/// Sorts represent the various 'types' of [`Ast`s](trait.Ast.html).
 pub struct Sort<'ctx> {
     ctx: &'ctx Context,
     z3_sort: Z3_sort,
-}
-
-/// Abstract syntax tree node. That is, the data structure used in Z3
-/// to represent terms, formulas, and types.
-pub struct Ast<'ctx> {
-    ctx: &'ctx Context,
-    z3_ast: Z3_ast,
 }
 
 /// (Incremental) solver, possibly specialized by a particular tactic or logic.
