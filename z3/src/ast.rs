@@ -714,38 +714,101 @@ impl<'ctx> BV<'ctx> {
         })
     }
 
+    // Bitwise ops
+    /// Bitwise negation
     unop!(bvnot, Z3_mk_bvnot, Self);
+    /// Two's complement negation
     unop!(bvneg, Z3_mk_bvneg, Self);
+    /// Bitwise and
+    binop!(bvand, Z3_mk_bvand, Self);
+    /// Bitwise or
+    binop!(bvor, Z3_mk_bvor, Self);
+    /// Bitwise exclusive-or
+    binop!(bvxor, Z3_mk_bvxor, Self);
+    /// Bitwise nand
+    binop!(bvnand, Z3_mk_bvnand, Self);
+    /// Bitwise nor
+    binop!(bvnor, Z3_mk_bvnor, Self);
+    /// Bitwise xnor
+    binop!(bvxnor, Z3_mk_bvxnor, Self);
     /// Conjunction of all the bits in the vector. Returns a BV with size (bitwidth) 1.
     unop!(bvredand, Z3_mk_bvredand, Self);
     /// Disjunction of all the bits in the vector. Returns a BV with size (bitwidth) 1.
     unop!(bvredor, Z3_mk_bvredor, Self);
-    binop!(bvand, Z3_mk_bvand, Self);
-    binop!(bvor, Z3_mk_bvor, Self);
-    binop!(bvxor, Z3_mk_bvxor, Self);
-    binop!(bvnand, Z3_mk_bvnand, Self);
-    binop!(bvnor, Z3_mk_bvnor, Self);
-    binop!(bvxnor, Z3_mk_bvxnor, Self);
+
+    // Arithmetic ops
+    /// Addition
     binop!(bvadd, Z3_mk_bvadd, Self);
+    /// Subtraction
     binop!(bvsub, Z3_mk_bvsub, Self);
+    /// Multiplication
     binop!(bvmul, Z3_mk_bvmul, Self);
+    /// Unsigned division
     binop!(bvudiv, Z3_mk_bvudiv, Self);
+    /// Signed division
     binop!(bvsdiv, Z3_mk_bvsdiv, Self);
+    /// Unsigned remainder
     binop!(bvurem, Z3_mk_bvurem, Self);
+    /// Signed remainder (sign follows dividend)
     binop!(bvsrem, Z3_mk_bvsrem, Self);
+    /// Signed remainder (sign follows divisor)
     binop!(bvsmod, Z3_mk_bvsmod, Self);
+
+    // Comparison ops
+    /// Unsigned less than
     binop!(bvult, Z3_mk_bvult, Bool<'ctx>);
+    /// Signed less than
     binop!(bvslt, Z3_mk_bvslt, Bool<'ctx>);
+    /// Unsigned less than or equal
     binop!(bvule, Z3_mk_bvule, Bool<'ctx>);
+    /// Signed less than or equal
     binop!(bvsle, Z3_mk_bvsle, Bool<'ctx>);
+    /// Unsigned greater or equal
     binop!(bvuge, Z3_mk_bvuge, Bool<'ctx>);
+    /// Signed greater or equal
     binop!(bvsge, Z3_mk_bvsge, Bool<'ctx>);
+    /// Unsigned greater than
     binop!(bvugt, Z3_mk_bvugt, Bool<'ctx>);
+    /// Signed greater than
     binop!(bvsgt, Z3_mk_bvsgt, Bool<'ctx>);
-    binop!(concat, Z3_mk_concat, Self);
+
+    // Shift ops
+    /// Shift left
     binop!(bvshl, Z3_mk_bvshl, Self);
+    /// Logical shift right (add zeroes in the high bits)
     binop!(bvlshr, Z3_mk_bvlshr, Self);
+    /// Arithmetic shift right (sign-extend in the high bits)
     binop!(bvashr, Z3_mk_bvashr, Self);
+
+    /// Concatenate two bitvectors
+    binop!(concat, Z3_mk_concat, Self);
+
+    /// Extract the bits `high` down to `low` from the bitvector.
+    /// Returns a bitvector of size `n`, where `n = high - low + 1`.
+    pub fn extract(&self, high: u32, low: u32) -> Self {
+        Self::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_extract(self.ctx.z3_ctx, high, low, self.z3_ast)
+        })
+    }
+
+    /// Sign-extend the bitvector to size `m+i`, where `m` is the original size of the bitvector.
+    /// That is, `i` bits will be added.
+    pub fn sign_ext(&self, i: u32) -> Self {
+        Self::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_sign_ext(self.ctx.z3_ctx, i, self.z3_ast)
+        })
+    }
+
+    /// Zero-extend the bitvector to size `m+i`, where `m` is the original size of the bitvector.
+    /// That is, `i` bits will be added.
+    pub fn zero_ext(&self, i: u32) -> Self {
+        Self::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_zero_ext(self.ctx.z3_ctx, i, self.z3_ast)
+        })
+    }
 }
 
 impl<'ctx> Array<'ctx> {
