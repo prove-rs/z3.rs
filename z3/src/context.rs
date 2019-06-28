@@ -19,6 +19,16 @@ impl Context {
         }
     }
 
+    /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
+    ///
+    /// This method can be invoked from a thread different from the one executing the
+    /// interruptible procedure.
+    pub fn interrupt(&self) {
+        unsafe {
+            Z3_interrupt(self.z3_ctx);
+        }
+    }
+
     // Helpers for common constructions
 
     pub fn bool_sort(&self) -> Sort {
