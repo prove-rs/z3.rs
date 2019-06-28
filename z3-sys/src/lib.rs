@@ -1720,7 +1720,11 @@ extern "C" {
     pub fn Z3_update_param_value(c: Z3_context, param_id: Z3_string, param_value: Z3_string);
 
     /// Interrupt the execution of a Z3 procedure.
+    ///
     /// This procedure can be used to interrupt: solvers, simplifiers and tactics.
+    ///
+    /// This method can be invoked from a thread different from the one executing the
+    /// interruptible procedure.
     pub fn Z3_interrupt(c: Z3_context);
 
     /// Create a Z3 (empty) parameter set.
