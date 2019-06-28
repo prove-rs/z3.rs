@@ -191,8 +191,8 @@ fn function_ref_count() {
 
     let int_sort = ctx.int_sort();
 
-    let _f = ctx.func_decl(ctx.str_sym("f"), &[&int_sort], &int_sort);
-    let _g = ctx.func_decl(ctx.str_sym("g"), &[&int_sort], &int_sort);
+    let _f = ctx.func_decl(Symbol::String("f".to_owned()), &[&int_sort], &int_sort);
+    let _g = ctx.func_decl(Symbol::String("g".to_owned()), &[&int_sort], &int_sort);
 
     assert!(solver.check());
 }

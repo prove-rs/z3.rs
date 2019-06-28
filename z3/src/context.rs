@@ -66,16 +66,16 @@ impl Context {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{Config, Context, Solver};
+    /// # use z3::{Config, Context, Solver, Symbol};
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
     /// let (colors, color_consts, color_testers) = ctx.enumeration_sort(
-    ///     &ctx.str_sym("Color"),
+    ///     Symbol::String("Color".to_owned()),
     ///     &[
-    ///         &ctx.str_sym("Red"),
-    ///         &ctx.str_sym("Green"),
-    ///         &ctx.str_sym("Blue"),
+    ///         Symbol::String("Red".to_owned()),
+    ///         Symbol::String("Green".to_owned()),
+    ///         Symbol::String("Blue".to_owned()),
     ///     ],
     /// );
     ///
@@ -90,26 +90,18 @@ impl Context {
     /// ```
     pub fn enumeration_sort<'ctx>(
         &'ctx self,
-        name: &Symbol<'ctx>,
-        enum_names: &[&Symbol<'ctx>],
+        name: Symbol,
+        enum_names: &[Symbol],
     ) -> (Sort<'ctx>, Vec<FuncDecl<'ctx>>, Vec<FuncDecl<'ctx>>) {
         Sort::enumeration(self, name, enum_names)
     }
 
-    pub fn int_sym(&self, i: u32) -> Symbol {
-        Symbol::from_int(self, i)
-    }
-
-    pub fn str_sym(&self, s: &str) -> Symbol {
-        Symbol::from_string(self, s)
-    }
-
     pub fn named_bool_const(&self, s: &str) -> ast::Bool {
-        ast::Bool::new_const(&self.str_sym(s))
+        ast::Bool::new_const(self, Symbol::String(s.to_owned()))
     }
 
     pub fn numbered_bool_const(&self, i: u32) -> ast::Bool {
-        ast::Bool::new_const(&self.int_sym(i))
+        ast::Bool::new_const(self, Symbol::Int(i))
     }
 
     pub fn fresh_bool_const<'ctx>(&'ctx self, prefix: &str) -> ast::Bool<'ctx> {
@@ -117,11 +109,11 @@ impl Context {
     }
 
     pub fn named_int_const(&self, s: &str) -> ast::Int {
-        ast::Int::new_const(&self.str_sym(s))
+        ast::Int::new_const(self, Symbol::String(s.to_owned()))
     }
 
     pub fn numbered_int_const(&self, i: u32) -> ast::Int {
-        ast::Int::new_const(&self.int_sym(i))
+        ast::Int::new_const(self, Symbol::Int(i))
     }
 
     pub fn fresh_int_const<'ctx>(&'ctx self, prefix: &str) -> ast::Int<'ctx> {
@@ -129,11 +121,11 @@ impl Context {
     }
 
     pub fn named_real_const(&self, s: &str) -> ast::Real {
-        ast::Real::new_const(&self.str_sym(s))
+        ast::Real::new_const(self, Symbol::String(s.to_owned()))
     }
 
     pub fn numbered_real_const(&self, i: u32) -> ast::Real {
-        ast::Real::new_const(&self.int_sym(i))
+        ast::Real::new_const(self, Symbol::Int(i))
     }
 
     pub fn fresh_real_const<'ctx>(&'ctx self, prefix: &str) -> ast::Real<'ctx> {
@@ -141,11 +133,11 @@ impl Context {
     }
 
     pub fn named_bitvector_const(&self, s: &str, sz: u32) -> ast::BV {
-        ast::BV::new_const(&self.str_sym(s), sz)
+        ast::BV::new_const(self, Symbol::String(s.to_owned()), sz)
     }
 
     pub fn numbered_bitvector_const(&self, i: u32, sz: u32) -> ast::BV {
-        ast::BV::new_const(&self.int_sym(i), sz)
+        ast::BV::new_const(self, Symbol::Int(i), sz)
     }
 
     pub fn fresh_bitvector_const<'ctx>(&'ctx self, prefix: &str, sz: u32) -> ast::BV<'ctx> {
@@ -179,7 +171,7 @@ impl Context {
 
     pub fn func_decl<'ctx>(
         &'ctx self,
-        name: Symbol<'ctx>,
+        name: Symbol,
         domain: &[&Sort<'ctx>],
         range: &Sort<'ctx>,
     ) -> FuncDecl<'ctx> {
@@ -190,13 +182,13 @@ impl Context {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{ast, Config, Context, Solver};
+    /// # use z3::{ast, Config, Context, Solver, Symbol};
     /// # use z3::ast::Ast;
     /// # use std::convert::TryInto;
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
-    /// let f = ctx.func_decl(ctx.str_sym("f"), &[&ctx.int_sort()], &ctx.int_sort());
+    /// let f = ctx.func_decl(Symbol::String("f".to_owned()), &[&ctx.int_sort()], &ctx.int_sort());
     ///
     /// let x: ast::Int = ctx.named_int_const("x");
     /// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
