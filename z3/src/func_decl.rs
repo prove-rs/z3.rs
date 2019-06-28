@@ -35,6 +35,25 @@ impl<'ctx> FuncDecl<'ctx> {
         }
     }
 
+    /// Return the number of arguments of a function declaration.
+    ///
+    /// If the function declaration is a constant, then the arity is `0`.
+    ///
+    /// ```
+    /// # use z3::{Config, Context, FuncDecl, Solver, Sort, Symbol};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// let f = FuncDecl::new(
+    ///     &ctx,
+    ///     Symbol::from_string(&ctx, "f"),
+    ///     &[&Sort::int(&ctx), &Sort::real(&ctx)],
+    ///     &Sort::int(&ctx));
+    /// assert_eq!(f.arity(), 2);
+    /// ```
+    pub fn arity(&self) -> usize {
+        unsafe { Z3_get_arity(self.ctx.z3_ctx, self.z3_func_decl) as usize }
+    }
+
     /// Create a constant (if `args` has length 0) or function application (otherwise).
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
