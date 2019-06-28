@@ -50,9 +50,9 @@ fn test_solving_for_model() {
     let ctx = Context::new(&cfg);
     let x = ctx.named_int_const("x");
     let y = ctx.named_int_const("y");
-    let zero = ctx.from_i64(0);
-    let two = ctx.from_i64(2);
-    let seven = ctx.from_i64(7);
+    let zero = ast::Int::from_i64(&ctx, 0);
+    let two = ast::Int::from_i64(&ctx, 2);
+    let seven = ast::Int::from_i64(&ctx, 7);
 
     let solver = Solver::new(&ctx);
     solver.assert(&x.gt(&y));
@@ -79,7 +79,7 @@ fn test_cloning_ast() {
     let ctx = Context::new(&cfg);
     let x = ctx.named_int_const("x");
     let y = x.clone();
-    let zero = ctx.from_i64(0);
+    let zero = ast::Int::from_i64(&ctx, 0);
 
     let solver = Solver::new(&ctx);
     solver.assert(&x._eq(&zero));
@@ -136,10 +136,10 @@ fn test_ast_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&destination);
-    slv.assert(&translated_a._eq(&destination.from_u64(2)));
+    slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 2)));
     assert!(slv.check());
 
-    slv.assert(&translated_a._eq(&destination.from_u64(3)));
+    slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 3)));
     assert!(!slv.check());
 }
 
@@ -153,12 +153,12 @@ fn test_solver_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&destination);
-    slv.assert(&translated_a._eq(&destination.from_u64(2)));
+    slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 2)));
     assert!(slv.check());
 
     let translated_slv = slv.translate(&source);
     // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
-    slv.assert(&translated_a._eq(&destination.from_u64(3)));
+    slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 3)));
     assert!(!slv.check());
     assert!(translated_slv.check());
 }
