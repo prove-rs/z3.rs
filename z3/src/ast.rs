@@ -986,7 +986,7 @@ fn _hash<'ctx, H: Hasher>(ast: &impl Ast<'ctx>, state: &mut H) {
     }
 }
 
-// for use to implement fmt::Display
+// for use to implement fmt::Display and fmt::Debug
 fn _fmt<'ctx>(ast: &impl Ast<'ctx>, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
     let p = unsafe {
         CStr::from_ptr(Z3_ast_to_string(ast.get_ctx().z3_ctx, ast.get_z3_ast()) as *mut i8)
@@ -1131,6 +1131,37 @@ impl<'ctx> Hash for Set<'ctx> {
     }
 }
 
+impl<'ctx> fmt::Debug for Bool<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        _fmt(self, f)
+    }
+}
+impl<'ctx> fmt::Debug for Int<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        _fmt(self, f)
+    }
+}
+impl<'ctx> fmt::Debug for Real<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        _fmt(self, f)
+    }
+}
+impl<'ctx> fmt::Debug for BV<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        _fmt(self, f)
+    }
+}
+impl<'ctx> fmt::Debug for Array<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        _fmt(self, f)
+    }
+}
+impl<'ctx> fmt::Debug for Set<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        _fmt(self, f)
+    }
+}
+
 impl<'ctx> fmt::Display for Bool<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         _fmt(self, f)
@@ -1164,7 +1195,7 @@ impl<'ctx> fmt::Display for Set<'ctx> {
 
 /// This type is used when we have an [`Ast`](trait.Ast.html) of dynamic type,
 /// i.e., we don't know at compile time what type it is.
-#[derive(Clone, PartialEq, Eq, Hash)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum Dynamic<'ctx> {
     Bool(Bool<'ctx>),
     Int(Int<'ctx>),
@@ -1369,18 +1400,5 @@ impl<'ctx> TryFrom<Dynamic<'ctx>> for Set<'ctx> {
         ast.as_set()
             .cloned()
             .ok_or_else(|| format!("Not a set: {:?}", ast))
-    }
-}
-
-impl<'ctx> fmt::Debug for Dynamic<'ctx> {
-    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        match self {
-            Dynamic::Bool(ast) => write!(f, "Bool( {} )", ast),
-            Dynamic::Int(ast) => write!(f, "Int( {} )", ast),
-            Dynamic::Real(ast) => write!(f, "Real( {} )", ast),
-            Dynamic::BV(ast) => write!(f, "BV( {} )", ast),
-            Dynamic::Array(ast) => write!(f, "Array( {} )", ast),
-            Dynamic::Set(ast) => write!(f, "Set( {} )", ast),
-        }
     }
 }
