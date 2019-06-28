@@ -42,14 +42,6 @@ pub struct Context {
 }
 
 /// Symbols are used to name several term and type constructors.
-///
-/// # Creation:
-///
-/// Symbols can be created with either [`Symbol::from_int()`] or
-/// [`Symbol::from_string()`].
-///
-/// [`Symbol::from_int()`]: struct.Symbol.html#method.from_int
-/// [`Symbol::from_string()`]: struct.Symbol.html#method.from_string
 pub enum Symbol {
     Int(u32),
     String(String),
