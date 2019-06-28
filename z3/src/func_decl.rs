@@ -1,8 +1,8 @@
+use ast;
+use ast::Ast;
 use std::convert::TryInto;
 use z3_sys::*;
 use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
-use ast;
-use ast::Ast;
 
 impl<'ctx> FuncDecl<'ctx> {
     pub fn new(

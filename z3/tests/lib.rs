@@ -3,8 +3,8 @@ extern crate env_logger;
 extern crate log;
 
 extern crate z3;
-use z3::*;
 use z3::ast::Ast;
+use z3::*;
 
 #[test]
 fn test_config() {

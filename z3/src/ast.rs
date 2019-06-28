@@ -1,5 +1,5 @@
 use std::cmp::{Eq, PartialEq};
-use std::convert::{TryInto, TryFrom};
+use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::hash::{Hash, Hasher};
@@ -136,7 +136,7 @@ macro_rules! varop {
 
 /// Abstract syntax tree (AST) nodes represent terms, constants, or expressions.
 /// The `Ast` trait contains methods common to all AST subtypes.
-pub trait Ast<'ctx> : Sized {
+pub trait Ast<'ctx>: Sized {
     fn get_ctx(&self) -> &'ctx Context;
     fn get_z3_ast(&self) -> Z3_ast;
 
@@ -197,9 +197,7 @@ pub trait Ast<'ctx> : Sized {
     fn get_sort(&self) -> Sort<'ctx> {
         Sort {
             ctx: self.get_ctx(),
-            z3_sort: unsafe {
-                Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast())
-            },
+            z3_sort: unsafe { Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast()) },
         }
     }
 }
@@ -220,7 +218,7 @@ macro_rules! new_ast {
                 },
             }
         }
-    }
+    };
 }
 
 // While we're at it, we can make the rest of the required impl into a macro too
@@ -313,7 +311,10 @@ impl<'ctx> Bool<'ctx> {
     }
 
     // This doesn't quite fit the trinop! macro because of the generic argty
-    pub fn ite<T>(&self, a: &T, b: &T) -> T where T: Ast<'ctx> {
+    pub fn ite<T>(&self, a: &T, b: &T) -> T
+    where
+        T: Ast<'ctx>,
+    {
         T::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_ite(self.ctx.z3_ctx, self.z3_ast, a.get_z3_ast(), b.get_z3_ast())
@@ -701,9 +702,7 @@ impl<'ctx> BV<'ctx> {
     /// Get the size of the bitvector (in bits)
     pub fn get_size(&self) -> u32 {
         let sort = self.get_sort();
-        unsafe {
-            Z3_get_bv_sort_size(self.ctx.z3_ctx, sort.z3_sort)
-        }
+        unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx, sort.z3_sort) }
     }
 
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
@@ -758,7 +757,12 @@ impl<'ctx> Array<'ctx> {
         })
     }
 
-    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, domain: &Sort<'ctx>, range: &Sort<'ctx>) -> Array<'ctx> {
+    pub fn fresh_const(
+        ctx: &'ctx Context,
+        prefix: &str,
+        domain: &Sort<'ctx>,
+        range: &Sort<'ctx>,
+    ) -> Array<'ctx> {
         let sort = Sort::array(ctx, domain, range);
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
@@ -807,7 +811,12 @@ impl<'ctx> Array<'ctx> {
     pub fn store(&self, index: &Dynamic<'ctx>, value: &Dynamic<'ctx>) -> Self {
         Self::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_store(self.ctx.z3_ctx, self.z3_ast, index.get_z3_ast(), value.get_z3_ast())
+            Z3_mk_store(
+                self.ctx.z3_ctx,
+                self.z3_ast,
+                index.get_z3_ast(),
+                value.get_z3_ast(),
+            )
         })
     }
 }
@@ -912,7 +921,11 @@ impl<'ctx> Set<'ctx> {
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
 /// ```
 
-pub fn forall_const<'ctx>(ctx: &'ctx Context, bounds: &[&Dynamic<'ctx>], body: &Dynamic<'ctx>) -> Dynamic<'ctx> {
+pub fn forall_const<'ctx>(
+    ctx: &'ctx Context,
+    bounds: &[&Dynamic<'ctx>],
+    body: &Dynamic<'ctx>,
+) -> Dynamic<'ctx> {
     assert!(bounds.iter().all(|a| a.get_ctx().z3_ctx == ctx.z3_ctx));
     assert_eq!(ctx.z3_ctx, body.get_ctx().z3_ctx);
 
@@ -939,19 +952,25 @@ pub fn forall_const<'ctx>(ctx: &'ctx Context, bounds: &[&Dynamic<'ctx>], body: &
 // macros to do the various impls.  Not sure if that's better or not.
 
 // for use to implement PartialEq and Eq
-fn _is_eq<'ctx, T>(a: &T, b: &T) -> bool where T: Ast<'ctx> {
+fn _is_eq<'ctx, T>(a: &T, b: &T) -> bool
+where
+    T: Ast<'ctx>,
+{
     assert_eq!(a.get_ctx().z3_ctx, b.get_ctx().z3_ctx);
     unsafe { Z3_is_eq_ast(a.get_ctx().z3_ctx, a.get_z3_ast(), b.get_z3_ast()) }
 }
 
 // for use to implement Clone
-fn _clone<'ctx, T>(ast: &T) -> T where T: Ast<'ctx> {
+fn _clone<'ctx, T>(ast: &T) -> T
+where
+    T: Ast<'ctx>,
+{
     debug!("clone ast {:p}", ast.get_z3_ast());
     T::new(ast.get_ctx(), ast.get_z3_ast())
 }
 
 // for use to implement Drop
-fn _drop<'ctx>(ast: &mut impl Ast<'ctx>) where {
+fn _drop<'ctx>(ast: &mut impl Ast<'ctx>) {
     debug!("drop ast {:p}", ast.get_z3_ast());
     unsafe {
         let guard = Z3_MUTEX.lock().unwrap();
@@ -969,8 +988,9 @@ fn _hash<'ctx, H: Hasher>(ast: &impl Ast<'ctx>, state: &mut H) {
 
 // for use to implement fmt::Display
 fn _fmt<'ctx>(ast: &impl Ast<'ctx>, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-    let p =
-        unsafe { CStr::from_ptr(Z3_ast_to_string(ast.get_ctx().z3_ctx, ast.get_z3_ast()) as *mut i8) };
+    let p = unsafe {
+        CStr::from_ptr(Z3_ast_to_string(ast.get_ctx().z3_ctx, ast.get_z3_ast()) as *mut i8)
+    };
     if p.as_ptr().is_null() {
         return Result::Err(fmt::Error);
     }
@@ -1011,12 +1031,12 @@ impl<'ctx> PartialEq for Set<'ctx> {
     }
 }
 
-impl<'ctx> Eq for Bool<'ctx> { }
-impl<'ctx> Eq for Int<'ctx> { }
-impl<'ctx> Eq for Real<'ctx> { }
-impl<'ctx> Eq for BV<'ctx> { }
-impl<'ctx> Eq for Array<'ctx> { }
-impl<'ctx> Eq for Set<'ctx> { }
+impl<'ctx> Eq for Bool<'ctx> {}
+impl<'ctx> Eq for Int<'ctx> {}
+impl<'ctx> Eq for Real<'ctx> {}
+impl<'ctx> Eq for BV<'ctx> {}
+impl<'ctx> Eq for Array<'ctx> {}
+impl<'ctx> Eq for Set<'ctx> {}
 
 impl<'ctx> Clone for Bool<'ctx> {
     fn clone(&self) -> Self {
@@ -1301,45 +1321,56 @@ impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Bool<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Bool<'ctx>, String> {
-        ast.as_bool().cloned().ok_or_else(|| format!("Not a bool: {:?}", ast))
+        ast.as_bool()
+            .cloned()
+            .ok_or_else(|| format!("Not a bool: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Int<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Int<'ctx>, String> {
-        ast.as_int().cloned().ok_or_else(|| format!("Not an int: {:?}", ast))
+        ast.as_int()
+            .cloned()
+            .ok_or_else(|| format!("Not an int: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Real<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Real<'ctx>, String> {
-        ast.as_real().cloned().ok_or_else(|| format!("Not a real: {:?}", ast))
+        ast.as_real()
+            .cloned()
+            .ok_or_else(|| format!("Not a real: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for BV<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<BV<'ctx>, String> {
-        ast.as_bv().cloned().ok_or_else(|| format!("Not a BV: {:?}", ast))
+        ast.as_bv()
+            .cloned()
+            .ok_or_else(|| format!("Not a BV: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Array<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Array<'ctx>, String> {
-        ast.as_array().cloned().ok_or_else(|| format!("Not an array: {:?}", ast))
+        ast.as_array()
+            .cloned()
+            .ok_or_else(|| format!("Not an array: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Set<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Set<'ctx>, String> {
-        ast.as_set().cloned().ok_or_else(|| format!("Not a set: {:?}", ast))
+        ast.as_set()
+            .cloned()
+            .ok_or_else(|| format!("Not a set: {:?}", ast))
     }
 }
-
 
 impl<'ctx> fmt::Debug for Dynamic<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {

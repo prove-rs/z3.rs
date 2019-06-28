@@ -1,7 +1,7 @@
+use ast::Ast;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
-use ast::Ast;
 use Context;
 use Model;
 use Optimize;

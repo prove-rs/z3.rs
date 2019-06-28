@@ -1,5 +1,5 @@
-use z3_sys::*;
 use ast;
+use z3_sys::*;
 use Config;
 use Context;
 use FuncDecl;
@@ -199,7 +199,11 @@ impl Context {
     /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ctx.from_u64(3).into()])]).try_into().unwrap();
     /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
     /// ```
-    pub fn forall_const<'ctx>(&'ctx self, bounds: &[&ast::Dynamic<'ctx>], body: &ast::Dynamic<'ctx>) -> ast::Dynamic<'ctx> {
+    pub fn forall_const<'ctx>(
+        &'ctx self,
+        bounds: &[&ast::Dynamic<'ctx>],
+        body: &ast::Dynamic<'ctx>,
+    ) -> ast::Dynamic<'ctx> {
         ast::forall_const(self, bounds, body)
     }
 }

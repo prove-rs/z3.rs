@@ -9,8 +9,8 @@ extern crate z3;
 
 use semver::{Version, VersionReq};
 use std::collections::HashMap;
-use z3::*;
 use z3::ast::Ast;
+use z3::*;
 
 struct Spec {
     vers: Version,
@@ -196,7 +196,10 @@ fn test_solve_simple_semver_example() {
     }
 
     // Tell the optimizer to maximizes the sum of the root constants.
-    opt.maximize(&ctx.from_i64(0).add(&asts.values().collect::<Vec<&ast::Int>>()));
+    opt.maximize(
+        &ctx.from_i64(0)
+            .add(&asts.values().collect::<Vec<&ast::Int>>()),
+    );
 
     // Ensure we have a constant for every pkg _or_ dep listed
     for k in (&smap).keys() {

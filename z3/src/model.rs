@@ -1,5 +1,5 @@
-use z3_sys::*;
 use ast::Ast;
+use z3_sys::*;
 use Model;
 use Optimize;
 use Solver;
@@ -30,11 +30,22 @@ impl<'ctx> Model<'ctx> {
         }
     }
 
-    pub fn eval<T>(&self, ast: &T) -> Option<T> where T: Ast<'ctx> {
+    pub fn eval<T>(&self, ast: &T) -> Option<T>
+    where
+        T: Ast<'ctx>,
+    {
         let mut tmp: Z3_ast = ast.get_z3_ast();
         let res = {
             let guard = Z3_MUTEX.lock().unwrap();
-            unsafe { Z3_model_eval(self.ctx.z3_ctx, self.z3_mdl, ast.get_z3_ast(), true, &mut tmp) }
+            unsafe {
+                Z3_model_eval(
+                    self.ctx.z3_ctx,
+                    self.z3_mdl,
+                    ast.get_z3_ast(),
+                    true,
+                    &mut tmp,
+                )
+            }
         };
         if res {
             Some(T::new(self.ctx, tmp))
@@ -50,7 +61,11 @@ impl<'ctx> std::fmt::Display for Model<'ctx> {
         if p.is_null() {
             Err(std::fmt::Error)
         } else {
-            write!(f, "{}", unsafe { std::ffi::CStr::from_ptr(p) }.to_str().unwrap())
+            write!(
+                f,
+                "{}",
+                unsafe { std::ffi::CStr::from_ptr(p) }.to_str().unwrap()
+            )
         }
     }
 }
