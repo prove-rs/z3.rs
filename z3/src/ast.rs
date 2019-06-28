@@ -1301,42 +1301,42 @@ impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Bool<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Bool<'ctx>, String> {
-        ast.as_bool().map(|b| b.clone()).ok_or_else(|| format!("Not a bool: {:?}", ast))
+        ast.as_bool().cloned().ok_or_else(|| format!("Not a bool: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Int<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Int<'ctx>, String> {
-        ast.as_int().map(|b| b.clone()).ok_or_else(|| format!("Not an int: {:?}", ast))
+        ast.as_int().cloned().ok_or_else(|| format!("Not an int: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Real<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Real<'ctx>, String> {
-        ast.as_real().map(|b| b.clone()).ok_or_else(|| format!("Not a real: {:?}", ast))
+        ast.as_real().cloned().ok_or_else(|| format!("Not a real: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for BV<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<BV<'ctx>, String> {
-        ast.as_bv().map(|b| b.clone()).ok_or_else(|| format!("Not a BV: {:?}", ast))
+        ast.as_bv().cloned().ok_or_else(|| format!("Not a BV: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Array<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Array<'ctx>, String> {
-        ast.as_array().map(|b| b.clone()).ok_or_else(|| format!("Not an array: {:?}", ast))
+        ast.as_array().cloned().ok_or_else(|| format!("Not an array: {:?}", ast))
     }
 }
 
 impl<'ctx> TryFrom<Dynamic<'ctx>> for Set<'ctx> {
     type Error = String;
     fn try_from(ast: Dynamic<'ctx>) -> Result<Set<'ctx>, String> {
-        ast.as_set().map(|b| b.clone()).ok_or_else(|| format!("Not a set: {:?}", ast))
+        ast.as_set().cloned().ok_or_else(|| format!("Not a set: {:?}", ast))
     }
 }
 

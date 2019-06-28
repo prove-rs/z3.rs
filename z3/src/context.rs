@@ -142,6 +142,7 @@ impl Context {
         ast::BV::fresh_const(self, prefix, sz)
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn from_bool(&self, b: bool) -> ast::Bool {
         ast::Bool::from_bool(self, b)
     }
@@ -149,16 +150,19 @@ impl Context {
     #[deprecated(
         note = "Context::from_u64 is ambiguous; prefer ast::Int::from_u64() or ast::BV::from_u64()"
     )]
+    #[allow(clippy::wrong_self_convention)]
     pub fn from_u64(&self, u: u64) -> ast::Int {
         ast::Int::from_u64(self, u)
     }
     #[deprecated(
         note = "Context::from_i64 is ambiguous; prefer ast::Int::from_i64() or ast::BV::from_i64()"
     )]
+    #[allow(clippy::wrong_self_convention)]
     pub fn from_i64(&self, i: i64) -> ast::Int {
         ast::Int::from_i64(self, i)
     }
 
+    #[allow(clippy::wrong_self_convention)]
     pub fn from_real(&self, num: i32, den: i32) -> ast::Real {
         ast::Real::from_real(self, num, den)
     }

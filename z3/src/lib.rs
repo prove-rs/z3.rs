@@ -1,5 +1,6 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
+#![allow(clippy::unreadable_literal)]
 
 #[macro_use]
 extern crate log;
