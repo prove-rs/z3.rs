@@ -80,6 +80,11 @@ pub struct Optimize<'ctx> {
     z3_opt: Z3_optimize,
 }
 
+/// Function declaration. Every constant and function have an associated declaration.
+///
+/// The declaration assigns a name, a sort (i.e., type), and for function
+/// the sort (i.e., type) of each of its arguments. Note that, in Z3,
+/// a constant is a function with 0 arguments.
 pub struct FuncDecl<'ctx> {
     ctx: &'ctx Context,
     z3_func_decl: Z3_func_decl,
