@@ -9,12 +9,12 @@ use Symbol;
 use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {
-    pub fn uninterpreted(ctx: &'ctx Context, sym: &Symbol<'ctx>) -> Sort<'ctx> {
+    pub fn uninterpreted(ctx: &'ctx Context, name: Symbol) -> Sort<'ctx> {
         Sort {
             ctx,
             z3_sort: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_mk_uninterpreted_sort(ctx.z3_ctx, sym.z3_sym)
+                Z3_mk_uninterpreted_sort(ctx.z3_ctx, name.as_z3_symbol(ctx))
             },
         }
     }
@@ -93,13 +93,10 @@ impl<'ctx> Sort<'ctx> {
 
     pub fn enumeration(
         ctx: &'ctx Context,
-        name: &Symbol<'ctx>,
-        enum_names: &[&Symbol<'ctx>],
+        name: Symbol,
+        enum_names: &[Symbol],
     ) -> (Sort<'ctx>, Vec<FuncDecl<'ctx>>, Vec<FuncDecl<'ctx>>) {
-        assert_eq!(ctx.z3_ctx, name.ctx.z3_ctx);
-        assert!(enum_names.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
-
-        let enum_names: Vec<_> = enum_names.iter().map(|s| s.z3_sym).collect();
+        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol(ctx)).collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
@@ -108,7 +105,7 @@ impl<'ctx> Sort<'ctx> {
             z3_sort: unsafe {
                 let s = Z3_mk_enumeration_sort(
                     ctx.z3_ctx,
-                    name.z3_sym,
+                    name.as_z3_symbol(ctx),
                     enum_names.len().try_into().unwrap(),
                     enum_names.as_ptr(),
                     enum_consts.as_mut_ptr(),

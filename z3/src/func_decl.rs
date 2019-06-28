@@ -7,11 +7,10 @@ use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
 impl<'ctx> FuncDecl<'ctx> {
     pub fn new(
         ctx: &'ctx Context,
-        name: Symbol<'ctx>,
+        name: Symbol,
         domain: &[&Sort<'ctx>],
         range: &Sort<'ctx>,
     ) -> Self {
-        assert_eq!(ctx.z3_ctx, name.ctx.z3_ctx);
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
 
@@ -24,7 +23,7 @@ impl<'ctx> FuncDecl<'ctx> {
 
                 let f = Z3_mk_func_decl(
                     ctx.z3_ctx,
-                    name.z3_sym,
+                    name.as_z3_symbol(ctx),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
@@ -45,7 +44,7 @@ impl<'ctx> FuncDecl<'ctx> {
     /// # let ctx = Context::new(&cfg);
     /// let f = FuncDecl::new(
     ///     &ctx,
-    ///     Symbol::from_string(&ctx, "f"),
+    ///     Symbol::String("f".to_owned()),
     ///     &[&Sort::int(&ctx), &Sort::real(&ctx)],
     ///     &Sort::int(&ctx));
     /// assert_eq!(f.arity(), 2);

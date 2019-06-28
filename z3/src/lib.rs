@@ -50,10 +50,9 @@ pub struct Context {
 ///
 /// [`Symbol::from_int()`]: struct.Symbol.html#method.from_int
 /// [`Symbol::from_string()`]: struct.Symbol.html#method.from_string
-pub struct Symbol<'ctx> {
-    ctx: &'ctx Context,
-    cst: Option<CString>,
-    z3_sym: Z3_symbol,
+pub enum Symbol {
+    Int(u32),
+    String(String),
 }
 
 /// Sorts represent the various 'types' of [`Ast`s](trait.Ast.html).
