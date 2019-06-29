@@ -71,11 +71,11 @@ impl Context {
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
     /// let (colors, color_consts, color_testers) = ctx.enumeration_sort(
-    ///     Symbol::String("Color".to_owned()),
+    ///     "Color".into(),
     ///     &[
-    ///         Symbol::String("Red".to_owned()),
-    ///         Symbol::String("Green".to_owned()),
-    ///         Symbol::String("Blue".to_owned()),
+    ///         "Red".into(),
+    ///         "Green".into(),
+    ///         "Blue".into(),
     ///     ],
     /// );
     ///
@@ -96,48 +96,16 @@ impl Context {
         Sort::enumeration(self, name, enum_names)
     }
 
-    pub fn named_bool_const(&self, s: &str) -> ast::Bool {
-        ast::Bool::new_const(self, Symbol::String(s.to_owned()))
-    }
-
-    pub fn numbered_bool_const(&self, i: u32) -> ast::Bool {
-        ast::Bool::new_const(self, Symbol::Int(i))
-    }
-
     pub fn fresh_bool_const<'ctx>(&'ctx self, prefix: &str) -> ast::Bool<'ctx> {
         ast::Bool::fresh_const(self, prefix)
-    }
-
-    pub fn named_int_const(&self, s: &str) -> ast::Int {
-        ast::Int::new_const(self, Symbol::String(s.to_owned()))
-    }
-
-    pub fn numbered_int_const(&self, i: u32) -> ast::Int {
-        ast::Int::new_const(self, Symbol::Int(i))
     }
 
     pub fn fresh_int_const<'ctx>(&'ctx self, prefix: &str) -> ast::Int<'ctx> {
         ast::Int::fresh_const(self, prefix)
     }
 
-    pub fn named_real_const(&self, s: &str) -> ast::Real {
-        ast::Real::new_const(self, Symbol::String(s.to_owned()))
-    }
-
-    pub fn numbered_real_const(&self, i: u32) -> ast::Real {
-        ast::Real::new_const(self, Symbol::Int(i))
-    }
-
     pub fn fresh_real_const<'ctx>(&'ctx self, prefix: &str) -> ast::Real<'ctx> {
         ast::Real::fresh_const(self, prefix)
-    }
-
-    pub fn named_bitvector_const(&self, s: &str, sz: u32) -> ast::BV {
-        ast::BV::new_const(self, Symbol::String(s.to_owned()), sz)
-    }
-
-    pub fn numbered_bitvector_const(&self, i: u32, sz: u32) -> ast::BV {
-        ast::BV::new_const(self, Symbol::Int(i), sz)
     }
 
     pub fn fresh_bitvector_const<'ctx>(&'ctx self, prefix: &str, sz: u32) -> ast::BV<'ctx> {
@@ -169,9 +137,9 @@ impl Context {
         ast::Real::from_real(self, num, den)
     }
 
-    pub fn func_decl<'ctx>(
+    pub fn func_decl<'ctx, S: Into<Symbol>>(
         &'ctx self,
-        name: Symbol,
+        name: S,
         domain: &[&Sort<'ctx>],
         range: &Sort<'ctx>,
     ) -> FuncDecl<'ctx> {
@@ -188,9 +156,9 @@ impl Context {
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
-    /// let f = ctx.func_decl(Symbol::String("f".to_owned()), &[&ctx.int_sort()], &ctx.int_sort());
+    /// let f = ctx.func_decl("f", &[&ctx.int_sort()], &ctx.int_sort());
     ///
-    /// let x: ast::Int = ctx.named_int_const("x");
+    /// let x = ast::Int::new_const(&ctx, "x");
     /// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
     /// let forall: ast::Dynamic = ctx.forall_const(&[&x.clone().into()], &(x._eq(&f_x)).into());
     /// solver.assert(&forall.try_into().unwrap());

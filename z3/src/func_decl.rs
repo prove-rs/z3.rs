@@ -5,9 +5,9 @@ use z3_sys::*;
 use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
 
 impl<'ctx> FuncDecl<'ctx> {
-    pub fn new(
+    pub fn new<S: Into<Symbol>>(
         ctx: &'ctx Context,
-        name: Symbol,
+        name: S,
         domain: &[&Sort<'ctx>],
         range: &Sort<'ctx>,
     ) -> Self {
@@ -23,7 +23,7 @@ impl<'ctx> FuncDecl<'ctx> {
 
                 let f = Z3_mk_func_decl(
                     ctx.z3_ctx,
-                    name.as_z3_symbol(ctx),
+                    name.into().as_z3_symbol(ctx),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
@@ -44,7 +44,7 @@ impl<'ctx> FuncDecl<'ctx> {
     /// # let ctx = Context::new(&cfg);
     /// let f = FuncDecl::new(
     ///     &ctx,
-    ///     Symbol::String("f".to_owned()),
+    ///     "f",
     ///     &[&Sort::int(&ctx), &Sort::real(&ctx)],
     ///     &Sort::int(&ctx));
     /// assert_eq!(f.arity(), 2);

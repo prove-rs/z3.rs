@@ -261,11 +261,11 @@ impl<'ctx> Ast<'ctx> for Set<'ctx> {
 }
 
 impl<'ctx> Bool<'ctx> {
-    pub fn new_const(ctx: &'ctx Context, name: Symbol) -> Bool<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Bool<'ctx> {
         let sort = Sort::bool(ctx);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const(ctx.z3_ctx, name.as_z3_symbol(ctx), sort.z3_sort)
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
 
@@ -385,11 +385,11 @@ impl<'ctx> Bool<'ctx> {
 }
 
 impl<'ctx> Int<'ctx> {
-    pub fn new_const(ctx: &'ctx Context, name: Symbol) -> Int<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Int<'ctx> {
         let sort = Sort::int(ctx);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const(ctx.z3_ctx, name.as_z3_symbol(ctx), sort.z3_sort)
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
 
@@ -468,7 +468,7 @@ impl<'ctx> Int<'ctx> {
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
-    /// let bv = ctx.named_bitvector_const("x", 32);
+    /// let bv = ast::BV::new_const(&ctx, "x", 32);
     /// solver.assert(&bv._eq(&ast::BV::from_i64(&ctx, -3, 32)));
     ///
     /// let x = ast::Int::from_bv(&bv, true);
@@ -529,11 +529,11 @@ impl<'ctx> Int<'ctx> {
 }
 
 impl<'ctx> Real<'ctx> {
-    pub fn new_const(ctx: &'ctx Context, name: Symbol) -> Real<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Real<'ctx> {
         let sort = Sort::real(ctx);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const(ctx.z3_ctx, name.as_z3_symbol(ctx), sort.z3_sort)
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
 
@@ -605,11 +605,11 @@ impl<'ctx> Real<'ctx> {
 }
 
 impl<'ctx> BV<'ctx> {
-    pub fn new_const(ctx: &'ctx Context, name: Symbol, sz: u32) -> BV<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const(ctx.z3_ctx, name.as_z3_symbol(ctx), sort.z3_sort)
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
 
@@ -674,7 +674,7 @@ impl<'ctx> BV<'ctx> {
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
-    /// let i = ctx.named_int_const("x");
+    /// let i = ast::Int::new_const(&ctx, "x");
     /// solver.assert(&i._eq(&ctx.from_i64(-3)));
     ///
     /// let x = ast::BV::from_int(&i, 64);
@@ -812,16 +812,16 @@ impl<'ctx> BV<'ctx> {
 }
 
 impl<'ctx> Array<'ctx> {
-    pub fn new_const(
+    pub fn new_const<S: Into<Symbol>>(
         ctx: &'ctx Context,
-        name: Symbol,
+        name: S,
         domain: &Sort<'ctx>,
         range: &Sort<'ctx>,
     ) -> Array<'ctx> {
         let sort = Sort::array(ctx, domain, range);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const(ctx.z3_ctx, name.as_z3_symbol(ctx), sort.z3_sort)
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
 
@@ -890,11 +890,15 @@ impl<'ctx> Array<'ctx> {
 }
 
 impl<'ctx> Set<'ctx> {
-    pub fn new_const(ctx: &'ctx Context, name: Symbol, eltype: &Sort<'ctx>) -> Set<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(
+        ctx: &'ctx Context,
+        name: S,
+        eltype: &Sort<'ctx>,
+    ) -> Set<'ctx> {
         let sort = Sort::set(ctx, eltype);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const(ctx.z3_ctx, name.as_z3_symbol(ctx), sort.z3_sort)
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
 
@@ -975,9 +979,9 @@ impl<'ctx> Set<'ctx> {
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new(&ctx);
-/// let f = ctx.func_decl(Symbol::String("f".to_owned()), &[&ctx.int_sort()], &ctx.int_sort());
+/// let f = ctx.func_decl("f", &[&ctx.int_sort()], &ctx.int_sort());
 ///
-/// let x: ast::Int = ctx.named_int_const("x");
+/// let x = ast::Int::new_const(&ctx, "x");
 /// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
 /// let forall: ast::Dynamic = ast::forall_const(&ctx, &[&x.clone().into()], &(x._eq(&f_x)).into());
 /// solver.assert(&forall.try_into().unwrap());

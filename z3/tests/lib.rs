@@ -26,8 +26,8 @@ fn test_sorts_and_symbols() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let _ = ctx.named_int_const("x");
-    let _ = ctx.named_int_const("y");
+    let _ = ast::Int::new_const(&ctx, "x");
+    let _ = ast::Int::new_const(&ctx, "y");
 }
 
 #[test]
@@ -35,8 +35,8 @@ fn test_solving() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let x = ctx.named_int_const("x");
-    let y = ctx.named_int_const("y");
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
 
     let solver = Solver::new(&ctx);
     solver.assert(&x.gt(&y));
@@ -48,8 +48,8 @@ fn test_solving_for_model() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let x = ctx.named_int_const("x");
-    let y = ctx.named_int_const("y");
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
     let zero = ast::Int::from_i64(&ctx, 0);
     let two = ast::Int::from_i64(&ctx, 2);
     let seven = ast::Int::from_i64(&ctx, 7);
@@ -77,7 +77,7 @@ fn test_cloning_ast() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let x = ctx.named_int_const("x");
+    let x = ast::Int::new_const(&ctx, "x");
     let y = x.clone();
     let zero = ast::Int::from_i64(&ctx, 0);
 
@@ -96,7 +96,7 @@ fn test_cloning_ast() {
 fn test_format() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let ast = ctx.named_int_const("x");
+    let ast = ast::Int::new_const(&ctx, "x");
     assert_eq!("x", format!("{}", ast));
 
     let int = ctx.int_sort();
@@ -107,8 +107,8 @@ fn test_format() {
 fn test_bitvectors() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let a = ctx.named_bitvector_const("a", 64);
-    let b = ctx.named_bitvector_const("b", 64);
+    let a = ast::BV::new_const(&ctx, "a", 64);
+    let b = ast::BV::new_const(&ctx, "b", 64);
     let two = ast::BV::from_i64(&ctx, 2, 64);
 
     let solver = Solver::new(&ctx);
@@ -130,7 +130,7 @@ fn test_bitvectors() {
 fn test_ast_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
-    let a = source.named_int_const("a");
+    let a = ast::Int::new_const(&source, "a");
 
     let destination = Context::new(&cfg);
     let translated_a = a.translate(&destination);
@@ -147,7 +147,7 @@ fn test_ast_translate() {
 fn test_solver_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
-    let a = source.named_int_const("a");
+    let a = ast::Int::new_const(&source, "a");
 
     let destination = Context::new(&cfg);
     let translated_a = a.translate(&destination);
@@ -167,8 +167,8 @@ fn test_solver_translate() {
 fn test_pb_ops_model() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
-    let x = ctx.named_bool_const("x");
-    let y = ctx.named_bool_const("y");
+    let x = ast::Bool::new_const(&ctx, "x");
+    let y = ast::Bool::new_const(&ctx, "y");
 
     let coeffs = vec![1, 1];
     let other_args = vec![&y];
@@ -191,8 +191,8 @@ fn function_ref_count() {
 
     let int_sort = ctx.int_sort();
 
-    let _f = ctx.func_decl(Symbol::String("f".to_owned()), &[&int_sort], &int_sort);
-    let _g = ctx.func_decl(Symbol::String("g".to_owned()), &[&int_sort], &int_sort);
+    let _f = ctx.func_decl("f", &[&int_sort], &int_sort);
+    let _g = ctx.func_decl("g", &[&int_sort], &int_sort);
 
     assert!(solver.check());
 }

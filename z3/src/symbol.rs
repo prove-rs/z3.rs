@@ -15,3 +15,21 @@ impl Symbol {
         }
     }
 }
+
+impl From<u32> for Symbol {
+    fn from(val: u32) -> Self {
+        Symbol::Int(val)
+    }
+}
+
+impl From<String> for Symbol {
+    fn from(val: String) -> Self {
+        Symbol::String(val)
+    }
+}
+
+impl From<&str> for Symbol {
+    fn from(val: &str) -> Self {
+        Symbol::String(val.to_owned())
+    }
+}
