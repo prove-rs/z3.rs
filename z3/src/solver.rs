@@ -99,10 +99,9 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::assert()`](#method.assert)
-    // TODO: noticed this method doesn't appear to use its 'p' parameter, which is suspicious
     pub fn assert_and_track(&self, ast: &ast::Bool<'ctx>, p: &ast::Bool<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
+        unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast, p.z3_ast) };
     }
 
     /// Remove all assertions from the solver.
