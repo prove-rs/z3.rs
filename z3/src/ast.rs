@@ -675,7 +675,7 @@ impl<'ctx> BV<'ctx> {
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
     /// let i = ast::Int::new_const(&ctx, "x");
-    /// solver.assert(&i._eq(&ctx.from_i64(-3)));
+    /// solver.assert(&i._eq(&ast::Int::from_i64(&ctx, -3)));
     ///
     /// let x = ast::BV::from_int(&i, 64);
     /// assert_eq!(64, x.get_size());
@@ -989,7 +989,7 @@ impl<'ctx> Set<'ctx> {
 /// assert!(solver.check());
 /// let model = solver.get_model();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ctx.from_u64(3).into()])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
 /// ```
 
