@@ -96,22 +96,6 @@ impl Context {
         Sort::enumeration(self, name, enum_names)
     }
 
-    pub fn fresh_bool_const<'ctx>(&'ctx self, prefix: &str) -> ast::Bool<'ctx> {
-        ast::Bool::fresh_const(self, prefix)
-    }
-
-    pub fn fresh_int_const<'ctx>(&'ctx self, prefix: &str) -> ast::Int<'ctx> {
-        ast::Int::fresh_const(self, prefix)
-    }
-
-    pub fn fresh_real_const<'ctx>(&'ctx self, prefix: &str) -> ast::Real<'ctx> {
-        ast::Real::fresh_const(self, prefix)
-    }
-
-    pub fn fresh_bitvector_const<'ctx>(&'ctx self, prefix: &str, sz: u32) -> ast::BV<'ctx> {
-        ast::BV::fresh_const(self, prefix, sz)
-    }
-
     #[allow(clippy::wrong_self_convention)]
     pub fn from_bool(&self, b: bool) -> ast::Bool {
         ast::Bool::from_bool(self, b)

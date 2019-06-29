@@ -175,7 +175,7 @@ fn test_solve_simple_semver_example() {
 
     // Make a root Z3 Int constant for each pkg we're trying to solve for.
     for (k, v) in &root {
-        let ast = ctx.fresh_int_const("root-pkg");
+        let ast = ast::Int::fresh_const(&ctx, "root-pkg");
         info!("new AST for root {}", k);
 
         match first_version_req_index(&smap, k, v) {
@@ -202,7 +202,7 @@ fn test_solve_simple_semver_example() {
     for k in (&smap).keys() {
         asts.entry(k.clone()).or_insert_with(|| {
             info!("new AST for {}", k);
-            ctx.fresh_int_const("pkg")
+            ast::Int::fresh_const(&ctx, "pkg")
         });
     }
     for specs in smap.values() {
@@ -210,7 +210,7 @@ fn test_solve_simple_semver_example() {
             for r in (&spec).reqs.keys() {
                 asts.entry(r.clone()).or_insert_with(|| {
                     info!("new AST for {}", r);
-                    ctx.fresh_int_const("dep-pkg")
+                    ast::Int::fresh_const(&ctx, "dep-pkg")
                 });
             }
         }
