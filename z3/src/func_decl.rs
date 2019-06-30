@@ -2,7 +2,7 @@ use ast;
 use ast::Ast;
 use std::convert::TryInto;
 use z3_sys::*;
-use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
+use {Context, FuncDecl, Sort, Symbol};
 
 impl<'ctx> FuncDecl<'ctx> {
     pub fn new<S: Into<Symbol>>(
@@ -19,8 +19,6 @@ impl<'ctx> FuncDecl<'ctx> {
         Self {
             ctx,
             z3_func_decl: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-
                 let f = Z3_mk_func_decl(
                     ctx.z3_ctx,
                     name.into().as_z3_symbol(ctx),
@@ -62,7 +60,6 @@ impl<'ctx> FuncDecl<'ctx> {
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
         ast::Dynamic::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_app(
                 self.ctx.z3_ctx,
                 self.z3_func_decl,
