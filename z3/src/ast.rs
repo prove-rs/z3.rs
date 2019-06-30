@@ -606,6 +606,16 @@ impl<'ctx> Real<'ctx> {
     unop!(unary_minus, Z3_mk_unary_minus, Self);
 }
 
+macro_rules! bv_overflow_check_signed {
+    ( $f:ident, $z3fn:ident) => {
+        pub fn $f(&self, other: &BV<'ctx>, b: bool) -> Bool<'ctx> {
+            Ast::new(self.ctx, unsafe {
+                $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast, b)
+            })
+    }
+    };
+}
+
 impl<'ctx> BV<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
@@ -774,6 +784,24 @@ impl<'ctx> BV<'ctx> {
 
     /// Concatenate two bitvectors
     binop!(concat, Z3_mk_concat, Self);
+
+    // overflow checks
+    /// Check if addition overflows
+    bv_overflow_check_signed!(bvadd_no_overflow, Z3_mk_bvadd_no_overflow);
+    /// Check if addition underflows
+    binop!(bvadd_no_underflow, Z3_mk_bvadd_no_underflow, Bool<'ctx>);
+    /// Check if subtraction overflows
+    binop!(bvsub_no_overflow, Z3_mk_bvsub_no_overflow, Bool<'ctx>);
+    /// Check if subtraction underflows
+    bv_overflow_check_signed!(bvsub_no_underflow, Z3_mk_bvsub_no_underflow);
+    /// Check if signed division overflows
+    binop!(bvsdiv_no_overflow, Z3_mk_bvsdiv_no_overflow, Bool<'ctx>);
+    /// Check if negation overflows
+    unop!(bvneg_no_overflow, Z3_mk_bvneg_no_overflow, Bool<'ctx>);
+    /// Check if multiplication overflows
+    bv_overflow_check_signed!(bvmul_no_overflow, Z3_mk_bvmul_no_overflow);
+    /// Check if multiplication underflows
+    binop!(bvmul_no_underflow, Z3_mk_bvmul_no_underflow, Bool<'ctx>);
 
     /// Extract the bits `high` down to `low` from the bitvector.
     /// Returns a bitvector of size `n`, where `n = high - low + 1`.
