@@ -5,13 +5,11 @@ use Context;
 use FuncDecl;
 use Sort;
 use Symbol;
-use Z3_MUTEX;
 
 impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
                 let p = Z3_mk_context_rc(cfg.z3_cfg);
                 debug!("new context {:p}", p);
                 p

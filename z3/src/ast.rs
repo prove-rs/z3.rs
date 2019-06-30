@@ -7,7 +7,6 @@ use z3_sys::*;
 use Context;
 use Sort;
 use Symbol;
-use Z3_MUTEX;
 
 /// [`Ast`](trait.Ast.html) node representing a boolean value.
 pub struct Bool<'ctx> {
@@ -87,7 +86,6 @@ macro_rules! unop {
     ( $f:ident, $z3fn:ident, $retty:ty ) => {
         pub fn $f(&self) -> $retty {
             <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
                 $z3fn(self.ctx.z3_ctx, self.z3_ast)
             })
         }
@@ -98,7 +96,6 @@ macro_rules! binop {
     ( $f:ident, $z3fn:ident, $retty:ty ) => {
         pub fn $f(&self, other: &Self) -> $retty {
             <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
                 $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast)
             })
         }
@@ -110,7 +107,6 @@ macro_rules! trinop {
     ( $f:ident, $z3fn:ident, $retty:ty ) => {
         pub fn $f(&self, a: &Self, b: &Self) -> $retty {
             <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
                 $z3fn(self.ctx.z3_ctx, self.z3_ast, a.z3_ast, b.z3_ast)
             })
         }
@@ -122,7 +118,6 @@ macro_rules! varop {
     ( $f:ident, $z3fn:ident, $retty:ty ) => {
         pub fn $f(&self, other: &[&Self]) -> $retty {
             <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
                 let mut tmp = vec![self.z3_ast];
                 for a in other {
                     tmp.push(a.z3_ast)
@@ -151,7 +146,6 @@ pub trait Ast<'ctx>: Sized {
             ctx,
             z3_ast: unsafe {
                 debug!("new ast {:p}", ast);
-                let guard = Z3_MUTEX.lock().unwrap();
                 Z3_inc_ref(ctx.z3_ctx, ast);
                 ast
             },
@@ -169,7 +163,6 @@ pub trait Ast<'ctx>: Sized {
     // Note that we can't use the binop! macro because of the `pub` keyword on it
     fn _eq(&self, other: &Self) -> Bool<'ctx> {
         Bool::new(self.get_ctx(), unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_eq(self.get_ctx().z3_ctx, self.get_z3_ast(), other.get_z3_ast())
         })
     }
@@ -183,7 +176,6 @@ pub trait Ast<'ctx>: Sized {
     // Note that we can't use the varop! macro because of the `pub` keyword on it
     fn distinct(&self, other: &[&Self]) -> Bool<'ctx> {
         Bool::new(self.get_ctx(), unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp = vec![self.get_z3_ast()];
             for a in other {
                 tmp.push(a.get_z3_ast())
@@ -212,7 +204,6 @@ macro_rules! new_ast {
                 ctx,
                 z3_ast: unsafe {
                     debug!("new ast {:p}", ast);
-                    let guard = Z3_MUTEX.lock().unwrap();
                     Z3_inc_ref(ctx.z3_ctx, ast);
                     ast
                 },
@@ -264,7 +255,6 @@ impl<'ctx> Bool<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Bool<'ctx> {
         let sort = Sort::bool(ctx);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
@@ -274,14 +264,12 @@ impl<'ctx> Bool<'ctx> {
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
 
     pub fn from_bool(ctx: &'ctx Context, b: bool) -> Bool<'ctx> {
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             if b {
                 Z3_mk_true(ctx.z3_ctx)
             } else {
@@ -292,7 +280,6 @@ impl<'ctx> Bool<'ctx> {
 
     pub fn as_bool(&self) -> Option<bool> {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             match Z3_get_bool_value(self.ctx.z3_ctx, self.z3_ast) {
                 Z3_L_TRUE => Some(true),
                 Z3_L_FALSE => Some(false),
@@ -305,7 +292,6 @@ impl<'ctx> Bool<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Bool<'dest_ctx> {
         Bool::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
@@ -316,7 +302,6 @@ impl<'ctx> Bool<'ctx> {
         T: Ast<'ctx>,
     {
         T::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_ite(self.ctx.z3_ctx, self.z3_ast, a.get_z3_ast(), b.get_z3_ast())
         })
     }
@@ -330,7 +315,6 @@ impl<'ctx> Bool<'ctx> {
 
     pub fn pb_le(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
         Bool::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp = vec![self.z3_ast];
             for a in other {
                 tmp.push(a.z3_ast)
@@ -348,7 +332,6 @@ impl<'ctx> Bool<'ctx> {
     }
     pub fn pb_ge(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
         Bool::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp = vec![self.z3_ast];
             for a in other {
                 tmp.push(a.z3_ast)
@@ -366,7 +349,6 @@ impl<'ctx> Bool<'ctx> {
     }
     pub fn pb_eq(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
         Bool::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp = vec![self.z3_ast];
             for a in other {
                 tmp.push(a.z3_ast)
@@ -388,7 +370,6 @@ impl<'ctx> Int<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Int<'ctx> {
         let sort = Sort::int(ctx);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
@@ -398,30 +379,24 @@ impl<'ctx> Int<'ctx> {
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
 
     pub fn from_i64(ctx: &'ctx Context, i: i64) -> Int<'ctx> {
         let sort = Sort::int(ctx);
-        Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)
-        })
+        Self::new(ctx, unsafe { Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort) })
     }
 
     pub fn from_u64(ctx: &'ctx Context, u: u64) -> Int<'ctx> {
         let sort = Sort::int(ctx);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)
         })
     }
 
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_longlong = 0;
             if Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
@@ -433,7 +408,6 @@ impl<'ctx> Int<'ctx> {
 
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
             if Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
@@ -445,7 +419,6 @@ impl<'ctx> Int<'ctx> {
 
     pub fn from_real(ast: &Real<'ctx>) -> Int<'ctx> {
         Self::new(ast.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_real2int(ast.ctx.z3_ctx, ast.z3_ast)
         })
     }
@@ -480,7 +453,6 @@ impl<'ctx> Int<'ctx> {
     /// ```
     pub fn from_bv(ast: &BV<'ctx>, signed: bool) -> Int<'ctx> {
         Self::new(ast.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_bv2int(ast.ctx.z3_ctx, ast.z3_ast, signed)
         })
     }
@@ -496,7 +468,6 @@ impl<'ctx> Int<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Int<'dest_ctx> {
         Int::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
@@ -532,7 +503,6 @@ impl<'ctx> Real<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Real<'ctx> {
         let sort = Sort::real(ctx);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
@@ -542,14 +512,12 @@ impl<'ctx> Real<'ctx> {
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
 
     pub fn from_real(ctx: &'ctx Context, num: i32, den: i32) -> Real<'ctx> {
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_real(
                 ctx.z3_ctx,
                 num as ::std::os::raw::c_int,
@@ -560,7 +528,6 @@ impl<'ctx> Real<'ctx> {
 
     pub fn as_real(&self) -> Option<(i64, i64)> {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut num: i64 = 0;
             let mut den: i64 = 0;
             if Z3_get_numeral_small(self.ctx.z3_ctx, self.z3_ast, &mut num, &mut den) {
@@ -573,7 +540,6 @@ impl<'ctx> Real<'ctx> {
 
     pub fn from_int(ast: &Int<'ctx>) -> Real<'ctx> {
         Self::new(ast.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_int2real(ast.ctx.z3_ctx, ast.z3_ast)
         })
     }
@@ -591,7 +557,6 @@ impl<'ctx> Real<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Real<'dest_ctx> {
         Real::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
@@ -608,7 +573,6 @@ impl<'ctx> BV<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
@@ -618,30 +582,24 @@ impl<'ctx> BV<'ctx> {
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
 
     pub fn from_i64(ctx: &'ctx Context, i: i64, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
-        Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)
-        })
+        Self::new(ctx, unsafe { Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort) })
     }
 
     pub fn from_u64(ctx: &'ctx Context, u: u64, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)
         })
     }
 
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_longlong = 0;
             if Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
@@ -653,7 +611,6 @@ impl<'ctx> BV<'ctx> {
 
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
             if Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
                 Some(tmp)
@@ -687,7 +644,6 @@ impl<'ctx> BV<'ctx> {
     /// ```
     pub fn from_int(ast: &Int<'ctx>, sz: u32) -> BV<'ctx> {
         Self::new(ast.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_int2bv(ast.ctx.z3_ctx, sz, ast.z3_ast)
         })
     }
@@ -709,7 +665,6 @@ impl<'ctx> BV<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> BV<'dest_ctx> {
         BV::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
@@ -787,7 +742,6 @@ impl<'ctx> BV<'ctx> {
     /// Returns a bitvector of size `n`, where `n = high - low + 1`.
     pub fn extract(&self, high: u32, low: u32) -> Self {
         Self::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_extract(self.ctx.z3_ctx, high, low, self.z3_ast)
         })
     }
@@ -796,7 +750,6 @@ impl<'ctx> BV<'ctx> {
     /// That is, `i` bits will be added.
     pub fn sign_ext(&self, i: u32) -> Self {
         Self::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_sign_ext(self.ctx.z3_ctx, i, self.z3_ast)
         })
     }
@@ -805,7 +758,6 @@ impl<'ctx> BV<'ctx> {
     /// That is, `i` bits will be added.
     pub fn zero_ext(&self, i: u32) -> Self {
         Self::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_zero_ext(self.ctx.z3_ctx, i, self.z3_ast)
         })
     }
@@ -820,7 +772,6 @@ impl<'ctx> Array<'ctx> {
     ) -> Array<'ctx> {
         let sort = Sort::array(ctx, domain, range);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
@@ -835,7 +786,6 @@ impl<'ctx> Array<'ctx> {
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
@@ -844,7 +794,6 @@ impl<'ctx> Array<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Array<'dest_ctx> {
         Array::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
@@ -865,7 +814,6 @@ impl<'ctx> Array<'ctx> {
         // problem.
         // This way we also avoid the redundant check every time this method is called.
         Dynamic::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_select(self.ctx.z3_ctx, self.z3_ast, index.get_z3_ast())
         })
     }
@@ -878,7 +826,6 @@ impl<'ctx> Array<'ctx> {
     // We avoid the trinop! macro because the arguments have non-Self types
     pub fn store(&self, index: &Dynamic<'ctx>, value: &Dynamic<'ctx>) -> Self {
         Self::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_store(
                 self.ctx.z3_ctx,
                 self.z3_ast,
@@ -897,7 +844,6 @@ impl<'ctx> Set<'ctx> {
     ) -> Set<'ctx> {
         let sort = Sort::set(ctx, eltype);
         Self::new(ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
         })
     }
@@ -907,7 +853,6 @@ impl<'ctx> Set<'ctx> {
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
@@ -916,7 +861,6 @@ impl<'ctx> Set<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Set<'dest_ctx> {
         Set::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
@@ -928,7 +872,6 @@ impl<'ctx> Set<'ctx> {
     // We avoid the binop! macro because the argument has a non-Self type
     pub fn add(&self, element: &Dynamic<'ctx>) -> Set<'ctx> {
         Set::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
         })
     }
@@ -940,7 +883,6 @@ impl<'ctx> Set<'ctx> {
     // We avoid the binop! macro because the argument has a non-Self type
     pub fn del(&self, element: &Dynamic<'ctx>) -> Set<'ctx> {
         Set::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
         })
     }
@@ -952,7 +894,6 @@ impl<'ctx> Set<'ctx> {
     // We avoid the binop! macro because the argument has a non-Self type
     pub fn member(&self, element: &Dynamic<'ctx>) -> Bool<'ctx> {
         Bool::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
         })
     }
@@ -1045,7 +986,6 @@ where
 fn _drop<'ctx>(ast: &mut impl Ast<'ctx>) {
     debug!("drop ast {:p}", ast.get_z3_ast());
     unsafe {
-        let guard = Z3_MUTEX.lock().unwrap();
         Z3_dec_ref(ast.get_ctx().z3_ctx, ast.get_z3_ast());
     }
 }
