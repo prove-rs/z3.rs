@@ -136,6 +136,12 @@ impl<'ctx> Sort<'ctx> {
 
         (sort, enum_consts, enum_testers)
     }
+
+    pub fn kind(&self) -> SortKind {
+        unsafe {
+            Z3_get_sort_kind(self.ctx.z3_ctx, self.z3_sort)
+        }
+    }
 }
 
 impl<'ctx> fmt::Display for Sort<'ctx> {
