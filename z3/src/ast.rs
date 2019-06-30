@@ -45,6 +45,12 @@ pub struct Set<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`](trait.Ast.html) node representing a datatype or enumeration value.
+pub struct Datatype<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 /// A dynamically typed [`Ast`](trait.Ast.html) node.
 pub struct Dynamic<'ctx> {
     pub(crate) ctx: &'ctx Context,
@@ -285,6 +291,9 @@ impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
         Dynamic::new(ast.ctx, ast.z3_ast)
     }
 }
+
+impl_ast!(Datatype);
+impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 
@@ -1028,8 +1037,44 @@ impl<'ctx> Dynamic<'ctx> {
         }
     }
 
+    pub fn as_datatype(&self) -> Option<Datatype<'ctx>> {
+        match self.sort_kind() {
+            SortKind::Datatype => Some(Datatype::new(self.ctx, self.z3_ast)),
+            _ => None,
+        }
+    }
+
     // TODO as_set. SortKind::Set does not exist
-    // TODO as_enumeration/datatype
+}
+
+impl<'ctx> Datatype<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sort: &Sort<'ctx>) -> Self {
+        assert_eq!(ctx.z3_ctx, sort.ctx.z3_ctx);
+        assert_eq!(sort.kind(), SortKind::Datatype);
+
+        Self::new(ctx, unsafe {
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+        })
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Self {
+        assert_eq!(ctx.z3_ctx, sort.ctx.z3_ctx);
+        assert_eq!(sort.kind(), SortKind::Datatype);
+
+        Self::new(ctx, unsafe {
+            let pp = CString::new(prefix).unwrap();
+            let p = pp.as_ptr();
+            Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+        })
+    }
+
+    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
+    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
+    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Datatype<'dest_ctx> {
+        Datatype::new(dest, unsafe {
+            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
+        })
+    }
 }
 
 /// Create a forall quantifier.
