@@ -781,6 +781,10 @@ impl<'ctx> BV<'ctx> {
     binop!(bvlshr, Z3_mk_bvlshr, Self);
     /// Arithmetic shift right (sign-extend in the high bits)
     binop!(bvashr, Z3_mk_bvashr, Self);
+    /// Rotate left
+    binop!(bvrotl, Z3_mk_ext_rotate_left, Self);
+    /// Rotate right
+    binop!(bvrotr, Z3_mk_ext_rotate_left, Self);
 
     /// Concatenate two bitvectors
     binop!(concat, Z3_mk_concat, Self);
