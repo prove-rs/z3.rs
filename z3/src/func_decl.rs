@@ -16,20 +16,24 @@ impl<'ctx> FuncDecl<'ctx> {
 
         let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
 
-        Self {
-            ctx,
-            z3_func_decl: unsafe {
-                let f = Z3_mk_func_decl(
+        unsafe {
+            Self::from_raw(
+                ctx,
+                Z3_mk_func_decl(
                     ctx.z3_ctx,
                     name.into().as_z3_symbol(ctx),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
-                );
-                Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, f));
-                f
-            },
+                ),
+            )
         }
+    }
+
+    pub unsafe fn from_raw(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
+        Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
+
+        Self { ctx, z3_func_decl }
     }
 
     /// Return the number of arguments of a function declaration.
