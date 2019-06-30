@@ -677,7 +677,7 @@ impl<'ctx> BV<'ctx> {
     /// assert!(solver.check());
     /// let model = solver.get_model();
     ///
-    /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().expect("as_i64() shouldn't fail"));
+    /// assert_eq!(-3, model.eval(&x.to_int(true)).unwrap().as_i64().expect("as_i64() shouldn't fail"));
     /// ```
     pub fn from_int(ast: &Int<'ctx>, sz: u32) -> BV<'ctx> {
         Self::new(ast.ctx, unsafe {
