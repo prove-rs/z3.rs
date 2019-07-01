@@ -262,7 +262,7 @@ macro_rules! impl_from_try_into_dynamic {
             type Error = String;
             fn try_from(ast: Dynamic<'ctx>) -> Result<Self, String> {
                 ast.$as_ast()
-                    .ok_or_else(|| format!("Not a bool: {:?}", ast))
+                    .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
         }
     };
@@ -1004,7 +1004,7 @@ impl<'ctx> Dynamic<'ctx> {
         }
     }
 
-    /// Returns `None` if the `Dynamic` is not actually an `Real`
+    /// Returns `None` if the `Dynamic` is not actually a `Real`
     pub fn as_real(&self) -> Option<Real<'ctx>> {
         match self.sort_kind() {
             SortKind::Real => Some(Real::new(self.ctx, self.z3_ast)),
@@ -1012,7 +1012,7 @@ impl<'ctx> Dynamic<'ctx> {
         }
     }
 
-    /// Returns `None` if the `Dynamic` is not actually an `BV`
+    /// Returns `None` if the `Dynamic` is not actually a `BV`
     pub fn as_bv(&self) -> Option<BV<'ctx>> {
         match self.sort_kind() {
             SortKind::BV => Some(BV::new(self.ctx, self.z3_ast)),
