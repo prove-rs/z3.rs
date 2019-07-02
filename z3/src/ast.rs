@@ -160,6 +160,15 @@ pub trait Ast<'ctx>: Sized {
             Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast())
         })
     }
+
+    /// Simplify the `Ast`. Returns a new `Ast` which is equivalent,
+    /// but simplified using algebraic simplification rules, such as
+    /// constant propagation.
+    fn simplify(&self) -> Self {
+        Self::new(self.get_ctx(), unsafe {
+            Z3_simplify(self.get_ctx().z3_ctx, self.get_z3_ast())
+        })
+    }
 }
 
 macro_rules! impl_ast {
