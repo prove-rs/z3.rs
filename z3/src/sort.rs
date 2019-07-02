@@ -6,9 +6,11 @@ use Context;
 use FuncDecl;
 use Sort;
 use Symbol;
+use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {
     pub(crate) fn new(ctx: &'ctx Context, z3_sort: Z3_sort) -> Sort<'ctx> {
+        let guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort))
         };

@@ -5,9 +5,13 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate lazy_static;
+
 extern crate z3_sys;
 
 use std::ffi::CString;
+use std::sync::Mutex;
 use z3_sys::*;
 
 pub mod ast;
@@ -20,6 +24,12 @@ mod optimize;
 mod solver;
 mod sort;
 mod symbol;
+
+// Z3 appears to be only mostly-threadsafe, a few initializers
+// and such race; so we mutex-guard all access to the library.
+lazy_static! {
+    static ref Z3_MUTEX: Mutex<()> = Mutex::new(());
+}
 
 /// Configuration used to initialize [logical contexts].
 ///

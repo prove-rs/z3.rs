@@ -1,12 +1,14 @@
 use std::ffi::CString;
 use z3_sys::*;
 use Config;
+use Z3_MUTEX;
 
 impl Config {
     pub fn new() -> Config {
         Config {
             kvs: Vec::new(),
             z3_cfg: unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
                 let p = Z3_mk_config();
                 debug!("new config {:p}", p);
                 p
@@ -17,6 +19,7 @@ impl Config {
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
         self.kvs.push((ks, vs));
+        let guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_set_param_value(
                 self.z3_cfg,
@@ -56,6 +59,7 @@ impl Default for Config {
 
 impl Drop for Config {
     fn drop(&mut self) {
+        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_del_config(self.z3_cfg) };
     }
 }

@@ -2,7 +2,7 @@ use ast;
 use ast::Ast;
 use std::convert::TryInto;
 use z3_sys::*;
-use {Context, FuncDecl, Sort, Symbol};
+use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
 
 impl<'ctx> FuncDecl<'ctx> {
     pub fn new<S: Into<Symbol>>(
@@ -31,6 +31,8 @@ impl<'ctx> FuncDecl<'ctx> {
     }
 
     pub unsafe fn from_raw(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
+        let guard = Z3_MUTEX.lock().unwrap();
+
         Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
 
         Self { ctx, z3_func_decl }
@@ -64,6 +66,7 @@ impl<'ctx> FuncDecl<'ctx> {
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
         ast::Dynamic::new(self.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_app(
                 self.ctx.z3_ctx,
                 self.z3_func_decl,
