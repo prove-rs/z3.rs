@@ -156,10 +156,9 @@ pub trait Ast<'ctx>: Sized {
 
     /// Get the [`Sort`](../struct.Sort.html) of the `Ast`
     fn get_sort(&self) -> Sort<'ctx> {
-        Sort {
-            ctx: self.get_ctx(),
-            z3_sort: unsafe { Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast()) },
-        }
+        Sort::new(self.get_ctx(), unsafe {
+            Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast())
+        })
     }
 }
 
