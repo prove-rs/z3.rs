@@ -58,24 +58,36 @@ pub enum Symbol {
 }
 
 /// Sorts represent the various 'types' of [`Ast`s](trait.Ast.html).
+//
+// Note for in-crate users: Never construct a `Sort` directly; only use
+// `Sort::new()` which handles Z3 refcounting properly.
 pub struct Sort<'ctx> {
     ctx: &'ctx Context,
     z3_sort: Z3_sort,
 }
 
 /// (Incremental) solver, possibly specialized by a particular tactic or logic.
+//
+// Note for in-crate users: Never construct a `Solver` directly; only use
+// `Solver::new()` which handles Z3 refcounting properly.
 pub struct Solver<'ctx> {
     ctx: &'ctx Context,
     z3_slv: Z3_solver,
 }
 
 /// Model for the constraints inserted into the logical context.
+//
+// Note for in-crate users: Never construct a `Model` directly; only use
+// `Model::new()` which handles Z3 refcounting properly.
 pub struct Model<'ctx> {
     ctx: &'ctx Context,
     z3_mdl: Z3_model,
 }
 
 /// Context for solving optimization queries.
+//
+// Note for in-crate users: Never construct an `Optimize` directly; only use
+// `Optimize::new()` which handles Z3 refcounting properly.
 pub struct Optimize<'ctx> {
     ctx: &'ctx Context,
     z3_opt: Z3_optimize,
@@ -86,6 +98,9 @@ pub struct Optimize<'ctx> {
 /// The declaration assigns a name, a sort (i.e., type), and for function
 /// the sort (i.e., type) of each of its arguments. Note that, in Z3,
 /// a constant is a function with 0 arguments.
+//
+// Note for in-crate users: Never construct a `FuncDecl` directly; only use
+// `FuncDecl::new()` which handles Z3 refcounting properly.
 pub struct FuncDecl<'ctx> {
     ctx: &'ctx Context,
     z3_func_decl: Z3_func_decl,

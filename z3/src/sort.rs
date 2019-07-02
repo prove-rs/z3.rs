@@ -8,77 +8,56 @@ use Sort;
 use Symbol;
 
 impl<'ctx> Sort<'ctx> {
-    pub fn uninterpreted(ctx: &'ctx Context, name: Symbol) -> Sort<'ctx> {
+    pub(crate) fn new(ctx: &'ctx Context, z3_sort: Z3_sort) -> Sort<'ctx> {
+        unsafe {
+            Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort))
+        };
         Sort {
             ctx,
-            z3_sort: unsafe { Z3_mk_uninterpreted_sort(ctx.z3_ctx, name.as_z3_symbol(ctx)) },
+            z3_sort,
         }
+    }
+
+    pub fn uninterpreted(ctx: &'ctx Context, name: Symbol) -> Sort<'ctx> {
+        Sort::new(ctx, unsafe {
+            Z3_mk_uninterpreted_sort(ctx.z3_ctx, name.as_z3_symbol(ctx))
+        })
     }
 
     pub fn bool(ctx: &Context) -> Sort {
-        Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_bool_sort(ctx.z3_ctx);
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, s));
-                s
-            },
-        }
+        Sort::new(ctx, unsafe {
+            Z3_mk_bool_sort(ctx.z3_ctx)
+        })
     }
 
     pub fn int(ctx: &Context) -> Sort {
-        Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_int_sort(ctx.z3_ctx);
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, s));
-                s
-            },
-        }
+        Sort::new(ctx, unsafe {
+            Z3_mk_int_sort(ctx.z3_ctx)
+        })
     }
 
     pub fn real(ctx: &Context) -> Sort {
-        Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_real_sort(ctx.z3_ctx);
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, s));
-                s
-            },
-        }
+        Sort::new(ctx, unsafe {
+            Z3_mk_real_sort(ctx.z3_ctx)
+        })
     }
 
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
-        Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_bv_sort(ctx.z3_ctx, sz as ::std::os::raw::c_uint);
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, s));
-                s
-            },
-        }
+        Sort::new(ctx, unsafe {
+            Z3_mk_bv_sort(ctx.z3_ctx, sz as ::std::os::raw::c_uint)
+        })
     }
 
     pub fn array(ctx: &'ctx Context, domain: &Sort<'ctx>, range: &Sort<'ctx>) -> Sort<'ctx> {
-        Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_array_sort(ctx.z3_ctx, domain.z3_sort, range.z3_sort);
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, s));
-                s
-            },
-        }
+        Sort::new(ctx, unsafe {
+            Z3_mk_array_sort(ctx.z3_ctx, domain.z3_sort, range.z3_sort)
+        })
     }
 
     pub fn set(ctx: &'ctx Context, elt: &Sort<'ctx>) -> Sort<'ctx> {
-        Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort);
-                Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, s));
-                s
-            },
-        }
+        Sort::new(ctx, unsafe {
+            Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort)
+        })
     }
 
     pub fn enumeration(
@@ -90,21 +69,16 @@ impl<'ctx> Sort<'ctx> {
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
-        let sort = Sort {
-            ctx,
-            z3_sort: unsafe {
-                let s = Z3_mk_enumeration_sort(
-                    ctx.z3_ctx,
-                    name.as_z3_symbol(ctx),
-                    enum_names.len().try_into().unwrap(),
-                    enum_names.as_ptr(),
-                    enum_consts.as_mut_ptr(),
-                    enum_testers.as_mut_ptr(),
-                );
-                Z3_inc_ref(ctx.z3_ctx, s as Z3_ast);
-                s
-            },
-        };
+        let sort = Sort::new(ctx, unsafe {
+            Z3_mk_enumeration_sort(
+                ctx.z3_ctx,
+                name.as_z3_symbol(ctx),
+                enum_names.len().try_into().unwrap(),
+                enum_names.as_ptr(),
+                enum_consts.as_mut_ptr(),
+                enum_testers.as_mut_ptr(),
+            )
+        });
 
         // increase ref counts
         for i in &enum_consts {
