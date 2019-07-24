@@ -24,6 +24,7 @@ mod optimize;
 mod solver;
 mod sort;
 mod symbol;
+mod params;
 
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
@@ -163,4 +164,9 @@ pub struct DatatypeSort<'ctx> {
     ctx: &'ctx Context,
     pub sort: Sort<'ctx>,
     pub variants: Vec<DatatypeVariant<'ctx>>,
+}
+
+pub struct Params<'ctx> {
+    ctx: &'ctx Context,
+    z3_params: Z3_params,
 }
