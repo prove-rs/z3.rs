@@ -25,6 +25,7 @@ mod func_decl;
 mod model;
 mod optimize;
 mod params;
+mod pattern;
 mod solver;
 mod sort;
 mod symbol;
@@ -185,4 +186,10 @@ pub enum SatResult {
     Unknown,
     /// The query is satisfiable.
     Sat,
+}
+
+/// A pattern for quantifier instantiation, used to guide quantifier instantiation.
+pub struct Pattern<'ctx> {
+    ctx: &'ctx Context,
+    z3_pattern: Z3_pattern,
 }

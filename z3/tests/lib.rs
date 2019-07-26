@@ -250,7 +250,7 @@ fn test_real_cmp() {
     let x = ast::Real::new_const(&ctx, "x");
     let x_plus_1 = x.add(&[&ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
-    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &x.lt(&x_plus_1).into());
+    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1).into());
 
     solver.assert(&forall.try_into().unwrap());
     assert_eq!(solver.check(), SatResult::Sat);

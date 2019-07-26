@@ -7,6 +7,7 @@ use z3_sys::*;
 use Context;
 use Sort;
 use Symbol;
+use Pattern;
 use Z3_MUTEX;
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -1223,11 +1224,11 @@ impl<'ctx> Datatype<'ctx> {
     }
 }
 
-/// Create a forall quantifier.
+/// Create a universal quantifier.
 ///
 /// # Examples
 /// ```
-/// # use z3::{ast, Config, Context, FuncDecl, SatResult, Solver, Sort, Symbol};
+/// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
@@ -1237,8 +1238,14 @@ impl<'ctx> Datatype<'ctx> {
 ///
 /// let x = ast::Int::new_const(&ctx, "x");
 /// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
-/// let forall: ast::Dynamic = ast::forall_const(&ctx, &[&x.clone().into()], &(x._eq(&f_x)).into());
-/// solver.assert(&forall.try_into().unwrap());
+/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+/// let forall: ast::Bool = ast::forall_const(
+///     &ctx,
+///     &[&x.clone().into()],
+///     &[&f_x_pattern],
+///     &x._eq(&f_x).into()
+/// ).try_into().unwrap();
+/// solver.assert(&forall);
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model();
@@ -1246,13 +1253,14 @@ impl<'ctx> Datatype<'ctx> {
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
 /// ```
-
 pub fn forall_const<'ctx>(
     ctx: &'ctx Context,
     bounds: &[&Dynamic<'ctx>],
+    patterns: &[&Pattern<'ctx>],
     body: &Dynamic<'ctx>,
 ) -> Dynamic<'ctx> {
-    assert!(bounds.iter().all(|a| a.get_ctx().z3_ctx == ctx.z3_ctx));
+    assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
+    assert!(patterns.iter().all(|p| p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
 
     if bounds.is_empty() {
@@ -1260,6 +1268,7 @@ pub fn forall_const<'ctx>(
     }
 
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+    let patterns: Vec<_> = patterns.iter().map(|p| p.z3_pattern).collect();
 
     Ast::new(ctx, unsafe {
         Z3_mk_forall_const(
@@ -1267,8 +1276,63 @@ pub fn forall_const<'ctx>(
             0,
             bounds.len().try_into().unwrap(),
             bounds.as_ptr() as *const Z3_app,
+            patterns.len().try_into().unwrap(),
+            patterns.as_ptr() as *const Z3_pattern,
+            body.get_z3_ast(),
+        )
+    })
+}
+
+/// Create an existential quantifier.
+///
+/// # Examples
+/// ```
+/// # use z3::{ast, Config, Context, FuncDecl, Solver, Sort, Symbol, Pattern};
+/// # use z3::ast::Ast;
+/// # use std::convert::TryInto;
+/// # let cfg = Config::new();
+/// # let ctx = Context::new(&cfg);
+/// # let solver = Solver::new(&ctx);
+/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+///
+/// let x = ast::Int::new_const(&ctx, "x");
+/// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
+/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+/// let exists: ast::Bool = ast::exists_const(
+///     &ctx,
+///     &[&x.clone().into()],
+///     &[&f_x_pattern],
+///     &x._eq(&f_x).not().into()
+/// ).try_into().unwrap();
+/// solver.assert(&exists.not());
+///
+/// assert!(solver.check());
+/// let model = solver.get_model();
+///
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
+/// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
+/// ```
+pub fn exists_const<'ctx>(
+    ctx: &'ctx Context,
+    bounds: &[&Dynamic<'ctx>],
+    patterns: &[&Pattern<'ctx>],
+    body: &Dynamic<'ctx>,
+) -> Dynamic<'ctx> {
+    assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
+    assert!(patterns.iter().all(|p| p.ctx == ctx));
+    assert_eq!(ctx, body.get_ctx());
+
+    let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+    let patterns: Vec<_> = patterns.iter().map(|p| p.z3_pattern).collect();
+
+    Ast::new(ctx, unsafe {
+        Z3_mk_exists_const(
+            ctx.z3_ctx,
             0,
-            std::ptr::null(),
+            bounds.len().try_into().unwrap(),
+            bounds.as_ptr() as *const Z3_app,
+            patterns.len().try_into().unwrap(),
+            patterns.as_ptr() as *const Z3_pattern,
             body.get_z3_ast(),
         )
     })
