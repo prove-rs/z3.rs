@@ -196,3 +196,20 @@ fn function_ref_count() {
 
     assert!(solver.check());
 }
+
+#[test]
+fn test_params() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+
+    let mut params = Params::new(&ctx);
+    params.set_bool("smt.mbqi", false);
+
+    let solver = Solver::new(&ctx);
+    solver.set_params(&params);
+    solver.assert(&x.gt(&y));
+    assert!(solver.check());
+}
