@@ -6,6 +6,7 @@ use z3_sys::*;
 use Context;
 use Model;
 use Solver;
+use Params;
 use Z3_MUTEX;
 
 impl<'ctx> Solver<'ctx> {
@@ -210,6 +211,12 @@ impl<'ctx> Solver<'ctx> {
         ast::Dynamic::new(self.ctx, unsafe {
             Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
         })
+    }
+
+    /// Set the current solver using the given parameters.
+    pub fn set_params(&self, params: &Params<'ctx>) {
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Z3_solver_set_params(self.ctx.z3_ctx, self.z3_slv, params.z3_params) };
     }
 }
 
