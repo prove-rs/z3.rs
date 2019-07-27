@@ -213,3 +213,20 @@ fn test_params() {
     solver.assert(&x.gt(&y));
     assert!(solver.check());
 }
+
+#[test]
+fn test_substitution() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let x = ast::Real::new_const(&ctx, "x");
+    let y = ast::Real::new_const(&ctx, "y");
+    let z = ast::Real::new_const(&ctx, "z");
+
+    let x_plus_y = x.add(&[&y]);
+    let x_plus_z = x.add(&[&z]);
+
+    let substitutions = &[(&y, &z)];
+
+    assert!(x_plus_y.substitute(substitutions) == x_plus_z);
+}

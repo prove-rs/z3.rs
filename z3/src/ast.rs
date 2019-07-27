@@ -183,6 +183,38 @@ pub trait Ast<'ctx>: Sized {
             Z3_simplify(self.get_ctx().z3_ctx, self.get_z3_ast())
         })
     }
+
+    /// Performs substitution on the `Ast`. The slice `substitutions` contains a
+    /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
+    fn substitute<F, T>(&self, substitutions: &[(&F, &T)]) -> Self
+    where
+        F: Ast<'ctx>,
+        T: Ast<'ctx>,
+    {
+        Self::new(self.get_ctx(), unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+
+            let this_ast = self.get_z3_ast();
+            let num_exprs = substitutions.len() as ::std::os::raw::c_uint;
+            let mut froms: Vec<_> = vec![];
+            let mut tos: Vec<_> = vec![];
+
+            for (from_ast, to_ast) in substitutions {
+                froms.push(from_ast.get_z3_ast());
+                tos.push(to_ast.get_z3_ast());
+            }
+
+            let new_ast = Z3_substitute(
+                self.get_ctx().z3_ctx,
+                this_ast,
+                num_exprs,
+                froms.as_ptr(),
+                tos.as_ptr(),
+            );
+
+            new_ast
+        })
+    }
 }
 
 macro_rules! impl_ast {
