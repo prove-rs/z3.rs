@@ -688,6 +688,10 @@ impl<'ctx> Real<'ctx> {
     binop!(div, Z3_mk_div, Self);
     binop!(power, Z3_mk_power, Self);
     unop!(unary_minus, Z3_mk_unary_minus, Self);
+    binop!(lt, Z3_mk_lt, Bool<'ctx>);
+    binop!(le, Z3_mk_le, Bool<'ctx>);
+    binop!(gt, Z3_mk_gt, Bool<'ctx>);
+    binop!(ge, Z3_mk_ge, Bool<'ctx>);
 }
 
 macro_rules! bv_overflow_check_signed {
