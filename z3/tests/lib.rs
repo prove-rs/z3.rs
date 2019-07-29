@@ -3,6 +3,7 @@ extern crate env_logger;
 extern crate log;
 
 extern crate z3;
+use std::convert::TryInto;
 use z3::ast::Ast;
 use z3::*;
 
@@ -229,4 +230,19 @@ fn test_substitution() {
     let substitutions = &[(&y, &z)];
 
     assert!(x_plus_y.substitute(substitutions) == x_plus_z);
+}
+
+#[test]
+fn test_real_cmp() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Real::new_const(&ctx, "x");
+    let x_plus_1 = x.add(&[&ast::Real::from_real(&ctx, 1, 1)]);
+    // forall x, x < x + 1
+    let forall = ctx.forall_const(&[&x.clone().into()], &x.lt(&x_plus_1).into());
+
+    solver.assert(&forall.try_into().unwrap());
+    assert!(solver.check());
 }
