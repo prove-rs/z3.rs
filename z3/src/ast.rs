@@ -204,15 +204,13 @@ pub trait Ast<'ctx>: Sized {
                 tos.push(to_ast.get_z3_ast());
             }
 
-            let new_ast = Z3_substitute(
+            Z3_substitute(
                 self.get_ctx().z3_ctx,
                 this_ast,
                 num_exprs,
                 froms.as_ptr(),
                 tos.as_ptr(),
-            );
-
-            new_ast
+            )
         })
     }
 }
