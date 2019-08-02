@@ -1,6 +1,6 @@
 use std::{convert::TryInto, ptr::null_mut};
 use z3_sys::*;
-use {Context, DatatypeSort, DatatypeBuilder, DatatypeVariant, FuncDecl, Sort,Symbol};
+use {Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
 
 impl<'ctx> DatatypeBuilder<'ctx> {
     pub fn new(ctx: &'ctx Context) -> Self {

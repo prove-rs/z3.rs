@@ -46,8 +46,9 @@ impl<'ctx> Params<'ctx> {
 
 impl<'ctx> fmt::Display for Params<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p =
-            unsafe { CStr::from_ptr(Z3_params_to_string(self.ctx.z3_ctx, self.z3_params) as *mut i8) };
+        let p = unsafe {
+            CStr::from_ptr(Z3_params_to_string(self.ctx.z3_ctx, self.z3_params) as *mut i8)
+        };
         if p.as_ptr().is_null() {
             return Result::Err(fmt::Error);
         }

@@ -5,8 +5,8 @@ use std::fmt;
 use z3_sys::*;
 use Context;
 use Model;
-use Solver;
 use Params;
+use Solver;
 use Z3_MUTEX;
 
 impl<'ctx> Solver<'ctx> {

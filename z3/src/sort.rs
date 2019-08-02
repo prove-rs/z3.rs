@@ -11,13 +11,8 @@ use Z3_MUTEX;
 impl<'ctx> Sort<'ctx> {
     pub(crate) fn new(ctx: &'ctx Context, z3_sort: Z3_sort) -> Sort<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe {
-            Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort))
-        };
-        Sort {
-            ctx,
-            z3_sort,
-        }
+        unsafe { Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort)) };
+        Sort { ctx, z3_sort }
     }
 
     pub fn uninterpreted(ctx: &'ctx Context, name: Symbol) -> Sort<'ctx> {
@@ -27,21 +22,15 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn bool(ctx: &Context) -> Sort {
-        Sort::new(ctx, unsafe {
-            Z3_mk_bool_sort(ctx.z3_ctx)
-        })
+        Sort::new(ctx, unsafe { Z3_mk_bool_sort(ctx.z3_ctx) })
     }
 
     pub fn int(ctx: &Context) -> Sort {
-        Sort::new(ctx, unsafe {
-            Z3_mk_int_sort(ctx.z3_ctx)
-        })
+        Sort::new(ctx, unsafe { Z3_mk_int_sort(ctx.z3_ctx) })
     }
 
     pub fn real(ctx: &Context) -> Sort {
-        Sort::new(ctx, unsafe {
-            Z3_mk_real_sort(ctx.z3_ctx)
-        })
+        Sort::new(ctx, unsafe { Z3_mk_real_sort(ctx.z3_ctx) })
     }
 
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
@@ -57,9 +46,7 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn set(ctx: &'ctx Context, elt: &Sort<'ctx>) -> Sort<'ctx> {
-        Sort::new(ctx, unsafe {
-            Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort)
-        })
+        Sort::new(ctx, unsafe { Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort) })
     }
 
     pub fn enumeration(
@@ -114,9 +101,7 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn kind(&self) -> SortKind {
-        unsafe {
-            Z3_get_sort_kind(self.ctx.z3_ctx, self.z3_sort)
-        }
+        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, self.z3_sort) }
     }
 }
 

@@ -21,10 +21,10 @@ mod datatype_builder;
 mod func_decl;
 mod model;
 mod optimize;
+mod params;
 mod solver;
 mod sort;
 mod symbol;
-mod params;
 
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
