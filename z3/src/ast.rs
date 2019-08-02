@@ -186,11 +186,7 @@ pub trait Ast<'ctx>: Sized {
 
     /// Performs substitution on the `Ast`. The slice `substitutions` contains a
     /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
-    fn substitute<F, T>(&self, substitutions: &[(&F, &T)]) -> Self
-    where
-        F: Ast<'ctx>,
-        T: Ast<'ctx>,
-    {
+    fn substitute<T: Ast<'ctx>>(&self, substitutions: &[(&T, &T)]) -> Self {
         Self::new(self.get_ctx(), unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
 
