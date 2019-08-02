@@ -49,6 +49,40 @@ impl<'ctx> Sort<'ctx> {
         Sort::new(ctx, unsafe { Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort) })
     }
 
+    /// Create an enumeration sort.
+    ///
+    /// Creates a Z3 enumeration sort with the given `name`.
+    /// The enum variants will have the names in `enum_names`.
+    /// Three things are returned:
+    /// - the created `Sort`,
+    /// - constants to create the variants,
+    /// - and testers to check if a value is equal to a variant.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver, Sort, Symbol};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let (colors, color_consts, color_testers) = Sort::enumeration(
+    ///     &ctx,
+    ///     "Color".into(),
+    ///     &[
+    ///         "Red".into(),
+    ///         "Green".into(),
+    ///         "Blue".into(),
+    ///     ],
+    /// );
+    ///
+    /// let red_const = color_consts[0].apply(&[]);
+    /// let red_tester = &color_testers[0];
+    /// let eq = red_tester.apply(&[&red_const]);
+    ///
+    /// assert!(solver.check());
+    /// let model = solver.get_model();
+    ///
+    /// assert!(model.eval(&eq).unwrap().as_bool().unwrap().as_bool().unwrap());
+    /// ```
     pub fn enumeration(
         ctx: &'ctx Context,
         name: Symbol,

@@ -129,7 +129,7 @@ pub struct FuncDecl<'ctx> {
 /// // Like Rust's Option<int> type
 /// let option_int = DatatypeBuilder::new(&ctx)
 ///         .variant("None", &[])
-///         .variant("Some", &[("value", &ctx.int_sort())])
+///         .variant("Some", &[("value", &Sort::int(&ctx))])
 ///         .finish("OptionInt");
 ///
 /// // Assert x.is_none()

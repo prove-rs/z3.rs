@@ -100,7 +100,7 @@ fn test_format() {
     let ast = ast::Int::new_const(&ctx, "x");
     assert_eq!("x", format!("{}", ast));
 
-    let int = ctx.int_sort();
+    let int = Sort::int(&ctx);
     assert_eq!("Int", format!("{}", int));
 }
 
@@ -190,10 +190,10 @@ fn function_ref_count() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let int_sort = ctx.int_sort();
+    let int_sort = Sort::int(&ctx);
 
-    let _f = ctx.func_decl("f", &[&int_sort], &int_sort);
-    let _g = ctx.func_decl("g", &[&int_sort], &int_sort);
+    let _f = FuncDecl::new(&ctx, "f", &[&int_sort], &int_sort);
+    let _g = FuncDecl::new(&ctx, "g", &[&int_sort], &int_sort);
 
     assert!(solver.check());
 }
@@ -241,7 +241,7 @@ fn test_real_cmp() {
     let x = ast::Real::new_const(&ctx, "x");
     let x_plus_1 = x.add(&[&ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
-    let forall = ctx.forall_const(&[&x.clone().into()], &x.lt(&x_plus_1).into());
+    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &x.lt(&x_plus_1).into());
 
     solver.assert(&forall.try_into().unwrap());
     assert!(solver.check());

@@ -1176,13 +1176,13 @@ impl<'ctx> Datatype<'ctx> {
 ///
 /// # Examples
 /// ```
-/// # use z3::{ast, Config, Context, Solver, Symbol};
+/// # use z3::{ast, Config, Context, FuncDecl, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new(&ctx);
-/// let f = ctx.func_decl("f", &[&ctx.int_sort()], &ctx.int_sort());
+/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
 ///
 /// let x = ast::Int::new_const(&ctx, "x");
 /// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
