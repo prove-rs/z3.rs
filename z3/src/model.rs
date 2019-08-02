@@ -1,4 +1,6 @@
 use ast::Ast;
+use std::ffi::CStr;
+use std::fmt;
 use z3_sys::*;
 use Model;
 use Optimize;
@@ -55,17 +57,15 @@ impl<'ctx> Model<'ctx> {
     }
 }
 
-impl<'ctx> std::fmt::Display for Model<'ctx> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl<'ctx> fmt::Display for Model<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_model_to_string(self.ctx.z3_ctx, self.z3_mdl) };
         if p.is_null() {
-            Err(std::fmt::Error)
-        } else {
-            write!(
-                f,
-                "{}",
-                unsafe { std::ffi::CStr::from_ptr(p) }.to_str().unwrap()
-            )
+            return Result::Err(fmt::Error);
+        }
+        match unsafe { CStr::from_ptr(p) }.to_str() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => Result::Err(fmt::Error),
         }
     }
 }

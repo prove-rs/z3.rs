@@ -1,6 +1,8 @@
 use ast;
 use ast::Ast;
 use std::convert::TryInto;
+use std::ffi::CStr;
+use std::fmt;
 use z3_sys::*;
 use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
 
@@ -77,14 +79,15 @@ impl<'ctx> FuncDecl<'ctx> {
     }
 }
 
-impl<'ctx> std::fmt::Display for FuncDecl<'ctx> {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl<'ctx> fmt::Display for FuncDecl<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx, self.z3_func_decl) };
         if p.is_null() {
-            Err(std::fmt::Error)
-        } else {
-            let s = unsafe { std::ffi::CStr::from_ptr(p) };
-            write!(f, "{:?}", s)
+            return Result::Err(fmt::Error);
+        }
+        match unsafe { CStr::from_ptr(p) }.to_str() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => Result::Err(fmt::Error),
         }
     }
 }
