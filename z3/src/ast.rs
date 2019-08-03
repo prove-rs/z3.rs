@@ -9,6 +9,11 @@ use Sort;
 use Symbol;
 use Z3_MUTEX;
 
+#[cfg(feature = "arbitrary-size-numeral")]
+use num::bigint::BigInt;
+#[cfg(feature = "arbitrary-size-numeral")]
+use num::rational::BigRational;
+
 /// [`Ast`](trait.Ast.html) node representing a boolean value.
 pub struct Bool<'ctx> {
     pub(crate) ctx: &'ctx Context,
@@ -334,6 +339,11 @@ impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
 }
 
 impl<'ctx> Int<'ctx> {
+    #[cfg(feature = "arbitrary-size-numeral")]
+    pub fn from_big_int(ctx: &'ctx Context, value: &BigInt) -> Int<'ctx> {
+        Int::from_str(ctx, &value.to_str_radix(10)).unwrap()
+    }
+
     pub fn from_str(ctx: &'ctx Context, value: &str) -> Option<Int<'ctx>> {
         let sort = Sort::int(ctx);
         let ast = unsafe {
@@ -351,6 +361,13 @@ impl<'ctx> Int<'ctx> {
 }
 
 impl<'ctx> Real<'ctx> {
+    #[cfg(feature = "arbitrary-size-numeral")]
+    pub fn from_big_rational(ctx: &'ctx Context, value: &BigRational) -> Real<'ctx> {
+        let num = value.numer();
+        let den = value.denom();
+        Real::from_real_str(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
+    }
+
     pub fn from_real_str(ctx: &'ctx Context, num: &str, den: &str) -> Option<Real<'ctx>> {
         let sort = Sort::real(ctx);
         let ast = unsafe {
