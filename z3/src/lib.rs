@@ -10,6 +10,9 @@ extern crate lazy_static;
 
 extern crate z3_sys;
 
+#[cfg(feature = "arbitrary-size-numeral")]
+extern crate num;
+
 use std::ffi::CString;
 use std::sync::Mutex;
 use z3_sys::*;

@@ -7,6 +7,15 @@ use std::convert::TryInto;
 use z3::ast::Ast;
 use z3::*;
 
+#[cfg(feature = "arbitrary-size-numeral")]
+extern crate num;
+#[cfg(feature = "arbitrary-size-numeral")]
+use num::bigint::BigInt;
+#[cfg(feature = "arbitrary-size-numeral")]
+use num::rational::BigRational;
+#[cfg(feature = "arbitrary-size-numeral")]
+use std::str::FromStr;
+
 #[test]
 fn test_config() {
     let _ = env_logger::try_init();
@@ -272,5 +281,42 @@ fn test_arbitrary_size_int() {
     let y = ast::Int::from_str(&ctx, "99999999999999999999999").unwrap();
 
     solver.assert(&x.add(&[&one])._eq(&y));
+    assert!(solver.check());
+}
+
+#[cfg(feature = "arbitrary-size-numeral")]
+#[test]
+fn test_arbitrary_size_real_from_bigrational() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Real::from_real_str(&ctx, "99999999999999999999998", "99999999999999999999999")
+        .unwrap();
+    let num = BigInt::from_str("99999999999999999999998").unwrap();
+    let den = BigInt::from_str("99999999999999999999999").unwrap();
+    let ratio = BigRational::new(num, den);
+    let y = ast::Real::from_big_rational(&ctx, &ratio);
+
+    solver.assert(&x._eq(&y));
+    assert!(solver.check());
+}
+
+#[cfg(feature = "arbitrary-size-numeral")]
+#[test]
+fn test_arbitrary_size_int_from_bigint() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let num1 = BigInt::from_str("99999999999999999999998").unwrap();
+    let x = ast::Int::from_big_int(&ctx, &num1);
+    let y = ast::Int::from_i64(&ctx, 1);
+
+    let num2 = BigInt::from_str("99999999999999999999999").unwrap();
+    let z = ast::Int::from_big_int(&ctx, &num2);
+
+
+    solver.assert(&x.add(&[&y])._eq(&z));
     assert!(solver.check());
 }
