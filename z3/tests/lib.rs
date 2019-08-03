@@ -246,3 +246,31 @@ fn test_real_cmp() {
     solver.assert(&forall.try_into().unwrap());
     assert!(solver.check());
 }
+
+#[test]
+fn test_arbitrary_size_real() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Real::from_real_str(&ctx, "99999999999999999999998", "99999999999999999999999")
+        .unwrap();
+    let y = ast::Real::from_real(&ctx, 1, 1);
+
+    solver.assert(&x.lt(&y));
+    assert!(solver.check());
+}
+
+#[test]
+fn test_arbitrary_size_int() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Int::from_str(&ctx, "99999999999999999999998").unwrap();
+    let one = ast::Int::from_i64(&ctx, 1);
+    let y = ast::Int::from_str(&ctx, "99999999999999999999999").unwrap();
+
+    solver.assert(&x.add(&[&one])._eq(&y));
+    assert!(solver.check());
+}
