@@ -333,6 +333,40 @@ impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
     }
 }
 
+impl<'ctx> Int<'ctx> {
+    pub fn from_str(ctx: &'ctx Context, value: &str) -> Option<Int<'ctx>> {
+        let sort = Sort::int(ctx);
+        let ast = unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let int_cstring = CString::new(value).unwrap();
+            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx, int_cstring.as_ptr(), sort.z3_sort);
+            if numeral_ptr.is_null() {
+                return None;
+            }
+
+            numeral_ptr
+        };
+        Some(Int::new(ctx, ast))
+    }
+}
+
+impl<'ctx> Real<'ctx> {
+    pub fn from_real_str(ctx: &'ctx Context, num: &str, den: &str) -> Option<Real<'ctx>> {
+        let sort = Sort::real(ctx);
+        let ast = unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let fraction_cstring = CString::new(format!("{:} / {:}", num, den)).unwrap();
+            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx, fraction_cstring.as_ptr(), sort.z3_sort);
+            if numeral_ptr.is_null() {
+                return None;
+            }
+
+            numeral_ptr
+        };
+        Some(Real::new(ctx, ast))
+    }
+}
+
 impl_ast!(Datatype);
 impl_from_try_into_dynamic!(Datatype, as_datatype);
 
