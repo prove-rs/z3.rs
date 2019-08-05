@@ -6,6 +6,7 @@ use z3_sys::*;
 use Context;
 use Model;
 use Params;
+use SatResult;
 use Solver;
 use Z3_MUTEX;
 
@@ -35,9 +36,9 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// The function [`Solver::get_model()`] retrieves a model if the
     /// assertions is satisfiable (i.e., the result is
-    /// `Z3_L_TRUE`) and [model construction is enabled].
+    /// `SatResult::Sat`) and [model construction is enabled].
     /// The function [`Solver::get_model()`] can also be used even
-    /// if the result is `Z3_L_UNDEF`, but the returned model
+    /// if the result is `SatResult::Unknown`, but the returned model
     /// is not guaranteed to satisfy quantified assertions.
     ///
     /// [model construction is enabled]: struct.Config.html#method.set_model_generation
@@ -115,8 +116,8 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// The function [`Solver::get_model()`](#method.get_model)
     /// retrieves a model if the assertions is satisfiable (i.e., the
-    /// result is `Z3_L_TRUE`) and [model construction is enabled].
-    /// Note that if the call returns `Z3_L_UNDEF`, Z3 does not
+    /// result is `SatResult::Sat`) and [model construction is enabled].
+    /// Note that if the call returns `SatResult::Unknown`, Z3 does not
     /// ensure that calls to [`Solver::get_model()`](#method.get_model)
     /// succeed and any models produced in this case are not guaranteed
     /// to satisfy the assertions.
@@ -124,7 +125,7 @@ impl<'ctx> Solver<'ctx> {
     /// The function [`Solver::get_proof()`](#method.get_proof)
     /// retrieves a proof if [proof generation was enabled] when the context
     /// was created, and the assertions are unsatisfiable (i.e., the result
-    /// is `Z3_L_FALSE`).
+    /// is `SatResult::Unsat`).
     ///
     /// # See also:
     ///
@@ -134,9 +135,14 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// [model construction is enabled]: struct.Config.html#method.set_model_generation
     /// [proof generation was enabled]: struct.Config.html#method.set_proof_generation
-    pub fn check(&self) -> bool {
+    pub fn check(&self) -> SatResult {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) == Z3_L_TRUE }
+        match unsafe { Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) } {
+            Z3_L_FALSE => SatResult::Unsat,
+            Z3_L_UNDEF => SatResult::Unknown,
+            Z3_L_TRUE => SatResult::Sat,
+            _ => unreachable!(),
+        }
     }
 
     /// Check whether the assertions in the given solver and
@@ -150,12 +156,16 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::check()`](#method.check)
-    pub fn check_assumptions(&self, assumptions: &[ast::Bool<'ctx>]) -> bool {
+    pub fn check_assumptions(&self, assumptions: &[ast::Bool<'ctx>]) -> SatResult {
         let guard = Z3_MUTEX.lock().unwrap();
         let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
-        unsafe {
+        match unsafe {
             Z3_solver_check_assumptions(self.ctx.z3_ctx, self.z3_slv, a.len() as u32, a.as_ptr())
-                == Z3_L_TRUE
+        } {
+            Z3_L_FALSE => SatResult::Unsat,
+            Z3_L_UNDEF => SatResult::Unknown,
+            Z3_L_TRUE => SatResult::Sat,
+            _ => unreachable!(),
         }
     }
 
@@ -211,6 +221,20 @@ impl<'ctx> Solver<'ctx> {
         ast::Dynamic::new(self.ctx, unsafe {
             Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
         })
+    }
+
+    /// Return a brief justification for an "unknown" result (i.e., `SatResult::Unknown`) for
+    /// the commands [`Solver::check()`](#method.check) and
+    /// [`Solver::check_assumptions()`](#method.check_assumptions)
+    pub fn get_reason_unknown(&self) -> Option<String> {
+        let p = unsafe { Z3_solver_get_reason_unknown(self.ctx.z3_ctx, self.z3_slv) };
+        if p.is_null() {
+            return None;
+        }
+        unsafe { CStr::from_ptr(p) }
+            .to_str()
+            .ok()
+            .map(|s| s.to_string())
     }
 
     /// Set the current solver using the given parameters.

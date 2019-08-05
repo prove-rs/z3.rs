@@ -6,6 +6,7 @@ use z3_sys::*;
 use Context;
 use Model;
 use Optimize;
+use SatResult;
 use Z3_MUTEX;
 
 impl<'ctx> Optimize<'ctx> {
@@ -89,16 +90,21 @@ impl<'ctx> Optimize<'ctx> {
     /// # See also:
     ///
     /// - [`Optimize::get_model()`](#method.get_model)
-    pub fn check(&self, assumptions: &[Bool<'ctx>]) -> bool {
+    pub fn check(&self, assumptions: &[Bool<'ctx>]) -> SatResult {
         let guard = Z3_MUTEX.lock().unwrap();
         let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
-        unsafe {
+        match unsafe {
             Z3_optimize_check(
                 self.ctx.z3_ctx,
                 self.z3_opt,
                 assumptions.len().try_into().unwrap(),
                 assumptions.as_ptr(),
-            ) == Z3_L_TRUE
+            )
+        } {
+            Z3_L_FALSE => SatResult::Unsat,
+            Z3_L_UNDEF => SatResult::Unknown,
+            Z3_L_TRUE => SatResult::Sat,
+            _ => unreachable!(),
         }
     }
 
@@ -109,6 +115,20 @@ impl<'ctx> Optimize<'ctx> {
     /// solver, or if the result was `Z3_L_FALSE`.
     pub fn get_model(&self) -> Model<'ctx> {
         Model::of_optimize(self)
+    }
+
+    /// Retrieve a string that describes the last status returned by [`Optimize::check()`](#method.check).
+    ///
+    /// Use this method when [`Optimize::check()`](#method.check) returns `SatResult::Unknown`.
+    pub fn get_reason_unknown(&self) -> Option<String> {
+        let p = unsafe { Z3_optimize_get_reason_unknown(self.ctx.z3_ctx, self.z3_opt) };
+        if p.is_null() {
+            return None;
+        }
+        unsafe { CStr::from_ptr(p) }
+            .to_str()
+            .ok()
+            .map(|s| s.to_string())
     }
 }
 

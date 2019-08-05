@@ -50,7 +50,7 @@ fn test_solving() {
 
     let solver = Solver::new(&ctx);
     solver.assert(&x.gt(&y));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -70,7 +70,7 @@ fn test_solving_for_model() {
     solver.assert(&y.rem(&seven)._eq(&two));
     let x_plus_two = x.add(&[&two]);
     solver.assert(&x_plus_two.gt(&seven));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model();
     let xv = model.eval(&x).unwrap().as_i64().unwrap();
@@ -93,7 +93,7 @@ fn test_cloning_ast() {
 
     let solver = Solver::new(&ctx);
     solver.assert(&x._eq(&zero));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model();
     let xv = model.eval(&x).unwrap().as_i64().unwrap();
@@ -126,7 +126,7 @@ fn test_bitvectors() {
     solver.assert(&b.bvsgt(&two));
     let b_plus_two = b.bvadd(&two);
     solver.assert(&b_plus_two.bvsgt(&a));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model();
     let av = model.eval(&a).unwrap().as_i64().unwrap();
@@ -147,10 +147,10 @@ fn test_ast_translate() {
 
     let slv = Solver::new(&destination);
     slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 2)));
-    assert!(slv.check());
+    assert_eq!(slv.check(), SatResult::Sat);
 
     slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 3)));
-    assert!(!slv.check());
+    assert_eq!(slv.check(), SatResult::Unsat);
 }
 
 #[test]
@@ -164,13 +164,13 @@ fn test_solver_translate() {
 
     let slv = Solver::new(&destination);
     slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 2)));
-    assert!(slv.check());
+    assert_eq!(slv.check(), SatResult::Sat);
 
     let translated_slv = slv.translate(&source);
     // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
     slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 3)));
-    assert!(!slv.check());
-    assert!(translated_slv.check());
+    assert_eq!(slv.check(), SatResult::Unsat);
+    assert_eq!(translated_slv.check(), SatResult::Sat);
 }
 
 #[test]
@@ -184,7 +184,7 @@ fn test_pb_ops_model() {
     let other_args = vec![&y];
     let solver = Solver::new(&ctx);
     solver.assert(&x.pb_eq(&other_args[..], coeffs, 1));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model();
     let xv = model.eval(&x).unwrap().as_bool().unwrap();
     let yv = model.eval(&y).unwrap().as_bool().unwrap();
@@ -204,7 +204,7 @@ fn function_ref_count() {
     let _f = FuncDecl::new(&ctx, "f", &[&int_sort], &int_sort);
     let _g = FuncDecl::new(&ctx, "g", &[&int_sort], &int_sort);
 
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -221,7 +221,7 @@ fn test_params() {
     let solver = Solver::new(&ctx);
     solver.set_params(&params);
     solver.assert(&x.gt(&y));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -253,7 +253,7 @@ fn test_real_cmp() {
     let forall = ast::forall_const(&ctx, &[&x.clone().into()], &x.lt(&x_plus_1).into());
 
     solver.assert(&forall.try_into().unwrap());
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -267,7 +267,7 @@ fn test_arbitrary_size_real() {
     let y = ast::Real::from_real(&ctx, 1, 1);
 
     solver.assert(&x.lt(&y));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -281,7 +281,7 @@ fn test_arbitrary_size_int() {
     let y = ast::Int::from_str(&ctx, "99999999999999999999999").unwrap();
 
     solver.assert(&x.add(&[&one])._eq(&y));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -299,7 +299,7 @@ fn test_arbitrary_size_real_from_bigrational() {
     let y = ast::Real::from_big_rational(&ctx, &ratio);
 
     solver.assert(&x._eq(&y));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -317,5 +317,57 @@ fn test_arbitrary_size_int_from_bigint() {
     let z = ast::Int::from_big_int(&ctx, &num2);
 
     solver.assert(&x.add(&[&y])._eq(&z));
-    assert!(solver.check());
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_solver_unknown() {
+    let _ = env_logger::try_init();
+    let mut cfg = Config::new();
+    // Use a very short timeout to quickly return "unknown"
+    cfg.set_timeout_msec(1);
+    let ctx = Context::new(&cfg);
+
+    // An open problem: find a model for x^3 + y^3 + z^3 == 42
+    // See: https://en.wikipedia.org/wiki/Sums_of_three_cubes
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+    let z = ast::Int::new_const(&ctx, "z");
+    let x_cube = x.mul(&[&x, &x]);
+    let y_cube = y.mul(&[&y, &y]);
+    let z_cube = z.mul(&[&z, &z]);
+    let sum_of_cubes = x_cube.add(&[&y_cube, &z_cube]);
+    let sum_of_cubes_is_42 = sum_of_cubes._eq(&ast::Int::from_i64(&ctx, 42));
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&sum_of_cubes_is_42);
+
+    assert_eq!(solver.check(), SatResult::Unknown);
+    assert!(solver.get_reason_unknown().is_some());
+}
+
+#[test]
+fn test_optimize_unknown() {
+    let _ = env_logger::try_init();
+    let mut cfg = Config::new();
+    // Use a very short timeout to quickly return "unknown"
+    cfg.set_timeout_msec(1);
+    let ctx = Context::new(&cfg);
+
+    // An open problem: find a model for x^3 + y^3 + z^3 == 42
+    // See: https://en.wikipedia.org/wiki/Sums_of_three_cubes
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+    let z = ast::Int::new_const(&ctx, "z");
+    let x_cube = x.mul(&[&x, &x]);
+    let y_cube = y.mul(&[&y, &y]);
+    let z_cube = z.mul(&[&z, &z]);
+    let sum_of_cubes = x_cube.add(&[&y_cube, &z_cube]);
+    let sum_of_cubes_is_42 = sum_of_cubes._eq(&ast::Int::from_i64(&ctx, 42));
+
+    let optimize = Optimize::new(&ctx);
+    optimize.assert(&sum_of_cubes_is_42);
+
+    assert_eq!(optimize.check(&[]), SatResult::Unknown);
+    assert!(optimize.get_reason_unknown().is_some());
 }

@@ -60,7 +60,7 @@ impl<'ctx> Sort<'ctx> {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{Config, Context, Solver, Sort, Symbol};
+    /// # use z3::{Config, Context, SatResult, Solver, Sort, Symbol};
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
@@ -78,7 +78,7 @@ impl<'ctx> Sort<'ctx> {
     /// let red_tester = &color_testers[0];
     /// let eq = red_tester.apply(&[&red_const]);
     ///
-    /// assert!(solver.check());
+    /// assert_eq!(solver.check(), SatResult::Sat);
     /// let model = solver.get_model();
     ///
     /// assert!(model.eval(&eq).unwrap().as_bool().unwrap().as_bool().unwrap());
