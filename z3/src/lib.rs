@@ -127,7 +127,7 @@ pub struct FuncDecl<'ctx> {
 ///
 /// Example:
 /// ```
-/// # use z3::{ast::Int, Config, Context, DatatypeBuilder, Solver, Sort, ast::{Ast, Datatype}};
+/// # use z3::{ast::Int, Config, Context, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype}};
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new(&ctx);
@@ -146,7 +146,7 @@ pub struct FuncDecl<'ctx> {
 /// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(&ctx, 3).into()]);
 /// solver.assert(&y._eq(&value.as_datatype().unwrap()));
 ///
-/// assert!(solver.check());
+/// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model();
 ///
 /// // Get the value out of Some(3)
@@ -174,4 +174,15 @@ pub struct DatatypeSort<'ctx> {
 pub struct Params<'ctx> {
     ctx: &'ctx Context,
     z3_params: Z3_params,
+}
+
+/// Result of a satisfiability query.
+#[derive(Copy, Clone, Debug, PartialEq, Eq)]
+pub enum SatResult {
+    /// The query is unsatisfiable.
+    Unsat,
+    /// The query was interrupted, timed out or otherwise failed.
+    Unknown,
+    /// The query is satisfiable.
+    Sat,
 }

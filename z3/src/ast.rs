@@ -592,7 +592,7 @@ impl<'ctx> Int<'ctx> {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{ast, Config, Context, Solver};
+    /// # use z3::{ast, Config, Context, SatResult, Solver};
     /// # use z3::ast::Ast;
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
@@ -602,7 +602,7 @@ impl<'ctx> Int<'ctx> {
     ///
     /// let x = ast::Int::from_bv(&bv, true);
     ///
-    /// assert!(solver.check());
+    /// assert_eq!(solver.check(), SatResult::Sat);
     /// let model = solver.get_model();
     ///
     /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().unwrap());
@@ -812,7 +812,7 @@ impl<'ctx> BV<'ctx> {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{ast, Config, Context, Solver};
+    /// # use z3::{ast, Config, Context, SatResult, Solver};
     /// # use z3::ast::Ast;
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
@@ -823,7 +823,7 @@ impl<'ctx> BV<'ctx> {
     /// let x = ast::BV::from_int(&i, 64);
     /// assert_eq!(64, x.get_size());
     ///
-    /// assert!(solver.check());
+    /// assert_eq!(solver.check(), SatResult::Sat);
     /// let model = solver.get_model();
     ///
     /// assert_eq!(-3, model.eval(&x.to_int(true)).unwrap().as_i64().expect("as_i64() shouldn't fail"));
@@ -1227,7 +1227,7 @@ impl<'ctx> Datatype<'ctx> {
 ///
 /// # Examples
 /// ```
-/// # use z3::{ast, Config, Context, FuncDecl, Solver, Sort, Symbol};
+/// # use z3::{ast, Config, Context, FuncDecl, SatResult, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
@@ -1240,7 +1240,7 @@ impl<'ctx> Datatype<'ctx> {
 /// let forall: ast::Dynamic = ast::forall_const(&ctx, &[&x.clone().into()], &(x._eq(&f_x)).into());
 /// solver.assert(&forall.try_into().unwrap());
 ///
-/// assert!(solver.check());
+/// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model();
 ///
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
