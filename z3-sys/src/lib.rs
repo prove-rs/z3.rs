@@ -1575,9 +1575,15 @@ extern "C" {
     ///
     /// This function can be used to set parameters for a specific Z3 module.
     /// This can be done by using <module-name>.<parameter-name>.
+    ///
     /// For example:
-    /// Z3_global_param_set('pp.decimal', 'true')
-    /// will set the parameter "decimal" in the module "pp" to true.
+    /// `Z3_global_param_set('pp.decimal', 'true')`
+    /// will set the parameter `"decimal"` in the module `"pp"` to true.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_global_param_get`](fn.Z3_global_param_get.html)
+    /// - [`Z3_global_param_reset_all`](fn.Z3_global_param_reset_all.html)
     pub fn Z3_global_param_set(param_id: Z3_string, param_value: Z3_string);
 
     /// Restore the value of all global (and module) parameters.
@@ -1585,6 +1591,7 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_global_param_get`](fn.Z3_global_param_get.html)
     /// - [`Z3_global_param_set`](fn.Z3_global_param_set.html)
     pub fn Z3_global_param_reset_all();
 
@@ -1594,6 +1601,7 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_global_param_reset_all`](fn.Z3_global_param_reset_all.html)
     /// - [`Z3_global_param_set`](fn.Z3_global_param_set.html)
     ///
     /// NOTE: This function cannot be invoked simultaneously from different threads without synchronization.
@@ -4815,6 +4823,10 @@ extern "C" {
     pub fn Z3_get_error_msg(c: Z3_context, err: ErrorCode) -> Z3_string;
 
     /// Return Z3 version number information.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_full_version`](fn.Z3_get_full_version.html)
     pub fn Z3_get_version(
         major: *mut ::std::os::raw::c_uint,
         minor: *mut ::std::os::raw::c_uint,
@@ -4823,14 +4835,26 @@ extern "C" {
     );
 
     /// Return a string that fully describes the version of Z3 in use.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_version`](fn.Z3_get_version.html)
     pub fn Z3_get_full_version() -> Z3_string;
 
     /// Enable tracing messages tagged as `tag` when Z3 is compiled in debug mode.
     /// It is a NOOP otherwise
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_disable_trace`](fn.Z3_disable_trace.html)
     pub fn Z3_enable_trace(tag: Z3_string);
 
     /// Disable tracing messages tagged as `tag` when Z3 is compiled in debug mode.
     /// It is a NOOP otherwise
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_enable_trace`](fn.Z3_enable_trace.html)
     pub fn Z3_disable_trace(tag: Z3_string);
 
     /// Reset all allocated resources.
@@ -4966,7 +4990,7 @@ extern "C" {
     pub fn Z3_probe_dec_ref(c: Z3_context, p: Z3_probe);
 
     /// Return a tactic that applies `t1` to a given goal and `t2`
-    /// to every subgoal produced by t1.
+    /// to every subgoal produced by `t1`.
     pub fn Z3_tactic_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Z3_tactic;
 
     /// Return a tactic that first applies `t1` to a given goal,
@@ -4981,7 +5005,7 @@ extern "C" {
     ) -> Z3_tactic;
 
     /// Return a tactic that applies `t1` to a given goal and then `t2`
-    /// to every subgoal produced by t1. The subgoals are processed in parallel.
+    /// to every subgoal produced by `t1`. The subgoals are processed in parallel.
     pub fn Z3_tactic_par_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Z3_tactic;
 
     /// Return a tactic that applies `t` to a given goal for `ms` milliseconds.
@@ -5072,7 +5096,7 @@ extern "C" {
     /// Return the number of builtin probes available in Z3.
     pub fn Z3_get_num_probes(c: Z3_context) -> ::std::os::raw::c_uint;
 
-    /// Return the name of the i probe.
+    /// Return the name of the `i` probe.
     ///
     /// # Preconditions:
     ///
@@ -6686,6 +6710,11 @@ extern "C" {
     ///
     /// - `c`: logical context
     /// - `s`: target sort
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_inf`](fn.Z3_mk_fpa_inf.html)
+    /// - [`Z3_mk_fpa_zero`](fn.Z3_mk_fpa_zero.html)
     pub fn Z3_mk_fpa_nan(c: Z3_context, s: Z3_sort) -> Z3_ast;
 
     /// Create a floating-point infinity of sort `s`.
@@ -6695,6 +6724,11 @@ extern "C" {
     /// - `negative`: indicates whether the result should be negative
     ///
     /// When `negative` is true, -oo will be generated instead of +oo.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_nan`](fn.Z3_mk_fpa_nan.html)
+    /// - [`Z3_mk_fpa_zero`](fn.Z3_mk_fpa_zero.html)
     pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
 
     /// Create a floating-point zero of sort `s`.
@@ -6704,6 +6738,11 @@ extern "C" {
     /// - `negative`: indicates whether the result should be negative
     ///
     /// When `negative` is true, -zero will be generated instead of +zero.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_inf`](fn.Z3_mk_fpa_inf.html)
+    /// - [`Z3_mk_fpa_nan`](fn.Z3_mk_fpa_nan.html)
     pub fn Z3_mk_fpa_zero(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
 
     /// Create an expression of FloatingPoint sort from three bit-vector expressions.
@@ -6718,6 +6757,15 @@ extern "C" {
     /// - `sgn`: sign
     /// - `exp`: exponent
     /// - `sig`: significand
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_numeral_double`](fn.Z3_mk_fpa_numeral_double.html)
+    /// - [`Z3_mk_fpa_numeral_float`](fn.Z3_mk_fpa_numeral_float.html)
+    /// - [`Z3_mk_fpa_numeral_int`](fn.Z3_mk_fpa_numeral_int.html)
+    /// - [`Z3_mk_fpa_numeral_int_uint`](fn.Z3_mk_fpa_numeral_int_uint.html)
+    /// - [`Z3_mk_fpa_numeral_int64_uint64`](fn.Z3_mk_fpa_numeral_int64_uint64.html)
+    /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_fp(c: Z3_context, sgn: Z3_ast, exp: Z3_ast, sig: Z3_ast) -> Z3_ast;
 
     /// Create a numeral of FloatingPoint sort from a float.
@@ -6729,10 +6777,15 @@ extern "C" {
     /// - `v`: value
     /// - `ty`: sort
     ///
-    /// ty must be a FloatingPoint sort
+    /// `ty` must be a FloatingPoint sort
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fpa_fp`](fn.Z3_mk_fpa_fp.html)
+    /// - [`Z3_mk_fpa_numeral_double`](fn.Z3_mk_fpa_numeral_double.html)
+    /// - [`Z3_mk_fpa_numeral_int`](fn.Z3_mk_fpa_numeral_int.html)
+    /// - [`Z3_mk_fpa_numeral_int_uint`](fn.Z3_mk_fpa_numeral_int_uint.html)
+    /// - [`Z3_mk_fpa_numeral_int64_uint64`](fn.Z3_mk_fpa_numeral_int64_uint64.html)
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_float(c: Z3_context, v: f32, ty: Z3_sort) -> Z3_ast;
 
@@ -6745,10 +6798,15 @@ extern "C" {
     /// - `v`: value
     /// - `ty`: sort
     ///
-    /// ty must be a FloatingPoint sort
+    /// `ty` must be a FloatingPoint sort
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fpa_fp`](fn.Z3_mk_fpa_fp.html)
+    /// - [`Z3_mk_fpa_numeral_float`](fn.Z3_mk_fpa_numeral_float.html)
+    /// - [`Z3_mk_fpa_numeral_int`](fn.Z3_mk_fpa_numeral_int.html)
+    /// - [`Z3_mk_fpa_numeral_int_uint`](fn.Z3_mk_fpa_numeral_int_uint.html)
+    /// - [`Z3_mk_fpa_numeral_int64_uint64`](fn.Z3_mk_fpa_numeral_int64_uint64.html)
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_double(c: Z3_context, v: f64, ty: Z3_sort) -> Z3_ast;
 
@@ -6758,10 +6816,15 @@ extern "C" {
     /// - `v`: value
     /// - `ty`: result sort
     ///
-    /// ty must be a FloatingPoint sort
+    /// `ty` must be a FloatingPoint sort
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fpa_fp`](fn.Z3_mk_fpa_fp.html)
+    /// - [`Z3_mk_fpa_numeral_double`](fn.Z3_mk_fpa_numeral_double.html)
+    /// - [`Z3_mk_fpa_numeral_float`](fn.Z3_mk_fpa_numeral_float.html)
+    /// - [`Z3_mk_fpa_numeral_int_uint`](fn.Z3_mk_fpa_numeral_int_uint.html)
+    /// - [`Z3_mk_fpa_numeral_int64_uint64`](fn.Z3_mk_fpa_numeral_int64_uint64.html)
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int(c: Z3_context, v: ::std::os::raw::c_int, ty: Z3_sort) -> Z3_ast;
 
@@ -6773,10 +6836,15 @@ extern "C" {
     /// - `exp`: exponent
     /// - `ty`: result sort
     ///
-    /// ty must be a FloatingPoint sort
+    /// `ty` must be a FloatingPoint sort
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fpa_fp`](fn.Z3_mk_fpa_fp.html)
+    /// - [`Z3_mk_fpa_numeral_double`](fn.Z3_mk_fpa_numeral_double.html)
+    /// - [`Z3_mk_fpa_numeral_float`](fn.Z3_mk_fpa_numeral_float.html)
+    /// - [`Z3_mk_fpa_numeral_int`](fn.Z3_mk_fpa_numeral_int.html)
+    /// - [`Z3_mk_fpa_numeral_int64_uint64`](fn.Z3_mk_fpa_numeral_int64_uint64.html)
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int_uint(
         c: Z3_context,
@@ -6794,10 +6862,15 @@ extern "C" {
     /// - `exp`: exponent
     /// - `ty`: result sort
     ///
-    /// ty must be a FloatingPoint sort
+    /// `ty` must be a FloatingPoint sort
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fpa_fp`](fn.Z3_mk_fpa_fp.html)
+    /// - [`Z3_mk_fpa_numeral_double`](fn.Z3_mk_fpa_numeral_double.html)
+    /// - [`Z3_mk_fpa_numeral_float`](fn.Z3_mk_fpa_numeral_float.html)
+    /// - [`Z3_mk_fpa_numeral_int`](fn.Z3_mk_fpa_numeral_int.html)
+    /// - [`Z3_mk_fpa_numeral_int_uint`](fn.Z3_mk_fpa_numeral_int_uint.html)
     /// - [`Z3_mk_numeral`](fn.Z3_mk_numeral.html)
     pub fn Z3_mk_fpa_numeral_int64_uint64(
         c: Z3_context,
