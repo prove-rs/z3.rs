@@ -1,5 +1,4 @@
-use ast;
-use ast::Ast;
+use ast::{self, Ast, SafeAstPtr};
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
@@ -63,19 +62,23 @@ impl<'ctx> FuncDecl<'ctx> {
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
     pub fn apply(&self, args: &[&ast::Dynamic<'ctx>]) -> ast::Dynamic<'ctx> {
-        assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
+        assert!(args
+            .iter()
+            .all(|s| s.get_ast_ptr().ctx.z3_ctx == self.ctx.z3_ctx));
 
-        let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
+        let args: Vec<_> = args.iter().map(|a| a.get_ast_ptr().z3_ast).collect();
 
-        ast::Dynamic::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_app(
-                self.ctx.z3_ctx,
-                self.z3_func_decl,
-                args.len().try_into().unwrap(),
-                args.as_ptr(),
-            )
-        })
+        unsafe {
+            ast::Dynamic::new(SafeAstPtr::new(self.ctx, {
+                let guard = Z3_MUTEX.lock().unwrap();
+                Z3_mk_app(
+                    self.ctx.z3_ctx,
+                    self.z3_func_decl,
+                    args.len().try_into().unwrap(),
+                    args.as_ptr(),
+                )
+            }))
+        }
     }
 }
 

@@ -31,7 +31,7 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::minimize()`](#method.minimize)
     pub fn assert(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
+        unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_ast_ptr().z3_ast) };
     }
 
     /// Add a maximization constraint.
@@ -42,7 +42,7 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::minimize()`](#method.minimize)
     pub fn maximize(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
+        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_ast_ptr().z3_ast) };
     }
 
     /// Add a minimization constraint.
@@ -53,7 +53,7 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::maximize()`](#method.maximize)
     pub fn minimize(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
+        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_ast_ptr().z3_ast) };
     }
 
     /// Create a backtracking point.
@@ -92,7 +92,7 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::get_model()`](#method.get_model)
     pub fn check(&self, assumptions: &[Bool<'ctx>]) -> SatResult {
         let guard = Z3_MUTEX.lock().unwrap();
-        let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
+        let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.get_ast_ptr().z3_ast).collect();
         match unsafe {
             Z3_optimize_check(
                 self.ctx.z3_ctx,

@@ -1,5 +1,4 @@
-use ast;
-use ast::Ast;
+use ast::{self, Ast};
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
@@ -84,7 +83,7 @@ impl<'ctx> Solver<'ctx> {
     /// - [`Solver::assert_and_track()`](#method.assert_and_track)
     pub fn assert(&self, ast: &ast::Bool<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
+        unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.get_ast_ptr().z3_ast) };
     }
 
     /// Assert a constraint `a` into the solver, and track it (in the
@@ -103,7 +102,14 @@ impl<'ctx> Solver<'ctx> {
     /// - [`Solver::assert()`](#method.assert)
     pub fn assert_and_track(&self, ast: &ast::Bool<'ctx>, p: &ast::Bool<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast, p.z3_ast) };
+        unsafe {
+            Z3_solver_assert_and_track(
+                self.ctx.z3_ctx,
+                self.z3_slv,
+                ast.get_ast_ptr().z3_ast,
+                p.get_ast_ptr().z3_ast,
+            )
+        };
     }
 
     /// Remove all assertions from the solver.
@@ -158,7 +164,7 @@ impl<'ctx> Solver<'ctx> {
     /// - [`Solver::check()`](#method.check)
     pub fn check_assumptions(&self, assumptions: &[ast::Bool<'ctx>]) -> SatResult {
         let guard = Z3_MUTEX.lock().unwrap();
-        let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
+        let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.get_ast_ptr().z3_ast).collect();
         match unsafe {
             Z3_solver_check_assumptions(self.ctx.z3_ctx, self.z3_slv, a.len() as u32, a.as_ptr())
         } {
@@ -216,11 +222,14 @@ impl<'ctx> Solver<'ctx> {
     //
     // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
     // have an Ast subtype for yet.
-    pub fn get_proof(&self) -> impl Ast<'ctx> {
+    pub fn get_proof(&self) -> ast::Dynamic<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
-        ast::Dynamic::new(self.ctx, unsafe {
-            Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
-        })
+        unsafe {
+            ast::Dynamic::new(ast::SafeAstPtr::new(
+                self.ctx,
+                Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv),
+            ))
+        }
     }
 
     /// Return a brief justification for an "unknown" result (i.e., `SatResult::Unknown`) for

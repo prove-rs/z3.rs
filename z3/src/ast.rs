@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -14,118 +15,15 @@ use num::bigint::BigInt;
 #[cfg(feature = "arbitrary-size-numeral")]
 use num::rational::BigRational;
 
-/// [`Ast`](trait.Ast.html) node representing a boolean value.
-pub struct Bool<'ctx> {
+/// A safe wrapper around Z3's AST pointers that manages reference
+/// counting.
+pub struct SafeAstPtr<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing an integer value.
-pub struct Int<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-/// [`Ast`](trait.Ast.html) node representing a real value.
-pub struct Real<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-/// [`Ast`](trait.Ast.html) node representing a bitvector value.
-pub struct BV<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-/// [`Ast`](trait.Ast.html) node representing an array value.
-/// An array in Z3 is a mapping from indices to values.
-pub struct Array<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-/// [`Ast`](trait.Ast.html) node representing a set value.
-pub struct Set<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-/// [`Ast`](trait.Ast.html) node representing a datatype or enumeration value.
-pub struct Datatype<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-/// A dynamically typed [`Ast`](trait.Ast.html) node.
-pub struct Dynamic<'ctx> {
-    pub(crate) ctx: &'ctx Context,
-    pub(crate) z3_ast: Z3_ast,
-}
-
-macro_rules! unop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                $z3fn(self.ctx.z3_ctx, self.z3_ast)
-            })
-        }
-    };
-}
-
-macro_rules! binop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self, other: &Self) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast)
-            })
-        }
-    };
-}
-
-/* We aren't currently using the trinop! macro for any of our trinops
-macro_rules! trinop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self, a: &Self, b: &Self) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                $z3fn(self.ctx.z3_ctx, self.z3_ast, a.z3_ast, b.z3_ast)
-            })
-        }
-    };
-}
-*/
-
-macro_rules! varop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self, other: &[&Self]) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                let mut tmp = vec![self.z3_ast];
-                for a in other {
-                    tmp.push(a.z3_ast)
-                }
-                assert!(tmp.len() <= 0xffff_ffff);
-                $z3fn(self.ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
-            })
-        }
-    };
-}
-
-/// Abstract syntax tree (AST) nodes represent terms, constants, or expressions.
-/// The `Ast` trait contains methods common to all AST subtypes.
-pub trait Ast<'ctx>: Sized + fmt::Debug {
-    fn get_ctx(&self) -> &'ctx Context;
-    fn get_z3_ast(&self) -> Z3_ast;
-
-    // This would be great, but gives error E0071 "expected struct, variant or union type, found Self"
-    // so I don't think we can write a generic constructor like this.
-    // Instead we just require the method, and use the new_ast! macro defined below to implement it
-    // on each Ast subtype.
-    /*
-    fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self {
+impl<'ctx> SafeAstPtr<'ctx> {
+    pub(crate) fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self {
         assert!(!ast.is_null());
         Self {
             ctx,
@@ -137,167 +35,297 @@ pub trait Ast<'ctx>: Sized + fmt::Debug {
             },
         }
     }
-    */
-    fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self;
+}
 
-    /// Compare this `Ast` with another `Ast`, and get a [`Bool`](struct.Bool.html)
-    /// representing the result.
-    ///
-    /// This operation works with all possible `Ast`s (int, real, BV, etc), but the two
-    /// `Ast`s being compared must be the same type.
-    //
-    // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq(&self, other: &Self) -> Bool<'ctx> {
-        Bool::new(self.get_ctx(), unsafe {
+impl<'ctx> Clone for SafeAstPtr<'ctx> {
+    fn clone(&self) -> Self {
+        Self::new(self.ctx, self.z3_ast)
+    }
+}
+
+impl<'ctx> Drop for SafeAstPtr<'ctx> {
+    fn drop(&mut self) {
+        debug!("drop ast {:p}", self.z3_ast);
+        unsafe {
+            Z3_dec_ref(self.ctx.z3_ctx, self.z3_ast);
+        }
+    }
+}
+
+impl<'ctx> Hash for SafeAstPtr<'ctx> {
+    fn hash<H: Hasher>(&self, state: &mut H) {
+        unsafe {
+            let u = Z3_get_ast_hash(self.ctx.z3_ctx, self.z3_ast);
+            u.hash(state);
+        }
+    }
+}
+
+impl<'ctx> fmt::Debug for SafeAstPtr<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let p =
+            unsafe { CStr::from_ptr(Z3_ast_to_string(self.ctx.z3_ctx, self.z3_ast) as *mut i8) };
+        if p.as_ptr().is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match p.to_str() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => Result::Err(fmt::Error),
+        }
+    }
+}
+
+impl<'ctx> fmt::Display for SafeAstPtr<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Debug>::fmt(self, f)
+    }
+}
+
+impl<'ctx> PartialEq for SafeAstPtr<'ctx> {
+    fn eq(&self, other: &Self) -> bool {
+        assert_eq!(self.ctx.z3_ctx, other.ctx.z3_ctx);
+        unsafe { Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
+    }
+}
+
+impl<'ctx> Eq for SafeAstPtr<'ctx> {}
+
+/// [`Ast`](trait.Ast.html) node representing a boolean value.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Bool<'ctx>(SafeAstPtr<'ctx>);
+
+/// [`Ast`](trait.Ast.html) node representing an integer value.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Int<'ctx>(SafeAstPtr<'ctx>);
+
+/// [`Ast`](trait.Ast.html) node representing a real value.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Real<'ctx>(SafeAstPtr<'ctx>);
+
+/// [`Ast`](trait.Ast.html) node representing a bitvector value.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct BV<'ctx>(SafeAstPtr<'ctx>);
+/// [`Ast`](trait.Ast.html) node representing an array value.
+/// An array in Z3 is a mapping from indices to values.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Array<'ctx>(SafeAstPtr<'ctx>);
+
+/// [`Ast`](trait.Ast.html) node representing a set value.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Set<'ctx>(SafeAstPtr<'ctx>);
+
+/// [`Ast`](trait.Ast.html) node representing a datatype or enumeration value.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Datatype<'ctx>(SafeAstPtr<'ctx>);
+
+/// A dynamically typed [`Ast`](trait.Ast.html) node.
+#[derive(Hash, Debug, PartialEq, Eq, Clone)]
+pub struct Dynamic<'ctx>(SafeAstPtr<'ctx>);
+
+macro_rules! for_each_static_typed_ast {
+    ($m:ident) => {
+        $m!(Bool);
+        $m!(Int);
+        $m!(Real);
+        $m!(BV);
+        $m!(Array);
+        $m!(Set);
+        $m!(Datatype);
+    };
+}
+
+macro_rules! for_each_ast {
+    ($m:ident) => {
+        for_each_static_typed_ast!($m);
+        $m!(Dynamic);
+    };
+}
+
+pub trait Ast<'ctx>: Borrow<SafeAstPtr<'ctx>> {
+    unsafe fn new(ptr: SafeAstPtr<'ctx>) -> Self
+    where
+        Self: Sized;
+
+    fn _eq(&self, other: &Self) -> Bool<'ctx>
+    where
+        Self: Sized,
+    {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_eq(self.get_ctx().z3_ctx, self.get_z3_ast(), other.get_z3_ast())
-        })
+            Z3_mk_eq(
+                ast_ptr.ctx.z3_ctx,
+                ast_ptr.z3_ast,
+                other.get_ast_ptr().z3_ast,
+            )
+        }))
     }
 
-    /// Compare this `Ast` with a list of other `Ast`s, and get a [`Bool`](struct.Bool.html)
-    /// which is true only if all arguments (including Self) are pairwise distinct.
-    ///
-    /// This operation works with all possible `Ast`s (int, real, BV, etc), but the
-    /// `Ast`s being compared must all be the same type.
-    //
-    // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(&self, other: &[&Self]) -> Bool<'ctx> {
-        Bool::new(self.get_ctx(), unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.get_z3_ast()];
-            for a in other {
-                tmp.push(a.get_z3_ast())
-            }
-            assert!(tmp.len() <= 0xffff_ffff);
-            Z3_mk_distinct(self.get_ctx().z3_ctx, tmp.len() as u32, tmp.as_ptr())
-        })
-    }
-
-    /// Get the [`Sort`](../struct.Sort.html) of the `Ast`
-    fn get_sort(&self) -> Sort<'ctx> {
-        Sort::new(self.get_ctx(), unsafe {
-            Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast())
-        })
+    fn get_ast_ptr(&self) -> &SafeAstPtr<'ctx> {
+        &self.borrow()
     }
 
     /// Simplify the `Ast`. Returns a new `Ast` which is equivalent,
     /// but simplified using algebraic simplification rules, such as
     /// constant propagation.
-    fn simplify(&self) -> Self {
-        Self::new(self.get_ctx(), unsafe {
-            Z3_simplify(self.get_ctx().z3_ctx, self.get_z3_ast())
+    fn simplify(&self) -> Self
+    where
+        Self: Sized,
+    {
+        let ast_ptr = self.get_ast_ptr();
+        unsafe {
+            Self::new(SafeAstPtr::new(
+                ast_ptr.ctx,
+                Z3_simplify(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast),
+            ))
+        }
+    }
+
+    /// compare this `ast` with a list of other `ast`s, and get a [`bool`](struct.bool.html)
+    /// which is true only if all arguments (including self) are pairwise distinct.
+
+    // Note that we can't use the varop! macro because of the `pub` keyword on it
+    fn distinct(&self, other: &[&Self]) -> Bool<'ctx>
+    where
+        Self: Sized,
+    {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let other_asts: Vec<Z3_ast> =
+                other.iter().map(|ast| ast.get_ast_ptr().z3_ast).collect();
+            assert!(other_asts.len() <= 0xffff_ffff);
+            Z3_mk_distinct(
+                ast_ptr.ctx.z3_ctx,
+                other_asts.len() as u32,
+                other_asts.as_ptr(),
+            )
+        }))
+    }
+
+    /// Get the [`Sort`](../struct.Sort.html) of the `Ast`
+    fn get_sort(&self) -> Sort<'ctx> {
+        let ast_ptr = self.get_ast_ptr();
+        Sort::new(ast_ptr.ctx, unsafe {
+            Z3_get_sort(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast)
         })
     }
 
-    /// Performs substitution on the `Ast`. The slice `substitutions` contains a
-    /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
-    fn substitute<T: Ast<'ctx>>(&self, substitutions: &[(&T, &T)]) -> Self {
-        Self::new(self.get_ctx(), unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
+    fn substitute<I, T>(&self, substitutions: I) -> Self
+    where
+        Self: Sized,
+        T: Ast<'ctx> + 'ctx,
+        I: IntoIterator<Item = &'ctx (&'ctx T, &'ctx T)>,
+    {
+        let ast_ptr: &SafeAstPtr<'ctx> = self.get_ast_ptr();
+        unsafe {
+            Self::new(SafeAstPtr::new(ast_ptr.ctx, {
+                let guard = Z3_MUTEX.lock().unwrap();
 
-            let this_ast = self.get_z3_ast();
-            let num_exprs = substitutions.len() as ::std::os::raw::c_uint;
-            let mut froms: Vec<_> = vec![];
-            let mut tos: Vec<_> = vec![];
+                let this_ast = ast_ptr.z3_ast;
+                let ast_subs = substitutions
+                    .into_iter()
+                    .map(|(f, t)| ((f.get_ast_ptr().z3_ast, t.get_ast_ptr().z3_ast)));
+                let (froms, tos): (Vec<_>, Vec<_>) = ast_subs.unzip();
+                let num_exprs = froms.len() as ::std::os::raw::c_uint;
 
-            for (from_ast, to_ast) in substitutions {
-                froms.push(from_ast.get_z3_ast());
-                tos.push(to_ast.get_z3_ast());
-            }
-
-            Z3_substitute(
-                self.get_ctx().z3_ctx,
-                this_ast,
-                num_exprs,
-                froms.as_ptr(),
-                tos.as_ptr(),
-            )
-        })
+                Z3_substitute(
+                    ast_ptr.ctx.z3_ctx,
+                    this_ast,
+                    num_exprs,
+                    froms.as_ptr(),
+                    tos.as_ptr(),
+                )
+            }))
+        }
     }
 }
 
 macro_rules! impl_ast {
-    ($ast:ident) => {
-        impl<'ctx> Ast<'ctx> for $ast<'ctx> {
-            fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self {
-                assert!(!ast.is_null());
-                Self {
-                    ctx,
-                    z3_ast: unsafe {
-                        debug!("new ast {:p}", ast);
-                        let guard = Z3_MUTEX.lock().unwrap();
-                        Z3_inc_ref(ctx.z3_ctx, ast);
-                        ast
-                    },
-                }
-            }
-
-            fn get_ctx(&self) -> &'ctx Context {
-                self.ctx
-            }
-
-            fn get_z3_ast(&self) -> Z3_ast {
-                self.z3_ast
+    ($t:ident) => {
+        impl<'ctx> Ast<'ctx> for $t<'ctx> {
+            unsafe fn new(ptr: SafeAstPtr<'ctx>) -> Self {
+                $t(ptr)
             }
         }
+    };
+}
+for_each_ast!(impl_ast);
 
-        impl<'ctx> From<$ast<'ctx>> for Z3_ast {
-            fn from(ast: $ast<'ctx>) -> Self {
-                ast.z3_ast
+macro_rules! impl_borrow_ptr {
+    ($t:ident) => {
+        impl<'ctx> Borrow<SafeAstPtr<'ctx>> for $t<'ctx> {
+            fn borrow(&self) -> &SafeAstPtr<'ctx> {
+                &self.0
             }
         }
+    };
+}
+for_each_ast!(impl_borrow_ptr);
 
-        impl<'ctx> PartialEq for $ast<'ctx> {
-            fn eq(&self, other: &$ast<'ctx>) -> bool {
-                assert_eq!(self.ctx, other.ctx);
-                unsafe { Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
-            }
-        }
-
-        impl<'ctx> Eq for $ast<'ctx> {}
-
-        impl<'ctx> Clone for $ast<'ctx> {
-            fn clone(&self) -> Self {
-                debug!("clone ast {:p}", self.z3_ast);
-                Self::new(self.ctx, self.z3_ast)
-            }
-        }
-
-        impl<'ctx> Drop for $ast<'ctx> {
-            fn drop(&mut self) {
-                debug!("drop ast {:p}", self.z3_ast);
-                unsafe {
-                    Z3_dec_ref(self.ctx.z3_ctx, self.z3_ast);
-                }
-            }
-        }
-
-        impl<'ctx> Hash for $ast<'ctx> {
-            fn hash<H: Hasher>(&self, state: &mut H) {
-                unsafe {
-                    let u = Z3_get_ast_hash(self.ctx.z3_ctx, self.z3_ast);
-                    u.hash(state);
-                }
-            }
-        }
-
-        impl<'ctx> fmt::Debug for $ast<'ctx> {
+macro_rules! impl_display {
+    ($t: ident) => {
+        impl<'ctx> fmt::Display for $t<'ctx> {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-                let p = unsafe { Z3_ast_to_string(self.ctx.z3_ctx, self.z3_ast) };
-                if p.is_null() {
-                    return Result::Err(fmt::Error);
-                }
-                match unsafe { CStr::from_ptr(p) }.to_str() {
-                    Ok(s) => write!(f, "{}", s),
-                    Err(_) => Result::Err(fmt::Error),
-                }
+                self.0.fmt(f)
             }
         }
+    };
+}
+for_each_ast!(impl_display);
 
-        impl<'ctx> fmt::Display for $ast<'ctx> {
-            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-                <Self as fmt::Debug>::fmt(self, f)
-            }
+macro_rules! unop {
+    ( $f:ident, $z3fn:ident, $retty:path ) => {
+        pub fn $f(&self) -> $retty {
+            let ast_ptr = self.get_ast_ptr();
+            $retty(SafeAstPtr::new(ast_ptr.ctx, unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                $z3fn(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast)
+            }))
+        }
+    };
+}
+
+macro_rules! binop {
+    ( $f:ident, $z3fn:ident, $retty:path ) => {
+        pub fn $f(&self, other: &Self) -> $retty {
+            let ast_ptr = self.get_ast_ptr();
+            $retty(SafeAstPtr::new(ast_ptr.ctx, unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                $z3fn(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, other.0.z3_ast)
+            }))
+        }
+    };
+}
+
+/* We aren't currently using the trinop! macro for any of our trinops
+macro_rules! trinop {
+    ( $f:ident, $z3fn:ident, $retty:ty ) => {
+        pub fn $f(&self, a: &Self, b: &Self) -> $retty {
+            <$retty>::new(self.0.ctx, unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                $z3fn(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, a.0.z3_ast, b.0.z3_ast)
+            })
+        }
+    };
+}
+*/
+
+macro_rules! varop {
+    ( $f:ident, $z3fn:ident, $retty:path ) => {
+        pub fn $f<'i, I>(&'i self, args: I) -> $retty
+        where I : IntoIterator<Item=&'i &'i Self>
+        {
+            let ast_ptr = self.get_ast_ptr();
+            $retty(SafeAstPtr::new(ast_ptr.ctx, unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                let args_z3 = args.into_iter().map(|ast| ast.get_ast_ptr().z3_ast);
+                let mut tmp = vec![ast_ptr.z3_ast];
+                tmp.extend(args_z3);
+
+                assert!(tmp.len() <= 0xffff_ffff);
+                $z3fn(ast_ptr.ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
+            }))
         }
     };
 }
@@ -306,7 +334,7 @@ macro_rules! impl_from_try_into_dynamic {
     ($ast:ident, $as_ast:ident) => {
         impl<'ctx> From<$ast<'ctx>> for Dynamic<'ctx> {
             fn from(ast: $ast<'ctx>) -> Self {
-                Dynamic::new(ast.ctx, ast.z3_ast)
+                Dynamic(ast.0)
             }
         }
 
@@ -320,21 +348,16 @@ macro_rules! impl_from_try_into_dynamic {
     };
 }
 
-impl_ast!(Bool);
 impl_from_try_into_dynamic!(Bool, as_bool);
-impl_ast!(Int);
 impl_from_try_into_dynamic!(Int, as_int);
-impl_ast!(Real);
 impl_from_try_into_dynamic!(Real, as_real);
-impl_ast!(BV);
 impl_from_try_into_dynamic!(BV, as_bv);
-impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
-impl_ast!(Set);
+
 // Dynamic::as_set does not exist, so just implement one direction here
 impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
     fn from(ast: Set<'ctx>) -> Self {
-        Dynamic::new(ast.ctx, ast.z3_ast)
+        Dynamic(ast.0)
     }
 }
 
@@ -356,7 +379,7 @@ impl<'ctx> Int<'ctx> {
 
             numeral_ptr
         };
-        Some(Int::new(ctx, ast))
+        Some(Int(SafeAstPtr::new(ctx, ast)))
     }
 }
 
@@ -380,49 +403,47 @@ impl<'ctx> Real<'ctx> {
 
             numeral_ptr
         };
-        Some(Real::new(ctx, ast))
+        Some(Real(SafeAstPtr::new(ctx, ast)))
     }
 }
 
-impl_ast!(Datatype);
 impl_from_try_into_dynamic!(Datatype, as_datatype);
-
-impl_ast!(Dynamic);
 
 impl<'ctx> Bool<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Bool<'ctx> {
         let sort = Sort::bool(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str) -> Bool<'ctx> {
         let sort = Sort::bool(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn from_bool(ctx: &'ctx Context, b: bool) -> Bool<'ctx> {
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             if b {
                 Z3_mk_true(ctx.z3_ctx)
             } else {
                 Z3_mk_false(ctx.z3_ctx)
             }
-        })
+        }))
     }
 
     pub fn as_bool(&self) -> Option<bool> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            match Z3_get_bool_value(self.ctx.z3_ctx, self.z3_ast) {
+            let ast_ptr = self.get_ast_ptr();
+            match Z3_get_bool_value(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast) {
                 Z3_L_TRUE => Some(true),
                 Z3_L_FALSE => Some(false),
                 _ => None,
@@ -433,10 +454,11 @@ impl<'ctx> Bool<'ctx> {
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Bool<'dest_ctx> {
-        Bool::new(dest, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(dest, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 
     // This doesn't quite fit the trinop! macro because of the generic argty
@@ -444,10 +466,18 @@ impl<'ctx> Bool<'ctx> {
     where
         T: Ast<'ctx>,
     {
-        T::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_ite(self.ctx.z3_ctx, self.z3_ast, a.get_z3_ast(), b.get_z3_ast())
-        })
+        let ast_ptr = self.get_ast_ptr();
+        unsafe {
+            T::new(SafeAstPtr::new(ast_ptr.ctx, {
+                let guard = Z3_MUTEX.lock().unwrap();
+                Z3_mk_ite(
+                    ast_ptr.ctx.z3_ctx,
+                    ast_ptr.z3_ast,
+                    a.get_ast_ptr().z3_ast,
+                    b.get_ast_ptr().z3_ast,
+                )
+            }))
+        }
     }
 
     varop!(and, Z3_mk_and, Self);
@@ -458,101 +488,105 @@ impl<'ctx> Bool<'ctx> {
     binop!(implies, Z3_mk_implies, Self);
 
     pub fn pb_le(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.z3_ast];
+            let mut tmp = vec![ast_ptr.z3_ast];
             for a in other {
-                tmp.push(a.z3_ast)
+                tmp.push(a.get_ast_ptr().z3_ast)
             }
             assert!(tmp.len() <= 0xffffffff);
             let mut tmp_coeffs = coeffs.clone();
             Z3_mk_pble(
-                self.ctx.z3_ctx,
+                ast_ptr.ctx.z3_ctx,
                 tmp.len() as u32,
                 tmp.as_ptr(),
                 tmp_coeffs.as_mut_ptr(),
                 k,
             )
-        })
+        }))
     }
     pub fn pb_ge(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.z3_ast];
+            let mut tmp = vec![ast_ptr.z3_ast];
             for a in other {
-                tmp.push(a.z3_ast)
+                tmp.push(a.get_ast_ptr().z3_ast)
             }
             assert!(tmp.len() <= 0xffffffff);
             let mut tmp_coeffs = coeffs.clone();
             Z3_mk_pbge(
-                self.ctx.z3_ctx,
+                ast_ptr.ctx.z3_ctx,
                 tmp.len() as u32,
                 tmp.as_ptr(),
                 tmp_coeffs.as_mut_ptr(),
                 k,
             )
-        })
+        }))
     }
     pub fn pb_eq(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.z3_ast];
+            let mut tmp = vec![ast_ptr.z3_ast];
             for a in other {
-                tmp.push(a.z3_ast)
+                tmp.push(a.get_ast_ptr().z3_ast)
             }
             assert!(tmp.len() <= 0xffffffff);
             let mut tmp_coeffs = coeffs.clone();
             Z3_mk_pbeq(
-                self.ctx.z3_ctx,
+                ast_ptr.ctx.z3_ctx,
                 tmp.len() as u32,
                 tmp.as_ptr(),
                 tmp_coeffs.as_mut_ptr(),
                 k,
             )
-        })
+        }))
     }
 }
 
 impl<'ctx> Int<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Int<'ctx> {
         let sort = Sort::int(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str) -> Int<'ctx> {
         let sort = Sort::int(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn from_i64(ctx: &'ctx Context, i: i64) -> Int<'ctx> {
         let sort = Sort::int(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn from_u64(ctx: &'ctx Context, u: u64) -> Int<'ctx> {
         let sort = Sort::int(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn as_i64(&self) -> Option<i64> {
+        let ast_ptr = self.get_ast_ptr();
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -561,10 +595,11 @@ impl<'ctx> Int<'ctx> {
     }
 
     pub fn as_u64(&self) -> Option<u64> {
+        let ast_ptr = self.get_ast_ptr();
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -573,10 +608,11 @@ impl<'ctx> Int<'ctx> {
     }
 
     pub fn from_real(ast: &Real<'ctx>) -> Int<'ctx> {
-        Self::new(ast.ctx, unsafe {
+        let ast_ptr = ast.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_real2int(ast.ctx.z3_ctx, ast.z3_ast)
-        })
+            Z3_mk_real2int(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast)
+        }))
     }
 
     /// Create a real from an integer.
@@ -608,10 +644,11 @@ impl<'ctx> Int<'ctx> {
     /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().unwrap());
     /// ```
     pub fn from_bv(ast: &BV<'ctx>, signed: bool) -> Int<'ctx> {
-        Self::new(ast.ctx, unsafe {
+        let ast_ptr = ast.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_bv2int(ast.ctx.z3_ctx, ast.z3_ast, signed)
-        })
+            Z3_mk_bv2int(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, signed)
+        }))
     }
 
     /// Create a bitvector from an integer.
@@ -624,10 +661,11 @@ impl<'ctx> Int<'ctx> {
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Int<'dest_ctx> {
-        Int::new(dest, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Int(SafeAstPtr::new(dest, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 
     varop!(add, Z3_mk_add, Self);
@@ -660,39 +698,40 @@ impl<'ctx> Int<'ctx> {
 impl<'ctx> Real<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Real<'ctx> {
         let sort = Sort::real(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str) -> Real<'ctx> {
         let sort = Sort::real(ctx);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn from_real(ctx: &'ctx Context, num: i32, den: i32) -> Real<'ctx> {
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_real(
                 ctx.z3_ctx,
                 num as ::std::os::raw::c_int,
                 den as ::std::os::raw::c_int,
             )
-        })
+        }))
     }
 
     pub fn as_real(&self) -> Option<(i64, i64)> {
+        let ast_ptr = self.get_ast_ptr();
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut num: i64 = 0;
             let mut den: i64 = 0;
-            if Z3_get_numeral_small(self.ctx.z3_ctx, self.z3_ast, &mut num, &mut den) {
+            if Z3_get_numeral_small(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, &mut num, &mut den) {
                 Some((num, den))
             } else {
                 None
@@ -701,10 +740,11 @@ impl<'ctx> Real<'ctx> {
     }
 
     pub fn from_int(ast: &Int<'ctx>) -> Real<'ctx> {
-        Self::new(ast.ctx, unsafe {
+        let ast_ptr = ast.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_int2real(ast.ctx.z3_ctx, ast.z3_ast)
-        })
+            Z3_mk_int2real(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast)
+        }))
     }
 
     /// Create an integer from a real.
@@ -719,10 +759,11 @@ impl<'ctx> Real<'ctx> {
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Real<'dest_ctx> {
-        Real::new(dest, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Real(SafeAstPtr::new(dest, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 
     varop!(add, Z3_mk_add, Self);
@@ -740,9 +781,10 @@ impl<'ctx> Real<'ctx> {
 macro_rules! bv_overflow_check_signed {
     ( $f:ident, $z3fn:ident) => {
         pub fn $f(&self, other: &BV<'ctx>, b: bool) -> Bool<'ctx> {
-            Ast::new(self.ctx, unsafe {
-                $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast, b)
-            })
+            let ast_ptr = self.get_ast_ptr();
+            Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
+                $z3fn(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, other.get_ast_ptr().z3_ast, b)
+            }))
     }
     };
 }
@@ -750,43 +792,44 @@ macro_rules! bv_overflow_check_signed {
 impl<'ctx> BV<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn from_i64(ctx: &'ctx Context, i: i64, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn from_u64(ctx: &'ctx Context, u: u64, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)
-        })
+        }))
     }
 
     pub fn as_i64(&self) -> Option<i64> {
+        let ast_ptr = self.get_ast_ptr();
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_get_numeral_int64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -795,10 +838,12 @@ impl<'ctx> BV<'ctx> {
     }
 
     pub fn as_u64(&self) -> Option<u64> {
+        let ast_ptr = self.get_ast_ptr();
+
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_get_numeral_uint64(self.ctx.z3_ctx, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -829,10 +874,11 @@ impl<'ctx> BV<'ctx> {
     /// assert_eq!(-3, model.eval(&x.to_int(true)).unwrap().as_i64().expect("as_i64() shouldn't fail"));
     /// ```
     pub fn from_int(ast: &Int<'ctx>, sz: u32) -> BV<'ctx> {
-        Self::new(ast.ctx, unsafe {
+        let ast_ptr = ast.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_int2bv(ast.ctx.z3_ctx, sz, ast.z3_ast)
-        })
+            Z3_mk_int2bv(ast_ptr.ctx.z3_ctx, sz, ast_ptr.z3_ast)
+        }))
     }
 
     /// Create an integer from a bitvector.
@@ -845,16 +891,17 @@ impl<'ctx> BV<'ctx> {
     /// Get the size of the bitvector (in bits)
     pub fn get_size(&self) -> u32 {
         let sort = self.get_sort();
-        unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx, sort.z3_sort) }
+        unsafe { Z3_get_bv_sort_size(sort.ctx.z3_ctx, sort.z3_sort) }
     }
 
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> BV<'dest_ctx> {
-        BV::new(dest, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        BV(SafeAstPtr::new(dest, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 
     // Bitwise ops
@@ -951,28 +998,31 @@ impl<'ctx> BV<'ctx> {
     /// Extract the bits `high` down to `low` from the bitvector.
     /// Returns a bitvector of size `n`, where `n = high - low + 1`.
     pub fn extract(&self, high: u32, low: u32) -> Self {
-        Self::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_extract(self.ctx.z3_ctx, high, low, self.z3_ast)
-        })
+            Z3_mk_extract(ast_ptr.ctx.z3_ctx, high, low, ast_ptr.z3_ast)
+        }))
     }
 
     /// Sign-extend the bitvector to size `m+i`, where `m` is the original size of the bitvector.
     /// That is, `i` bits will be added.
     pub fn sign_ext(&self, i: u32) -> Self {
-        Self::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_sign_ext(self.ctx.z3_ctx, i, self.z3_ast)
-        })
+            Z3_mk_sign_ext(ast_ptr.ctx.z3_ctx, i, ast_ptr.z3_ast)
+        }))
     }
 
     /// Zero-extend the bitvector to size `m+i`, where `m` is the original size of the bitvector.
     /// That is, `i` bits will be added.
     pub fn zero_ext(&self, i: u32) -> Self {
-        Self::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_zero_ext(self.ctx.z3_ctx, i, self.z3_ast)
-        })
+            Z3_mk_zero_ext(ast_ptr.ctx.z3_ctx, i, ast_ptr.z3_ast)
+        }))
     }
 }
 
@@ -984,10 +1034,10 @@ impl<'ctx> Array<'ctx> {
         range: &Sort<'ctx>,
     ) -> Array<'ctx> {
         let sort = Sort::array(ctx, domain, range);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(
@@ -997,21 +1047,22 @@ impl<'ctx> Array<'ctx> {
         range: &Sort<'ctx>,
     ) -> Array<'ctx> {
         let sort = Sort::array(ctx, domain, range);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Array<'dest_ctx> {
-        Array::new(dest, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Array(SafeAstPtr::new(dest, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 
     /// Get the value at a given index in the array.
@@ -1029,10 +1080,15 @@ impl<'ctx> Array<'ctx> {
         // like a huge advantage over just letting Z3 panic itself when it discovers the
         // problem.
         // This way we also avoid the redundant check every time this method is called.
-        Dynamic::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Dynamic(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_select(self.ctx.z3_ctx, self.z3_ast, index.get_z3_ast())
-        })
+            Z3_mk_select(
+                ast_ptr.ctx.z3_ctx,
+                ast_ptr.z3_ast,
+                index.get_ast_ptr().z3_ast,
+            )
+        }))
     }
 
     /// Update the value at a given index in the array.
@@ -1042,15 +1098,16 @@ impl<'ctx> Array<'ctx> {
     //
     // We avoid the trinop! macro because the arguments have non-Self types
     pub fn store(&self, index: &Dynamic<'ctx>, value: &Dynamic<'ctx>) -> Self {
-        Self::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Self(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_store(
-                self.ctx.z3_ctx,
-                self.z3_ast,
-                index.get_z3_ast(),
-                value.get_z3_ast(),
+                ast_ptr.ctx.z3_ctx,
+                ast_ptr.z3_ast,
+                index.get_ast_ptr().z3_ast,
+                value.get_ast_ptr().z3_ast,
             )
-        })
+        }))
     }
 }
 
@@ -1061,29 +1118,30 @@ impl<'ctx> Set<'ctx> {
         eltype: &Sort<'ctx>,
     ) -> Set<'ctx> {
         let sort = Sort::set(ctx, eltype);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str, eltype: &Sort<'ctx>) -> Set<'ctx> {
         let sort = Sort::set(ctx, eltype);
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Set<'dest_ctx> {
-        Set::new(dest, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Set(SafeAstPtr::new(dest, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 
     /// Add an element to the set.
@@ -1092,10 +1150,15 @@ impl<'ctx> Set<'ctx> {
     //
     // We avoid the binop! macro because the argument has a non-Self type
     pub fn add(&self, element: &Dynamic<'ctx>) -> Set<'ctx> {
-        Set::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Set(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
-        })
+            Z3_mk_set_add(
+                ast_ptr.ctx.z3_ctx,
+                ast_ptr.z3_ast,
+                element.get_ast_ptr().z3_ast,
+            )
+        }))
     }
 
     /// Remove an element from the set.
@@ -1104,10 +1167,15 @@ impl<'ctx> Set<'ctx> {
     //
     // We avoid the binop! macro because the argument has a non-Self type
     pub fn del(&self, element: &Dynamic<'ctx>) -> Set<'ctx> {
-        Set::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Set(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
-        })
+            Z3_mk_set_add(
+                ast_ptr.ctx.z3_ctx,
+                ast_ptr.z3_ast,
+                element.get_ast_ptr().z3_ast,
+            )
+        }))
     }
 
     /// Check if an item is a member of the set.
@@ -1116,10 +1184,15 @@ impl<'ctx> Set<'ctx> {
     //
     // We avoid the binop! macro because the argument has a non-Self type
     pub fn member(&self, element: &Dynamic<'ctx>) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+        let ast_ptr = self.get_ast_ptr();
+        Bool(SafeAstPtr::new(ast_ptr.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
-        })
+            Z3_mk_set_add(
+                ast_ptr.ctx.z3_ctx,
+                ast_ptr.z3_ast,
+                element.get_ast_ptr().z3_ast,
+            )
+        }))
     }
 
     /// Take the intersection of a list of sets.
@@ -1135,18 +1208,20 @@ impl<'ctx> Set<'ctx> {
 }
 
 impl<'ctx> Dynamic<'ctx> {
-    pub fn from_ast(ast: &impl Ast<'ctx>) -> Self {
-        Self::new(ast.get_ctx(), ast.get_z3_ast())
-    }
-
     fn sort_kind(&self) -> SortKind {
-        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, Z3_get_sort(self.ctx.z3_ctx, self.z3_ast)) }
+        let ast_ptr = self.get_ast_ptr();
+        unsafe {
+            Z3_get_sort_kind(
+                ast_ptr.ctx.z3_ctx,
+                Z3_get_sort(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast),
+            )
+        }
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Bool`
     pub fn as_bool(&self) -> Option<Bool<'ctx>> {
         match self.sort_kind() {
-            SortKind::Bool => Some(Bool::new(self.ctx, self.z3_ast)),
+            SortKind::Bool => Some(Bool(self.0.clone())),
             _ => None,
         }
     }
@@ -1154,7 +1229,7 @@ impl<'ctx> Dynamic<'ctx> {
     /// Returns `None` if the `Dynamic` is not actually an `Int`
     pub fn as_int(&self) -> Option<Int<'ctx>> {
         match self.sort_kind() {
-            SortKind::Int => Some(Int::new(self.ctx, self.z3_ast)),
+            SortKind::Int => Some(Int(self.0.clone())),
             _ => None,
         }
     }
@@ -1162,7 +1237,7 @@ impl<'ctx> Dynamic<'ctx> {
     /// Returns `None` if the `Dynamic` is not actually a `Real`
     pub fn as_real(&self) -> Option<Real<'ctx>> {
         match self.sort_kind() {
-            SortKind::Real => Some(Real::new(self.ctx, self.z3_ast)),
+            SortKind::Real => Some(Real(self.0.clone())),
             _ => None,
         }
     }
@@ -1170,7 +1245,7 @@ impl<'ctx> Dynamic<'ctx> {
     /// Returns `None` if the `Dynamic` is not actually a `BV`
     pub fn as_bv(&self) -> Option<BV<'ctx>> {
         match self.sort_kind() {
-            SortKind::BV => Some(BV::new(self.ctx, self.z3_ast)),
+            SortKind::BV => Some(BV(self.0.clone())),
             _ => None,
         }
     }
@@ -1178,14 +1253,14 @@ impl<'ctx> Dynamic<'ctx> {
     /// Returns `None` if the `Dynamic` is not actually an `Array`
     pub fn as_array(&self) -> Option<Array<'ctx>> {
         match self.sort_kind() {
-            SortKind::Array => Some(Array::new(self.ctx, self.z3_ast)),
+            SortKind::Array => Some(Array(self.0.clone())),
             _ => None,
         }
     }
 
     pub fn as_datatype(&self) -> Option<Datatype<'ctx>> {
         match self.sort_kind() {
-            SortKind::Datatype => Some(Datatype::new(self.ctx, self.z3_ast)),
+            SortKind::Datatype => Some(Datatype(self.0.clone())),
             _ => None,
         }
     }
@@ -1198,28 +1273,29 @@ impl<'ctx> Datatype<'ctx> {
         assert_eq!(ctx, sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
-        })
+        }))
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Self {
         assert_eq!(ctx, sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
-        Self::new(ctx, unsafe {
+        Self(SafeAstPtr::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
-        })
+        }))
     }
 
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Datatype<'dest_ctx> {
-        Datatype::new(dest, unsafe {
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
+        let ast_ptr = self.get_ast_ptr();
+        Datatype(SafeAstPtr::new(dest, unsafe {
+            Z3_translate(ast_ptr.ctx.z3_ctx, ast_ptr.z3_ast, dest.z3_ctx)
+        }))
     }
 }
 
@@ -1252,16 +1328,18 @@ pub fn forall_const<'ctx>(
     bounds: &[&Dynamic<'ctx>],
     body: &Dynamic<'ctx>,
 ) -> Dynamic<'ctx> {
-    assert!(bounds.iter().all(|a| a.get_ctx().z3_ctx == ctx.z3_ctx));
-    assert_eq!(ctx, body.get_ctx());
+    assert!(bounds
+        .iter()
+        .all(|a| a.get_ast_ptr().ctx.z3_ctx == ctx.z3_ctx));
+    assert_eq!(ctx, body.get_ast_ptr().ctx);
 
     if bounds.is_empty() {
         return body.clone();
     }
 
-    let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+    let bounds: Vec<_> = bounds.iter().map(|a| a.get_ast_ptr().z3_ast).collect();
 
-    Ast::new(ctx, unsafe {
+    Dynamic(SafeAstPtr::new(ctx, unsafe {
         Z3_mk_forall_const(
             ctx.z3_ctx,
             0,
@@ -1269,7 +1347,7 @@ pub fn forall_const<'ctx>(
             bounds.as_ptr() as *const Z3_app,
             0,
             std::ptr::null(),
-            body.get_z3_ast(),
+            body.get_ast_ptr().z3_ast,
         )
-    })
+    }))
 }

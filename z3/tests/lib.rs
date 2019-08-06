@@ -235,7 +235,6 @@ fn test_substitution() {
 
     let x_plus_y = x.add(&[&y]);
     let x_plus_z = x.add(&[&z]);
-
     let substitutions = &[(&y, &z)];
 
     assert!(x_plus_y.substitute(substitutions) == x_plus_z);

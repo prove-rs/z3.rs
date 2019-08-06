@@ -1,4 +1,5 @@
 use ast::Ast;
+use ast::SafeAstPtr;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
@@ -36,21 +37,21 @@ impl<'ctx> Model<'ctx> {
     where
         T: Ast<'ctx>,
     {
-        let mut tmp: Z3_ast = ast.get_z3_ast();
+        let mut tmp: Z3_ast = ast.get_ast_ptr().z3_ast;
         let res = {
             let guard = Z3_MUTEX.lock().unwrap();
             unsafe {
                 Z3_model_eval(
                     self.ctx.z3_ctx,
                     self.z3_mdl,
-                    ast.get_z3_ast(),
+                    ast.get_ast_ptr().z3_ast,
                     true,
                     &mut tmp,
                 )
             }
         };
         if res {
-            Some(T::new(self.ctx, tmp))
+            Some(unsafe { T::new(SafeAstPtr::new(self.ctx, tmp)) })
         } else {
             None
         }
