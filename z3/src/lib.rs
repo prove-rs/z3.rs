@@ -62,11 +62,13 @@ pub struct Config {
 /// ```
 ///
 /// [`interrupt()`]: #method.interrupt
+#[derive(PartialEq, Eq, Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
 }
 
 /// Symbols are used to name several term and type constructors.
+#[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Symbol {
     Int(u32),
     String(String),
