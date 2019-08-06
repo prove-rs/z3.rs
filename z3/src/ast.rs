@@ -977,6 +977,10 @@ impl<'ctx> BV<'ctx> {
 }
 
 impl<'ctx> Array<'ctx> {
+    /// Create an `Array` which maps from indices of the `domain` `Sort` to
+    /// values of the `range` `Sort`.
+    ///
+    /// All values in the `Array` will be unconstrained.
     pub fn new_const<S: Into<Symbol>>(
         ctx: &'ctx Context,
         name: S,
@@ -1002,6 +1006,19 @@ impl<'ctx> Array<'ctx> {
             let p = pp.as_ptr();
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+        })
+    }
+
+    /// Create a "constant array", that is, an `Array` initialized so that all of the
+    /// indices in the `domain` map to the given value `val`
+    pub fn const_array(
+        ctx: &'ctx Context,
+        domain: &Sort<'ctx>,
+        val: &Dynamic<'ctx>,
+    ) -> Array<'ctx> {
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const_array(ctx.z3_ctx, domain.z3_sort, val.z3_ast)
         })
     }
 
