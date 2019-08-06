@@ -6416,8 +6416,11 @@ extern "C" {
     pub fn Z3_optimize_pop(c: Z3_context, d: Z3_optimize);
 
     /// Check consistency and produce optimal values.
+    ///
     /// - `c`: - context
     /// - `o`: - optimization context
+    /// - `num_assumptions`: - number of additional assumptions
+    /// - `assumptions`: - the additional assumptions
     ///
     /// # See also:
     ///
@@ -6425,7 +6428,12 @@ extern "C" {
     /// - [`Z3_optimize_get_model`](fn.Z3_optimize_get_model.html)
     /// - [`Z3_optimize_get_statistics`](fn.Z3_optimize_get_statistics.html)
     /// - [`Z3_optimize_get_unsat_core`](fn.Z3_optimize_get_unsat_core.html)
-    pub fn Z3_optimize_check(c: Z3_context, o: Z3_optimize) -> Z3_lbool;
+    pub fn Z3_optimize_check(
+        c: Z3_context,
+        o: Z3_optimize,
+        num_assumptions: ::std::os::raw::c_uint,
+        assumptions: *const Z3_ast,
+    ) -> Z3_lbool;
 
     /// Retrieve a string that describes the last status returned by [`Z3_optimize_check`](fn.Z3_optimize_check.html).
     ///

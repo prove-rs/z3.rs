@@ -266,7 +266,7 @@ fn test_solve_simple_semver_example() {
         }
     }
 
-    assert!(opt.check());
+    assert!(opt.check(&[]));
     let model = opt.get_model();
 
     for k in root.keys() {

@@ -1,4 +1,5 @@
-use ast::Ast;
+use ast::{Ast, Bool};
+use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
@@ -88,9 +89,17 @@ impl<'ctx> Optimize<'ctx> {
     /// # See also:
     ///
     /// - [`Optimize::get_model()`](#method.get_model)
-    pub fn check(&self) -> bool {
+    pub fn check(&self, assumptions: &[Bool<'ctx>]) -> bool {
         let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_optimize_check(self.ctx.z3_ctx, self.z3_opt) == Z3_L_TRUE }
+        let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
+        unsafe {
+            Z3_optimize_check(
+                self.ctx.z3_ctx,
+                self.z3_opt,
+                assumptions.len().try_into().unwrap(),
+                assumptions.as_ptr(),
+            ) == Z3_L_TRUE
+        }
     }
 
     /// Retrieve the model for the last [`Optimize::check()`](#method.check)
