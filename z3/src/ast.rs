@@ -111,7 +111,7 @@ macro_rules! varop {
 
 /// Abstract syntax tree (AST) nodes represent terms, constants, or expressions.
 /// The `Ast` trait contains methods common to all AST subtypes.
-pub trait Ast<'ctx>: Sized {
+pub trait Ast<'ctx>: Sized + fmt::Debug {
     fn get_ctx(&self) -> &'ctx Context;
     fn get_z3_ast(&self) -> Z3_ast;
 
@@ -244,7 +244,7 @@ macro_rules! impl_ast {
 
         impl<'ctx> PartialEq for $ast<'ctx> {
             fn eq(&self, other: &$ast<'ctx>) -> bool {
-                assert_eq!(self.ctx.z3_ctx, other.ctx.z3_ctx);
+                assert_eq!(self.ctx, other.ctx);
                 unsafe { Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
             }
         }
@@ -1144,7 +1144,7 @@ impl<'ctx> Dynamic<'ctx> {
 
 impl<'ctx> Datatype<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sort: &Sort<'ctx>) -> Self {
-        assert_eq!(ctx.z3_ctx, sort.ctx.z3_ctx);
+        assert_eq!(ctx, sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
         Self::new(ctx, unsafe {
@@ -1153,7 +1153,7 @@ impl<'ctx> Datatype<'ctx> {
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Self {
-        assert_eq!(ctx.z3_ctx, sort.ctx.z3_ctx);
+        assert_eq!(ctx, sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
         Self::new(ctx, unsafe {
@@ -1202,7 +1202,7 @@ pub fn forall_const<'ctx>(
     body: &Dynamic<'ctx>,
 ) -> Dynamic<'ctx> {
     assert!(bounds.iter().all(|a| a.get_ctx().z3_ctx == ctx.z3_ctx));
-    assert_eq!(ctx.z3_ctx, body.get_ctx().z3_ctx);
+    assert_eq!(ctx, body.get_ctx());
 
     if bounds.is_empty() {
         return body.clone();
