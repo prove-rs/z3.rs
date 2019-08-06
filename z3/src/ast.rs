@@ -122,7 +122,7 @@ pub struct Datatype<'ctx>(SafeAstPtr<'ctx>);
 #[derive(Hash, Debug, PartialEq, Eq, Clone)]
 pub struct Dynamic<'ctx>(SafeAstPtr<'ctx>);
 
-macro_rules! for_each_static_typed_ast {
+macro_rules! for_each_ast {
     ($m:ident) => {
         $m!(Bool);
         $m!(Int);
@@ -131,12 +131,6 @@ macro_rules! for_each_static_typed_ast {
         $m!(Array);
         $m!(Set);
         $m!(Datatype);
-    };
-}
-
-macro_rules! for_each_ast {
-    ($m:ident) => {
-        for_each_static_typed_ast!($m);
         $m!(Dynamic);
     };
 }
