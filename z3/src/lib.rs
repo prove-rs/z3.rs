@@ -13,6 +13,7 @@ extern crate z3_sys;
 #[cfg(feature = "arbitrary-size-numeral")]
 extern crate num;
 
+use std::convert::TryFrom;
 use std::ffi::CString;
 use std::sync::Mutex;
 use z3_sys::*;
@@ -186,6 +187,17 @@ pub enum SatResult {
     Unknown,
     /// The query is satisfiable.
     Sat,
+}
+
+impl TryFrom<SatResult> for bool {
+    type Error = &'static str;
+    fn try_from(sat: SatResult) -> Result<Self, Self::Error> {
+        match sat {
+            SatResult::Unsat => Ok(false),
+            SatResult::Unknown => Err("The query was interrupted, timed out, or otherwise failed"),
+            SatResult::Sat => Ok(true),
+        }
+    }
 }
 
 /// A pattern for quantifier instantiation, used to guide quantifier instantiation.
