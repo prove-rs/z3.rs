@@ -1304,7 +1304,7 @@ pub fn forall_const<'ctx>(
 ///
 /// # Examples
 /// ```
-/// # use z3::{ast, Config, Context, FuncDecl, Solver, Sort, Symbol, Pattern};
+/// # use z3::{ast, Config, Context, FuncDecl, SatResult, Solver, Sort, Symbol, Pattern};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
@@ -1323,7 +1323,7 @@ pub fn forall_const<'ctx>(
 /// ).try_into().unwrap();
 /// solver.assert(&exists.not());
 ///
-/// assert!(solver.check());
+/// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model();
 ///
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
