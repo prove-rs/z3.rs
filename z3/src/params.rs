@@ -42,6 +42,30 @@ impl<'ctx> Params<'ctx> {
             )
         };
     }
+
+    pub fn set_f64<K: Into<Symbol>>(&mut self, k: K, v: f64) {
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Z3_params_set_double(
+                self.ctx.z3_ctx,
+                self.z3_params,
+                k.into().as_z3_symbol(self.ctx),
+                v,
+            )
+        };
+    }
+
+    pub fn set_u32<K: Into<Symbol>>(&mut self, k: K, v: u32) {
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Z3_params_set_uint(
+                self.ctx.z3_ctx,
+                self.z3_params,
+                k.into().as_z3_symbol(self.ctx),
+                v,
+            )
+        };
+    }
 }
 
 impl<'ctx> fmt::Display for Params<'ctx> {

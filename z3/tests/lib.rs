@@ -217,6 +217,8 @@ fn test_params() {
 
     let mut params = Params::new(&ctx);
     params.set_bool("smt.mbqi", false);
+    params.set_f64("smt.qi.eager_threshold", 5.0);
+    params.set_u32("smt.qi.max_instances", 999);
 
     let solver = Solver::new(&ctx);
     solver.set_params(&params);
