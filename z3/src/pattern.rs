@@ -1,12 +1,12 @@
+use ast::Ast;
+use ast::Dynamic;
+use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 use Context;
 use Pattern;
-use ast::Dynamic;
-use ast::Ast;
 use Z3_MUTEX;
-use std::convert::TryInto;
 
 impl<'ctx> Pattern<'ctx> {
     /// Create a pattern for quantifier instantiation.

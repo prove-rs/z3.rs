@@ -5,9 +5,9 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use z3_sys::*;
 use Context;
+use Pattern;
 use Sort;
 use Symbol;
-use Pattern;
 use Z3_MUTEX;
 
 #[cfg(feature = "arbitrary-size-numeral")]
