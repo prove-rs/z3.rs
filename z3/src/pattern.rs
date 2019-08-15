@@ -28,7 +28,7 @@ impl<'ctx> Pattern<'ctx> {
     /// - `ast::forall_const()`
     /// - `ast::exists_const()`
     pub fn new(ctx: &'ctx Context, terms: &[&Dynamic]) -> Pattern<'ctx> {
-        assert!(terms.len() > 0);
+        assert!(!terms.is_empty());
         assert!(terms.iter().all(|t| t.get_ctx().z3_ctx == ctx.z3_ctx));
 
         let terms: Vec<_> = terms.iter().map(|t| t.get_z3_ast()).collect();
