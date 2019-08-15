@@ -1982,8 +1982,14 @@ extern "C" {
     /// - `field_names`: names of the constructor fields.
     /// - `sorts`: field sorts, 0 if the field sort refers to a recursive sort.
     /// - `sort_refs`: reference to datatype sort that is an argument to the constructor; if the corresponding
-    /// sort reference is 0, then the value in sort_refs should be an index referring to
-    /// one of the recursive datatypes that is declared.
+    ///   sort reference is 0, then the value in sort_refs should be an index referring to
+    ///   one of the recursive datatypes that is declared.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_del_constructor`](fn.Z3_del_constructor.html)
+    /// - [`Z3_mk_constructor_list`](fn.Z3_mk_constructor_list.html)
+    /// - [`Z3_query_constructor`](fn.Z3_query_constructor.html)
     pub fn Z3_mk_constructor(
         c: Z3_context,
         name: Z3_symbol,
@@ -1998,6 +2004,10 @@ extern "C" {
     ///
     /// - `c`: logical context.
     /// - `constr`: constructor.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_constructor`](fn.Z3_mk_constructor.html)
     pub fn Z3_del_constructor(c: Z3_context, constr: Z3_constructor);
 
     /// Create datatype, such as lists, trees, records, enumerations or unions of records.
@@ -2007,6 +2017,12 @@ extern "C" {
     /// - `name`: name of datatype.
     /// - `num_constructors`: number of constructors passed in.
     /// - `constructors`: array of constructor containers.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_constructor`](fn.Z3_mk_constructor.html)
+    /// - [`Z3_mk_constructor_list`](fn.Z3_mk_constructor_list.html)
+    /// - [`Z3_mk_datatypes`](fn.Z3_mk_datatypes.html)
     pub fn Z3_mk_datatype(
         c: Z3_context,
         name: Z3_symbol,
@@ -2019,6 +2035,11 @@ extern "C" {
     /// - `c`: logical context.
     /// - `num_constructors`: number of constructors in list.
     /// - `constructors`: list of constructors.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_del_constructor_list`](fn.Z3_del_constructor_list.html)
+    /// - [`Z3_mk_constructor`](fn.Z3_mk_constructor.html)
     pub fn Z3_mk_constructor_list(
         c: Z3_context,
         num_constructors: ::std::os::raw::c_uint,
@@ -2031,6 +2052,10 @@ extern "C" {
     ///
     /// - `c`: logical context.
     /// - `clist`: constructor list container.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_constructor_list`](fn.Z3_mk_constructor_list.html)
     pub fn Z3_del_constructor_list(c: Z3_context, clist: Z3_constructor_list);
 
     /// Create mutually recursive datatypes.
@@ -2040,6 +2065,12 @@ extern "C" {
     /// - `sort_names`: names of datatype sorts.
     /// - `sorts`: array of datatype sorts.
     /// - `constructor_lists`: list of constructors, one list per sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_constructor`](fn.Z3_mk_constructor.html)
+    /// - [`Z3_mk_constructor_list`](fn.Z3_mk_constructor_list.html)
+    /// - [`Z3_mk_datatype`](fn.Z3_mk_datatype.html)
     pub fn Z3_mk_datatypes(
         c: Z3_context,
         num_sorts: ::std::os::raw::c_uint,
@@ -2056,6 +2087,10 @@ extern "C" {
     /// - `constructor`: constructor function declaration, allocated by user.
     /// - `tester`: constructor test function declaration, allocated by user.
     /// - `accessors`: array of accessor function declarations allocated by user. The array must contain num_fields elements.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_constructor`](fn.Z3_mk_constructor.html)
     pub fn Z3_query_constructor(
         c: Z3_context,
         constr: Z3_constructor,
@@ -2080,6 +2115,8 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
+    /// - [`Z3_mk_fresh_func_decl`](fn.Z3_mk_fresh_func_decl.html)
+    /// - [`Z3_mk_rec_func_decl`](fn.Z3_mk_rec_func_decl.html)
     pub fn Z3_mk_func_decl(
         c: Z3_context,
         s: Z3_symbol,
@@ -2092,7 +2129,9 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fresh_func_decl`](fn.Z3_mk_fresh_func_decl.html)
     /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
+    /// - [`Z3_mk_rec_func_decl`](fn.Z3_mk_rec_func_decl.html)
     pub fn Z3_mk_app(
         c: Z3_context,
         d: Z3_func_decl,
@@ -2111,8 +2150,9 @@ extern "C" {
     ///
     /// # See also:
     ///
-    /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
+    /// - [`Z3_mk_fresh_const`](fn.Z3_mk_fresh_const.html)
+    /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     pub fn Z3_mk_const(c: Z3_context, s: Z3_symbol, ty: Z3_sort) -> Z3_ast;
 
     /// Declare a fresh constant or function.
@@ -2145,8 +2185,10 @@ extern "C" {
     ///
     /// # See also:
     ///
-    /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     /// - [`Z3_mk_app`](fn.Z3_mk_app.html)
+    /// - [`Z3_mk_const`](fn.Z3_mk_const.html)
+    /// - [`Z3_mk_fresh_func_decl`](fn.Z3_mk_fresh_func_decl.html)
+    /// - [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     pub fn Z3_mk_fresh_const(c: Z3_context, prefix: Z3_string, ty: Z3_sort) -> Z3_ast;
 
     /// Declare a recursive function
@@ -2164,8 +2206,9 @@ extern "C" {
     ///
     /// # See also:
     ///
-    /// * [`Z3_mk_app`](fn.Z3_mk_app.html)
     /// * [`Z3_add_rec_def`](fn.Z3_add_rec_def.html)
+    /// * [`Z3_mk_app`](fn.Z3_mk_app.html)
+    /// * [`Z3_mk_func_decl`](fn.Z3_mk_func_decl.html)
     pub fn Z3_mk_rec_func_decl(
         c: Z3_context,
         s: Z3_symbol,
