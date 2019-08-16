@@ -14,16 +14,12 @@ impl<'ctx> DatatypeBuilder<'ctx> {
         let recognizer_name_sym = Symbol::String(format!("is-{}", name)).as_z3_symbol(self.ctx);
         let name_sym = Symbol::String(name.to_string()).as_z3_symbol(self.ctx);
 
-        assert!(fields
-            .iter()
-            .all(|(name, sort)| sort.ctx.z3_ctx == self.ctx.z3_ctx));
-
         let mut field_names: Vec<Z3_symbol> = Vec::with_capacity(fields.len());
         let mut field_sorts = Vec::with_capacity(fields.len());
 
         for (name, sort) in fields {
             field_names.push(Symbol::String(name.to_string()).as_z3_symbol(self.ctx));
-            field_sorts.push(sort.z3_sort);
+            field_sorts.push(sort.as_z3_sort(self.ctx));
         }
 
         // This is unused.

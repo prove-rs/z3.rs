@@ -20,7 +20,7 @@ use z3_sys::*;
 pub mod ast;
 mod config;
 mod context;
-mod datatype_builder;
+// mod datatype_builder;
 mod func_decl;
 mod model;
 mod optimize;
@@ -69,19 +69,29 @@ pub struct Context {
 }
 
 /// Symbols are used to name several term and type constructors.
-#[derive(PartialEq, Eq, Clone, Debug)]
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Symbol {
     Int(u32),
     String(String),
 }
 
 /// Sorts represent the various 'types' of [`Ast`s](trait.Ast.html).
-//
-// Note for in-crate users: Never construct a `Sort` directly; only use
-// `Sort::new()` which handles Z3 refcounting properly.
-pub struct Sort<'ctx> {
-    ctx: &'ctx Context,
-    z3_sort: Z3_sort,
+#[derive(Clone, Debug, PartialEq, Eq, PartialOrd, Ord)]
+pub enum Sort {
+    Uninterpreted(Symbol),
+    Bool,
+    Int,
+    Real,
+    BitVector(u32),
+    Array {
+        domain: Box<Sort>,
+        range: Box<Sort>,
+    },
+    Set(Box<Sort>),
+    Enum {
+        name: Symbol,
+        enum_names: Vec<Symbol>,
+    },
 }
 
 /// (Incremental) solver, possibly specialized by a particular tactic or logic.
@@ -135,7 +145,7 @@ pub struct FuncDecl<'ctx> {
 /// // Like Rust's Option<int> type
 /// let option_int = DatatypeBuilder::new(&ctx)
 ///         .variant("None", &[])
-///         .variant("Some", &[("value", &Sort::int(&ctx))])
+///         .variant("Some", &[("value", Sort::Int)])
 ///         .finish("OptionInt");
 ///
 /// // Assert x.is_none()
@@ -168,7 +178,7 @@ pub struct DatatypeVariant<'ctx> {
 
 pub struct DatatypeSort<'ctx> {
     ctx: &'ctx Context,
-    pub sort: Sort<'ctx>,
+    pub sort: Sort,
     pub variants: Vec<DatatypeVariant<'ctx>>,
 }
 

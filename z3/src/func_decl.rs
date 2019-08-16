@@ -7,16 +7,13 @@ use z3_sys::*;
 use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
 
 impl<'ctx> FuncDecl<'ctx> {
-    pub fn new<S: Into<Symbol>>(
+    pub fn new<'s, S: Into<Symbol>>(
         ctx: &'ctx Context,
         name: S,
-        domain: &[&Sort<'ctx>],
-        range: &Sort<'ctx>,
+        domain: &[Sort],
+        range: Sort,
     ) -> Self {
-        assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
-        assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
-
-        let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
+        let domain: Vec<_> = domain.iter().map(|s| s.as_z3_sort(ctx)).collect();
 
         unsafe {
             Self::from_raw(
@@ -26,7 +23,7 @@ impl<'ctx> FuncDecl<'ctx> {
                     name.into().as_z3_symbol(ctx),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
-                    range.z3_sort,
+                    range.as_z3_sort(ctx),
                 ),
             )
         }
@@ -51,8 +48,8 @@ impl<'ctx> FuncDecl<'ctx> {
     /// let f = FuncDecl::new(
     ///     &ctx,
     ///     "f",
-    ///     &[&Sort::int(&ctx), &Sort::real(&ctx)],
-    ///     &Sort::int(&ctx));
+    ///     &[Sort::Int, Sort::Real],
+    ///     Sort::Int);
     /// assert_eq!(f.arity(), 2);
     /// ```
     pub fn arity(&self) -> usize {
