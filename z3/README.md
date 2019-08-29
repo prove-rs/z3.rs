@@ -21,7 +21,7 @@ Add it to your `Cargo.toml` like so:
 
 ```toml
 [dependencies]
-z3 = "0.3.2"
+z3 = "0.4.0"
 ```
 
 ## Support and Maintenance
