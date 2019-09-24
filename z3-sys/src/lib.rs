@@ -4831,9 +4831,6 @@ extern "C" {
     /// Returns output generated from processing commands.
     pub fn Z3_eval_smtlib2_string(arg1: Z3_context, str: Z3_string) -> Z3_string;
 
-    /// Retrieve that last error message information generated from parsing.
-    pub fn Z3_get_parser_error(c: Z3_context) -> Z3_string;
-
     /// Return the error code for the last API call.
     ///
     /// A call to a Z3 function may return a non `ErrorCode::OK` error code,
@@ -5198,15 +5195,6 @@ extern "C" {
         r: Z3_apply_result,
         i: ::std::os::raw::c_uint,
     ) -> Z3_goal;
-
-    /// Convert a model for the subgoal `Z3_apply_result_get_subgoal`(c, r, i) into a model for the original goal `g`.
-    /// Where `g` is the goal used to create `r` using `Z3_tactic_apply`(c, t, g).
-    pub fn Z3_apply_result_convert_model(
-        c: Z3_context,
-        r: Z3_apply_result,
-        i: ::std::os::raw::c_uint,
-        m: Z3_model,
-    ) -> Z3_model;
 
     /// Create a new solver. This solver is a "combined solver" (see
     /// combined_solver module) that internally uses a non-incremental (solver1) and an
@@ -6278,27 +6266,6 @@ extern "C" {
     /// - [`Z3_fixedpoint_from_string`](fn.Z3_fixedpoint_from_string.html)
     /// - [`Z3_fixedpoint_to_string`](fn.Z3_fixedpoint_to_string.html)
     pub fn Z3_fixedpoint_from_file(c: Z3_context, f: Z3_fixedpoint, s: Z3_string) -> Z3_ast_vector;
-
-    /// Create a backtracking point.
-    ///
-    /// The fixedpoint solver contains a set of rules, added facts and assertions.
-    /// The set of rules, facts and assertions are restored upon calling [`Z3_fixedpoint_pop`](fn.Z3_fixedpoint_pop.html).
-    ///
-    /// # See also:
-    ///
-    /// - [`Z3_fixedpoint_pop`](fn.Z3_fixedpoint_pop.html)
-    pub fn Z3_fixedpoint_push(c: Z3_context, d: Z3_fixedpoint);
-
-    /// Backtrack one backtracking point.
-    ///
-    /// # Preconditions:
-    ///
-    /// - The number of calls to pop cannot exceed calls to push.
-    ///
-    /// # See also:
-    ///
-    /// - [`Z3_fixedpoint_push`](fn.Z3_fixedpoint_push.html)
-    pub fn Z3_fixedpoint_pop(c: Z3_context, d: Z3_fixedpoint);
 }
 /// The following utilities allows adding user-defined domains.
 pub type Z3_fixedpoint_reduce_assign_callback_fptr = ::std::option::Option<
