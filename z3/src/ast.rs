@@ -926,7 +926,7 @@ impl<'ctx> BV<'ctx> {
     /// Rotate left
     binop!(bvrotl, Z3_mk_ext_rotate_left, Self);
     /// Rotate right
-    binop!(bvrotr, Z3_mk_ext_rotate_left, Self);
+    binop!(bvrotr, Z3_mk_ext_rotate_right, Self);
 
     /// Concatenate two bitvectors
     binop!(concat, Z3_mk_concat, Self);
