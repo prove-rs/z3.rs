@@ -73,6 +73,11 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
+    /// Return the context of the solver.
+    pub fn get_ctx(&self) -> &'ctx Context {
+        self.ctx
+    }
+
     /// Assert a constraint into the solver.
     ///
     /// The functions [`Solver::check()`](#method.check) and
