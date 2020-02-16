@@ -92,6 +92,12 @@ impl<'ctx> fmt::Display for FuncDecl<'ctx> {
     }
 }
 
+impl<'ctx> fmt::Debug for FuncDecl<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
+    }
+}
+
 impl<'ctx> Drop for FuncDecl<'ctx> {
     fn drop(&mut self) {
         unsafe {

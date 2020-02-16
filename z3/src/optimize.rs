@@ -145,6 +145,12 @@ impl<'ctx> fmt::Display for Optimize<'ctx> {
     }
 }
 
+impl<'ctx> fmt::Debug for Optimize<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
+    }
+}
+
 impl<'ctx> Drop for Optimize<'ctx> {
     fn drop(&mut self) {
         let guard = Z3_MUTEX.lock().unwrap();
