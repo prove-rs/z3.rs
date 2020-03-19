@@ -65,24 +65,38 @@ pub struct Dynamic<'ctx> {
 }
 
 macro_rules! unop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                $z3fn(self.ctx.z3_ctx, self.z3_ast)
-            })
-        }
+    (
+        $(
+            $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident, $retty:ty ) ;
+        )*
+    ) => {
+        $(
+            $( #[ $attr ] )*
+            pub fn $f(&self) -> $retty {
+                <$retty>::new(self.ctx, unsafe {
+                    let guard = Z3_MUTEX.lock().unwrap();
+                    $z3fn(self.ctx.z3_ctx, self.z3_ast)
+                })
+            }
+        )*
     };
 }
 
 macro_rules! binop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self, other: &Self) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast)
-            })
-        }
+    (
+        $(
+            $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident, $retty:ty ) ;
+        )*
+    ) => {
+        $(
+            $( #[ $attr ] )*
+            pub fn $f(&self, other: &Self) -> $retty {
+                <$retty>::new(self.ctx, unsafe {
+                    let guard = Z3_MUTEX.lock().unwrap();
+                    $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast)
+                })
+            }
+        )*
     };
 }
 
@@ -100,18 +114,25 @@ macro_rules! trinop {
 */
 
 macro_rules! varop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self, other: &[&Self]) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                let mut tmp = vec![self.z3_ast];
-                for a in other {
-                    tmp.push(a.z3_ast)
-                }
-                assert!(tmp.len() <= 0xffff_ffff);
-                $z3fn(self.ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
-            })
-        }
+    (
+        $(
+            $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident, $retty:ty ) ;
+        )*
+    ) => {
+        $(
+            $( #[ $attr ] )*
+            pub fn $f(&self, other: &[&Self]) -> $retty {
+                <$retty>::new(self.ctx, unsafe {
+                    let guard = Z3_MUTEX.lock().unwrap();
+                    let mut tmp = vec![self.z3_ast];
+                    for a in other {
+                        tmp.push(a.z3_ast)
+                    }
+                    assert!(tmp.len() <= 0xffff_ffff);
+                    $z3fn(self.ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
+                })
+            }
+        )*
     };
 }
 
@@ -451,12 +472,18 @@ impl<'ctx> Bool<'ctx> {
         })
     }
 
-    varop!(and, Z3_mk_and, Self);
-    varop!(or, Z3_mk_or, Self);
-    binop!(xor, Z3_mk_xor, Self);
-    unop!(not, Z3_mk_not, Self);
-    binop!(iff, Z3_mk_iff, Self);
-    binop!(implies, Z3_mk_implies, Self);
+    varop! {
+        and(Z3_mk_and, Self);
+        or(Z3_mk_or, Self);
+    }
+    binop! {
+        xor(Z3_mk_xor, Self);
+        iff(Z3_mk_iff, Self);
+        implies(Z3_mk_implies, Self);
+    }
+    unop! {
+        not(Z3_mk_not, Self);
+    }
 
     pub fn pb_le(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
         Bool::new(self.ctx, unsafe {
@@ -631,18 +658,24 @@ impl<'ctx> Int<'ctx> {
         })
     }
 
-    varop!(add, Z3_mk_add, Self);
-    varop!(sub, Z3_mk_sub, Self);
-    varop!(mul, Z3_mk_mul, Self);
-    binop!(div, Z3_mk_div, Self);
-    binop!(rem, Z3_mk_rem, Self);
-    binop!(modulo, Z3_mk_mod, Self);
-    binop!(power, Z3_mk_power, Self);
-    unop!(unary_minus, Z3_mk_unary_minus, Self);
-    binop!(lt, Z3_mk_lt, Bool<'ctx>);
-    binop!(le, Z3_mk_le, Bool<'ctx>);
-    binop!(gt, Z3_mk_gt, Bool<'ctx>);
-    binop!(ge, Z3_mk_ge, Bool<'ctx>);
+    varop! {
+        add(Z3_mk_add, Self);
+        sub(Z3_mk_sub, Self);
+        mul(Z3_mk_mul, Self);
+    }
+    unop! {
+        unary_minus(Z3_mk_unary_minus, Self);
+    }
+    binop! {
+        div(Z3_mk_div, Self);
+        rem(Z3_mk_rem, Self);
+        modulo(Z3_mk_mod, Self);
+        power(Z3_mk_power, Self);
+        lt(Z3_mk_lt, Bool<'ctx>);
+        le(Z3_mk_le, Bool<'ctx>);
+        gt(Z3_mk_gt, Bool<'ctx>);
+        ge(Z3_mk_ge, Bool<'ctx>);
+    }
     // Z3 does support mixing ints and reals in add(), sub(), mul(), div(), and power()
     //   (but not rem(), modulo(), lt(), le(), gt(), or ge()).
     // TODO: we could consider expressing this by having a Numeric trait with these methods.
@@ -715,7 +748,9 @@ impl<'ctx> Real<'ctx> {
         Int::from_real(self)
     }
 
-    unop!(is_int, Z3_mk_is_int, Bool<'ctx>);
+    unop! {
+        is_int(Z3_mk_is_int, Bool<'ctx>);
+    }
 
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
@@ -726,25 +761,38 @@ impl<'ctx> Real<'ctx> {
         })
     }
 
-    varop!(add, Z3_mk_add, Self);
-    varop!(sub, Z3_mk_sub, Self);
-    varop!(mul, Z3_mk_mul, Self);
-    binop!(div, Z3_mk_div, Self);
-    binop!(power, Z3_mk_power, Self);
-    unop!(unary_minus, Z3_mk_unary_minus, Self);
-    binop!(lt, Z3_mk_lt, Bool<'ctx>);
-    binop!(le, Z3_mk_le, Bool<'ctx>);
-    binop!(gt, Z3_mk_gt, Bool<'ctx>);
-    binop!(ge, Z3_mk_ge, Bool<'ctx>);
+    varop! {
+        add(Z3_mk_add, Self);
+        sub(Z3_mk_sub, Self);
+        mul(Z3_mk_mul, Self);
+    }
+    unop! {
+        unary_minus(Z3_mk_unary_minus, Self);
+    }
+    binop! {
+        div(Z3_mk_div, Self);
+        power(Z3_mk_power, Self);
+        lt(Z3_mk_lt, Bool<'ctx>);
+        le(Z3_mk_le, Bool<'ctx>);
+        gt(Z3_mk_gt, Bool<'ctx>);
+        ge(Z3_mk_ge, Bool<'ctx>);
+    }
 }
 
 macro_rules! bv_overflow_check_signed {
-    ( $f:ident, $z3fn:ident) => {
-        pub fn $f(&self, other: &BV<'ctx>, b: bool) -> Bool<'ctx> {
-            Ast::new(self.ctx, unsafe {
-                $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast, b)
-            })
-    }
+    (
+        $(
+            $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident ) ;
+        )*
+    ) => {
+        $(
+            $( #[ $attr ] )*
+            pub fn $f(&self, other: &BV<'ctx>, b: bool) -> Bool<'ctx> {
+                Ast::new(self.ctx, unsafe {
+                    $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast, b)
+                })
+            }
+        )*
     };
 }
 
@@ -859,95 +907,113 @@ impl<'ctx> BV<'ctx> {
     }
 
     // Bitwise ops
-    /// Bitwise negation
-    unop!(bvnot, Z3_mk_bvnot, Self);
-    /// Two's complement negation
-    unop!(bvneg, Z3_mk_bvneg, Self);
-    /// Bitwise and
-    binop!(bvand, Z3_mk_bvand, Self);
-    /// Bitwise or
-    binop!(bvor, Z3_mk_bvor, Self);
-    /// Bitwise exclusive-or
-    binop!(bvxor, Z3_mk_bvxor, Self);
-    /// Bitwise nand
-    binop!(bvnand, Z3_mk_bvnand, Self);
-    /// Bitwise nor
-    binop!(bvnor, Z3_mk_bvnor, Self);
-    /// Bitwise xnor
-    binop!(bvxnor, Z3_mk_bvxnor, Self);
-    /// Conjunction of all the bits in the vector. Returns a BV with size (bitwidth) 1.
-    unop!(bvredand, Z3_mk_bvredand, Self);
-    /// Disjunction of all the bits in the vector. Returns a BV with size (bitwidth) 1.
-    unop!(bvredor, Z3_mk_bvredor, Self);
+    unop! {
+        /// Bitwise negation
+        bvnot(Z3_mk_bvnot, Self);
+        /// Two's complement negation
+        bvneg(Z3_mk_bvneg, Self);
+        /// Conjunction of all the bits in the vector. Returns a BV with size (bitwidth) 1.
+        bvredand(Z3_mk_bvredand, Self);
+        /// Disjunction of all the bits in the vector. Returns a BV with size (bitwidth) 1.
+        bvredor(Z3_mk_bvredor, Self);
+    }
+    binop! {
+        /// Bitwise and
+        bvand(Z3_mk_bvand, Self);
+        /// Bitwise or
+        bvor(Z3_mk_bvor, Self);
+        /// Bitwise exclusive-or
+        bvxor(Z3_mk_bvxor, Self);
+        /// Bitwise nand
+        bvnand(Z3_mk_bvnand, Self);
+        /// Bitwise nor
+        bvnor(Z3_mk_bvnor, Self);
+        /// Bitwise xnor
+        bvxnor(Z3_mk_bvxnor, Self);
+    }
 
     // Arithmetic ops
-    /// Addition
-    binop!(bvadd, Z3_mk_bvadd, Self);
-    /// Subtraction
-    binop!(bvsub, Z3_mk_bvsub, Self);
-    /// Multiplication
-    binop!(bvmul, Z3_mk_bvmul, Self);
-    /// Unsigned division
-    binop!(bvudiv, Z3_mk_bvudiv, Self);
-    /// Signed division
-    binop!(bvsdiv, Z3_mk_bvsdiv, Self);
-    /// Unsigned remainder
-    binop!(bvurem, Z3_mk_bvurem, Self);
-    /// Signed remainder (sign follows dividend)
-    binop!(bvsrem, Z3_mk_bvsrem, Self);
-    /// Signed remainder (sign follows divisor)
-    binop!(bvsmod, Z3_mk_bvsmod, Self);
+    binop! {
+        /// Addition
+        bvadd(Z3_mk_bvadd, Self);
+        /// Subtraction
+        bvsub(Z3_mk_bvsub, Self);
+        /// Multiplication
+        bvmul(Z3_mk_bvmul, Self);
+        /// Unsigned division
+        bvudiv(Z3_mk_bvudiv, Self);
+        /// Signed division
+        bvsdiv(Z3_mk_bvsdiv, Self);
+        /// Unsigned remainder
+        bvurem(Z3_mk_bvurem, Self);
+        /// Signed remainder (sign follows dividend)
+        bvsrem(Z3_mk_bvsrem, Self);
+        /// Signed remainder (sign follows divisor)
+        bvsmod(Z3_mk_bvsmod, Self);
+    }
 
     // Comparison ops
-    /// Unsigned less than
-    binop!(bvult, Z3_mk_bvult, Bool<'ctx>);
-    /// Signed less than
-    binop!(bvslt, Z3_mk_bvslt, Bool<'ctx>);
-    /// Unsigned less than or equal
-    binop!(bvule, Z3_mk_bvule, Bool<'ctx>);
-    /// Signed less than or equal
-    binop!(bvsle, Z3_mk_bvsle, Bool<'ctx>);
-    /// Unsigned greater or equal
-    binop!(bvuge, Z3_mk_bvuge, Bool<'ctx>);
-    /// Signed greater or equal
-    binop!(bvsge, Z3_mk_bvsge, Bool<'ctx>);
-    /// Unsigned greater than
-    binop!(bvugt, Z3_mk_bvugt, Bool<'ctx>);
-    /// Signed greater than
-    binop!(bvsgt, Z3_mk_bvsgt, Bool<'ctx>);
+    binop! {
+        /// Unsigned less than
+        bvult(Z3_mk_bvult, Bool<'ctx>);
+        /// Signed less than
+        bvslt(Z3_mk_bvslt, Bool<'ctx>);
+        /// Unsigned less than or equal
+        bvule(Z3_mk_bvule, Bool<'ctx>);
+        /// Signed less than or equal
+        bvsle(Z3_mk_bvsle, Bool<'ctx>);
+        /// Unsigned greater or equal
+        bvuge(Z3_mk_bvuge, Bool<'ctx>);
+        /// Signed greater or equal
+        bvsge(Z3_mk_bvsge, Bool<'ctx>);
+        /// Unsigned greater than
+        bvugt(Z3_mk_bvugt, Bool<'ctx>);
+        /// Signed greater than
+        bvsgt(Z3_mk_bvsgt, Bool<'ctx>);
+    }
 
     // Shift ops
-    /// Shift left
-    binop!(bvshl, Z3_mk_bvshl, Self);
-    /// Logical shift right (add zeroes in the high bits)
-    binop!(bvlshr, Z3_mk_bvlshr, Self);
-    /// Arithmetic shift right (sign-extend in the high bits)
-    binop!(bvashr, Z3_mk_bvashr, Self);
-    /// Rotate left
-    binop!(bvrotl, Z3_mk_ext_rotate_left, Self);
-    /// Rotate right
-    binop!(bvrotr, Z3_mk_ext_rotate_right, Self);
+    binop! {
+        /// Shift left
+        bvshl(Z3_mk_bvshl, Self);
+        /// Logical shift right (add zeroes in the high bits)
+        bvlshr(Z3_mk_bvlshr, Self);
+        /// Arithmetic shift right (sign-extend in the high bits)
+        bvashr(Z3_mk_bvashr, Self);
+        /// Rotate left
+        bvrotl(Z3_mk_ext_rotate_left, Self);
+        /// Rotate right
+        bvrotr(Z3_mk_ext_rotate_right, Self);
+    }
 
-    /// Concatenate two bitvectors
-    binop!(concat, Z3_mk_concat, Self);
+    binop! {
+        /// Concatenate two bitvectors
+        concat(Z3_mk_concat, Self);
+    }
 
     // overflow checks
-    /// Check if addition overflows
-    bv_overflow_check_signed!(bvadd_no_overflow, Z3_mk_bvadd_no_overflow);
-    /// Check if addition underflows
-    binop!(bvadd_no_underflow, Z3_mk_bvadd_no_underflow, Bool<'ctx>);
-    /// Check if subtraction overflows
-    binop!(bvsub_no_overflow, Z3_mk_bvsub_no_overflow, Bool<'ctx>);
-    /// Check if subtraction underflows
-    bv_overflow_check_signed!(bvsub_no_underflow, Z3_mk_bvsub_no_underflow);
-    /// Check if signed division overflows
-    binop!(bvsdiv_no_overflow, Z3_mk_bvsdiv_no_overflow, Bool<'ctx>);
-    /// Check if negation overflows
-    unop!(bvneg_no_overflow, Z3_mk_bvneg_no_overflow, Bool<'ctx>);
-    /// Check if multiplication overflows
-    bv_overflow_check_signed!(bvmul_no_overflow, Z3_mk_bvmul_no_overflow);
-    /// Check if multiplication underflows
-    binop!(bvmul_no_underflow, Z3_mk_bvmul_no_underflow, Bool<'ctx>);
+    unop! {
+        /// Check if negation overflows
+        bvneg_no_overflow(Z3_mk_bvneg_no_overflow, Bool<'ctx>);
+    }
+    bv_overflow_check_signed! {
+        /// Check if addition overflows
+        bvadd_no_overflow(Z3_mk_bvadd_no_overflow);
+        /// Check if subtraction underflows
+        bvsub_no_underflow(Z3_mk_bvsub_no_underflow);
+        /// Check if multiplication overflows
+        bvmul_no_overflow(Z3_mk_bvmul_no_overflow);
+    }
+    binop! {
+        /// Check if addition underflows
+        bvadd_no_underflow(Z3_mk_bvadd_no_underflow, Bool<'ctx>);
+        /// Check if subtraction overflows
+        bvsub_no_overflow(Z3_mk_bvsub_no_overflow, Bool<'ctx>);
+        /// Check if signed division overflows
+        bvsdiv_no_overflow(Z3_mk_bvsdiv_no_overflow, Bool<'ctx>);
+        /// Check if multiplication underflows
+        bvmul_no_underflow(Z3_mk_bvmul_no_underflow, Bool<'ctx>);
+    }
 
     /// Extract the bits `high` down to `low` from the bitvector.
     /// Returns a bitvector of size `n`, where `n = high - low + 1`.
@@ -1140,16 +1206,22 @@ impl<'ctx> Set<'ctx> {
         })
     }
 
-    /// Take the intersection of a list of sets.
-    varop!(intersect, Z3_mk_set_intersect, Self);
-    /// Take the union of a list of sets.
-    varop!(set_union, Z3_mk_set_union, Self);
-    /// Check if the set is a subset of another set.
-    binop!(set_subset, Z3_mk_set_subset, Bool<'ctx>);
-    /// Take the complement of the set.
-    unop!(complement, Z3_mk_set_complement, Self);
-    /// Take the set difference between two sets.
-    binop!(difference, Z3_mk_set_difference, Self);
+    varop! {
+        /// Take the intersection of a list of sets.
+        intersect(Z3_mk_set_intersect, Self);
+        /// Take the union of a list of sets.
+        set_union(Z3_mk_set_union, Self);
+    }
+    unop! {
+        /// Take the complement of the set.
+        complement(Z3_mk_set_complement, Self);
+    }
+    binop! {
+        /// Check if the set is a subset of another set.
+        set_subset(Z3_mk_set_subset, Bool<'ctx>);
+        /// Take the set difference between two sets.
+        difference(Z3_mk_set_difference, Self);
+    }
 }
 
 impl<'ctx> Dynamic<'ctx> {
