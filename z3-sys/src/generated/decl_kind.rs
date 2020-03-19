@@ -2,6 +2,7 @@
 
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+#[allow(dead_code)]
 pub enum Z3_decl_kind {
     Z3_OP_TRUE = 256,
     Z3_OP_FALSE = 257,
