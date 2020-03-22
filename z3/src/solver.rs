@@ -73,8 +73,8 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
-    /// Return the context of the solver.
-    pub fn get_ctx(&self) -> &'ctx Context {
+    /// Get this solver's context.
+    pub fn get_context(&self) -> &'ctx Context {
         self.ctx
     }
 
