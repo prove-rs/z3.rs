@@ -70,6 +70,12 @@ impl<'ctx> fmt::Display for Model<'ctx> {
     }
 }
 
+impl<'ctx> fmt::Debug for Model<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
+    }
+}
+
 impl<'ctx> Drop for Model<'ctx> {
     fn drop(&mut self) {
         let guard = Z3_MUTEX.lock().unwrap();

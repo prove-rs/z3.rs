@@ -1,6 +1,7 @@
 #![allow(dead_code)]
 #![allow(unused_variables)]
 #![allow(clippy::unreadable_literal)]
+#![deny(missing_debug_implementations)]
 
 #[macro_use]
 extern crate log;
@@ -39,6 +40,7 @@ lazy_static! {
 /// Configuration used to initialize [logical contexts].
 ///
 /// [logical contexts]: struct.Context.html
+#[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,
     z3_cfg: Z3_config,
@@ -154,18 +156,21 @@ pub struct FuncDecl<'ctx> {
 /// let ast = option_int.variants[1].accessors[0].apply(&[&y.into()]);
 /// assert_eq!(3, model.eval(&ast.as_int().unwrap()).unwrap().as_i64().unwrap());
 /// ```
+#[derive(Debug)]
 pub struct DatatypeBuilder<'ctx> {
     ctx: &'ctx Context,
     // num_fields and constructor
     variants: Vec<(usize, Z3_constructor)>,
 }
 
+#[derive(Debug)]
 pub struct DatatypeVariant<'ctx> {
     pub constructor: FuncDecl<'ctx>,
     pub tester: FuncDecl<'ctx>,
     pub accessors: Vec<FuncDecl<'ctx>>,
 }
 
+#[derive(Debug)]
 pub struct DatatypeSort<'ctx> {
     ctx: &'ctx Context,
     pub sort: Sort<'ctx>,

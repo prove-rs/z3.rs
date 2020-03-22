@@ -152,6 +152,12 @@ impl<'ctx> fmt::Display for Sort<'ctx> {
     }
 }
 
+impl<'ctx> fmt::Debug for Sort<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
+    }
+}
+
 impl<'ctx> PartialEq<Sort<'ctx>> for Sort<'ctx> {
     fn eq(&self, other: &Sort<'ctx>) -> bool {
         unsafe { Z3_is_eq_sort(self.ctx.z3_ctx, self.z3_sort, other.z3_sort) }

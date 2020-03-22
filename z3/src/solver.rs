@@ -257,6 +257,12 @@ impl<'ctx> fmt::Display for Solver<'ctx> {
     }
 }
 
+impl<'ctx> fmt::Debug for Solver<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
+    }
+}
+
 impl<'ctx> Drop for Solver<'ctx> {
     fn drop(&mut self) {
         let guard = Z3_MUTEX.lock().unwrap();
