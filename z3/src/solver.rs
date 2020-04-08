@@ -174,6 +174,49 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
+    /// Return a subset of the assumptions provided to either the last
+    ///
+    /// * `check_assumptions` call, or
+    /// * sequence of `assert_and_track` calls followed by a `check` call.
+    ///
+    /// These are the assumptions Z3 used in the unsatisfiability proof.
+    /// Assumptions are available in Z3. They are used to extract unsatisfiable
+    /// cores.  They may be also used to "retract" assumptions. Note that,
+    /// assumptions are not really "soft constraints", but they can be used to
+    /// implement them.
+    ///
+    /// # See also:
+    ///
+    /// - [`Solver::check_assumptions`](#method.check_assumptions)
+    /// - [`Solver::assert_and_track`](#method.assert_and_track)
+    pub fn get_unsat_core(&self) -> Vec<ast::Bool<'ctx>> {
+        let z3_unsat_core = unsafe {
+            let _guard = Z3_MUTEX.lock().unwrap();
+            Z3_solver_get_unsat_core(self.ctx.z3_ctx, self.z3_slv)
+        };
+        if z3_unsat_core.is_null() {
+            return vec![];
+        }
+
+        let len = unsafe {
+            let _guard = Z3_MUTEX.lock().unwrap();
+            Z3_ast_vector_size(self.ctx.z3_ctx, z3_unsat_core)
+        };
+
+        let mut unsat_core = Vec::with_capacity(len as usize);
+
+        for i in 0..len {
+            let elem = unsafe {
+                let _guard = Z3_MUTEX.lock().unwrap();
+                Z3_ast_vector_get(self.ctx.z3_ctx, z3_unsat_core, i)
+            };
+            let elem = ast::Bool::new(self.ctx, elem);
+            unsat_core.push(elem);
+        }
+
+        unsat_core
+    }
+
     /// Create a backtracking point.
     ///
     /// The solver contains a stack of assertions.

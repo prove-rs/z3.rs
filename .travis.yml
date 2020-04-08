@@ -8,3 +8,4 @@ sudo: false
 script:
  - cargo build
  - cargo test
+ - cd z3-sys && cargo build --features static-link-z3

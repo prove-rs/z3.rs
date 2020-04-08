@@ -373,3 +373,38 @@ fn test_optimize_unknown() {
     assert_eq!(optimize.check(&[]), SatResult::Unknown);
     assert!(optimize.get_reason_unknown().is_some());
 }
+
+#[test]
+fn test_get_unsat_core() {
+    let _ = env_logger::try_init();
+
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    assert!(
+        solver.get_unsat_core().is_empty(),
+        "no unsat core before assertions"
+    );
+
+    let x = ast::Int::new_const(&ctx, "x");
+
+    let x_is_three = ast::Bool::new_const(&ctx, "x-is-three");
+    solver.assert_and_track(&x._eq(&ast::Int::from_i64(&ctx, 3)), &x_is_three);
+
+    let x_is_five = ast::Bool::new_const(&ctx, "x-is-five");
+    solver.assert_and_track(&x._eq(&ast::Int::from_i64(&ctx, 5)), &x_is_five);
+
+    assert!(
+        solver.get_unsat_core().is_empty(),
+        "no unsat core before checking"
+    );
+
+    let result = solver.check();
+    assert_eq!(result, SatResult::Unsat);
+
+    let unsat_core = solver.get_unsat_core();
+    assert_eq!(unsat_core.len(), 2);
+    assert!(unsat_core.contains(&x_is_three));
+    assert!(unsat_core.contains(&x_is_five));
+}
