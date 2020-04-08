@@ -11,6 +11,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
+    - name: Install Z3
+      run: sudo apt install libz3-dev
     - name: Build
       run: cargo build --verbose --all
     - name: Run tests
