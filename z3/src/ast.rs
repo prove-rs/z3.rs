@@ -246,7 +246,11 @@ macro_rules! impl_ast {
                 Self {
                     ctx,
                     z3_ast: unsafe {
-                        debug!("new ast {:p}", ast);
+                        debug!(
+                            "new ast: id = {}, pointer = {:p}",
+                            Z3_get_ast_id(ctx.z3_ctx, ast),
+                            ast
+                        );
                         let guard = Z3_MUTEX.lock().unwrap();
                         Z3_inc_ref(ctx.z3_ctx, ast);
                         ast
@@ -280,14 +284,22 @@ macro_rules! impl_ast {
 
         impl<'ctx> Clone for $ast<'ctx> {
             fn clone(&self) -> Self {
-                debug!("clone ast {:p}", self.z3_ast);
+                debug!(
+                    "clone ast: id = {}, pointer = {:p}",
+                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx, self.z3_ast) },
+                    self.z3_ast
+                );
                 Self::new(self.ctx, self.z3_ast)
             }
         }
 
         impl<'ctx> Drop for $ast<'ctx> {
             fn drop(&mut self) {
-                debug!("drop ast {:p}", self.z3_ast);
+                debug!(
+                    "drop ast: id = {}, pointer = {:p}",
+                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx, self.z3_ast) },
+                    self.z3_ast
+                );
                 unsafe {
                     Z3_dec_ref(self.ctx.z3_ctx, self.z3_ast);
                 }
