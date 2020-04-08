@@ -20,6 +20,8 @@ jobs:
     runs-on: [ubuntu-latest]
     steps:
       - uses: actions/checkout@v2
+        with:
+          submodules: recursive
       - name: Build z3-sys with statically linked Z3
         run: cd z3-sys && cargo build --verbose --features static-link-z3
       - name: Build z3 with statically linked Z3
