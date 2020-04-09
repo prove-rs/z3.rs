@@ -408,3 +408,57 @@ fn test_get_unsat_core() {
     assert!(unsat_core.contains(&x_is_three));
     assert!(unsat_core.contains(&x_is_five));
 }
+
+#[test]
+fn test_datatype_builder() {
+    let _ = env_logger::try_init();
+
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let maybe_int = DatatypeBuilder::new(&ctx)
+        .variant("Nothing", &[])
+        .variant("Just", &[("int", &Sort::int(&ctx))])
+        .finish("MaybeInt");
+
+    let nothing = maybe_int.variants[0].constructor.apply(&[]);
+    let five = ast::Int::from_i64(&ctx, 5);
+    let just_five = maybe_int.variants[1].constructor.apply(&[&five.clone().into()]);
+
+    let nothing_is_nothing = maybe_int.variants[0]
+        .tester
+        .apply(&[&nothing])
+        .as_bool()
+        .unwrap();
+    solver.assert(&nothing_is_nothing);
+
+    let nothing_is_just = maybe_int.variants[1]
+        .tester
+        .apply(&[&nothing])
+        .as_bool()
+        .unwrap();
+    solver.assert(&nothing_is_just.not());
+
+    let just_five_is_nothing = maybe_int.variants[0]
+        .tester
+        .apply(&[&just_five])
+        .as_bool()
+        .unwrap();
+    solver.assert(&just_five_is_nothing.not());
+
+    let just_five_is_just = maybe_int.variants[1]
+        .tester
+        .apply(&[&just_five])
+        .as_bool()
+        .unwrap();
+    solver.assert(&just_five_is_just);
+
+    let five_two = maybe_int.variants[1].accessors[0]
+        .apply(&[&just_five])
+        .as_int()
+        .unwrap();
+    solver.assert(&five._eq(&five_two));
+
+    assert_eq!(solver.check(), SatResult::Sat);
+}

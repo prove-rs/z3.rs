@@ -87,6 +87,10 @@ impl<'ctx> DatatypeBuilder<'ctx> {
                         accessors.as_mut_ptr(),
                     );
 
+                    // We don't need the raw constructor now that we have
+                    // converted it into a func decl.
+                    Z3_del_constructor(ctx.z3_ctx, constructor);
+
                     // convert to Rust types
                     let constructor = FuncDecl::from_raw(ctx, constructor_func);
                     let tester = FuncDecl::from_raw(ctx, tester);
