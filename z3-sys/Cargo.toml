@@ -1,9 +1,9 @@
 [package]
 name = "z3-sys"
-version = "0.5.0"
-authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>"]
+version = "0.6.0"
+authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 
-description = "Low-level rust-bindgen bindings for the Z3 SMT solver from Microsoft Research"
+description = "Low-level bindings for the Z3 SMT solver from Microsoft Research"
 license = "MIT"
 links = "z3"
 keywords = ["FFI", "SMT", "satisfiability", "solver"]
