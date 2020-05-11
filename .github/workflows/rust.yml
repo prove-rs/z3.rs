@@ -26,14 +26,24 @@ jobs:
       continue-on-error: true
 
   build_z3_statically:
-    runs-on: [ubuntu-latest]
+    strategy:
+      matrix:
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+          - build: macos
+            os: macos-latest
+          - build: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - name: Build z3-sys with statically linked Z3
-        run: cd z3-sys && cargo build --verbose --features static-link-z3
+        run: cargo build --manifest-path z3-sys/Cargo.toml --verbose --features static-link-z3
       - name: Build z3 with statically linked Z3
-        run: cd z3 && cargo build --verbose --features static-link-z3
+        run: cargo build --manifest-path z3/Cargo.toml --verbose --features static-link-z3
       - name: Test z3 with statically linked z3
-        run: cd z3 && cargo test --verbose --features static-link-z3
+        run: cargo test --manifest-path z3/Cargo.toml --verbose --features static-link-z3
