@@ -1,6 +1,6 @@
 [package]
 name = "z3-sys"
-version = "0.6.0"
+version = "0.6.1"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 
 description = "Low-level bindings for the Z3 SMT solver from Microsoft Research"
