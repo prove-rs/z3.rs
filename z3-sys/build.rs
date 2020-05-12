@@ -5,14 +5,21 @@ fn main() {
 
 #[cfg(feature = "static-link-z3")]
 fn build_z3() {
-    let dst = cmake::Config::new("z3")
+    let mut cfg = cmake::Config::new("z3");
+    cfg
         // Don't build `libz3.so`, build `libz3.a` instead.
         .define("Z3_BUILD_LIBZ3_SHARED", "false")
         // Don't build the Z3 repl.
         .define("Z3_BUILD_EXECUTABLE", "false")
         // Don't build the tests.
-        .define("Z3_BUILD_TEST_EXECUTABLES", "false")
-        .build();
+        .define("Z3_BUILD_TEST_EXECUTABLES", "false");
+
+    if cfg!(target_os = "windows") {
+        cfg.cxxflag("-DWIN32");
+        cfg.cxxflag("-D_WINDOWS");
+    }
+
+    let dst = cfg.build();
 
     // Z3 needs a C++ standard library. Customize which one we use with the
     // `CXXSTDLIB` environment variable, if needed.
@@ -39,9 +46,20 @@ fn build_z3() {
         println!("cargo:rustc-link-lib={}", cxx);
     }
 
-    println!(
-        "cargo:rustc-link-search=native={}",
-        dst.join("lib").display()
-    );
+    let lib = dst.join("lib");
+
+    // For some reason Z3 builds as `libz3.lib`, but on windows the "lib" prefix
+    // is not a convention.
+    if cfg!(target_os = "windows") {
+        let from = lib.join("libz3.lib");
+        let to = lib.join("z3.lib");
+        std::fs::copy(&from, &to).expect(&format!(
+            "failed to copy `{}` to `{}`",
+            from.display(),
+            to.display()
+        ));
+    }
+
+    println!("cargo:rustc-link-search=native={}", lib.display());
     println!("cargo:rustc-link-lib=static=z3");
 }
