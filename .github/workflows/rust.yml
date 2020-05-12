@@ -14,26 +14,36 @@ jobs:
     - name: Install Z3
       run: sudo apt install libz3-dev
     - name: Build
-      run: cargo build --verbose --all
+      run: cargo build -vv --all
       # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
       # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
       # we figure out how to work around it. At least we have the
       # statically-linked Z3 tests below...
       continue-on-error: true
     - name: Run tests
-      run: cargo test --verbose --all
+      run: cargo test -vv --all
       # See above.
       continue-on-error: true
 
   build_z3_statically:
-    runs-on: [ubuntu-latest]
+    strategy:
+      matrix:
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+          - build: macos
+            os: macos-latest
+          - build: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v2
         with:
           submodules: recursive
       - name: Build z3-sys with statically linked Z3
-        run: cd z3-sys && cargo build --verbose --features static-link-z3
+        run: cargo build --manifest-path z3-sys/Cargo.toml -vv --features static-link-z3
       - name: Build z3 with statically linked Z3
-        run: cd z3 && cargo build --verbose --features static-link-z3
+        run: cargo build --manifest-path z3/Cargo.toml -vv --features static-link-z3
       - name: Test z3 with statically linked z3
-        run: cd z3 && cargo test --verbose --features static-link-z3
+        run: cargo test --manifest-path z3/Cargo.toml -vv --features static-link-z3
