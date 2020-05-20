@@ -88,7 +88,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// - [`Solver::assert_and_track()`](#method.assert_and_track)
     pub fn assert(&self, ast: &ast::Bool<'ctx>) {
-        debug!("assertion: {:?}", ast);
+        debug!("assert: {:?}", ast);
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
     }
@@ -108,7 +108,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// - [`Solver::assert()`](#method.assert)
     pub fn assert_and_track(&self, ast: &ast::Bool<'ctx>, p: &ast::Bool<'ctx>) {
-        debug!("assertion: {:?}", ast);
+        debug!("assert_and_track: {:?}", ast);
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast, p.z3_ast) };
     }
