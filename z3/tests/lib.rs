@@ -323,6 +323,66 @@ fn test_arbitrary_size_int_from_bigint() {
 }
 
 #[test]
+fn test_string_eq() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::String::from_str(&ctx, "foo").unwrap();
+    let y = ast::String::from_str(&ctx, "foo").unwrap();
+    let z = ast::String::from_str(&ctx, "bar").unwrap();
+    let h = ast::String::new_const(&ctx, "h");
+
+    solver.assert(&x._eq(&y));
+    solver.assert(&x._eq(&z).not());
+    solver.assert(&h._eq(&x));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    solver.assert(&h._eq(&z));
+    assert_eq!(solver.check(), SatResult::Unsat)
+}
+
+#[test]
+fn test_string_concat() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::String::from_str(&ctx, "foo").unwrap();
+    let y = ast::String::from_str(&ctx, "bar").unwrap();
+    let z = ast::String::from_str(&ctx, "foobar").unwrap();
+
+    solver.assert(&x.concat(&[&y])._eq(&z));
+    assert_eq!(solver.check(), SatResult::Sat)
+}
+
+#[test]
+fn test_string_prefix() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::String::from_str(&ctx, "foo").unwrap();
+    let y = ast::String::from_str(&ctx, "foobar").unwrap();
+
+    solver.assert(&x.prefix(&y));
+    assert_eq!(solver.check(), SatResult::Sat)
+}
+
+#[test]
+fn test_string_suffix() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::String::from_str(&ctx, "bar").unwrap();
+    let y = ast::String::from_str(&ctx, "foobar").unwrap();
+
+    solver.assert(&x.suffix(&y));
+    assert_eq!(solver.check(), SatResult::Sat)
+}
+
+#[test]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
@@ -424,7 +484,9 @@ fn test_datatype_builder() {
 
     let nothing = maybe_int.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(&ctx, 5);
-    let just_five = maybe_int.variants[1].constructor.apply(&[&five.clone().into()]);
+    let just_five = maybe_int.variants[1]
+        .constructor
+        .apply(&[&five.clone().into()]);
 
     let nothing_is_nothing = maybe_int.variants[0]
         .tester
