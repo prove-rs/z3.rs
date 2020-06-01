@@ -33,6 +33,10 @@ impl<'ctx> Sort<'ctx> {
         Sort::new(ctx, unsafe { Z3_mk_real_sort(ctx.z3_ctx) })
     }
 
+    pub fn string(ctx: &'ctx Context) -> Sort<'ctx> {
+        Sort::new(ctx, unsafe { Z3_mk_string_sort(ctx.z3_ctx) })
+    }
+
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
         Sort::new(ctx, unsafe {
             Z3_mk_bv_sort(ctx.z3_ctx, sz as ::std::os::raw::c_uint)

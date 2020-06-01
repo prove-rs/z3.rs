@@ -33,6 +33,12 @@ pub struct Real<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`](trait.Ast.html) node representing a string value.
+pub struct String<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 /// [`Ast`](trait.Ast.html) node representing a bitvector value.
 pub struct BV<'ctx> {
     pub(crate) ctx: &'ctx Context,
@@ -345,8 +351,8 @@ macro_rules! impl_from_try_into_dynamic {
         }
 
         impl<'ctx> TryFrom<Dynamic<'ctx>> for $ast<'ctx> {
-            type Error = String;
-            fn try_from(ast: Dynamic<'ctx>) -> Result<Self, String> {
+            type Error = std::string::String;
+            fn try_from(ast: Dynamic<'ctx>) -> Result<Self, std::string::String> {
                 ast.$as_ast()
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
@@ -360,6 +366,8 @@ impl_ast!(Int);
 impl_from_try_into_dynamic!(Int, as_int);
 impl_ast!(Real);
 impl_from_try_into_dynamic!(Real, as_real);
+impl_ast!(String);
+impl_from_try_into_dynamic!(String, as_string);
 impl_ast!(BV);
 impl_from_try_into_dynamic!(BV, as_bv);
 impl_ast!(Array);
@@ -788,6 +796,51 @@ impl<'ctx> Real<'ctx> {
         le(Z3_mk_le, Bool<'ctx>);
         gt(Z3_mk_gt, Bool<'ctx>);
         ge(Z3_mk_ge, Bool<'ctx>);
+    }
+}
+
+impl<'ctx> String<'ctx> {
+    /// Creates a new constant using the built-in string sort
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> String<'ctx> {
+        let sort = Sort::string(ctx);
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+        })
+    }
+
+    /// Creates a fresh constant using the built-in string sort
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str) -> String<'ctx> {
+        let sort = Sort::string(ctx);
+        Self::new(ctx, unsafe {
+            let pp = CString::new(prefix).unwrap();
+            let p = pp.as_ptr();
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+        })
+    }
+
+    /// Creates a Z3 constant string from a `&str`
+    pub fn from_str(ctx: &'ctx Context, string: &str) -> Result<String<'ctx>, std::ffi::NulError> {
+        let string = CString::new(string)?;
+        Ok(Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_string(ctx.z3_ctx, string.as_c_str().as_ptr())
+        }))
+    }
+
+    varop! {
+        /// Appends the argument strings to `Self`
+        concat(Z3_mk_seq_concat, String<'ctx>);
+    }
+
+    binop! {
+        /// Checks whether `Self` contains a substring
+        contains(Z3_mk_seq_contains, Bool<'ctx>);
+        /// Checks whether `Self` is a prefix of the argument
+        prefix(Z3_mk_seq_prefix, Bool<'ctx>);
+        /// Checks whether `Self` is a sufix of the argument
+        suffix(Z3_mk_seq_suffix, Bool<'ctx>);
     }
 }
 
@@ -1266,6 +1319,16 @@ impl<'ctx> Dynamic<'ctx> {
         match self.sort_kind() {
             SortKind::Real => Some(Real::new(self.ctx, self.z3_ast)),
             _ => None,
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `String`
+    pub fn as_string(&self) -> Option<String<'ctx>> {
+        if unsafe { Z3_is_string_sort(self.ctx.z3_ctx, Z3_get_sort(self.ctx.z3_ctx, self.z3_ast)) }
+        {
+            Some(String::new(self.ctx, self.z3_ast))
+        } else {
+            None
         }
     }
 
