@@ -53,8 +53,8 @@ fn build_z3() {
     if cfg!(target_os = "windows") {
         let from = lib.join("libz3.lib");
         let to = lib.join("z3.lib");
-        std::fs::copy(&from, &to).expect(&format!(
-            "failed to copy `{}` to `{}`",
+        std::fs::rename(&from, &to).expect(&format!(
+            "failed to rename `{}` to `{}`",
             from.display(),
             to.display()
         ));
