@@ -505,56 +505,53 @@ impl<'ctx> Bool<'ctx> {
         not(Z3_mk_not, Self);
     }
 
-    pub fn pb_le(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+    pub fn pb_le(context: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
+        Bool::new(context, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.z3_ast];
-            for a in other {
-                tmp.push(a.z3_ast)
-            }
-            assert!(tmp.len() <= 0xffffffff);
-            let mut tmp_coeffs = coeffs.clone();
+            assert!(values.len() <= 0xffffffff);
+            let (values, coefficients): (Vec<Z3_ast>, Vec<i32>) = values
+                .iter()
+                .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
+                .unzip();
             Z3_mk_pble(
-                self.ctx.z3_ctx,
-                tmp.len() as u32,
-                tmp.as_ptr(),
-                tmp_coeffs.as_mut_ptr(),
+                context.z3_ctx,
+                values.len() as u32,
+                values.as_ptr(),
+                coefficients.as_ptr(),
                 k,
             )
         })
     }
-    pub fn pb_ge(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+    pub fn pb_ge(context: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
+        Bool::new(context, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.z3_ast];
-            for a in other {
-                tmp.push(a.z3_ast)
-            }
-            assert!(tmp.len() <= 0xffffffff);
-            let mut tmp_coeffs = coeffs.clone();
+            assert!(values.len() <= 0xffffffff);
+            let (values, coefficients): (Vec<Z3_ast>, Vec<i32>) = values
+                .iter()
+                .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
+                .unzip();
             Z3_mk_pbge(
-                self.ctx.z3_ctx,
-                tmp.len() as u32,
-                tmp.as_ptr(),
-                tmp_coeffs.as_mut_ptr(),
+                context.z3_ctx,
+                values.len() as u32,
+                values.as_ptr(),
+                coefficients.as_ptr(),
                 k,
             )
         })
     }
-    pub fn pb_eq(&self, other: &[&Bool<'ctx>], coeffs: Vec<i32>, k: i32) -> Bool<'ctx> {
-        Bool::new(self.ctx, unsafe {
+    pub fn pb_eq(context: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
+        Bool::new(context, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.z3_ast];
-            for a in other {
-                tmp.push(a.z3_ast)
-            }
-            assert!(tmp.len() <= 0xffffffff);
-            let mut tmp_coeffs = coeffs.clone();
+            assert!(values.len() <= 0xffffffff);
+            let (values, coefficients): (Vec<Z3_ast>, Vec<i32>) = values
+                .iter()
+                .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
+                .unzip();
             Z3_mk_pbeq(
-                self.ctx.z3_ctx,
-                tmp.len() as u32,
-                tmp.as_ptr(),
-                tmp_coeffs.as_mut_ptr(),
+                context.z3_ctx,
+                values.len() as u32,
+                values.as_ptr(),
+                coefficients.as_ptr(),
                 k,
             )
         })

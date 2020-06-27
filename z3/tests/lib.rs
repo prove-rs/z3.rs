@@ -179,11 +179,10 @@ fn test_pb_ops_model() {
     let ctx = Context::new(&cfg);
     let x = ast::Bool::new_const(&ctx, "x");
     let y = ast::Bool::new_const(&ctx, "y");
-
-    let coeffs = vec![1, 1];
-    let other_args = vec![&y];
     let solver = Solver::new(&ctx);
-    solver.assert(&x.pb_eq(&other_args[..], coeffs, 1));
+    solver.push();
+
+    solver.assert(&ast::Bool::pb_eq(&ctx, &[(&x, 1), (&y, 1)], 1));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model();
     let xv = model.eval(&x).unwrap().as_bool().unwrap();
@@ -191,6 +190,27 @@ fn test_pb_ops_model() {
     info!("x: {}", xv);
     info!("y: {}", yv);
     assert!((xv && !yv) || (!xv && yv));
+
+    solver.pop(1);
+    solver.push();
+    solver.assert(&ast::Bool::pb_ge(&ctx, &[(&x, 1), (&y, 1)], 2));
+    assert_eq!(solver.check(), SatResult::Sat);
+    let model = solver.get_model();
+    let xv = model.eval(&x).unwrap().as_bool().unwrap();
+    let yv = model.eval(&y).unwrap().as_bool().unwrap();
+    info!("x: {}", xv);
+    info!("y: {}", yv);
+    assert!(xv && yv);
+
+    solver.pop(1);
+    solver.assert(&ast::Bool::pb_le(&ctx, &[(&x, 1), (&y, 1)], 0));
+    assert_eq!(solver.check(), SatResult::Sat);
+    let model = solver.get_model();
+    let xv = model.eval(&x).unwrap().as_bool().unwrap();
+    let yv = model.eval(&y).unwrap().as_bool().unwrap();
+    info!("x: {}", xv);
+    info!("y: {}", yv);
+    assert!(!xv && !yv);
 }
 
 #[test]
