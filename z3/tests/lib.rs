@@ -68,7 +68,7 @@ fn test_solving_for_model() {
     solver.assert(&x.gt(&y));
     solver.assert(&y.gt(&zero));
     solver.assert(&y.rem(&seven)._eq(&two));
-    let x_plus_two = x.add(&[&two]);
+    let x_plus_two = ast::Int::add(&ctx, &[&x, &two]);
     solver.assert(&x_plus_two.gt(&seven));
     assert_eq!(solver.check(), SatResult::Sat);
 
@@ -255,8 +255,8 @@ fn test_substitution() {
     let y = ast::Real::new_const(&ctx, "y");
     let z = ast::Real::new_const(&ctx, "z");
 
-    let x_plus_y = x.add(&[&y]);
-    let x_plus_z = x.add(&[&z]);
+    let x_plus_y = ast::Real::add(&ctx, &[&x, &y]);
+    let x_plus_z = ast::Real::add(&ctx, &[&x, &z]);
 
     let substitutions = &[(&y, &z)];
 
@@ -270,7 +270,7 @@ fn test_real_cmp() {
     let solver = Solver::new(&ctx);
 
     let x = ast::Real::new_const(&ctx, "x");
-    let x_plus_1 = x.add(&[&ast::Real::from_real(&ctx, 1, 1)]);
+    let x_plus_1 = ast::Real::add(&ctx, &[&x, &ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
     let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1).into());
 
@@ -302,7 +302,7 @@ fn test_arbitrary_size_int() {
     let one = ast::Int::from_i64(&ctx, 1);
     let y = ast::Int::from_str(&ctx, "99999999999999999999999").unwrap();
 
-    solver.assert(&x.add(&[&one])._eq(&y));
+    solver.assert(&ast::Int::add(&ctx, &[&x, &one])._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -372,7 +372,7 @@ fn test_string_concat() {
     let y = ast::String::from_str(&ctx, "bar").unwrap();
     let z = ast::String::from_str(&ctx, "foobar").unwrap();
 
-    solver.assert(&x.concat(&[&y])._eq(&z));
+    solver.assert(&ast::String::concat(&ctx, &[&x, &y])._eq(&z));
     assert_eq!(solver.check(), SatResult::Sat)
 }
 
@@ -415,10 +415,10 @@ fn test_solver_unknown() {
     let x = ast::Int::new_const(&ctx, "x");
     let y = ast::Int::new_const(&ctx, "y");
     let z = ast::Int::new_const(&ctx, "z");
-    let x_cube = x.mul(&[&x, &x]);
-    let y_cube = y.mul(&[&y, &y]);
-    let z_cube = z.mul(&[&z, &z]);
-    let sum_of_cubes = x_cube.add(&[&y_cube, &z_cube]);
+    let x_cube = ast::Int::mul(&ctx, &[&x, &x, &x]);
+    let y_cube = ast::Int::mul(&ctx, &[&y, &y, &y]);
+    let z_cube = ast::Int::mul(&ctx, &[&z, &z, &z]);
+    let sum_of_cubes = &ast::Int::add(&ctx, &[&x_cube, &y_cube, &z_cube]);
     let sum_of_cubes_is_42 = sum_of_cubes._eq(&ast::Int::from_i64(&ctx, 42));
 
     let solver = Solver::new(&ctx);
@@ -441,10 +441,10 @@ fn test_optimize_unknown() {
     let x = ast::Int::new_const(&ctx, "x");
     let y = ast::Int::new_const(&ctx, "y");
     let z = ast::Int::new_const(&ctx, "z");
-    let x_cube = x.mul(&[&x, &x]);
-    let y_cube = y.mul(&[&y, &y]);
-    let z_cube = z.mul(&[&z, &z]);
-    let sum_of_cubes = x_cube.add(&[&y_cube, &z_cube]);
+    let x_cube = ast::Int::mul(&ctx, &[&x, &x, &x]);
+    let y_cube = ast::Int::mul(&ctx, &[&y, &y, &y]);
+    let z_cube = ast::Int::mul(&ctx, &[&z, &z, &z]);
+    let sum_of_cubes = &ast::Int::add(&ctx, &[&x_cube, &y_cube, &z_cube]);
     let sum_of_cubes_is_42 = sum_of_cubes._eq(&ast::Int::from_i64(&ctx, 42));
 
     let optimize = Optimize::new(&ctx);

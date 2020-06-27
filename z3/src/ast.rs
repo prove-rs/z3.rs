@@ -127,15 +127,12 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(&self, other: &[&Self]) -> $retty {
-                <$retty>::new(self.ctx, unsafe {
+            pub fn $f(context: &'ctx Context, values: &[&Self]) -> $retty {
+                <$retty>::new(context, unsafe {
                     let guard = Z3_MUTEX.lock().unwrap();
-                    let mut tmp = vec![self.z3_ast];
-                    for a in other {
-                        tmp.push(a.z3_ast)
-                    }
+                    let tmp: Vec<_> = values.iter().map(|x| x.z3_ast).collect();
                     assert!(tmp.len() <= 0xffff_ffff);
-                    $z3fn(self.ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
+                    $z3fn(context.z3_ctx, tmp.len() as u32, tmp.as_ptr())
                 })
             }
         )*
