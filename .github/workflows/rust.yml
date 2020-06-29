@@ -24,6 +24,10 @@ jobs:
       run: cargo test -vv --all
       # See above.
       continue-on-error: true
+    - name: Run tests with `arbitrary-size-numeral` enabled
+      run: cargo test --manifest-path z3/Cargo.toml -vv --features arbitrary-size-numeral
+      # See above.
+      continue-on-error: true
 
   build_z3_statically:
     strategy:
@@ -45,5 +49,7 @@ jobs:
         run: cargo build --manifest-path z3-sys/Cargo.toml -vv --features static-link-z3
       - name: Build z3 with statically linked Z3
         run: cargo build --manifest-path z3/Cargo.toml -vv --features static-link-z3
-      - name: Test z3 with statically linked z3
+      - name: Test `z3` with statically linked Z3
         run: cargo test --manifest-path z3/Cargo.toml -vv --features static-link-z3
+      - name: Test `z3` with statically linked Z3 and `arbitrary-size-numeral` enabled
+        run: cargo test --manifest-path z3/Cargo.toml -vv --features 'static-link-z3 arbitrary-size-numeral'
