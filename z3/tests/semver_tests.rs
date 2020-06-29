@@ -196,7 +196,10 @@ fn test_solve_simple_semver_example() {
     }
 
     // Tell the optimizer to maximizes the sum of the root constants.
-    opt.maximize(&ast::Int::from_i64(&ctx, 0).add(&asts.values().collect::<Vec<&ast::Int>>()));
+    opt.maximize(&ast::Int::add(
+        &ctx,
+        &asts.values().collect::<Vec<&ast::Int>>()[..],
+    ));
 
     // Ensure we have a constant for every pkg _or_ dep listed
     for k in (&smap).keys() {
