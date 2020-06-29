@@ -338,7 +338,7 @@ fn test_arbitrary_size_int_from_bigint() {
     let num2 = BigInt::from_str("99999999999999999999999").unwrap();
     let z = ast::Int::from_big_int(&ctx, &num2);
 
-    solver.assert(&x.add(&[&y])._eq(&z));
+    solver.assert(&ast::Int::add(&ctx, &[&x, &y])._eq(&z));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
