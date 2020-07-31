@@ -15,6 +15,11 @@ fn build_z3() {
         .define("Z3_BUILD_TEST_EXECUTABLES", "false");
 
     if cfg!(target_os = "windows") {
+        // The compiler option -MP and the msbuild option -m
+        // can sometimes make builds slower but is measurably
+        // faster building Z3 with many cores.
+        cfg.cxxflag("-MP");
+        cfg.build_arg("-m");
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
     }
