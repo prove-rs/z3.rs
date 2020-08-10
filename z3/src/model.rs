@@ -2,6 +2,7 @@ use ast::Ast;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
+use Context;
 use Model;
 use Optimize;
 use Solver;
@@ -27,6 +28,19 @@ impl<'ctx> Model<'ctx> {
                 let guard = Z3_MUTEX.lock().unwrap();
                 let m = Z3_optimize_get_model(opt.ctx.z3_ctx, opt.z3_opt);
                 Z3_model_inc_ref(opt.ctx.z3_ctx, m);
+                m
+            },
+        }
+    }
+
+    /// Translate model to context `dest`
+    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Model<'dest_ctx> {
+        Model {
+            ctx: dest,
+            z3_mdl: unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                let m = Z3_model_translate(self.ctx.z3_ctx, self.z3_mdl, dest.z3_ctx);
+                Z3_model_inc_ref(dest.z3_ctx, m);
                 m
             },
         }
