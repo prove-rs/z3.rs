@@ -174,6 +174,25 @@ fn test_solver_translate() {
 }
 
 #[test]
+fn test_model_translate() {
+    let cfg = Config::new();
+    let source = Context::new(&cfg);
+    let a = ast::Int::new_const(&source, "a");
+
+    let destination = Context::new(&cfg);
+    let translated_a = a.translate(&destination);
+
+    let slv = Solver::new(&source);
+    slv.assert(&a._eq(&ast::Int::from_u64(&source, 2)));
+    assert_eq!(slv.check(), SatResult::Sat);
+
+    let model = slv.get_model();
+    assert_eq!(2, model.eval(&a).unwrap().as_i64().unwrap());
+    let translated_model = model.translate(&destination);
+    assert_eq!(2, translated_model.eval(&translated_a).unwrap().as_i64().unwrap());
+}
+
+#[test]
 fn test_pb_ops_model() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
