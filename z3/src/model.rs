@@ -33,6 +33,7 @@ impl<'ctx> Model<'ctx> {
         }
     }
 
+    /// Translate model to context `dest`
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Model<'dest_ctx> {
         Model {
             ctx: dest,
