@@ -16,6 +16,12 @@ macro_rules! mk_const_int {
     };
 }
 
+macro_rules! mk_const_bool {
+    ($constant:expr, $function:ident, $val:expr, $other:expr) => {
+        $constant = Bool::from_bool($other.get_ctx(), $val);
+    };
+}
+
 macro_rules! impl_binary_op_raw {
     ($ty:ty, $rhs:ty, $output:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
         impl<'a, 'ctx> $base_trait<$rhs> for $ty {
@@ -134,6 +140,41 @@ macro_rules! impl_binary_op_without_numbers {
             $base_fn,
             $assign_fn,
             $function
+        );
+    };
+}
+
+macro_rules! impl_binary_op_bool {
+    ($ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
+        impl_binary_op_without_numbers!(
+            $ty,
+            $base_trait,
+            $assign_trait,
+            $base_fn,
+            $assign_fn,
+            $function
+        );
+        impl_binary_op_assign_number_raw!(
+            $ty,
+            bool,
+            from_bool,
+            $ty,
+            $base_trait,
+            $assign_trait,
+            $base_fn,
+            $assign_fn,
+            $function,
+            mk_const_bool
+        );
+        impl_binary_op_number_raw!(
+            &'a $ty,
+            bool,
+            from_bool,
+            $ty,
+            $base_trait,
+            $base_fn,
+            $function,
+            mk_const_bool
         );
     };
 }
@@ -338,6 +379,40 @@ macro_rules! impl_binary_mult_op_without_numbers {
     };
 }
 
+macro_rules! impl_binary_mult_op_bool {
+    ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
+        impl_binary_mult_op_without_numbers!(
+            $base_ty,
+            $ty,
+            $base_trait,
+            $assign_trait,
+            $base_fn,
+            $assign_fn,
+            $function
+        );
+        impl_binary_mult_op_assign_number_raw!(
+            $ty,
+            bool,
+            from_bool,
+            $ty,
+            $base_trait,
+            $assign_trait,
+            $base_fn,
+            $assign_fn,
+            mk_const_bool
+        );
+        impl_binary_mult_op_number_raw!(
+            &'a $ty,
+            bool,
+            from_bool,
+            $ty,
+            $base_trait,
+            $base_fn,
+            mk_const_bool
+        );
+    };
+}
+
 macro_rules! impl_binary_mult_op {
     ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $construct_constant:ident) => {
         impl_binary_mult_op_without_numbers!(
@@ -514,7 +589,7 @@ impl_binary_op_without_numbers!(Real<'ctx>, Div, DivAssign, div, div_assign, div
 impl_unary_op!(Real<'ctx>, Neg, neg, unary_minus);
 
 // implementations for Bool
-impl_binary_mult_op_without_numbers!(
+impl_binary_mult_op_bool!(
     Bool,
     Bool<'ctx>,
     BitAnd,
@@ -523,7 +598,7 @@ impl_binary_mult_op_without_numbers!(
     bitand_assign,
     and
 );
-impl_binary_mult_op_without_numbers!(
+impl_binary_mult_op_bool!(
     Bool,
     Bool<'ctx>,
     BitOr,
@@ -532,5 +607,5 @@ impl_binary_mult_op_without_numbers!(
     bitor_assign,
     or
 );
-impl_binary_op_without_numbers!(Bool<'ctx>, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
+impl_binary_op_bool!(Bool<'ctx>, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
 impl_unary_op!(Bool<'ctx>, Not, not, not);
