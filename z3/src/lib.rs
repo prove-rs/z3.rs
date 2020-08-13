@@ -24,6 +24,7 @@ mod context;
 mod datatype_builder;
 mod func_decl;
 mod model;
+mod ops;
 mod optimize;
 mod params;
 mod pattern;
