@@ -1377,6 +1377,7 @@ impl<'ctx> Datatype<'ctx> {
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Datatype<'dest_ctx> {
         Datatype::new(dest, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
             Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
         })
     }
