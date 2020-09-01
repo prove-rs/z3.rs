@@ -563,3 +563,11 @@ fn test_datatype_builder() {
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
+
+#[test]
+fn get_model_without_check_does_not_exit(){
+    let cfg =Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    solver.get_model();
+}
