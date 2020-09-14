@@ -270,7 +270,7 @@ fn test_solve_simple_semver_example() {
     }
 
     assert_eq!(opt.check(&[]), SatResult::Sat);
-    let model = opt.get_model();
+    let model = opt.get_model().unwrap();
 
     for k in root.keys() {
         let ast = &asts[k];

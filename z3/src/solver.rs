@@ -247,7 +247,7 @@ impl<'ctx> Solver<'ctx> {
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if
     /// the result was `Z3_L_FALSE`.
-    pub fn get_model(&self) -> Model<'ctx> {
+    pub fn get_model(&self) -> Option<Model<'ctx>> {
         Model::of_solver(self)
     }
 
@@ -266,11 +266,15 @@ impl<'ctx> Solver<'ctx> {
     //
     // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
     // have an Ast subtype for yet.
-    pub fn get_proof(&self) -> impl Ast<'ctx> {
+    pub fn get_proof(&self) -> Option<impl Ast<'ctx>> {
         let guard = Z3_MUTEX.lock().unwrap();
-        ast::Dynamic::new(self.ctx, unsafe {
-            Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
-        })
+        Some(ast::Dynamic::new(self.ctx, unsafe {
+            let m = Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv);
+            if m.is_null() {
+                return None;
+            }
+            m
+        }))
     }
 
     /// Return a brief justification for an "unknown" result (i.e., `SatResult::Unknown`) for

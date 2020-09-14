@@ -113,7 +113,7 @@ impl<'ctx> Optimize<'ctx> {
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given optimization
     /// solver, or if the result was `Z3_L_FALSE`.
-    pub fn get_model(&self) -> Model<'ctx> {
+    pub fn get_model(&self) -> Option<Model<'ctx>> {
         Model::of_optimize(self)
     }
 
