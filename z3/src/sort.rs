@@ -83,7 +83,7 @@ impl<'ctx> Sort<'ctx> {
     /// let eq = red_tester.apply(&[&red_const]);
     ///
     /// assert_eq!(solver.check(), SatResult::Sat);
-    /// let model = solver.get_model();
+    /// let model = solver.get_model().unwrap();;
     ///
     /// assert!(model.eval(&eq).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```

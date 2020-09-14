@@ -72,7 +72,7 @@ fn test_solving_for_model() {
     solver.assert(&x_plus_two.gt(&seven));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    let model = solver.get_model();
+    let model = solver.get_model().unwrap();
     let xv = model.eval(&x).unwrap().as_i64().unwrap();
     let yv = model.eval(&y).unwrap().as_i64().unwrap();
     info!("x: {}", xv);
@@ -95,7 +95,7 @@ fn test_cloning_ast() {
     solver.assert(&x._eq(&zero));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    let model = solver.get_model();
+    let model = solver.get_model().unwrap();
     let xv = model.eval(&x).unwrap().as_i64().unwrap();
     let yv = model.eval(&y).unwrap().as_i64().unwrap();
     assert_eq!(xv, 0);
@@ -128,7 +128,7 @@ fn test_bitvectors() {
     solver.assert(&b_plus_two.bvsgt(&a));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    let model = solver.get_model();
+    let model = solver.get_model().unwrap();
     let av = model.eval(&a).unwrap().as_i64().unwrap();
     let bv = model.eval(&b).unwrap().as_i64().unwrap();
     assert!(av > bv);
@@ -186,7 +186,7 @@ fn test_model_translate() {
     slv.assert(&a._eq(&ast::Int::from_u64(&source, 2)));
     assert_eq!(slv.check(), SatResult::Sat);
 
-    let model = slv.get_model();
+    let model = slv.get_model().unwrap();
     assert_eq!(2, model.eval(&a).unwrap().as_i64().unwrap());
     let translated_model = model.translate(&destination);
     assert_eq!(2, translated_model.eval(&translated_a).unwrap().as_i64().unwrap());
@@ -203,7 +203,7 @@ fn test_pb_ops_model() {
 
     solver.assert(&ast::Bool::pb_eq(&ctx, &[(&x, 1), (&y, 1)], 1));
     assert_eq!(solver.check(), SatResult::Sat);
-    let model = solver.get_model();
+    let model = solver.get_model().unwrap();
     let xv = model.eval(&x).unwrap().as_bool().unwrap();
     let yv = model.eval(&y).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
@@ -214,7 +214,7 @@ fn test_pb_ops_model() {
     solver.push();
     solver.assert(&ast::Bool::pb_ge(&ctx, &[(&x, 1), (&y, 1)], 2));
     assert_eq!(solver.check(), SatResult::Sat);
-    let model = solver.get_model();
+    let model = solver.get_model().unwrap();
     let xv = model.eval(&x).unwrap().as_bool().unwrap();
     let yv = model.eval(&y).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
@@ -224,7 +224,7 @@ fn test_pb_ops_model() {
     solver.pop(1);
     solver.assert(&ast::Bool::pb_le(&ctx, &[(&x, 1), (&y, 1)], 0));
     assert_eq!(solver.check(), SatResult::Sat);
-    let model = solver.get_model();
+    let model = solver.get_model().unwrap();
     let xv = model.eval(&x).unwrap().as_bool().unwrap();
     let yv = model.eval(&y).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
@@ -562,4 +562,12 @@ fn test_datatype_builder() {
     solver.assert(&five._eq(&five_two));
 
     assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn get_model_without_check_does_not_exit() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    solver.get_model();
 }

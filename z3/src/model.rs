@@ -9,28 +9,34 @@ use Solver;
 use Z3_MUTEX;
 
 impl<'ctx> Model<'ctx> {
-    pub fn of_solver(slv: &Solver<'ctx>) -> Model<'ctx> {
-        Model {
+    pub fn of_solver(slv: &Solver<'ctx>) -> Option<Model<'ctx>> {
+        Some(Model {
             ctx: slv.ctx,
             z3_mdl: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
                 let m = Z3_solver_get_model(slv.ctx.z3_ctx, slv.z3_slv);
+                if m.is_null() {
+                    return None;
+                }
                 Z3_model_inc_ref(slv.ctx.z3_ctx, m);
                 m
             },
-        }
+        })
     }
 
-    pub fn of_optimize(opt: &Optimize<'ctx>) -> Model<'ctx> {
-        Model {
+    pub fn of_optimize(opt: &Optimize<'ctx>) -> Option<Model<'ctx>> {
+        Some(Model {
             ctx: opt.ctx,
             z3_mdl: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
                 let m = Z3_optimize_get_model(opt.ctx.z3_ctx, opt.z3_opt);
+                if m.is_null() {
+                    return None;
+                }
                 Z3_model_inc_ref(opt.ctx.z3_ctx, m);
                 m
             },
-        }
+        })
     }
 
     /// Translate model to context `dest`
@@ -95,4 +101,15 @@ impl<'ctx> Drop for Model<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
     }
+}
+
+#[test]
+fn test_unsat() {
+    use crate::{ast, Config, SatResult};
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    solver.assert(&ast::Bool::from_bool(&ctx, false));
+    assert_eq!(solver.check(), SatResult::Unsat);
+    assert!(solver.get_model().is_none());
 }

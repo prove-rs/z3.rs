@@ -645,7 +645,7 @@ impl<'ctx> Int<'ctx> {
     /// let x = ast::Int::from_bv(&bv, true);
     ///
     /// assert_eq!(solver.check(), SatResult::Sat);
-    /// let model = solver.get_model();
+    /// let model = solver.get_model().unwrap();
     ///
     /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().unwrap());
     /// ```
@@ -932,7 +932,7 @@ impl<'ctx> BV<'ctx> {
     /// assert_eq!(64, x.get_size());
     ///
     /// assert_eq!(solver.check(), SatResult::Sat);
-    /// let model = solver.get_model();
+    /// let model = solver.get_model().unwrap();;
     ///
     /// assert_eq!(-3, model.eval(&x.to_int(true)).unwrap().as_i64().expect("as_i64() shouldn't fail"));
     /// ```
@@ -1407,7 +1407,7 @@ impl<'ctx> Datatype<'ctx> {
 /// solver.assert(&forall);
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
-/// let model = solver.get_model();
+/// let model = solver.get_model().unwrap();;
 ///
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
@@ -1466,7 +1466,7 @@ pub fn forall_const<'ctx>(
 /// solver.assert(&exists.not());
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
-/// let model = solver.get_model();
+/// let model = solver.get_model().unwrap();;
 ///
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
