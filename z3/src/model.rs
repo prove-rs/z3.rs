@@ -96,3 +96,14 @@ impl<'ctx> Drop for Model<'ctx> {
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
     }
 }
+
+#[test]
+fn test_unsat() {
+    use crate::{ast, Config, SatResult};
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    solver.assert(&ast::Bool::from_bool(&ctx, false));
+    assert_eq!(solver.check(), SatResult::Unsat);
+    assert!(solver.get_model().z3_mdl.is_null());
+}

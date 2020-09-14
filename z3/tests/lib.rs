@@ -565,8 +565,8 @@ fn test_datatype_builder() {
 }
 
 #[test]
-fn get_model_without_check_does_not_exit(){
-    let cfg =Config::new();
+fn get_model_without_check_does_not_exit() {
+    let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
     solver.get_model();
