@@ -131,12 +131,12 @@ pub struct FuncDecl<'ctx> {
 ///
 /// Example:
 /// ```
-/// # use z3::{ast::Int, Config, Context, DtypeBuilder, DatatypeAccessor, SatResult, Solver, Sort, ast::{Ast, Datatype}};
+/// # use z3::{ast::Int, Config, Context, DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype}};
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new(&ctx);
 /// // Like Rust's Option<int> type
-/// let mut builder = DtypeBuilder::new(&ctx, "OptionInt");
+/// let mut builder = DatatypeBuilder::new(&ctx, "OptionInt");
 /// builder.variant("None", &[]);
 /// let some_accessor = [("value", DatatypeAccessor::Sort(Sort::int(&ctx)))];
 /// builder.variant("Some", &some_accessor);
@@ -160,13 +160,6 @@ pub struct FuncDecl<'ctx> {
 /// ```
 #[derive(Debug)]
 pub struct DatatypeBuilder<'ctx> {
-    ctx: &'ctx Context,
-    // num_fields and constructor
-    variants: Vec<(usize, Z3_constructor)>,
-}
-
-#[derive(Debug)]
-pub struct DtypeBuilder<'ctx> {
     ctx: &'ctx Context,
     name: Symbol,
     constructors: Vec<(String, Vec<(String, &'ctx DatatypeAccessor<'ctx>)>)>,

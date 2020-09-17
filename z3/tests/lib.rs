@@ -523,7 +523,7 @@ fn test_datatype_builder() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let mut builder = DtypeBuilder::new(&ctx, "MaybeInt");
+    let mut builder = DatatypeBuilder::new(&ctx, "MaybeInt");
     builder.variant("Nothing", &[]);
     let just_accessors = [("int", DatatypeAccessor::Sort(Sort::int(&ctx)))];
     builder.variant("Just", &just_accessors);
@@ -580,7 +580,7 @@ fn test_recursive_datatype() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let mut list_builder = DtypeBuilder::new(&ctx, "List");
+    let mut list_builder = DatatypeBuilder::new(&ctx, "List");
     list_builder.variant("nil", &[]);
     let cons_accessors = [
         ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
