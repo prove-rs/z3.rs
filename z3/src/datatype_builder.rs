@@ -1,6 +1,9 @@
 use std::{convert::TryInto, ptr::null_mut};
 use z3_sys::*;
-use {Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
+use {
+    Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, DtypeAccessor, DtypeBuilder, FuncDecl,
+    Sort, Symbol,
+};
 
 impl<'ctx> DatatypeBuilder<'ctx> {
     pub fn new(ctx: &'ctx Context) -> Self {
@@ -114,4 +117,37 @@ impl<'ctx> DatatypeBuilder<'ctx> {
             variants,
         }
     }
+}
+
+impl<'ctx> DtypeBuilder<'ctx> {
+    pub fn new<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Self {
+        Self {
+            ctx,
+            name: name.into(),
+            constructors: Vec::new(),
+        }
+    }
+
+    pub fn variant<S: Into<Symbol>>(
+        &mut self,
+        name: S,
+        fields: &[(&str, &'ctx DtypeAccessor<'ctx>)],
+    ) {
+        let mut accesssors: Vec<(Symbol, &'ctx DtypeAccessor<'ctx>)> = Vec::new();
+
+        for (accessor_name, accessor) in fields {
+            accesssors.push((Symbol::String(accessor_name.to_string()), accessor));
+        }
+
+        self.constructors.push((name.into(), accesssors));
+    }
+
+    pub fn finish(&self) -> DatatypeSort<'ctx> {
+        let mut dtypes = create_datatypes(&[self]);
+        dtypes.remove(0)
+    }
+}
+
+pub fn create_datatypes<'ctx>(ds: &[&DtypeBuilder<'ctx>]) -> Vec<DatatypeSort<'ctx>> {
+    Vec::new()
 }

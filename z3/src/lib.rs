@@ -165,6 +165,19 @@ pub struct DatatypeBuilder<'ctx> {
 }
 
 #[derive(Debug)]
+pub struct DtypeBuilder<'ctx> {
+    ctx: &'ctx Context,
+    name: Symbol,
+    constructors: Vec<(Symbol, Vec<(Symbol, &'ctx DtypeAccessor<'ctx>)>)>,
+}
+
+#[derive(Debug)]
+pub enum DtypeAccessor<'ctx> {
+    Sort(Sort<'ctx>),
+    Datatype(&'ctx DtypeBuilder<'ctx>),
+}
+
+#[derive(Debug)]
 pub struct DatatypeVariant<'ctx> {
     pub constructor: FuncDecl<'ctx>,
     pub tester: FuncDecl<'ctx>,
