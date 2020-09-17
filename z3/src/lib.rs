@@ -131,15 +131,16 @@ pub struct FuncDecl<'ctx> {
 ///
 /// Example:
 /// ```
-/// # use z3::{ast::Int, Config, Context, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype}};
+/// # use z3::{ast::Int, Config, Context, DtypeBuilder, DatatypeAccessor, SatResult, Solver, Sort, ast::{Ast, Datatype}};
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new(&ctx);
 /// // Like Rust's Option<int> type
-/// let option_int = DatatypeBuilder::new(&ctx)
-///         .variant("None", &[])
-///         .variant("Some", &[("value", &Sort::int(&ctx))])
-///         .finish("OptionInt");
+/// let mut builder = DtypeBuilder::new(&ctx, "OptionInt");
+/// builder.variant("None", &[]);
+/// let some_accessor = [("value", DatatypeAccessor::Sort(Sort::int(&ctx)))];
+/// builder.variant("Some", &some_accessor);
+/// let option_int = builder.finish();
 ///
 /// // Assert x.is_none()
 /// let x = Datatype::new_const(&ctx, "x", &option_int.sort);
@@ -168,13 +169,13 @@ pub struct DatatypeBuilder<'ctx> {
 pub struct DtypeBuilder<'ctx> {
     ctx: &'ctx Context,
     name: Symbol,
-    constructors: Vec<(Symbol, Vec<(Symbol, &'ctx DtypeAccessor<'ctx>)>)>,
+    constructors: Vec<(String, Vec<(String, &'ctx DatatypeAccessor<'ctx>)>)>,
 }
 
 #[derive(Debug)]
-pub enum DtypeAccessor<'ctx> {
+pub enum DatatypeAccessor<'ctx> {
     Sort(Sort<'ctx>),
-    Datatype(&'ctx DtypeBuilder<'ctx>),
+    Datatype(Symbol),
 }
 
 #[derive(Debug)]

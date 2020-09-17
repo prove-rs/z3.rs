@@ -189,7 +189,14 @@ fn test_model_translate() {
     let model = slv.get_model().unwrap();
     assert_eq!(2, model.eval(&a).unwrap().as_i64().unwrap());
     let translated_model = model.translate(&destination);
-    assert_eq!(2, translated_model.eval(&translated_a).unwrap().as_i64().unwrap());
+    assert_eq!(
+        2,
+        translated_model
+            .eval(&translated_a)
+            .unwrap()
+            .as_i64()
+            .unwrap()
+    );
 }
 
 #[test]
@@ -516,10 +523,12 @@ fn test_datatype_builder() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let maybe_int = DatatypeBuilder::new(&ctx)
-        .variant("Nothing", &[])
-        .variant("Just", &[("int", &Sort::int(&ctx))])
-        .finish("MaybeInt");
+    let mut builder = DtypeBuilder::new(&ctx, "MaybeInt");
+    builder.variant("Nothing", &[]);
+    let just_accessors = [("int", DatatypeAccessor::Sort(Sort::int(&ctx)))];
+    builder.variant("Just", &just_accessors);
+
+    let maybe_int = builder.finish();
 
     let nothing = maybe_int.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(&ctx, 5);
@@ -561,6 +570,73 @@ fn test_datatype_builder() {
         .unwrap();
     solver.assert(&five._eq(&five_two));
 
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_recursive_datatype() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let mut list_builder = DtypeBuilder::new(&ctx, "List");
+    list_builder.variant("nil", &[]);
+    let cons_accessors = [
+        ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
+        ("cdr", DatatypeAccessor::Datatype("List".into())),
+    ];
+    list_builder.variant("cons", &cons_accessors);
+
+    let list_sort = list_builder.finish();
+
+    assert_eq!(list_sort.variants.len(), 2);
+    let nil = list_sort.variants[0].constructor.apply(&[]);
+    let five = ast::Int::from_i64(&ctx, 5);
+    let cons_five_nil = list_sort.variants[1]
+        .constructor
+        .apply(&[&five.clone().into(), &nil]);
+
+    let nil_is_nil = list_sort.variants[0]
+        .tester
+        .apply(&[&nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&nil_is_nil);
+
+    let nil_is_cons = list_sort.variants[1]
+        .tester
+        .apply(&[&nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&nil_is_cons.not());
+
+    let cons_five_nil_is_nil = list_sort.variants[0]
+        .tester
+        .apply(&[&cons_five_nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&cons_five_nil_is_nil.not());
+
+    let cons_five_nil_is_cons = list_sort.variants[1]
+        .tester
+        .apply(&[&cons_five_nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&cons_five_nil_is_cons);
+
+    let car_cons_five_is_five = list_sort.variants[1].accessors[0]
+        .apply(&[&cons_five_nil])
+        .as_int()
+        .unwrap();
+    solver.assert(&car_cons_five_is_five._eq(&five));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let cdr_cons_five_is_nil = list_sort.variants[1].accessors[1]
+        .apply(&[&cons_five_nil])
+        .as_datatype()
+        .unwrap();
+    solver.assert(&cdr_cons_five_is_nil._eq(&nil.as_datatype().unwrap()));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
