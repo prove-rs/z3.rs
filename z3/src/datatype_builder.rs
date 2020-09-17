@@ -34,7 +34,6 @@ pub fn create_datatypes<'ctx>(ds: &[&DatatypeBuilder<'ctx>]) -> Vec<DatatypeSort
     let num = ds.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
-
     let ctx: &'ctx Context = ds[0].ctx;
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
 
