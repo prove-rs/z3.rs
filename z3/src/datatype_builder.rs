@@ -31,12 +31,16 @@ impl<'ctx> DatatypeBuilder<'ctx> {
 }
 
 pub fn create_datatypes<'ctx>(ds: &[&DatatypeBuilder<'ctx>]) -> Vec<DatatypeSort<'ctx>> {
-    let ctx: &'ctx Context = ds[0].ctx;
     let num = ds.len();
+    assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
-    assert!(num > 0, "input ds empty");
+
+    let ctx: &'ctx Context = ds[0].ctx;
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
+
     let out: Vec<Z3_sort> = Vec::with_capacity(num);
+    // Prevent running `out's destructor so we are in complete control
+    // of the allocation.
     let mut out = mem::ManuallyDrop::new(out);
     let mut clists: Vec<Z3_constructor_list> = Vec::with_capacity(num);
 
@@ -119,15 +123,11 @@ pub fn create_datatypes<'ctx>(ds: &[&DatatypeBuilder<'ctx>]) -> Vec<DatatypeSort
         );
     };
 
-    println!("returned from z3_mk_datatypes");
+    let out_rebuilt: Vec<Z3_sort> = unsafe { Vec::from_raw_parts(out.as_mut_ptr(), num, num) };
 
-    let rebuilt = unsafe { Vec::from_raw_parts(out.as_mut_ptr(), num, num) };
-
-    assert!(rebuilt.len() > 0, "empty rebuilt vec.");
-
-    let mut datatype_sorts: Vec<DatatypeSort<'ctx>> = Vec::with_capacity(rebuilt.len());
-    for i in 0..rebuilt.len() {
-        let s = rebuilt[i];
+    let mut datatype_sorts: Vec<DatatypeSort<'ctx>> = Vec::with_capacity(out_rebuilt.len());
+    for i in 0..out_rebuilt.len() {
+        let s = out_rebuilt[i];
         let d = &ds[i];
         let num_cs = d.constructors.len();
 
