@@ -28,12 +28,12 @@ impl<'ctx> DatatypeBuilder<'ctx> {
     }
 
     pub fn finish(self) -> DatatypeSort<'ctx> {
-        let mut dtypes = create_datatypes(&[self]);
+        let mut dtypes = create_datatypes(vec![self]);
         dtypes.remove(0)
     }
 }
 
-pub fn create_datatypes<'ctx>(ds: &[DatatypeBuilder<'ctx>]) -> Vec<DatatypeSort<'ctx>> {
+pub fn create_datatypes<'ctx>(ds: Vec<DatatypeBuilder<'ctx>>) -> Vec<DatatypeSort<'ctx>> {
     let num = ds.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 

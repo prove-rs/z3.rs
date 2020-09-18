@@ -643,6 +643,45 @@ fn test_recursive_datatype() {
 }
 
 #[test]
+fn test_mutually_recursive_datatype() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let tree_builder = DatatypeBuilder::new(&ctx, "Tree")
+        .variant(
+            "leaf",
+            vec![("val", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+        )
+        .variant(
+            "node",
+            vec![("node", DatatypeAccessor::Datatype("TreeList".into()))],
+        );
+
+    let tree_list_builder = DatatypeBuilder::new(&ctx, "TreeList")
+        .variant("nil", vec![])
+        .variant(
+            "cons",
+            vec![
+                ("car", DatatypeAccessor::Datatype("Tree".into())),
+                ("cdr", DatatypeAccessor::Datatype("TreeList".into())),
+            ],
+        );
+
+    let sorts = z3::datatype_builder::create_datatypes(vec![tree_builder, tree_list_builder]);
+    assert_eq!(sorts.len(), 2);
+    let tree_sort = &sorts[0];
+    assert_eq!(tree_sort.variants.len(), 2);
+    assert_eq!(tree_sort.variants[0].accessors.len(), 1);
+    assert_eq!(tree_sort.variants[1].accessors.len(), 1);
+
+    let tree_list_sort = &sorts[1];
+    assert_eq!(tree_list_sort.variants.len(), 2);
+    assert_eq!(tree_list_sort.variants[0].accessors.len(), 0);
+    assert_eq!(tree_list_sort.variants[1].accessors.len(), 2);
+}
+
+#[test]
 fn get_model_without_check_does_not_exit() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);

@@ -21,7 +21,7 @@ use z3_sys::*;
 pub mod ast;
 mod config;
 mod context;
-mod datatype_builder;
+pub mod datatype_builder;
 mod func_decl;
 mod model;
 mod ops;
