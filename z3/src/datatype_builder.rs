@@ -105,7 +105,7 @@ pub fn create_datatypes<'ctx>(ds: Vec<DatatypeBuilder<'ctx>>) -> Vec<DatatypeSor
             };
             cs.push(constructor);
         }
-        assert!(cs.len() > 0, "Empty cs vec");
+        assert!(!cs.is_empty());
 
         let clist = unsafe {
             let _guard = Z3_MUTEX.lock().unwrap();
@@ -113,7 +113,7 @@ pub fn create_datatypes<'ctx>(ds: Vec<DatatypeBuilder<'ctx>>) -> Vec<DatatypeSor
         };
         clists.push(clist);
     }
-    assert!(clists.len() > 0, "Empty clist vec");
+    assert!(!clists.is_empty());
 
     assert!(num == names.len());
     assert!(num == clists.len());
