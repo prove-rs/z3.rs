@@ -189,7 +189,14 @@ fn test_model_translate() {
     let model = slv.get_model().unwrap();
     assert_eq!(2, model.eval(&a).unwrap().as_i64().unwrap());
     let translated_model = model.translate(&destination);
-    assert_eq!(2, translated_model.eval(&translated_a).unwrap().as_i64().unwrap());
+    assert_eq!(
+        2,
+        translated_model
+            .eval(&translated_a)
+            .unwrap()
+            .as_i64()
+            .unwrap()
+    );
 }
 
 #[test]
@@ -516,10 +523,13 @@ fn test_datatype_builder() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let maybe_int = DatatypeBuilder::new(&ctx)
-        .variant("Nothing", &[])
-        .variant("Just", &[("int", &Sort::int(&ctx))])
-        .finish("MaybeInt");
+    let maybe_int = DatatypeBuilder::new(&ctx, "MaybeInt")
+        .variant("Nothing", vec![])
+        .variant(
+            "Just",
+            vec![("int", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+        )
+        .finish();
 
     let nothing = maybe_int.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(&ctx, 5);
@@ -561,6 +571,156 @@ fn test_datatype_builder() {
         .unwrap();
     solver.assert(&five._eq(&five_two));
 
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_recursive_datatype() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let list_sort = DatatypeBuilder::new(&ctx, "List")
+        .variant("nil", vec![])
+        .variant(
+            "cons",
+            vec![
+                ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
+                ("cdr", DatatypeAccessor::Datatype("List".into())),
+            ],
+        )
+        .finish();
+
+    assert_eq!(list_sort.variants.len(), 2);
+    let nil = list_sort.variants[0].constructor.apply(&[]);
+    let five = ast::Int::from_i64(&ctx, 5);
+    let cons_five_nil = list_sort.variants[1]
+        .constructor
+        .apply(&[&five.clone().into(), &nil]);
+
+    let nil_is_nil = list_sort.variants[0]
+        .tester
+        .apply(&[&nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&nil_is_nil);
+
+    let nil_is_cons = list_sort.variants[1]
+        .tester
+        .apply(&[&nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&nil_is_cons.not());
+
+    let cons_five_nil_is_nil = list_sort.variants[0]
+        .tester
+        .apply(&[&cons_five_nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&cons_five_nil_is_nil.not());
+
+    let cons_five_nil_is_cons = list_sort.variants[1]
+        .tester
+        .apply(&[&cons_five_nil])
+        .as_bool()
+        .unwrap();
+    solver.assert(&cons_five_nil_is_cons);
+
+    let car_cons_five_is_five = list_sort.variants[1].accessors[0]
+        .apply(&[&cons_five_nil])
+        .as_int()
+        .unwrap();
+    solver.assert(&car_cons_five_is_five._eq(&five));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let cdr_cons_five_is_nil = list_sort.variants[1].accessors[1]
+        .apply(&[&cons_five_nil])
+        .as_datatype()
+        .unwrap();
+    solver.assert(&cdr_cons_five_is_nil._eq(&nil.as_datatype().unwrap()));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_mutually_recursive_datatype() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let tree_builder = DatatypeBuilder::new(&ctx, "Tree")
+        .variant(
+            "leaf",
+            vec![("val", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+        )
+        .variant(
+            "node",
+            vec![("children", DatatypeAccessor::Datatype("TreeList".into()))],
+        );
+
+    let tree_list_builder = DatatypeBuilder::new(&ctx, "TreeList")
+        .variant("nil", vec![])
+        .variant(
+            "cons",
+            vec![
+                ("car", DatatypeAccessor::Datatype("Tree".into())),
+                ("cdr", DatatypeAccessor::Datatype("TreeList".into())),
+            ],
+        );
+
+    let sorts = z3::datatype_builder::create_datatypes(vec![tree_builder, tree_list_builder]);
+    assert_eq!(sorts.len(), 2);
+    let tree_sort = &sorts[0];
+    assert_eq!(tree_sort.variants.len(), 2);
+    assert_eq!(tree_sort.variants[0].accessors.len(), 1);
+    assert_eq!(tree_sort.variants[1].accessors.len(), 1);
+
+    let tree_list_sort = &sorts[1];
+    assert_eq!(tree_list_sort.variants.len(), 2);
+    assert_eq!(tree_list_sort.variants[0].accessors.len(), 0);
+    assert_eq!(tree_list_sort.variants[1].accessors.len(), 2);
+
+    let ten = ast::Int::from_i64(&ctx, 10);
+    let leaf_ten = tree_sort.variants[0]
+        .constructor
+        .apply(&[&ten.clone().into()]);
+    let leaf_ten_val_is_ten = tree_sort.variants[0].accessors[0]
+        .apply(&[&leaf_ten])
+        .as_int()
+        .unwrap();
+    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone().into()));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let nil = tree_list_sort.variants[0].constructor.apply(&[]);
+    let twenty = ast::Int::from_i64(&ctx, 20);
+    let leaf_twenty = tree_sort.variants[0]
+        .constructor
+        .apply(&[&twenty.clone().into()]);
+    let cons_leaf_twenty_nil = tree_list_sort.variants[1]
+        .constructor
+        .apply(&[&leaf_twenty, &nil]);
+    let cons_leaf_ten_cons_leaf_twenty_nil = tree_list_sort.variants[1]
+        .constructor
+        .apply(&[&leaf_ten, &cons_leaf_twenty_nil]);
+
+    // n1 = Tree.node(TreeList.cons(Tree.leaf(10), TreeList.cons(Tree.leaf(20), TreeList.nil)))
+    let n1 = tree_sort.variants[1]
+        .constructor
+        .apply(&[&cons_leaf_ten_cons_leaf_twenty_nil]);
+
+    let n1_cons_nil = tree_list_sort.variants[1].constructor.apply(&[&n1, &nil]);
+    // n2 = Tree.node(TreeList.cons(n1, TreeList.nil))
+    let n2 = tree_sort.variants[1].constructor.apply(&[&n1_cons_nil]);
+
+    solver.assert(&n2._eq(&n1).not());
+
+    // assert(TreeList.car(Tree.children(n2)) == n1)
+    solver.assert(
+        &tree_list_sort.variants[1].accessors[0]
+            .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
+            ._eq(&n1)
+    );
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
