@@ -16,12 +16,8 @@ impl<'ctx> DatatypeBuilder<'ctx> {
         }
     }
 
-    pub fn variant(
-        &mut self,
-        name: &str,
-        fields: &'ctx [(&str, DatatypeAccessor<'ctx>)],
-    ) -> &mut Self {
-        let mut accessor_vec: Vec<(String, &DatatypeAccessor<'ctx>)> = Vec::new();
+    pub fn variant(mut self, name: &str, fields: Vec<(&str, DatatypeAccessor<'ctx>)>) -> Self {
+        let mut accessor_vec: Vec<(String, DatatypeAccessor<'ctx>)> = Vec::new();
         for (accessor_name, accessor) in fields {
             accessor_vec.push((accessor_name.to_string(), accessor));
         }
@@ -161,9 +157,7 @@ pub fn create_datatypes<'ctx>(ds: &[DatatypeBuilder<'ctx>]) -> Vec<DatatypeSort<
                 let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_get_datatype_sort_recognizer(ctx.z3_ctx, s, j.try_into().unwrap())
             };
-            let tester = unsafe {
-                FuncDecl::from_raw(ctx, tester_func)
-            };
+            let tester = unsafe { FuncDecl::from_raw(ctx, tester_func) };
 
             let mut accessors: Vec<FuncDecl<'ctx>> = Vec::new();
             for k in 0..num_fs {

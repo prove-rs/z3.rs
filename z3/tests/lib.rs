@@ -523,12 +523,13 @@ fn test_datatype_builder() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let mut builder = DatatypeBuilder::new(&ctx, "MaybeInt");
-    builder.variant("Nothing", &[]);
-    let just_accessors = [("int", DatatypeAccessor::Sort(Sort::int(&ctx)))];
-    builder.variant("Just", &just_accessors);
-
-    let maybe_int = builder.finish();
+    let maybe_int = DatatypeBuilder::new(&ctx, "MaybeInt")
+        .variant("Nothing", vec![])
+        .variant(
+            "Just",
+            vec![("int", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+        )
+        .finish();
 
     let nothing = maybe_int.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(&ctx, 5);
@@ -580,15 +581,16 @@ fn test_recursive_datatype() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let mut list_builder = DatatypeBuilder::new(&ctx, "List");
-    list_builder.variant("nil", &[]);
-    let cons_accessors = [
-        ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
-        ("cdr", DatatypeAccessor::Datatype("List".into())),
-    ];
-    list_builder.variant("cons", &cons_accessors);
-
-    let list_sort = list_builder.finish();
+    let list_sort = DatatypeBuilder::new(&ctx, "List")
+        .variant("nil", vec![])
+        .variant(
+            "cons",
+            vec![
+                ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
+                ("cdr", DatatypeAccessor::Datatype("List".into())),
+            ],
+        )
+        .finish();
 
     assert_eq!(list_sort.variants.len(), 2);
     let nil = list_sort.variants[0].constructor.apply(&[]);

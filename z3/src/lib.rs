@@ -136,11 +136,13 @@ pub struct FuncDecl<'ctx> {
 /// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new(&ctx);
 /// // Like Rust's Option<int> type
-/// let mut builder = DatatypeBuilder::new(&ctx, "OptionInt");
-/// builder.variant("None", &[]);
-/// let some_accessor = [("value", DatatypeAccessor::Sort(Sort::int(&ctx)))];
-/// builder.variant("Some", &some_accessor);
-/// let option_int = builder.finish();
+/// let option_int = DatatypeBuilder::new(&ctx, "OptionInt")
+/// .variant("None", vec![])
+/// .variant(
+///     "Some",
+///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+/// )
+/// .finish();
 ///
 /// // Assert x.is_none()
 /// let x = Datatype::new_const(&ctx, "x", &option_int.sort);
@@ -162,7 +164,7 @@ pub struct FuncDecl<'ctx> {
 pub struct DatatypeBuilder<'ctx> {
     ctx: &'ctx Context,
     name: Symbol,
-    constructors: Vec<(String, Vec<(String, &'ctx DatatypeAccessor<'ctx>)>)>,
+    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'ctx>)>)>,
 }
 
 #[derive(Debug)]
