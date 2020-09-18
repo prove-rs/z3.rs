@@ -647,6 +647,7 @@ fn test_mutually_recursive_datatype() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
 
     let tree_builder = DatatypeBuilder::new(&ctx, "Tree")
         .variant(
@@ -655,7 +656,7 @@ fn test_mutually_recursive_datatype() {
         )
         .variant(
             "node",
-            vec![("node", DatatypeAccessor::Datatype("TreeList".into()))],
+            vec![("children", DatatypeAccessor::Datatype("TreeList".into()))],
         );
 
     let tree_list_builder = DatatypeBuilder::new(&ctx, "TreeList")
@@ -679,6 +680,45 @@ fn test_mutually_recursive_datatype() {
     assert_eq!(tree_list_sort.variants.len(), 2);
     assert_eq!(tree_list_sort.variants[0].accessors.len(), 0);
     assert_eq!(tree_list_sort.variants[1].accessors.len(), 2);
+
+    let ten = ast::Int::from_i64(&ctx, 10);
+    let leaf_ten = tree_sort.variants[0]
+        .constructor
+        .apply(&[&ten.clone().into()]);
+    let leaf_ten_val_is_ten = tree_sort.variants[0].accessors[0]
+        .apply(&[&leaf_ten])
+        .as_int()
+        .unwrap();
+    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone().into()));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let nil = tree_list_sort.variants[0].constructor.apply(&[]);
+    let twenty = ast::Int::from_i64(&ctx, 20);
+    let leaf_twenty = tree_sort.variants[0]
+        .constructor
+        .apply(&[&twenty.clone().into()]);
+    let cons_leaf_twenty_nil = tree_list_sort.variants[1]
+        .constructor
+        .apply(&[&leaf_twenty, &nil]);
+    let cons_leaf_ten_cons_leaf_twenty_nil = tree_list_sort.variants[1]
+        .constructor
+        .apply(&[&leaf_ten, &cons_leaf_twenty_nil]);
+
+    let n1 = tree_sort.variants[1]
+        .constructor
+        .apply(&[&cons_leaf_ten_cons_leaf_twenty_nil]);
+
+    let n1_cons_nil = tree_list_sort.variants[1].constructor.apply(&[&n1, &nil]);
+    let n2 = tree_sort.variants[1].constructor.apply(&[&n1_cons_nil]);
+
+    solver.assert(&n2._eq(&n1).not());
+
+    solver.assert(
+        &tree_list_sort.variants[1].accessors[0]
+            .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
+            ._eq(&n1)
+    );
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
