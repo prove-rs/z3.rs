@@ -704,15 +704,18 @@ fn test_mutually_recursive_datatype() {
         .constructor
         .apply(&[&leaf_ten, &cons_leaf_twenty_nil]);
 
+    // n1 = Tree.node(TreeList.cons(Tree.leaf(10), TreeList.cons(Tree.leaf(20), TreeList.nil)))
     let n1 = tree_sort.variants[1]
         .constructor
         .apply(&[&cons_leaf_ten_cons_leaf_twenty_nil]);
 
     let n1_cons_nil = tree_list_sort.variants[1].constructor.apply(&[&n1, &nil]);
+    // n2 = Tree.node(TreeList.cons(n1, TreeList.nil))
     let n2 = tree_sort.variants[1].constructor.apply(&[&n1_cons_nil]);
 
     solver.assert(&n2._eq(&n1).not());
 
+    // assert(TreeList.car(Tree.children(n2)) == n1)
     solver.assert(
         &tree_list_sort.variants[1].accessors[0]
             .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
