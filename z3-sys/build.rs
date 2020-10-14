@@ -53,18 +53,10 @@ fn build_z3() {
 
     let lib = dst.join("lib");
 
-    // For some reason Z3 builds as `libz3.lib`, but on windows the "lib" prefix
-    // is not a convention.
-    if cfg!(target_os = "windows") {
-        let from = lib.join("libz3.lib");
-        let to = lib.join("z3.lib");
-        std::fs::rename(&from, &to).expect(&format!(
-            "failed to rename `{}` to `{}`",
-            from.display(),
-            to.display()
-        ));
-    }
-
     println!("cargo:rustc-link-search=native={}", lib.display());
-    println!("cargo:rustc-link-lib=static=z3");
+    if cfg!(target_os = "windows") {
+        println!("cargo:rustc-link-lib=static=libz3");
+    } else {
+        println!("cargo:rustc-link-lib=static=z3");
+    }
 }

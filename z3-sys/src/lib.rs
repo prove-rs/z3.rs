@@ -1559,7 +1559,6 @@ pub enum GoalPrec {
     UnderOver = generated::Z3_goal_prec::Z3_GOAL_UNDER_OVER as u32,
 }
 
-#[link(name = "z3")]
 extern "C" {
     /// Set a global (or module) parameter.
     /// This setting is shared by all Z3 contexts.
@@ -7482,3 +7481,11 @@ extern "C" {
     /// Best-effort quantifier elimination
     pub fn Z3_qe_lite(c: Z3_context, vars: Z3_ast_vector, body: Z3_ast) -> Z3_ast;
 }
+
+#[cfg(not(windows))]
+#[link(name = "z3")]
+extern "C" {}
+
+#[cfg(windows)]
+#[link(name = "libz3")]
+extern "C" {}
