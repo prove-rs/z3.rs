@@ -54,5 +54,9 @@ fn build_z3() {
     let lib = dst.join("lib");
 
     println!("cargo:rustc-link-search=native={}", lib.display());
-    println!("cargo:rustc-link-lib=static=z3");
+    if cfg!(target_os = "windows") {
+        println!("cargo:rustc-link-lib=static=libz3");
+    } else {
+        println!("cargo:rustc-link-lib=static=z3");
+    }
 }
