@@ -51,9 +51,24 @@ fn build_z3() {
         println!("cargo:rustc-link-lib={}", cxx);
     }
 
-    let lib = dst.join("lib");
+    let mut found_lib_dir = false;
+    for lib_dir in &[
+        "lib",
+        // Fedora builds seem to use `lib64` rather than `lib` in some
+        // circumstances.
+        "lib64",
+    ] {
+        let lib_dir = dst.join(lib_dir);
+        if lib_dir.exists() {
+            found_lib_dir = true;
+            println!("cargo:rustc-link-search=native={}", lib_dir.display(),);
+        }
+    }
+    assert!(
+        found_lib_dir,
+        "Should have found the lib directory for our built Z3"
+    );
 
-    println!("cargo:rustc-link-search=native={}", lib.display());
     if cfg!(target_os = "windows") {
         println!("cargo:rustc-link-lib=static=libz3");
     } else {
