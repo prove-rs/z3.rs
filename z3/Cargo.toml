@@ -1,6 +1,6 @@
 [package]
 name = "z3"
-version = "0.6.0"
+version = "0.7.0"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 
 description = "High-level rust bindings for the Z3 SMT solver from Microsoft Research"
@@ -34,4 +34,4 @@ semver = "0.9"
 
 [dependencies.z3-sys]
 path = "../z3-sys"
-version = "0.6.2"
+version = "0.6.3"
