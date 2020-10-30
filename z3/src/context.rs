@@ -86,6 +86,23 @@ impl Eq for Context {}
 
 #[derive(Debug)]
 pub struct SendableContext {
+    z3_ctx: Z3_context,
+    asts: Vec<Z3_ast>,
+    solvers: Vec<Z3_solver>,
+}
+
+impl SendableContext {
+    pub fn consume(self) -> UnpackedSendableContext {
+        UnpackedSendableContext {
+            z3_ctx: self.z3_ctx,
+            asts: self.asts,
+            solvers: self.solvers
+        }
+    }
+}
+
+#[derive(Debug)]
+pub struct UnpackedSendableContext {
     pub z3_ctx: Z3_context,
     pub asts: Vec<Z3_ast>,
     pub solvers: Vec<Z3_solver>,

@@ -745,6 +745,7 @@ fn move_to_thread() {
     let sendable = unsafe { ctx.prepare_move(Some(&mut [&mut old_a, &mut old_b]), Some(&mut [&mut old_solver])) };
 
     let a = thread::spawn(move || {
+        let sendable = sendable.consume();
         let sent_ctx = unsafe { Context::from_raw(sendable.z3_ctx) };
         let a = Int::new(&sent_ctx, sendable.asts[0]);
         let c = Int::new_const(&sent_ctx, "c");
