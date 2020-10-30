@@ -73,8 +73,6 @@ pub struct Context {
     moved: AtomicBool,
 }
 
-unsafe impl Send for Context {}
-
 /// Symbols are used to name several term and type constructors.
 #[derive(PartialEq, Eq, Clone, Debug)]
 pub enum Symbol {

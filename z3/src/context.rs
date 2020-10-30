@@ -59,6 +59,7 @@ impl Context {
             }
         }
 
+        // TODO: assert self.moved = false
         self.moved.store(true, Ordering::SeqCst);
         SendableContext {
             z3_ctx: self.z3_ctx,
