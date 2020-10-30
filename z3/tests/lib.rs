@@ -4,7 +4,9 @@ extern crate log;
 
 extern crate z3;
 use std::convert::TryInto;
+use std::thread;
 use z3::ast::Ast;
+use z3::ast::Int;
 use z3::*;
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -730,4 +732,33 @@ fn get_model_without_check_does_not_exit() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
     solver.get_model();
+}
+
+#[test]
+fn move_to_thread() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let mut old_a = Int::new_const(&ctx, "a");
+    let mut old_b = Int::new_const(&ctx, "b");
+    let mut old_solver = Solver::new(&ctx);
+    old_solver.assert(&old_a._eq(&Int::from_u64(&ctx, 1)).not());
+    let sendable = unsafe { ctx.prepare_move(Some(&mut [&mut old_a, &mut old_b]), Some(&mut [&mut old_solver])) };
+
+    let a = thread::spawn(move || {
+        let sent_ctx = unsafe { Context::from_raw(sendable.z3_ctx) };
+        let a = Int::new(&sent_ctx, sendable.asts[0]);
+        let c = Int::new_const(&sent_ctx, "c");
+        let solver = unsafe { Solver::from_raw(&sent_ctx, sendable.solvers[0]) };
+        solver.assert(&a._eq(&c));
+        let zero = Int::from_u64(&sent_ctx, 0);
+        solver.assert(&a._eq(&zero).not());
+        println!("{:?}", solver.check());
+        println!("{:?}", solver.get_model());
+    });
+
+    // Using the ctx after prepare_move (like here) breaks your memory safety.
+    // We can't prevent that, so prepare_move is unsafe.
+    // let c = Int::new_const(&ctx, "y");
+
+    a.join().unwrap()
 }

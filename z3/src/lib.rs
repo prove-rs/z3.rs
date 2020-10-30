@@ -16,6 +16,7 @@ extern crate num;
 
 use std::ffi::CString;
 use std::sync::Mutex;
+use std::sync::atomic::AtomicBool;
 use z3_sys::*;
 
 pub mod ast;
@@ -66,10 +67,13 @@ pub struct Config {
 /// ```
 ///
 /// [`interrupt()`]: #method.interrupt
-#[derive(PartialEq, Eq, Debug)]
+#[derive(Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
+    moved: AtomicBool,
 }
+
+unsafe impl Send for Context {}
 
 /// Symbols are used to name several term and type constructors.
 #[derive(PartialEq, Eq, Clone, Debug)]
@@ -92,8 +96,9 @@ pub struct Sort<'ctx> {
 // Note for in-crate users: Never construct a `Solver` directly; only use
 // `Solver::new()` which handles Z3 refcounting properly.
 pub struct Solver<'ctx> {
-    ctx: &'ctx Context,
+    pub(crate) ctx: &'ctx Context,
     z3_slv: Z3_solver,
+    moved: bool,
 }
 
 /// Model for the constraints inserted into the logical context.

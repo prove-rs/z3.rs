@@ -19,30 +19,35 @@ use num::rational::BigRational;
 pub struct Bool<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing an integer value.
 pub struct Int<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing a real value.
 pub struct Real<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing a string value.
 pub struct String<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing a bitvector value.
 pub struct BV<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing an array value.
@@ -50,24 +55,28 @@ pub struct BV<'ctx> {
 pub struct Array<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing a set value.
 pub struct Set<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// [`Ast`](trait.Ast.html) node representing a datatype or enumeration value.
 pub struct Datatype<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 /// A dynamically typed [`Ast`](trait.Ast.html) node.
 pub struct Dynamic<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) moved: bool,
 }
 
 macro_rules! unop {
@@ -144,6 +153,7 @@ macro_rules! varop {
 pub trait Ast<'ctx>: Sized + fmt::Debug {
     fn get_ctx(&self) -> &'ctx Context;
     fn get_z3_ast(&self) -> Z3_ast;
+    fn mark_moved(&mut self);
 
     // This would be great, but gives error E0071 "expected struct, variant or union type, found Self"
     // so I don't think we can write a generic constructor like this.
@@ -258,7 +268,13 @@ macro_rules! impl_ast {
                         Z3_inc_ref(ctx.z3_ctx, ast);
                         ast
                     },
+                    moved: false,
                 }
+            }
+
+            fn mark_moved(&mut self) {
+                assert!(self.moved == false);
+                self.moved = true
             }
 
             fn get_ctx(&self) -> &'ctx Context {
@@ -298,13 +314,15 @@ macro_rules! impl_ast {
 
         impl<'ctx> Drop for $ast<'ctx> {
             fn drop(&mut self) {
-                debug!(
-                    "drop ast: id = {}, pointer = {:p}",
-                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx, self.z3_ast) },
-                    self.z3_ast
-                );
-                unsafe {
-                    Z3_dec_ref(self.ctx.z3_ctx, self.z3_ast);
+                if !self.moved {
+                    debug!(
+                        "drop ast: id = {}, pointer = {:p}",
+                        unsafe { Z3_get_ast_id(self.ctx.z3_ctx, self.z3_ast) },
+                        self.z3_ast
+                    );
+                    unsafe {
+                        Z3_dec_ref(self.ctx.z3_ctx, self.z3_ast);
+                    }
                 }
             }
         }

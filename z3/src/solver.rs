@@ -58,7 +58,21 @@ impl<'ctx> Solver<'ctx> {
                 Z3_solver_inc_ref(ctx.z3_ctx, s);
                 s
             },
+            moved: false,
         }
+    }
+
+    pub unsafe fn from_raw(ctx: &'ctx Context, z3_slv: *mut z3_sys::_Z3_solver) -> Solver<'ctx> {
+        Solver {
+            ctx,
+            z3_slv,
+            moved: false,
+        }
+    }
+
+    pub fn mark_moved(&mut self) {
+        assert!(self.moved == false);
+        self.moved = true
     }
 
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Solver<'dest_ctx> {
@@ -70,6 +84,7 @@ impl<'ctx> Solver<'ctx> {
                 Z3_solver_inc_ref(dest.z3_ctx, s);
                 s
             },
+            moved: false,
         }
     }
 
@@ -319,7 +334,9 @@ impl<'ctx> fmt::Debug for Solver<'ctx> {
 
 impl<'ctx> Drop for Solver<'ctx> {
     fn drop(&mut self) {
-        let guard = Z3_MUTEX.lock().unwrap();
-        unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv) };
+        if !self.moved {
+            let guard = Z3_MUTEX.lock().unwrap();
+            unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv) };
+        }
     }
 }
