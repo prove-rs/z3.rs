@@ -186,15 +186,12 @@ pub trait Ast<'ctx>: Sized + fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(&self, other: &[&Self]) -> Bool<'ctx> {
-        Bool::new(self.get_ctx(), unsafe {
+    fn distinct(context: &'ctx Context, values: &[&Self]) -> Bool<'ctx> {
+        Bool::new(context, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            let mut tmp = vec![self.get_z3_ast()];
-            for a in other {
-                tmp.push(a.get_z3_ast())
-            }
-            assert!(tmp.len() <= 0xffff_ffff);
-            Z3_mk_distinct(self.get_ctx().z3_ctx, tmp.len() as u32, tmp.as_ptr())
+            assert!(values.len() <= 0xffffffff);
+            let values: Vec<Z3_ast> = values.iter().map(|nodes| nodes.get_z3_ast()).collect();
+            Z3_mk_distinct(context.z3_ctx, values.len() as u32, values.as_ptr())
         })
     }
 
