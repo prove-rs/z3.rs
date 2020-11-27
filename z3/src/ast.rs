@@ -236,6 +236,40 @@ pub trait Ast<'ctx>: Sized + fmt::Debug {
             )
         })
     }
+
+    /// Return the number of children of this AST node.
+    /// Leaf nodes (eg Bool consts) will return 0.
+    fn num_children(&self) -> usize {
+        let this_ctx = self.get_ctx().z3_ctx;
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let this_app = Z3_to_app(this_ctx, self.get_z3_ast());
+            Z3_get_app_num_args(this_ctx, this_app) as usize
+        }
+    }
+
+    /// Return the nth child of this AST node.  Out-of-bound indices will
+    /// return none.
+    fn nth_child(&self, idx: usize) -> Option<Dynamic<'ctx>> {
+        if idx >= self.num_children() {
+            None
+        } else {
+            let idx = u32::try_from(idx).unwrap();
+            let this_ctx = self.get_ctx().z3_ctx;
+            let child_ast = unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                let this_app = Z3_to_app(this_ctx, self.get_z3_ast());
+                Z3_get_app_arg(this_ctx, this_app, idx)
+            };
+            Some(Dynamic::new(self.get_ctx(), child_ast))
+        }
+    }
+
+    /// Return the children of this node as a Vec of Dynamic nodes.
+    fn children(&self) -> Vec<Dynamic<'ctx>> {
+        let n = self.num_children();
+        (0..n).map(|i| self.nth_child(i).unwrap()).collect()
+    }
 }
 
 macro_rules! impl_ast {
