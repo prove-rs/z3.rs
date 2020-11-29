@@ -208,11 +208,17 @@ fn test_ast_attributes() {
 
     let a = Bool::new_const(&ctx, "a");
     let b = Bool::from_bool(&ctx, false);
+    let not_a = a.not();
+    let a_or_b = &Bool::or(&ctx, &[&a, &b]);
+    assert_eq!(b.decl().kind(), DeclKind::FALSE);
+    assert_eq!(not_a.decl().kind(), DeclKind::NOT);
+    assert_eq!(a_or_b.decl().kind(), DeclKind::OR);
+
     assert_ast_attributes(&a, true);
     assert_ast_attributes(&b, true);
     assert_ast_attributes(&Dynamic::from_ast(&a), true);
-    assert_ast_attributes(&a.not(), false);
-    assert_ast_attributes(&Bool::or(&ctx, &[&a, &b]), false);
+    assert_ast_attributes(&not_a, false);
+    assert_ast_attributes(a_or_b, false);
 
     assert_ast_attributes(
         &Array::new_const(&ctx, "arr", &Sort::int(&ctx), &Sort::bool(&ctx)),
