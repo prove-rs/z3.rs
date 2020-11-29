@@ -5,6 +5,7 @@ use std::fmt;
 use std::hash::{Hash, Hasher};
 use z3_sys::*;
 use Context;
+use FuncDecl;
 use Pattern;
 use Sort;
 use Symbol;
@@ -311,6 +312,23 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     /// Note that constants are function applications with 0 arguments.
     fn is_const(&self) -> bool {
         self.is_app() && self.num_children() == 0
+    }
+
+    /// Return the `FuncDecl` of the `Ast`.
+    ///
+    /// This will panic if the `Ast` is not an app, i.e. if AstKind is not App
+    /// or Numeral.
+    fn decl(&self) -> FuncDecl<'ctx> {
+        let ctx = self.get_ctx();
+        let func_decl = unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let app = Z3_to_app(ctx.z3_ctx, self.get_z3_ast());
+            assert!(!app.is_null(), "Ast has a null Z3_app.");
+            let func_decl = Z3_get_app_decl(ctx.z3_ctx, app);
+            assert!(!func_decl.is_null(), "Ast has a null Z3_func_decl.");
+            func_decl
+        };
+        unsafe { FuncDecl::from_raw(ctx, func_decl) }
     }
 }
 
