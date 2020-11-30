@@ -1217,6 +1217,15 @@ impl<'ctx> Set<'ctx> {
         })
     }
 
+    /// Creates a set that maps the domain to false by default
+    pub fn empty(ctx: &'ctx Context, eltype: &Sort<'ctx>) -> Set<'ctx> {
+        let sort = Sort::set(ctx, eltype);
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const_array(ctx.z3_ctx, eltype.z3_sort, Z3_mk_false(ctx.z3_ctx))
+        })
+    }
+
     // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
     // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Set<'dest_ctx> {
