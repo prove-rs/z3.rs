@@ -298,9 +298,23 @@ fn test_real_cmp() {
     let x = ast::Real::new_const(&ctx, "x");
     let x_plus_1 = ast::Real::add(&ctx, &[&x, &ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
-    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1).into());
+    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1));
 
     solver.assert(&forall.try_into().unwrap());
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_float_add() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Float::new_const_float32(&ctx, "x");
+    let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
+    let y = ast::Float::from_f32(&ctx, 3.14);
+
+    solver.assert(&x_plus_one._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -428,6 +442,21 @@ fn test_string_suffix() {
     assert_eq!(solver.check(), SatResult::Sat)
 }
 
+fn assert_string_roundtrip(source: &str) {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let expr = ast::String::from_str(&ctx, source).unwrap();
+    assert_eq!(&expr.as_string().unwrap(), source);
+}
+
+#[test]
+fn test_string_as_string() {
+    assert_string_roundtrip("x");
+    assert_string_roundtrip("'x'");
+    assert_string_roundtrip(r#""x""#);
+    assert_string_roundtrip(r#"\\"x\\""#);
+}
+
 #[test]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
@@ -527,7 +556,7 @@ fn test_datatype_builder() {
         .variant("Nothing", vec![])
         .variant(
             "Just",
-            vec![("int", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+            vec![("int", DatatypeAccessor::Sort(&Sort::int(&ctx)))],
         )
         .finish();
 
@@ -586,7 +615,7 @@ fn test_recursive_datatype() {
         .variant(
             "cons",
             vec![
-                ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
+                ("car", DatatypeAccessor::Sort(&Sort::int(&ctx))),
                 ("cdr", DatatypeAccessor::Datatype("List".into())),
             ],
         )
@@ -649,11 +678,10 @@ fn test_mutually_recursive_datatype() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
+    let int_sort = Sort::int(&ctx);
+
     let tree_builder = DatatypeBuilder::new(&ctx, "Tree")
-        .variant(
-            "leaf",
-            vec![("val", DatatypeAccessor::Sort(Sort::int(&ctx)))],
-        )
+        .variant("leaf", vec![("val", DatatypeAccessor::Sort(&int_sort))])
         .variant(
             "node",
             vec![("children", DatatypeAccessor::Datatype("TreeList".into()))],
@@ -689,7 +717,7 @@ fn test_mutually_recursive_datatype() {
         .apply(&[&leaf_ten])
         .as_int()
         .unwrap();
-    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone().into()));
+    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone()));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let nil = tree_list_sort.variants[0].constructor.apply(&[]);
@@ -719,7 +747,7 @@ fn test_mutually_recursive_datatype() {
     solver.assert(
         &tree_list_sort.variants[1].accessors[0]
             .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
-            ._eq(&n1)
+            ._eq(&n1),
     );
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -861,6 +889,79 @@ fn test_goal_reset() {
     assert_eq!(format!("{}", goal), "(goal)");
 }
 
+fn test_set_membership() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let set = ast::Set::new_const(&ctx, "integer_set", &Sort::int(&ctx));
+    let one = ast::Int::from_u64(&ctx, 1);
+
+    solver.push();
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx))));
+
+    solver.push();
+    solver.assert(&set.member(&one));
+    // An empty set will never contain 1
+    assert_eq!(solver.check(), SatResult::Unsat);
+    solver.pop(1);
+
+    solver.push();
+    let x = ast::Int::new_const(&ctx, "x");
+    // An empty set will always return false for member
+    let forall: ast::Bool =
+        ast::forall_const(&ctx, &[&x.clone().into()], &[], &set.member(&x).not())
+            .try_into()
+            .unwrap();
+    solver.assert(&forall);
+    assert_eq!(solver.check(), SatResult::Sat);
+    solver.pop(1);
+
+    solver.pop(1);
+
+    solver.push();
+    // A singleton set of 1 will contain 1
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
+    solver.assert(&set.member(&one));
+    assert_eq!(solver.check(), SatResult::Sat);
+    solver.pop(1);
+}
+
+#[test]
+fn test_dynamic_as_set() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let set_sort = Sort::set(&ctx, &Sort::int(&ctx));
+    let array_sort = Sort::array(&ctx, &Sort::int(&ctx), &Sort::int(&ctx));
+    let array_of_sets = ast::Array::new_const(&ctx, "array_of_sets", &Sort::int(&ctx), &set_sort);
+    let array_of_arrays =
+        ast::Array::new_const(&ctx, "array_of_arrays", &Sort::int(&ctx), &array_sort);
+    assert!(array_of_sets
+        .select(&ast::Int::from_u64(&ctx, 0))
+        .as_set()
+        .is_some());
+    assert!(array_of_arrays
+        .select(&ast::Int::from_u64(&ctx, 0))
+        .as_set()
+        .is_none());
+}
+
+#[test]
+fn test_array_store_select() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let one = ast::Int::from_u64(&ctx, 1);
+    let set = ast::Array::new_const(&ctx, "integer_array", &Sort::int(&ctx), &Sort::int(&ctx))
+        .store(&zero, &one);
+
+    solver.assert(&set.select(&zero)._eq(&one.into()).not());
+    assert_eq!(solver.check(), SatResult::Unsat);
+}
+
 #[test]
 #[should_panic]
 fn test_goal_get_formulas_empty() {
@@ -868,7 +969,7 @@ fn test_goal_get_formulas_empty() {
     let ctx = Context::new(&cfg);
 
     let goal = Goal::new(&ctx, false, false, false);
-    goal.get_formulas();
+    goal.get_formulas::<Bool>();
 }
 
 #[test]
@@ -884,7 +985,7 @@ fn test_goal_get_formulas() {
     goal.assert(&b);
     goal.assert(&c);
     assert_eq!(
-        goal.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(),
+        goal.get_formulas::<Bool>(),
         vec![a, b, c],
     );
 }
@@ -905,7 +1006,7 @@ fn test_tactic_skip() {
     let tactic = Tactic::create_skip(&ctx);
     let goal_result = tactic.apply(&goal, &params);
     assert_eq!(
-        goal_result.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(),
+        goal_result.get_formulas::<Bool>(),
         vec![a.clone(), b, a],
     );
 }
@@ -926,7 +1027,7 @@ fn test_tactic_and_then() {
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let and_then_tactic = tactic.and_then(Tactic::new(&ctx, "simplify"));
     let goal_result = and_then_tactic.apply(&goal, &params);
-    assert_eq!(goal_result.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(), vec![a, b]);
+    assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
 
 #[test]
@@ -945,7 +1046,7 @@ fn test_tactic_or_else() {
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let or_else_tactic = tactic.or_else(Tactic::new(&ctx, "simplify"));
     let goal_result = or_else_tactic.apply(&goal, &params);
-    assert_eq!(goal_result.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(), vec![a, b]);
+    assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
 
 #[test]
@@ -953,14 +1054,14 @@ fn test_goal_apply_tactic() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
-    pub fn test_apply_tactic(ctx: &Context, goal: Goal, before_string: &str, after_string: &str) {
-        assert_eq!(format!("{}", goal), before_string);
+    pub fn test_apply_tactic(ctx: &Context, goal: Goal, before_formulas: Vec<Bool>, after_formulas: Vec<Bool>) {
+        assert_eq!(goal.get_formulas::<Bool>(), before_formulas);
         let params = Params::new(&ctx);
 
         let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
         let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
         let goal_result = repeat_tactic.apply(&goal, &params);
-        assert_eq!(format!("{}", goal_result), after_string);
+        assert_eq!(goal_result.get_formulas::<Bool>(), after_formulas);
     }
 
     let a = ast::Bool::new_const(&ctx, "a");
@@ -970,24 +1071,33 @@ fn test_goal_apply_tactic() {
     let a_and_b_and_a = Bool::and(&ctx, &bools);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
-    test_apply_tactic(&ctx, goal, "(goal\n  a\n  b\n  a)", "(goal\n  b\n  a)");
+    test_apply_tactic(&ctx, goal, vec![a.clone(), b.clone(), a.clone()], vec![b.clone(), a.clone()]);
 
     let a_implies_b = ast::Bool::implies(&a, &b);
     let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
 
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_a_implies_b);
-    test_apply_tactic(&ctx, goal, "(goal\n  a\n  (=> a b))", "(goal\n  a\n  b)");
+    test_apply_tactic(&ctx, goal, vec![a.clone(), a_implies_b.clone()], vec![a.clone(), b.clone()]);
 
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a);
-    goal.assert(&a_implies_b);
-    test_apply_tactic(&ctx, goal, "(goal\n  a\n  (=> a b))", "(goal\n  a\n  b)");
+    goal.assert(&a_implies_b.clone());
+    test_apply_tactic(&ctx, goal, vec![a.clone(), a_implies_b.clone()], vec![a.clone(), b.clone()]);
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     let true_and_false_and_true = ast::Bool::and(&ctx, &[&true_bool, &false_bool, &true_bool]);
     goal.assert(&true_and_false_and_true);
-    test_apply_tactic(&ctx, goal, "(goal\n  false)", "(goal\n  false)");
+    test_apply_tactic(&ctx, goal, vec![false_bool.clone()], vec![false_bool.clone()]);
+}
+
+fn test_issue_94() {
+    let cfg = Config::new();
+    let ctx0 = Context::new(&cfg);
+    let ctx1 = Context::new(&cfg);
+    let i0 = ast::Int::fresh_const(&ctx0, "a");
+    let i1 = ast::Int::fresh_const(&ctx1, "b");
+    ast::Int::add(&ctx0, &[&i0, &i1]);
 }
