@@ -141,7 +141,7 @@ macro_rules! varop {
 
 /// Abstract syntax tree (AST) nodes represent terms, constants, or expressions.
 /// The `Ast` trait contains methods common to all AST subtypes.
-pub trait Ast<'ctx>: Sized + fmt::Debug {
+pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     fn get_ctx(&self) -> &'ctx Context;
     fn get_z3_ast(&self) -> Z3_ast;
 
@@ -1168,14 +1168,13 @@ impl<'ctx> Array<'ctx> {
 
     /// Create a "constant array", that is, an `Array` initialized so that all of the
     /// indices in the `domain` map to the given value `val`
-    pub fn const_array(
-        ctx: &'ctx Context,
-        domain: &Sort<'ctx>,
-        val: &Dynamic<'ctx>,
-    ) -> Array<'ctx> {
+    pub fn const_array<A>(ctx: &'ctx Context, domain: &Sort<'ctx>, val: &A) -> Array<'ctx>
+    where
+        A: Ast<'ctx>,
+    {
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const_array(ctx.z3_ctx, domain.z3_sort, val.z3_ast)
+            Z3_mk_const_array(ctx.z3_ctx, domain.z3_sort, val.get_z3_ast())
         })
     }
 
@@ -1194,7 +1193,10 @@ impl<'ctx> Array<'ctx> {
     /// The return type will be of the array's `range` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn select(&self, index: &Dynamic<'ctx>) -> Dynamic<'ctx> {
+    pub fn select<A>(&self, index: &A) -> Dynamic<'ctx>
+    where
+        A: Ast<'ctx>,
+    {
         // TODO: We could validate here that the index is of the correct type.
         // This would require us either to keep around the original `domain` argument
         // from when the Array was constructed, or to do an additional Z3 query
@@ -1215,7 +1217,11 @@ impl<'ctx> Array<'ctx> {
     /// and the `value` _must be_ of the array's `range` sort.
     //
     // We avoid the trinop! macro because the arguments have non-Self types
-    pub fn store(&self, index: &Dynamic<'ctx>, value: &Dynamic<'ctx>) -> Self {
+    pub fn store<A1, A2>(&self, index: A1, value: A2) -> Self
+    where
+        A1: Ast<'ctx>,
+        A2: Ast<'ctx>,
+    {
         Self::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_store(
@@ -1274,7 +1280,10 @@ impl<'ctx> Set<'ctx> {
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn add(&self, element: &Dynamic<'ctx>) -> Set<'ctx> {
+    pub fn add<A>(&self, element: &A) -> Set<'ctx>
+    where
+        A: Ast<'ctx>,
+    {
         Set::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
@@ -1286,7 +1295,10 @@ impl<'ctx> Set<'ctx> {
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn del(&self, element: &Dynamic<'ctx>) -> Set<'ctx> {
+    pub fn del<A>(&self, element: &A) -> Set<'ctx>
+    where
+        A: Ast<'ctx>,
+    {
         Set::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
@@ -1298,7 +1310,10 @@ impl<'ctx> Set<'ctx> {
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn member(&self, element: &Dynamic<'ctx>) -> Bool<'ctx> {
+    pub fn member<A>(&self, element: &A) -> Bool<'ctx>
+    where
+        A: Ast<'ctx>,
+    {
         Bool::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
@@ -1442,7 +1457,7 @@ impl<'ctx> Datatype<'ctx> {
 ///     &ctx,
 ///     &[&x.clone().into()],
 ///     &[&f_x_pattern],
-///     &x._eq(&f_x).into()
+///     &x._eq(&f_x)
 /// ).try_into().unwrap();
 /// solver.assert(&forall);
 ///
@@ -1452,18 +1467,21 @@ impl<'ctx> Datatype<'ctx> {
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
 /// ```
-pub fn forall_const<'ctx>(
+pub fn forall_const<'ctx, A>(
     ctx: &'ctx Context,
     bounds: &[&Dynamic<'ctx>],
     patterns: &[&Pattern<'ctx>],
-    body: &Dynamic<'ctx>,
-) -> Dynamic<'ctx> {
+    body: &A,
+) -> Dynamic<'ctx>
+where
+    A: Ast<'ctx> + Clone,
+{
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
 
     if bounds.is_empty() {
-        return body.clone();
+        return (*body).clone().into();
     }
 
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
@@ -1501,7 +1519,7 @@ pub fn forall_const<'ctx>(
 ///     &ctx,
 ///     &[&x.clone().into()],
 ///     &[&f_x_pattern],
-///     &x._eq(&f_x).not().into()
+///     &x._eq(&f_x).not()
 /// ).try_into().unwrap();
 /// solver.assert(&exists.not());
 ///
@@ -1511,15 +1529,22 @@ pub fn forall_const<'ctx>(
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
 /// ```
-pub fn exists_const<'ctx>(
+pub fn exists_const<'ctx, A>(
     ctx: &'ctx Context,
     bounds: &[&Dynamic<'ctx>],
     patterns: &[&Pattern<'ctx>],
-    body: &Dynamic<'ctx>,
-) -> Dynamic<'ctx> {
+    body: &A,
+) -> Dynamic<'ctx>
+where
+    A: Ast<'ctx> + Clone,
+{
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
+
+    if bounds.is_empty() {
+        return (*body).clone().into();
+    }
 
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
     let patterns: Vec<_> = patterns.iter().map(|p| p.z3_pattern).collect();
