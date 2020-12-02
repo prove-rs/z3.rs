@@ -1301,7 +1301,7 @@ impl<'ctx> Set<'ctx> {
     pub fn member(&self, element: &Dynamic<'ctx>) -> Bool<'ctx> {
         Bool::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
+            Z3_mk_set_member(self.ctx.z3_ctx, element.get_z3_ast(), self.z3_ast)
         })
     }
 

@@ -719,7 +719,7 @@ fn test_mutually_recursive_datatype() {
     solver.assert(
         &tree_list_sort.variants[1].accessors[0]
             .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
-            ._eq(&n1)
+            ._eq(&n1),
     );
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -730,4 +730,45 @@ fn get_model_without_check_does_not_exit() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
     solver.get_model();
+}
+
+#[test]
+fn test_set_membership() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let set = ast::Set::new_const(&ctx, "integer_set", &Sort::int(&ctx));
+    let one = ast::Int::from_u64(&ctx, 1);
+
+    solver.push();
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx))));
+
+    solver.push();
+    solver.assert(&set.member(&one.clone().into()));
+    // An empty set will never contain 1
+    assert_eq!(solver.check(), SatResult::Unsat);
+    solver.pop(1);
+
+    solver.push();
+    let x = ast::Int::new_const(&ctx, "x");
+    // An empty set will always return false for member
+    let forall: ast::Bool = ast::forall_const(
+        &ctx,
+        &[&x.clone().into()],
+        &[],
+        &set.member(&x.into()).not().into(),
+    ).try_into().unwrap();
+    solver.assert(&forall);
+    assert_eq!(solver.check(), SatResult::Sat);
+    solver.pop(1);
+
+    solver.pop(1);
+
+    solver.push();
+    // A singleton set of 1 will contain 1
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one.clone().into())));
+    solver.assert(&set.member(&one.clone().into()).into());
+    assert_eq!(solver.check(), SatResult::Sat);
+    solver.pop(1);
 }
