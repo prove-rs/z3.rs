@@ -298,7 +298,7 @@ fn test_real_cmp() {
     let x = ast::Real::new_const(&ctx, "x");
     let x_plus_1 = ast::Real::add(&ctx, &[&x, &ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
-    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1).into());
+    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1));
 
     solver.assert(&forall.try_into().unwrap());
     assert_eq!(solver.check(), SatResult::Sat);
@@ -689,7 +689,7 @@ fn test_mutually_recursive_datatype() {
         .apply(&[&leaf_ten])
         .as_int()
         .unwrap();
-    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone().into()));
+    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone()));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let nil = tree_list_sort.variants[0].constructor.apply(&[]);
