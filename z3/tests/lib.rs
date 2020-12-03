@@ -745,7 +745,7 @@ fn test_set_membership() {
     solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx))));
 
     solver.push();
-    solver.assert(&set.member(&one.clone().into()));
+    solver.assert(&set.member(&one));
     // An empty set will never contain 1
     assert_eq!(solver.check(), SatResult::Unsat);
     solver.pop(1);
@@ -753,12 +753,10 @@ fn test_set_membership() {
     solver.push();
     let x = ast::Int::new_const(&ctx, "x");
     // An empty set will always return false for member
-    let forall: ast::Bool = ast::forall_const(
-        &ctx,
-        &[&x.clone().into()],
-        &[],
-        &set.member(&x.into()).not().into(),
-    ).try_into().unwrap();
+    let forall: ast::Bool =
+        ast::forall_const(&ctx, &[&x.clone().into()], &[], &set.member(&x).not())
+            .try_into()
+            .unwrap();
     solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
@@ -767,8 +765,28 @@ fn test_set_membership() {
 
     solver.push();
     // A singleton set of 1 will contain 1
-    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one.clone().into())));
-    solver.assert(&set.member(&one.clone().into()).into());
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
+    solver.assert(&set.member(&one));
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
+}
+
+#[test]
+fn test_dynamic_as_set() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let set_sort = Sort::set(&ctx, &Sort::int(&ctx));
+    let array_sort = Sort::array(&ctx, &Sort::int(&ctx), &Sort::int(&ctx));
+    let array_of_sets = ast::Array::new_const(&ctx, "array_of_sets", &Sort::int(&ctx), &set_sort);
+    let array_of_arrays =
+        ast::Array::new_const(&ctx, "array_of_arrays", &Sort::int(&ctx), &array_sort);
+    assert!(array_of_sets
+        .select(&ast::Int::from_u64(&ctx, 0))
+        .as_set()
+        .is_some());
+    assert!(array_of_arrays
+        .select(&ast::Int::from_u64(&ctx, 0))
+        .as_set()
+        .is_none());
 }

@@ -401,12 +401,7 @@ impl_from_try_into_dynamic!(BV, as_bv);
 impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
-// Dynamic::as_set does not exist, so just implement one direction here
-impl<'ctx> From<Set<'ctx>> for Dynamic<'ctx> {
-    fn from(ast: Set<'ctx>) -> Self {
-        Dynamic::new(ast.ctx, ast.z3_ast)
-    }
-}
+impl_from_try_into_dynamic!(Set, as_set);
 
 impl<'ctx> Int<'ctx> {
     #[cfg(feature = "arbitrary-size-numeral")]
@@ -1397,6 +1392,28 @@ impl<'ctx> Dynamic<'ctx> {
         }
     }
 
+    /// Returns `None` if the `Dynamic` is not actually a `Set`
+    pub fn as_set(&self) -> Option<Set<'ctx>> {
+        match self.sort_kind() {
+            SortKind::Array => {
+                match unsafe {
+                    Z3_get_sort_kind(
+                        self.ctx.z3_ctx,
+                        Z3_get_array_sort_range(
+                            self.ctx.z3_ctx,
+                            Z3_get_sort(self.ctx.z3_ctx, self.z3_ast),
+                        ),
+                    )
+                } {
+                    SortKind::Bool => Some(Set::new(self.ctx, self.z3_ast)),
+                    _ => None,
+                }
+            }
+            _ => None,
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `Datatype`
     pub fn as_datatype(&self) -> Option<Datatype<'ctx>> {
         match self.sort_kind() {
             SortKind::Datatype => Some(Datatype::new(self.ctx, self.z3_ast)),
