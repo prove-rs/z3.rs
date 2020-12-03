@@ -1212,7 +1212,7 @@ impl<'ctx> Array<'ctx> {
     /// and the `value` _must be_ of the array's `range` sort.
     //
     // We avoid the trinop! macro because the arguments have non-Self types
-    pub fn store<A1, A2>(&self, index: A1, value: A2) -> Self
+    pub fn store<A1, A2>(&self, index: &A1, value: &A2) -> Self
     where
         A1: Ast<'ctx>,
         A2: Ast<'ctx>,
