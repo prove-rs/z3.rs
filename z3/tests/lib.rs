@@ -790,3 +790,18 @@ fn test_dynamic_as_set() {
         .as_set()
         .is_none());
 }
+
+#[test]
+fn test_array_store_select() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let one = ast::Int::from_u64(&ctx, 1);
+    let set = ast::Array::new_const(&ctx, "integer_array", &Sort::int(&ctx), &Sort::int(&ctx))
+        .store(&zero, &one);
+
+    solver.assert(&set.select(&zero)._eq(&one.into()).not());
+    assert_eq!(solver.check(), SatResult::Unsat);
+}
