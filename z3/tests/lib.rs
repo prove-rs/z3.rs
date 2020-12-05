@@ -805,3 +805,14 @@ fn test_array_store_select() {
     solver.assert(&set.select(&zero)._eq(&one.into()).not());
     assert_eq!(solver.check(), SatResult::Unsat);
 }
+
+#[test]
+#[should_panic]
+fn test_issue_94() {
+    let cfg = Config::new();
+    let ctx0 = Context::new(&cfg);
+    let ctx1 = Context::new(&cfg);
+    let i0 = ast::Int::fresh_const(&ctx0, "a");
+    let i1 = ast::Int::fresh_const(&ctx1, "b");
+    ast::Int::add(&ctx0, &[&i0, &i1]);
+}
