@@ -97,6 +97,7 @@ macro_rules! binop {
         $(
             $( #[ $attr ] )*
             pub fn $f(&self, other: &Self) -> $retty {
+                assert!(self.ctx == other.ctx);
                 <$retty>::new(self.ctx, unsafe {
                     let guard = Z3_MUTEX.lock().unwrap();
                     $z3fn(self.ctx.z3_ctx, self.z3_ast, other.z3_ast)
@@ -128,6 +129,7 @@ macro_rules! varop {
         $(
             $( #[ $attr ] )*
             pub fn $f(context: &'ctx Context, values: &[&Self]) -> $retty {
+                assert!(values.iter().all(|v| v.get_ctx().z3_ctx == context.z3_ctx));
                 <$retty>::new(context, unsafe {
                     let guard = Z3_MUTEX.lock().unwrap();
                     let tmp: Vec<_> = values.iter().map(|x| x.z3_ast).collect();
