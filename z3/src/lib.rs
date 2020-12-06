@@ -140,7 +140,7 @@ pub struct FuncDecl<'ctx> {
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+///     vec![("value", DatatypeAccessor::Sort(&Sort::int(&ctx)))],
 /// )
 /// .finish();
 ///
@@ -161,15 +161,15 @@ pub struct FuncDecl<'ctx> {
 /// assert_eq!(3, model.eval(&ast.as_int().unwrap()).unwrap().as_i64().unwrap());
 /// ```
 #[derive(Debug)]
-pub struct DatatypeBuilder<'ctx> {
+pub struct DatatypeBuilder<'sort, 'ctx: 'sort> {
     ctx: &'ctx Context,
     name: Symbol,
-    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'ctx>)>)>,
+    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'sort, 'ctx>)>)>,
 }
 
 #[derive(Debug)]
-pub enum DatatypeAccessor<'ctx> {
-    Sort(Sort<'ctx>),
+pub enum DatatypeAccessor<'sort, 'ctx: 'sort> {
+    Sort(&'sort Sort<'ctx>),
     Datatype(Symbol),
 }
 
