@@ -6,7 +6,7 @@ use {
     Symbol,
 };
 
-impl<'ctx> DatatypeBuilder<'ctx> {
+impl<'sort, 'ctx: 'sort> DatatypeBuilder<'sort, 'ctx> {
     pub fn new<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Self {
         Self {
             ctx,
@@ -15,8 +15,12 @@ impl<'ctx> DatatypeBuilder<'ctx> {
         }
     }
 
-    pub fn variant(mut self, name: &str, fields: Vec<(&str, DatatypeAccessor<'ctx>)>) -> Self {
-        let mut accessor_vec: Vec<(String, DatatypeAccessor<'ctx>)> = Vec::new();
+    pub fn variant(
+        mut self,
+        name: &str,
+        fields: Vec<(&str, DatatypeAccessor<'sort, 'ctx>)>,
+    ) -> Self {
+        let mut accessor_vec: Vec<(String, DatatypeAccessor<'sort, 'ctx>)> = Vec::new();
         for (accessor_name, accessor) in fields {
             accessor_vec.push((accessor_name.to_string(), accessor));
         }
@@ -32,8 +36,8 @@ impl<'ctx> DatatypeBuilder<'ctx> {
     }
 }
 
-pub fn create_datatypes<'ctx>(
-    datatype_builders: Vec<DatatypeBuilder<'ctx>>,
+pub fn create_datatypes<'sort, 'ctx: 'sort>(
+    datatype_builders: Vec<DatatypeBuilder<'sort, 'ctx>>,
 ) -> Vec<DatatypeSort<'ctx>> {
     let num = datatype_builders.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
