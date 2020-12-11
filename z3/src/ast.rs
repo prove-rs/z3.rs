@@ -35,6 +35,12 @@ pub struct Real<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`](trait.Ast.html) node representing a float value.
+pub struct Float<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 /// [`Ast`](trait.Ast.html) node representing a string value.
 pub struct String<'ctx> {
     pub(crate) ctx: &'ctx Context,
@@ -109,18 +115,37 @@ macro_rules! binop {
     };
 }
 
-/* We aren't currently using the trinop! macro for any of our trinops
+// We aren't currently using the trinop! macro for any of our trinops
+// macro_rules! trinop {
+//     ( $f:ident, $z3fn:ident, $retty:ty ) => {
+//         pub fn $f(&self, a: &Self, b: &Self) -> $retty {
+//             assert!((self.ctx == a.ctx) && (a.ctx == b.ctx));
+//             <$retty>::new(self.ctx, unsafe {
+//                 let guard = Z3_MUTEX.lock().unwrap();
+//                 $z3fn(self.ctx.z3_ctx, self.z3_ast, a.z3_ast, b.z3_ast)
+//             })
+//         }
+//     };
+// }
+
 macro_rules! trinop {
-    ( $f:ident, $z3fn:ident, $retty:ty ) => {
-        pub fn $f(&self, a: &Self, b: &Self) -> $retty {
-            <$retty>::new(self.ctx, unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                $z3fn(self.ctx.z3_ctx, self.z3_ast, a.z3_ast, b.z3_ast)
-            })
-        }
+    (
+        $(
+            $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident, $retty:ty ) ;
+        )*
+    ) => {
+        $(
+            $( #[ $attr ] )*
+            pub fn $f(&self, a: &Self, b: &Self) -> $retty {
+                assert!((self.ctx == a.ctx) && (a.ctx == b.ctx));
+                <$retty>::new(self.ctx, unsafe {
+                    let guard = Z3_MUTEX.lock().unwrap();
+                    $z3fn(self.ctx.z3_ctx, self.z3_ast, a.z3_ast, b.z3_ast)
+                })
+            }
+        )*
     };
 }
-*/
 
 macro_rules! varop {
     (
@@ -424,6 +449,8 @@ impl_ast!(Int);
 impl_from_try_into_dynamic!(Int, as_int);
 impl_ast!(Real);
 impl_from_try_into_dynamic!(Real, as_real);
+impl_ast!(Float);
+impl_from_try_into_dynamic!(Float, as_float);
 impl_ast!(String);
 impl_from_try_into_dynamic!(String, as_string);
 impl_ast!(BV);
@@ -476,6 +503,18 @@ impl<'ctx> Real<'ctx> {
             numeral_ptr
         };
         Some(Real::new(ctx, ast))
+    }
+}
+
+impl<'ctx> Float<'ctx> {
+    pub fn from_f32(ctx: &'ctx Context, value: f32) -> Float<'ctx> {
+        let sort = Sort::float32(ctx);
+        Self::new(ctx, unsafe{Z3_mk_fpa_numeral_float(ctx.z3_ctx, value, sort.z3_sort)})
+    }
+
+    pub fn from_f64(ctx: &'ctx Context, value: f64) -> Float<'ctx> {
+            let sort = Sort::double(ctx);
+            Self::new(ctx, unsafe{Z3_mk_fpa_numeral_double(ctx.z3_ctx, value, sort.z3_sort)})
     }
 }
 
@@ -848,6 +887,190 @@ impl<'ctx> Real<'ctx> {
         ge(Z3_mk_ge, Bool<'ctx>);
     }
 }
+
+impl<'ctx> Float<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, ebits: u32, sbits: u32) -> Float<'ctx> {
+        let sort = Sort::float(ctx, ebits, sbits);
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+        })
+    }
+
+    pub fn new_const_float32<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Float<'ctx> {
+        let sort = Sort::float32(ctx);
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+        })
+    }
+
+    pub fn new_const_double<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Float<'ctx> {
+        let sort = Sort::double(ctx);
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+        })
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, ebits: u32, sbits: u32) -> Float<'ctx> {
+        let sort = Sort::float32(ctx);
+        Self::new(ctx, unsafe {
+            let pp = CString::new(prefix).unwrap();
+            let p = pp.as_ptr();
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+        })
+    }
+
+    pub fn fresh_const_float32(ctx: &'ctx Context, prefix: &str) -> Float<'ctx> {
+        let sort = Sort::float32(ctx);
+        Self::new(ctx, unsafe {
+            let pp = CString::new(prefix).unwrap();
+            let p = pp.as_ptr();
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+        })
+    }
+
+    pub fn fresh_const_double(ctx: &'ctx Context, prefix: &str) -> Float<'ctx> {
+        let sort = Sort::double(ctx);
+        Self::new(ctx, unsafe {
+            let pp = CString::new(prefix).unwrap();
+            let p = pp.as_ptr();
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+        })
+    }
+
+    pub fn round_towards_zero(ctx: &'ctx Context) -> Float<'ctx> {
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fpa_round_toward_zero(ctx.z3_ctx)
+        })
+    }
+
+    pub fn round_towards_negative(ctx: &'ctx Context) -> Float<'ctx> {
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fpa_round_toward_negative(ctx.z3_ctx)
+        })
+    }
+
+    pub fn round_towards_positive(ctx: &'ctx Context) -> Float<'ctx> {
+        Self::new(ctx, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_fpa_round_toward_positive(ctx.z3_ctx)
+        })
+    }
+
+    pub fn add_towards_zero(&self, other: &Self) -> Float<'ctx> {
+        Self::round_towards_zero(self.ctx).add(self, other)
+    }
+
+    pub fn sub_towards_zero(&self, other: &Self) -> Float<'ctx> {
+        Self::round_towards_zero(self.ctx).sub(self, other)
+    }
+
+    pub fn mul_towards_zero(&self, other: &Self) -> Float<'ctx> {
+        Self::round_towards_zero(self.ctx).mul(self, other)
+    }
+
+    pub fn div_towards_zero(&self, other: &Self) -> Float<'ctx> {
+        Self::round_towards_zero(self.ctx).div(self, other)
+    }
+
+    unop! {
+        unary_abs(Z3_mk_fpa_abs, Self);
+        unary_neg(Z3_mk_fpa_neg, Self);
+    }
+    binop! {
+        lt(Z3_mk_fpa_lt, Bool<'ctx>);
+        le(Z3_mk_fpa_lt, Bool<'ctx>);
+        gt(Z3_mk_fpa_gt, Bool<'ctx>);
+        ge(Z3_mk_fpa_gt, Bool<'ctx>);
+    }
+    trinop! {
+        add(Z3_mk_fpa_add, Self);
+        sub(Z3_mk_fpa_sub, Self);
+        mul(Z3_mk_fpa_mul, Self);
+        div(Z3_mk_fpa_div, Self);
+    }
+}
+
+// impl<'ctx> Double<'ctx> {
+//     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Double<'ctx> {
+//         let sort = Sort::double(ctx);
+//         Self::new(ctx, unsafe {
+//             let guard = Z3_MUTEX.lock().unwrap();
+//             Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+//         })
+//     }
+
+//     pub fn fresh_const(ctx: &'ctx Context, prefix: &str) -> Double<'ctx> {
+//         let sort = Sort::double(ctx);
+//         Self::new(ctx, unsafe {
+//             let pp = CString::new(prefix).unwrap();
+//             let p = pp.as_ptr();
+//             let guard = Z3_MUTEX.lock().unwrap();
+//             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+//         })
+//     }
+
+//     pub fn round_towards_zero(ctx: &'ctx Context) -> Double<'ctx> {
+//         Self::new(ctx, unsafe {
+//             let guard = Z3_MUTEX.lock().unwrap();
+//             Z3_mk_fpa_round_toward_zero(ctx.z3_ctx)
+//         })
+//     }
+
+//     pub fn round_towards_negative(ctx: &'ctx Context) -> Double<'ctx> {
+//         Self::new(ctx, unsafe {
+//             let guard = Z3_MUTEX.lock().unwrap();
+//             Z3_mk_fpa_round_toward_negative(ctx.z3_ctx)
+//         })
+//     }
+
+//     pub fn round_towards_positive(ctx: &'ctx Context) -> Double<'ctx> {
+//         Self::new(ctx, unsafe {
+//             let guard = Z3_MUTEX.lock().unwrap();
+//             Z3_mk_fpa_round_toward_positive(ctx.z3_ctx)
+//         })
+//     }
+
+//     pub fn add_towards_zero(&self, other: &Self) -> Double<'ctx> {
+//         Self::round_towards_zero(self.ctx).add(self, other)
+//     }
+
+//     pub fn sub_towards_zero(&self, other: &Self) -> Double<'ctx> {
+//         Self::round_towards_zero(self.ctx).sub(self, other)
+//     }
+
+//     pub fn mul_towards_zero(&self, other: &Self) -> Double<'ctx> {
+//         Self::round_towards_zero(self.ctx).mul(self, other)
+//     }
+
+//     pub fn div_towards_zero(&self, other: &Self) -> Double<'ctx> {
+//         Self::round_towards_zero(self.ctx).div(self, other)
+//     }
+
+//     unop! {
+//         unary_abs(Z3_mk_fpa_abs, Self);
+//         unary_neg(Z3_mk_fpa_neg, Self);
+//     }
+//     binop! {
+//         lt(Z3_mk_fpa_lt, Bool<'ctx>);
+//         le(Z3_mk_fpa_lt, Bool<'ctx>);
+//         gt(Z3_mk_fpa_gt, Bool<'ctx>);
+//         ge(Z3_mk_fpa_gt, Bool<'ctx>);
+//     }
+//     trinop! {
+//         add(Z3_mk_fpa_add, Self);
+//         sub(Z3_mk_fpa_sub, Self);
+//         mul(Z3_mk_fpa_mul, Self);
+//         div(Z3_mk_fpa_div, Self);
+//     }
+// }
 
 impl<'ctx> String<'ctx> {
     /// Creates a new constant using the built-in string sort
@@ -1392,6 +1615,14 @@ impl<'ctx> Dynamic<'ctx> {
     pub fn as_real(&self) -> Option<Real<'ctx>> {
         match self.sort_kind() {
             SortKind::Real => Some(Real::new(self.ctx, self.z3_ast)),
+            _ => None,
+        }
+    }
+
+    // Returns `None` if the `Dynamic` is not actually a `Float`
+    pub fn as_float(&self) -> Option<Float<'ctx>> {
+        match self.sort_kind() {
+            SortKind::FloatingPoint => Some(Float::new(self.ctx, self.z3_ast)),
             _ => None,
         }
     }
