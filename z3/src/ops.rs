@@ -588,11 +588,8 @@ impl_binary_mult_op_without_numbers!(Real, Real<'ctx>, Mul, MulAssign, mul, mul_
 impl_binary_op_without_numbers!(Real<'ctx>, Div, DivAssign, div, div_assign, div);
 impl_unary_op!(Real<'ctx>, Neg, neg, unary_minus);
 
-// // implementations for Float32
+// // implementations for Float
 impl_unary_op!(Float<'ctx>, Neg, neg, unary_neg);
-
-// // implementations for Double
-// impl_unary_op!(Double<'ctx>, Neg, neg, unary_neg);
 
 // implementations for Bool
 impl_binary_mult_op_bool!(
