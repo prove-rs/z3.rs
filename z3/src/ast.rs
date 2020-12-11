@@ -115,19 +115,6 @@ macro_rules! binop {
     };
 }
 
-// We aren't currently using the trinop! macro for any of our trinops
-// macro_rules! trinop {
-//     ( $f:ident, $z3fn:ident, $retty:ty ) => {
-//         pub fn $f(&self, a: &Self, b: &Self) -> $retty {
-//             assert!((self.ctx == a.ctx) && (a.ctx == b.ctx));
-//             <$retty>::new(self.ctx, unsafe {
-//                 let guard = Z3_MUTEX.lock().unwrap();
-//                 $z3fn(self.ctx.z3_ctx, self.z3_ast, a.z3_ast, b.z3_ast)
-//             })
-//         }
-//     };
-// }
-
 macro_rules! trinop {
     (
         $(
