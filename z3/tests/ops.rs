@@ -2,7 +2,7 @@ extern crate z3;
 
 use z3::{
     ast,
-    ast::{Array, Ast, AstKind, Bool, Dynamic, Int, Real, BV},
+    ast::{Array, Ast, AstKind, Bool, Dynamic, Int, Real, BV, Float},
     Config, Context, DeclKind, FuncDecl, Sort,
 };
 
@@ -114,6 +114,35 @@ fn test_real_ops() {
     test_op_assign!(-, -=);
     test_op_assign!(*, *=);
     test_op_assign!(/, /=);
+    test_unary_op!(-);
+}
+
+
+#[test]
+fn test_float32_ops() {
+    let cfg = Config::default();
+    let ctx = Context::new(&cfg);
+
+    macro_rules! test_unary_op {
+        ($op:tt) => {
+            let a = Float::new_const_float32(&ctx, "a");
+            let _ = $op a;
+        };
+    }
+    test_unary_op!(-);
+}
+
+#[test]
+fn test_double_ops() {
+    let cfg = Config::default();
+    let ctx = Context::new(&cfg);
+
+    macro_rules! test_unary_op {
+        ($op:tt) => {
+            let a = Float::new_const_double(&ctx, "a");
+            let _ = $op a;
+        };
+    }
     test_unary_op!(-);
 }
 
