@@ -239,8 +239,9 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
         })
     }
 
-    /// Return the number of children of this AST node.
-    /// Leaf nodes (eg Bool consts) will return 0.
+    /// Return the number of children of this `Ast`.
+    ///
+    /// Leaf nodes (eg `Bool` consts) will return 0.
     fn num_children(&self) -> usize {
         let this_ctx = self.get_ctx().z3_ctx;
         unsafe {
@@ -250,8 +251,9 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
         }
     }
 
-    /// Return the nth child of this AST node.  Out-of-bound indices will
-    /// return none.
+    /// Return the `n`th child of this `Ast`.
+    ///
+    /// Out-of-bound indices will return `None`.
     fn nth_child(&self, idx: usize) -> Option<Dynamic<'ctx>> {
         if idx >= self.num_children() {
             None
