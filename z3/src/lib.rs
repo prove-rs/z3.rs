@@ -130,6 +130,8 @@ pub struct FuncDecl<'ctx> {
     z3_func_decl: Z3_func_decl,
 }
 
+pub use z3_sys::DeclKind;
+
 /// Build a datatype sort.
 ///
 /// Example:
