@@ -1,4 +1,4 @@
-use crate::ast::{Ast, Bool, Int, Real, BV, Float};
+use crate::ast::{Ast, Bool, Float, Int, Real, BV};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,

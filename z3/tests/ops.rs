@@ -117,7 +117,6 @@ fn test_real_ops() {
     test_unary_op!(-);
 }
 
-
 #[test]
 fn test_float32_ops() {
     let cfg = Config::default();

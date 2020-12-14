@@ -34,15 +34,15 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn float(ctx: &Context, ebits: u32, sbits: u32) -> Sort {
-        Sort::new(ctx, unsafe {  Z3_mk_fpa_sort(ctx.z3_ctx, ebits, sbits) })
+        Sort::new(ctx, unsafe { Z3_mk_fpa_sort(ctx.z3_ctx, ebits, sbits) })
     }
 
     pub fn float32(ctx: &Context) -> Sort {
-        Sort::new(ctx, unsafe {  Z3_mk_fpa_sort(ctx.z3_ctx, 8, 24) })
+        Sort::new(ctx, unsafe { Z3_mk_fpa_sort(ctx.z3_ctx, 8, 24) })
     }
 
     pub fn double(ctx: &Context) -> Sort {
-        Sort::new(ctx, unsafe {  Z3_mk_fpa_sort(ctx.z3_ctx, 11, 53) })
+        Sort::new(ctx, unsafe { Z3_mk_fpa_sort(ctx.z3_ctx, 11, 53) })
     }
 
     pub fn string(ctx: &'ctx Context) -> Sort<'ctx> {
