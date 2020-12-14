@@ -494,6 +494,7 @@ impl<'ctx> Real<'ctx> {
 }
 
 impl<'ctx> Float<'ctx> {
+    // Create a 32-bit (IEEE-754) Float [`Ast`](trait.Ast.html) from a rust f32
     pub fn from_f32(ctx: &'ctx Context, value: f32) -> Float<'ctx> {
         let sort = Sort::float32(ctx);
         Self::new(ctx, unsafe {
@@ -501,6 +502,7 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // Create a 364-bit (IEEE-754) Float [`Ast`](trait.Ast.html) from a rust f64
     pub fn from_f64(ctx: &'ctx Context, value: f64) -> Float<'ctx> {
         let sort = Sort::double(ctx);
         Self::new(ctx, unsafe {
@@ -893,6 +895,7 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // Create a 32-bit (IEEE-754) Float [`Ast`](trait.Ast.html)
     pub fn new_const_float32<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Float<'ctx> {
         let sort = Sort::float32(ctx);
         Self::new(ctx, unsafe {
@@ -901,6 +904,7 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // Create a 64-bit (IEEE-754) Float [`Ast`](trait.Ast.html)
     pub fn new_const_double<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Float<'ctx> {
         let sort = Sort::double(ctx);
         Self::new(ctx, unsafe {
@@ -939,6 +943,7 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // returns RoundingMode towards zero
     pub fn round_towards_zero(ctx: &'ctx Context) -> Float<'ctx> {
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
@@ -946,6 +951,7 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // returns RoundingMode towards negative
     pub fn round_towards_negative(ctx: &'ctx Context) -> Float<'ctx> {
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
@@ -953,6 +959,7 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // returns RoundingMode towards positive
     pub fn round_towards_positive(ctx: &'ctx Context) -> Float<'ctx> {
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
@@ -960,18 +967,22 @@ impl<'ctx> Float<'ctx> {
         })
     }
 
+    // Add two floats of the same size, rounding towards zero
     pub fn add_towards_zero(&self, other: &Self) -> Float<'ctx> {
         Self::round_towards_zero(self.ctx).add(self, other)
     }
 
+    // Subtract two floats of the same size, rounding towards zero
     pub fn sub_towards_zero(&self, other: &Self) -> Float<'ctx> {
         Self::round_towards_zero(self.ctx).sub(self, other)
     }
 
+    // Multiply two floats of the same size, rounding towards zero
     pub fn mul_towards_zero(&self, other: &Self) -> Float<'ctx> {
         Self::round_towards_zero(self.ctx).mul(self, other)
     }
 
+    // Divide two floats of the same size, rounding towards zero
     pub fn div_towards_zero(&self, other: &Self) -> Float<'ctx> {
         Self::round_towards_zero(self.ctx).div(self, other)
     }
