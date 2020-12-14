@@ -1,8 +1,9 @@
 extern crate z3;
 
 use z3::{
-    ast::{Ast, Bool, Int, Real, BV},
-    Config, Context,
+    ast,
+    ast::{Array, Ast, AstKind, Bool, Dynamic, Int, Real, BV},
+    Config, Context, DeclKind, FuncDecl, Sort,
 };
 
 #[test]
@@ -192,4 +193,64 @@ fn test_ast_children() {
     assert_eq!(children[0].as_bool().unwrap(), a);
     assert_eq!(children[1].as_bool().unwrap(), b);
     assert_eq!(children[2].as_bool().unwrap(), c);
+}
+
+fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
+    assert_eq!(expr.kind(), AstKind::App);
+    assert_eq!(expr.is_app(), true);
+    assert_eq!(expr.is_const(), is_const);
+}
+
+#[test]
+fn test_ast_attributes() {
+    let cfg = Config::default();
+    let ctx = Context::new(&cfg);
+
+    let a = Bool::new_const(&ctx, "a");
+    let b = Bool::from_bool(&ctx, false);
+    assert_ast_attributes(&a, true);
+    assert_ast_attributes(&b, true);
+    assert_ast_attributes(&Dynamic::from_ast(&a), true);
+    assert_ast_attributes(&a.not(), false);
+    assert_ast_attributes(&Bool::or(&ctx, &[&a, &b]), false);
+
+    assert_ast_attributes(
+        &Array::new_const(&ctx, "arr", &Sort::int(&ctx), &Sort::bool(&ctx)),
+        true,
+    );
+    assert_ast_attributes(&BV::new_const(&ctx, "bv", 512), true);
+    assert_ast_attributes(&Real::new_const(&ctx, "r"), true);
+    assert_ast_attributes(&ast::String::new_const(&ctx, "st"), true);
+
+    let int_expr = Int::new_const(&ctx, "i");
+    let set_expr = ast::Set::new_const(&ctx, "set", &Sort::int(&ctx));
+    assert_ast_attributes(&int_expr, true);
+    assert_ast_attributes(&set_expr, true);
+    assert_ast_attributes(&set_expr.add(&Dynamic::from_ast(&int_expr)), false);
+}
+
+#[test]
+fn test_func_decl_attributes() {
+    let cfg = Config::default();
+    let ctx = Context::new(&cfg);
+
+    let const_decl = FuncDecl::new(&ctx, "c", &[], &Sort::bool(&ctx));
+    assert_eq!(const_decl.kind(), DeclKind::UNINTERPRETED);
+    assert_eq!(const_decl.name(), "c");
+    assert_eq!(const_decl.arity(), 0);
+
+    let unary_decl = FuncDecl::new(&ctx, "unary", &[&Sort::bool(&ctx)], &Sort::bool(&ctx));
+    assert_eq!(unary_decl.kind(), DeclKind::UNINTERPRETED);
+    assert_eq!(unary_decl.name(), "unary");
+    assert_eq!(unary_decl.arity(), 1);
+
+    let binary_decl = FuncDecl::new(
+        &ctx,
+        "binary",
+        &[&Sort::bool(&ctx), &Sort::bool(&ctx)],
+        &Sort::bool(&ctx),
+    );
+    assert_eq!(binary_decl.kind(), DeclKind::UNINTERPRETED);
+    assert_eq!(binary_decl.name(), "binary");
+    assert_eq!(binary_decl.arity(), 2);
 }

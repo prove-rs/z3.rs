@@ -10,6 +10,8 @@ use Sort;
 use Symbol;
 use Z3_MUTEX;
 
+pub use z3_sys::AstKind;
+
 #[cfg(feature = "arbitrary-size-numeral")]
 use num::bigint::BigInt;
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -239,8 +241,9 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
         })
     }
 
-    /// Return the number of children of this AST node.
-    /// Leaf nodes (eg Bool consts) will return 0.
+    /// Return the number of children of this `Ast`.
+    ///
+    /// Leaf nodes (eg `Bool` consts) will return 0.
     fn num_children(&self) -> usize {
         let this_ctx = self.get_ctx().z3_ctx;
         unsafe {
@@ -250,8 +253,9 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
         }
     }
 
-    /// Return the nth child of this AST node.  Out-of-bound indices will
-    /// return none.
+    /// Return the `n`th child of this `Ast`.
+    ///
+    /// Out-of-bound indices will return `None`.
     fn nth_child(&self, idx: usize) -> Option<Dynamic<'ctx>> {
         if idx >= self.num_children() {
             None
@@ -267,10 +271,34 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
         }
     }
 
-    /// Return the children of this node as a Vec of Dynamic nodes.
+    /// Return the children of this node as a `Vec<Dynamic>`.
     fn children(&self) -> Vec<Dynamic<'ctx>> {
         let n = self.num_children();
         (0..n).map(|i| self.nth_child(i).unwrap()).collect()
+    }
+
+    /// Return the `AstKind` for this `Ast`.
+    fn kind(&self) -> AstKind {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let z3_ctx = self.get_ctx().z3_ctx;
+            Z3_get_ast_kind(z3_ctx, self.get_z3_ast())
+        }
+    }
+
+    /// Return `true` if this is a Z3 function application.
+    ///
+    /// Note that constants are function applications with 0 arguments.
+    fn is_app(&self) -> bool {
+        let kind = self.kind();
+        kind == AstKind::Numeral || kind == AstKind::App
+    }
+
+    /// Return `true` if this is a Z3 constant.
+    ///
+    /// Note that constants are function applications with 0 arguments.
+    fn is_const(&self) -> bool {
+        self.is_app() && self.num_children() == 0
     }
 }
 
