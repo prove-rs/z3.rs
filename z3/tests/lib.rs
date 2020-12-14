@@ -305,6 +305,20 @@ fn test_real_cmp() {
 }
 
 #[test]
+fn test_float_add() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Float::new_const_float32(&ctx, "x");
+    let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
+    let y = ast::Float::from_f32(&ctx, 3.14);
+
+    solver.assert(&x_plus_one._eq(&y));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
 fn test_arbitrary_size_real() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
