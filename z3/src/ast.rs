@@ -496,12 +496,16 @@ impl<'ctx> Real<'ctx> {
 impl<'ctx> Float<'ctx> {
     pub fn from_f32(ctx: &'ctx Context, value: f32) -> Float<'ctx> {
         let sort = Sort::float32(ctx);
-        Self::new(ctx, unsafe{Z3_mk_fpa_numeral_float(ctx.z3_ctx, value, sort.z3_sort)})
+        Self::new(ctx, unsafe {
+            Z3_mk_fpa_numeral_float(ctx.z3_ctx, value, sort.z3_sort)
+        })
     }
 
     pub fn from_f64(ctx: &'ctx Context, value: f64) -> Float<'ctx> {
-            let sort = Sort::double(ctx);
-            Self::new(ctx, unsafe{Z3_mk_fpa_numeral_double(ctx.z3_ctx, value, sort.z3_sort)})
+        let sort = Sort::double(ctx);
+        Self::new(ctx, unsafe {
+            Z3_mk_fpa_numeral_double(ctx.z3_ctx, value, sort.z3_sort)
+        })
     }
 }
 
@@ -876,7 +880,12 @@ impl<'ctx> Real<'ctx> {
 }
 
 impl<'ctx> Float<'ctx> {
-    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, ebits: u32, sbits: u32) -> Float<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(
+        ctx: &'ctx Context,
+        name: S,
+        ebits: u32,
+        sbits: u32,
+    ) -> Float<'ctx> {
         let sort = Sort::float(ctx, ebits, sbits);
         Self::new(ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
