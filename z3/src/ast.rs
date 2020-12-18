@@ -1053,6 +1053,27 @@ impl<'ctx> String<'ctx> {
         }))
     }
 
+    /// Retrieves the underlying `std::string::String`
+    ///
+    /// If this is not a constant `z3::ast::String`, return `None`.
+    ///
+    /// Note that `to_string()` provided by `std::string::ToString` (which uses
+    /// `std::fmt::Display`) returns an escaped string. In contrast,
+    /// `z3::ast::String::from_str(&ctx, s).unwrap().as_string()` returns a
+    /// `String` equal to the original value.
+    pub fn as_string(&self) -> Option<std::string::String> {
+        let z3_ctx = self.get_ctx().z3_ctx;
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let bytes = Z3_get_string(z3_ctx, self.get_z3_ast());
+            if bytes.is_null() {
+                None
+            } else {
+                Some(CStr::from_ptr(bytes).to_string_lossy().into_owned())
+            }
+        }
+    }
+
     varop! {
         /// Appends the argument strings to `Self`
         concat(Z3_mk_seq_concat, String<'ctx>);
