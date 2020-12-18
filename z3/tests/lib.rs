@@ -442,6 +442,21 @@ fn test_string_suffix() {
     assert_eq!(solver.check(), SatResult::Sat)
 }
 
+fn assert_string_roundtrip(source: &str) {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let expr = ast::String::from_str(&ctx, source).unwrap();
+    assert_eq!(&expr.as_string().unwrap(), source);
+}
+
+#[test]
+fn test_string_as_string() {
+    assert_string_roundtrip("x");
+    assert_string_roundtrip("'x'");
+    assert_string_roundtrip(r#""x""#);
+    assert_string_roundtrip(r#"\\"x\\""#);
+}
+
 #[test]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
