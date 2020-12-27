@@ -2,7 +2,7 @@ extern crate z3;
 
 use z3::{
     ast,
-    ast::{Array, Ast, AstKind, Bool, Dynamic, Int, Real, BV, Float},
+    ast::{Array, Ast, AstKind, Bool, Dynamic, Float, Int, Real, BV},
     Config, Context, DeclKind, FuncDecl, Sort,
 };
 

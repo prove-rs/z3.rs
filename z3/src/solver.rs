@@ -268,13 +268,13 @@ impl<'ctx> Solver<'ctx> {
     // have an Ast subtype for yet.
     pub fn get_proof(&self) -> Option<impl Ast<'ctx>> {
         let m = unsafe {
-          let _guard = Z3_MUTEX.lock().unwrap();
-          Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
+            let _guard = Z3_MUTEX.lock().unwrap();
+            Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
         };
         if !m.is_null() {
-          return Some(ast::Dynamic::new(self.ctx, m));
+            return Some(ast::Dynamic::new(self.ctx, m));
         } else {
-          return None;
+            return None;
         }
     }
 
