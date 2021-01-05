@@ -153,6 +153,89 @@ impl<'ctx> Sort<'ctx> {
     pub fn kind(&self) -> SortKind {
         unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, self.z3_sort) }
     }
+
+    /// Return if this Sort is for an `Array` or a `Set`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// let bool_sort = Sort::bool(&ctx);
+    /// let int_sort = Sort::int(&ctx);
+    /// let array_sort = Sort::array(&ctx, &int_sort, &bool_sort);
+    /// let set_sort = Sort::set(&ctx, &int_sort);
+    /// assert!(array_sort.is_array());
+    /// assert!(set_sort.is_array());
+    /// assert!(!int_sort.is_array());
+    /// assert!(!bool_sort.is_array());
+    /// ```
+    pub fn is_array(&self) -> bool {
+        self.kind() == SortKind::Array
+    }
+
+    /// Return the `Sort` of the domain for `Array`s of this `Sort`.
+    ///
+    /// If this `Sort` is an `Array` or `Set`, it has a domain sort, so return it.
+    /// If this is not an `Array` or `Set` `Sort`, return `None`.
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// let bool_sort = Sort::bool(&ctx);
+    /// let int_sort = Sort::int(&ctx);
+    /// let array_sort = Sort::array(&ctx, &int_sort, &bool_sort);
+    /// let set_sort = Sort::set(&ctx, &int_sort);
+    /// assert_eq!(array_sort.array_domain().unwrap(), int_sort);
+    /// assert_eq!(set_sort.array_domain().unwrap(), int_sort);
+    /// assert!(int_sort.array_domain().is_none());
+    /// assert!(bool_sort.array_domain().is_none());
+    /// ```
+    pub fn array_domain(&self) -> Option<Sort> {
+        if self.is_array() {
+            let domain_sort = unsafe { Z3_get_array_sort_domain(self.ctx.z3_ctx, self.z3_sort) };
+            if domain_sort.is_null() {
+                None
+            } else {
+                Some(Sort::new(self.ctx, domain_sort))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return the `Sort` of the range for `Array`s of this `Sort`.
+    ///
+    /// If this `Sort` is an `Array` it has a range sort, so return it.
+    /// If this `Sort` is a `Set`, it has an implied range sort of `Bool`.
+    /// If this is not an `Array` or `Set` `Sort`, return `None`.
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// let bool_sort = Sort::bool(&ctx);
+    /// let int_sort = Sort::int(&ctx);
+    /// let array_sort = Sort::array(&ctx, &int_sort, &bool_sort);
+    /// let set_sort = Sort::set(&ctx, &int_sort);
+    /// assert_eq!(array_sort.array_range().unwrap(), bool_sort);
+    /// assert_eq!(set_sort.array_range().unwrap(), bool_sort);
+    /// assert!(int_sort.array_range().is_none());
+    /// assert!(bool_sort.array_range().is_none());
+    /// ```
+    pub fn array_range(&self) -> Option<Sort> {
+        if self.is_array() {
+            let range_sort = unsafe { Z3_get_array_sort_range(self.ctx.z3_ctx, self.z3_sort) };
+            if range_sort.is_null() {
+                None
+            } else {
+                Some(Sort::new(self.ctx, range_sort))
+            }
+        } else {
+            None
+        }
+    }
 }
 
 impl<'ctx> fmt::Display for Sort<'ctx> {
