@@ -55,8 +55,6 @@ pub struct Config {
 /// An application may use multiple Z3 contexts. Objects created in one context
 /// cannot be used in another one. However, several objects may be "translated" from
 /// one context to another. It is not safe to access Z3 objects from multiple threads.
-/// The only exception is the method [`interrupt()`] that can be used to interrupt a long
-/// computation.
 ///
 /// # Examples:
 ///
@@ -72,6 +70,12 @@ pub struct Config {
 #[derive(PartialEq, Eq, Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
+}
+
+/// Handle that can be used to interrupt a computation from another thread.
+#[derive(PartialEq, Eq, Debug)]
+pub struct ContextHandle<'ctx> {
+    ctx: &'ctx Context,
 }
 
 /// Symbols are used to name several term and type constructors.
