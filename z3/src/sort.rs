@@ -154,6 +154,22 @@ impl<'ctx> Sort<'ctx> {
         unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, self.z3_sort) }
     }
 
+    pub fn get_float_exponent_size(&self) -> Option<u32> {
+        if self.kind() == SortKind::FloatingPoint {
+            Some(unsafe { Z3_fpa_get_ebits(self.ctx.z3_ctx, self.z3_sort) })
+        } else {
+            None
+        }
+    }
+
+    pub fn get_float_significand_size(&self) -> Option<u32> {
+        if self.kind() == SortKind::FloatingPoint {
+            Some(unsafe { Z3_fpa_get_sbits(self.ctx.z3_ctx, self.z3_sort) })
+        } else {
+            None
+        }
+    }
+
     /// Return if this Sort is for an `Array` or a `Set`.
     ///
     /// # Examples
