@@ -1,13 +1,20 @@
-use ast::{Ast, Bool};
+use ast::{Ast, Bool, Dynamic};
 use std::convert::TryInto;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use z3_sys::*;
 use Context;
 use Model;
 use Optimize;
 use SatResult;
+use Symbol;
 use Z3_MUTEX;
+
+#[cfg(feature = "arbitrary-size-numeral")]
+use num::{
+    bigint::{BigInt, BigUint, Sign},
+    rational::BigRational,
+};
 
 impl<'ctx> Optimize<'ctx> {
     /// Create a new optimize context.
@@ -27,11 +34,39 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
+    /// - [`Optimize::assert_soft()`](#method.assert_soft)
     /// - [`Optimize::maximize()`](#method.maximize)
     /// - [`Optimize::minimize()`](#method.minimize)
     pub fn assert(&self, ast: &impl Ast<'ctx>) {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
+    }
+
+    /// Assert soft constraint to the optimization context.
+    /// Weight is a positive, rational penalty for violating the constraint.
+    /// Group is an optional identifier to group soft constraints.
+    ///
+    /// # See also:
+    ///
+    /// - [`Optimize::assert()`](#method.assert)
+    /// - [`Optimize::maximize()`](#method.maximize)
+    /// - [`Optimize::minimize()`](#method.minimize)
+    pub fn assert_soft(&self, ast: &impl Ast<'ctx>, weight: impl Weight, group: Option<Symbol>) {
+        let weight_string = weight.to_string();
+        let weight_cstring = CString::new(weight_string).unwrap();
+        let group = group
+            .map(|g| g.as_z3_symbol(self.ctx))
+            .unwrap_or_else(|| std::ptr::null_mut());
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Z3_optimize_assert_soft(
+                self.ctx.z3_ctx,
+                self.z3_opt,
+                ast.get_z3_ast(),
+                weight_cstring.as_ptr(),
+                group,
+            )
+        };
     }
 
     /// Add a maximization constraint.
@@ -117,6 +152,31 @@ impl<'ctx> Optimize<'ctx> {
         Model::of_optimize(self)
     }
 
+    /// Retrieve the objectives for the last [`Optimize::check()`](#method.check)
+    ///
+    /// This contains maximize/minimize objectives and grouped soft constraints.
+    pub fn get_objectives(&self) -> Vec<Dynamic<'ctx>> {
+        let (z3_objectives, len) = unsafe {
+            let _guard = Z3_MUTEX.lock().unwrap();
+            let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx, self.z3_opt);
+            let len = Z3_ast_vector_size(self.ctx.z3_ctx, objectives);
+            (objectives, len)
+        };
+
+        let mut objectives = Vec::with_capacity(len as usize);
+
+        for i in 0..len {
+            let elem = unsafe {
+                let _guard = Z3_MUTEX.lock().unwrap();
+                Z3_ast_vector_get(self.ctx.z3_ctx, z3_objectives, i)
+            };
+            let elem = Dynamic::new(self.ctx, elem);
+            objectives.push(elem);
+        }
+
+        objectives
+    }
+
     /// Retrieve a string that describes the last status returned by [`Optimize::check()`](#method.check).
     ///
     /// Use this method when [`Optimize::check()`](#method.check) returns `SatResult::Unknown`.
@@ -156,4 +216,94 @@ impl<'ctx> Drop for Optimize<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx, self.z3_opt) };
     }
+}
+
+/// A rational non-negative weight for soft assertions.
+/// This trait is sealed and cannot be implemented for types outside of
+/// `z3`.
+///
+/// # See also:
+///
+/// - [`Optimize::assert_soft()`](#method.assert_soft)
+pub trait Weight: private::Sealed {
+    /// This is purposefully distinct from `ToString` to allow
+    /// specifying a `to_string` for tuples.
+    fn to_string(&self) -> String;
+}
+
+macro_rules! impl_weight {
+    ($($ty: ty),*) => {
+        $(
+            impl Weight for $ty {
+                fn to_string(&self) -> String {
+                    assert!(*self >= 0, "Weight cannot be negative");
+                    ToString::to_string(&self)
+                }
+            }
+
+            impl Weight for ($ty, $ty) {
+                fn to_string(&self) -> String {
+                    assert!(self.0 >= 0, "Weight numerator cannot be negative");
+                    assert!(self.1 >= 0, "Weight denominator cannot be negative");
+                    format!("{} / {}", self.0, self.1)
+                }
+            }
+        )*
+    };
+}
+
+impl_weight! {
+    u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
+}
+
+#[cfg(feature = "arbitrary-size-numeral")]
+impl Weight for BigInt {
+    fn to_string(&self) -> String {
+        assert_ne!(self.sign(), Sign::Minus);
+        self.to_str_radix(10)
+    }
+}
+
+#[cfg(feature = "arbitrary-size-numeral")]
+impl Weight for BigUint {
+    fn to_string(&self) -> String {
+        self.to_str_radix(10)
+    }
+}
+
+#[cfg(feature = "arbitrary-size-numeral")]
+impl Weight for BigRational {
+    fn to_string(&self) -> String {
+        assert_ne!(self.numer().sign(), Sign::Minus);
+        assert_ne!(self.denom().sign(), Sign::Minus);
+        format!(
+            "{} / {}",
+            self.numer().to_str_radix(10),
+            self.denom().to_str_radix(10)
+        )
+    }
+}
+
+macro_rules! impl_sealed {
+    ($($ty: ty),*) => {
+        mod private {
+            use super::*;
+            pub trait Sealed {}
+            $(
+                impl Sealed for $ty {}
+                impl Sealed for ($ty, $ty) {}
+            )*
+
+            #[cfg(feature = "arbitrary-size-numeral")]
+            impl Sealed for BigInt {}
+            #[cfg(feature = "arbitrary-size-numeral")]
+            impl Sealed for BigUint {}
+            #[cfg(feature = "arbitrary-size-numeral")]
+            impl Sealed for BigRational {}
+        }
+    };
+}
+
+impl_sealed! {
+    u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
 }
