@@ -154,7 +154,9 @@ impl<'ctx> Sort<'ctx> {
         unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, self.z3_sort) }
     }
 
-    pub fn get_float_exponent_size(&self) -> Option<u32> {
+    /// Returns `Some(e)` where `e` is the number of exponent bits if the sort
+    /// is a `FloatingPoint` and `None` otherwise.
+    pub fn float_exponent_size(&self) -> Option<u32> {
         if self.kind() == SortKind::FloatingPoint {
             Some(unsafe { Z3_fpa_get_ebits(self.ctx.z3_ctx, self.z3_sort) })
         } else {
@@ -162,7 +164,9 @@ impl<'ctx> Sort<'ctx> {
         }
     }
 
-    pub fn get_float_significand_size(&self) -> Option<u32> {
+    /// Returns `Some(s)` where `s` is the number of significand bits if the sort
+    /// is a `FloatingPoint` and `None` otherwise.
+    pub fn float_significand_size(&self) -> Option<u32> {
         if self.kind() == SortKind::FloatingPoint {
             Some(unsafe { Z3_fpa_get_sbits(self.ctx.z3_ctx, self.z3_sort) })
         } else {
