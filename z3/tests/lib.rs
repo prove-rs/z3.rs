@@ -4,7 +4,7 @@ extern crate log;
 
 extern crate z3;
 use std::convert::TryInto;
-use z3::ast::Ast;
+use z3::ast::{Ast, Bool};
 use z3::*;
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -730,4 +730,259 @@ fn get_model_without_check_does_not_exit() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
     solver.get_model();
+}
+
+#[test]
+fn check_application_of_tactic_to_goal() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let params = Params::new(&ctx);
+
+    let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
+    let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    let x = ast::Bool::new_const(&ctx, "x");
+    goal.assert(&x);
+
+    let y = ast::Int::new_const(&ctx, "y");
+    let two = ast::Int::from_i64(&ctx, 2);
+    let y_greater_than_two = y.ge(&two);
+    goal.assert(&y_greater_than_two);
+
+    let one = ast::Int::from_i64(&ctx, 1);
+    let y_greater_than_one = y.ge(&one);
+    goal.assert(&y_greater_than_one);
+
+    assert_eq!(format!("{}", goal), "(goal\n  x\n  (>= y 2)\n  (>= y 1))");
+    let goal_result = repeat_tactic.apply(&goal, &params);
+    assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 2))");
+}
+
+#[test]
+fn test_goal_depth() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    goal.assert(&a);
+    goal.assert(&b);
+    assert_eq!(goal.get_depth(), 0);
+}
+
+#[test]
+fn test_goal_size() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    goal.assert(&a);
+    goal.assert(&b);
+    assert_eq!(goal.get_size(), 2);
+}
+
+#[test]
+fn test_goal_num_expr() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    let a = ast::Bool::new_const(&ctx, "a");
+    goal.assert(&a);
+    assert_eq!(goal.get_num_expr(), 1);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    goal.assert(&a);
+    goal.assert(&b);
+    assert_eq!(goal.get_num_expr(), 2);
+}
+
+#[test]
+fn test_goal_get_precision() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let false_bool = ast::Bool::from_bool(&ctx, false);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&false_bool);
+    assert_eq!(goal.get_precision(), "PRECISE".to_string());
+}
+
+#[test]
+fn test_goal_is_inconsistent() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let false_bool = ast::Bool::from_bool(&ctx, false);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&false_bool);
+    assert_eq!(goal.is_inconsistent(), true);
+
+    let true_bool = ast::Bool::from_bool(&ctx, true);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&true_bool);
+    assert_eq!(goal.is_inconsistent(), false);
+}
+
+#[test]
+fn test_goal_is_sat() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let false_bool = ast::Bool::from_bool(&ctx, false);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&false_bool);
+    assert_eq!(goal.is_decided_sat(), false);
+    assert_eq!(goal.is_decided_unsat(), true);
+
+    let true_bool = ast::Bool::from_bool(&ctx, true);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&true_bool);
+    assert_eq!(goal.is_decided_unsat(), false);
+    assert_eq!(goal.is_decided_sat(), true);
+}
+
+#[test]
+fn test_goal_reset() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let a = ast::Bool::new_const(&ctx, "a");
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a);
+    assert_eq!(format!("{}", goal), "(goal\n  a)");
+    goal.reset();
+    assert_eq!(format!("{}", goal), "(goal)");
+}
+
+#[test]
+#[should_panic]
+fn test_goal_get_asts_empty() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.get_asts();
+}
+
+#[test]
+fn test_goal_get_asts() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    let c = ast::Bool::new_const(&ctx, "c");
+    goal.assert(&a);
+    goal.assert(&b);
+    goal.assert(&c);
+    let bools = vec![a, b, c];
+    assert_eq!(goal.get_asts(), bools);
+}
+
+#[test]
+fn test_tactic_skip() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let params = Params::new(&ctx);
+
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    let bools = [&a, &b, &a];
+    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a_and_b_and_a);
+
+    let tactic = Tactic::create_skip(&ctx);
+    let goal_result = tactic.apply(&goal, &params);
+    assert_eq!(goal_result.get_asts(), vec![a.clone(), b, a]);
+}
+
+#[test]
+fn test_tactic_and_then() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let params = Params::new(&ctx);
+
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    let bools = [&a, &b, &a];
+    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a_and_b_and_a);
+
+    let tactic = Tactic::new(&ctx, "sat-preprocess");
+    let and_then_tactic = tactic.and_then(Tactic::new(&ctx, "simplify"));
+    let goal_result = and_then_tactic.apply(&goal, &params);
+    assert_eq!(goal_result.get_asts(), vec![a, b]);
+}
+
+#[test]
+fn test_tactic_or_else() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let params = Params::new(&ctx);
+
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+    let bools = [&a, &b, &a];
+    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a_and_b_and_a);
+
+    let tactic = Tactic::new(&ctx, "sat-preprocess");
+    let or_else_tactic = tactic.or_else(Tactic::new(&ctx, "simplify"));
+    let goal_result = or_else_tactic.apply(&goal, &params);
+    assert_eq!(goal_result.get_asts(), vec![a, b]);
+}
+
+#[test]
+fn test_goal_apply_tactic() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    pub fn test_apply_tactic(ctx: &Context, goal: Goal, before_string: &str, after_string: &str) {
+        assert_eq!(format!("{}", goal), before_string);
+        let params = Params::new(&ctx);
+
+        let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
+        let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
+        let goal_result = repeat_tactic.apply(&goal, &params);
+        assert_eq!(format!("{}", goal_result), after_string);
+    }
+
+    let a = ast::Bool::new_const(&ctx, "a");
+    let b = ast::Bool::new_const(&ctx, "b");
+
+    let bools = [&a, &b, &a];
+    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a_and_b_and_a);
+    test_apply_tactic(&ctx, goal, "(goal\n  a\n  b\n  a)", "(goal\n  b\n  a)");
+
+    let a_implies_b = ast::Bool::implies(&a, &b);
+    let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
+
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a_and_a_implies_b);
+    test_apply_tactic(&ctx, goal, "(goal\n  a\n  (=> a b))", "(goal\n  a\n  b)");
+
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a);
+    goal.assert(&a_implies_b);
+    test_apply_tactic(&ctx, goal, "(goal\n  a\n  (=> a b))", "(goal\n  a\n  b)");
+
+    let true_bool = ast::Bool::from_bool(&ctx, true);
+    let false_bool = ast::Bool::from_bool(&ctx, false);
+    let goal = Goal::new(&ctx, false, false, false);
+    let true_and_false_and_true = ast::Bool::and(&ctx, &[&true_bool, &false_bool, &true_bool]);
+    goal.assert(&true_and_false_and_true);
+    test_apply_tactic(&ctx, goal, "(goal\n  false)", "(goal\n  false)");
 }
