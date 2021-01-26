@@ -137,6 +137,35 @@ fn test_bitvectors() {
 }
 
 #[test]
+fn test_floating_point_bits() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let float32 = ast::Float::new_const_float32(&ctx, "float32");
+    let float64 = ast::Float::new_const_double(&ctx, "float64");
+    let float128 = ast::Float::new_const(&ctx, "float128", 15, 113);
+    let i = ast::Int::new_const(&ctx, "int");
+
+    let exp32 = Sort::float_exponent_size(&float32.get_sort());
+    let sig32 = Sort::float_significand_size(&float32.get_sort());
+    let exp64 = Sort::float_exponent_size(&float64.get_sort());
+    let sig64 = Sort::float_significand_size(&float64.get_sort());
+    let exp128 = Sort::float_exponent_size(&float128.get_sort());
+    let sig128 = Sort::float_significand_size(&float128.get_sort());
+    let expi = Sort::float_exponent_size(&i.get_sort());
+    let sigi = Sort::float_significand_size(&i.get_sort());
+
+    assert!(exp32 == Some(8));
+    assert!(sig32 == Some(24));
+    assert!(exp64 == Some(11));
+    assert!(sig64 == Some(53));
+    assert!(exp128 == Some(15));
+    assert!(sig128 == Some(113));
+    assert!(expi == None);
+    assert!(sigi == None);
+}
+
+#[test]
 fn test_ast_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
