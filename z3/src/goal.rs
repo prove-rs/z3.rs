@@ -107,20 +107,20 @@ impl<'ctx> Goal<'ctx> {
     }
 
     /// Return a vector of the formulas from the given goal.
-    pub fn get_formulas(self) -> Vec<ast::Dynamic<'ctx>> {
+    pub fn get_formulas<T>(&self) -> Vec<T> where T: Ast<'ctx> {
         let goal_size = self.get_size();
-        let raw_ast = unsafe {
+        let formula = unsafe {
             Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, 0)
         };
-        let mut asts = vec![ast::Dynamic::new(&self.ctx, raw_ast)];
+        let mut formulas = vec![T::new(&self.ctx, formula)];
 
         for i in 1..goal_size {
-            let raw_ast = unsafe {
+            let formula = unsafe {
                 Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, i)
             };
-            asts.push(ast::Dynamic::new(&self.ctx, raw_ast));
+            formulas.push(T::new(&self.ctx, formula));
         };
-        asts
+        formulas
     }
 }
 
