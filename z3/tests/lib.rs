@@ -863,16 +863,16 @@ fn test_goal_reset() {
 
 #[test]
 #[should_panic]
-fn test_goal_get_asts_empty() {
+fn test_goal_get_formulas_empty() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
     let goal = Goal::new(&ctx, false, false, false);
-    goal.get_asts();
+    goal.get_formulas();
 }
 
 #[test]
-fn test_goal_get_asts() {
+fn test_goal_get_formulas() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
@@ -883,8 +883,10 @@ fn test_goal_get_asts() {
     goal.assert(&a);
     goal.assert(&b);
     goal.assert(&c);
-    let bools = vec![a, b, c];
-    assert_eq!(goal.get_asts(), bools);
+    assert_eq!(
+        goal.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(),
+        vec![a, b, c],
+    );
 }
 
 #[test]
@@ -902,7 +904,10 @@ fn test_tactic_skip() {
 
     let tactic = Tactic::create_skip(&ctx);
     let goal_result = tactic.apply(&goal, &params);
-    assert_eq!(goal_result.get_asts(), vec![a.clone(), b, a]);
+    assert_eq!(
+        goal_result.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(),
+        vec![a.clone(), b, a],
+    );
 }
 
 #[test]
@@ -921,7 +926,7 @@ fn test_tactic_and_then() {
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let and_then_tactic = tactic.and_then(Tactic::new(&ctx, "simplify"));
     let goal_result = and_then_tactic.apply(&goal, &params);
-    assert_eq!(goal_result.get_asts(), vec![a, b]);
+    assert_eq!(goal_result.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(), vec![a, b]);
 }
 
 #[test]
@@ -940,7 +945,7 @@ fn test_tactic_or_else() {
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let or_else_tactic = tactic.or_else(Tactic::new(&ctx, "simplify"));
     let goal_result = or_else_tactic.apply(&goal, &params);
-    assert_eq!(goal_result.get_asts(), vec![a, b]);
+    assert_eq!(goal_result.get_formulas().iter().map(|x| x.as_bool().unwrap()).collect::<Vec<Bool>>(), vec![a, b]);
 }
 
 #[test]
