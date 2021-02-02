@@ -137,6 +137,35 @@ fn test_bitvectors() {
 }
 
 #[test]
+fn test_floating_point_bits() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let float32 = ast::Float::new_const_float32(&ctx, "float32");
+    let float64 = ast::Float::new_const_double(&ctx, "float64");
+    let float128 = ast::Float::new_const(&ctx, "float128", 15, 113);
+    let i = ast::Int::new_const(&ctx, "int");
+
+    let exp32 = Sort::float_exponent_size(&float32.get_sort());
+    let sig32 = Sort::float_significand_size(&float32.get_sort());
+    let exp64 = Sort::float_exponent_size(&float64.get_sort());
+    let sig64 = Sort::float_significand_size(&float64.get_sort());
+    let exp128 = Sort::float_exponent_size(&float128.get_sort());
+    let sig128 = Sort::float_significand_size(&float128.get_sort());
+    let expi = Sort::float_exponent_size(&i.get_sort());
+    let sigi = Sort::float_significand_size(&i.get_sort());
+
+    assert!(exp32 == Some(8));
+    assert!(sig32 == Some(24));
+    assert!(exp64 == Some(11));
+    assert!(sig64 == Some(53));
+    assert!(exp128 == Some(15));
+    assert!(sig128 == Some(113));
+    assert!(expi == None);
+    assert!(sigi == None);
+}
+
+#[test]
 fn test_ast_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
@@ -298,9 +327,23 @@ fn test_real_cmp() {
     let x = ast::Real::new_const(&ctx, "x");
     let x_plus_1 = ast::Real::add(&ctx, &[&x, &ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
-    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1).into());
+    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1));
 
     solver.assert(&forall.try_into().unwrap());
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_float_add() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let x = ast::Float::new_const_float32(&ctx, "x");
+    let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
+    let y = ast::Float::from_f32(&ctx, 3.14);
+
+    solver.assert(&x_plus_one._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -428,6 +471,21 @@ fn test_string_suffix() {
     assert_eq!(solver.check(), SatResult::Sat)
 }
 
+fn assert_string_roundtrip(source: &str) {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let expr = ast::String::from_str(&ctx, source).unwrap();
+    assert_eq!(&expr.as_string().unwrap(), source);
+}
+
+#[test]
+fn test_string_as_string() {
+    assert_string_roundtrip("x");
+    assert_string_roundtrip("'x'");
+    assert_string_roundtrip(r#""x""#);
+    assert_string_roundtrip(r#"\\"x\\""#);
+}
+
 #[test]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
@@ -527,7 +585,7 @@ fn test_datatype_builder() {
         .variant("Nothing", vec![])
         .variant(
             "Just",
-            vec![("int", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+            vec![("int", DatatypeAccessor::Sort(&Sort::int(&ctx)))],
         )
         .finish();
 
@@ -586,7 +644,7 @@ fn test_recursive_datatype() {
         .variant(
             "cons",
             vec![
-                ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
+                ("car", DatatypeAccessor::Sort(&Sort::int(&ctx))),
                 ("cdr", DatatypeAccessor::Datatype("List".into())),
             ],
         )
@@ -649,11 +707,10 @@ fn test_mutually_recursive_datatype() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
+    let int_sort = Sort::int(&ctx);
+
     let tree_builder = DatatypeBuilder::new(&ctx, "Tree")
-        .variant(
-            "leaf",
-            vec![("val", DatatypeAccessor::Sort(Sort::int(&ctx)))],
-        )
+        .variant("leaf", vec![("val", DatatypeAccessor::Sort(&int_sort))])
         .variant(
             "node",
             vec![("children", DatatypeAccessor::Datatype("TreeList".into()))],
@@ -689,7 +746,7 @@ fn test_mutually_recursive_datatype() {
         .apply(&[&leaf_ten])
         .as_int()
         .unwrap();
-    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone().into()));
+    solver.assert(&leaf_ten_val_is_ten._eq(&ten.clone()));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let nil = tree_list_sort.variants[0].constructor.apply(&[]);
@@ -719,7 +776,7 @@ fn test_mutually_recursive_datatype() {
     solver.assert(
         &tree_list_sort.variants[1].accessors[0]
             .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
-            ._eq(&n1)
+            ._eq(&n1),
     );
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -861,6 +918,79 @@ fn test_goal_reset() {
     assert_eq!(format!("{}", goal), "(goal)");
 }
 
+fn test_set_membership() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let set = ast::Set::new_const(&ctx, "integer_set", &Sort::int(&ctx));
+    let one = ast::Int::from_u64(&ctx, 1);
+
+    solver.push();
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx))));
+
+    solver.push();
+    solver.assert(&set.member(&one));
+    // An empty set will never contain 1
+    assert_eq!(solver.check(), SatResult::Unsat);
+    solver.pop(1);
+
+    solver.push();
+    let x = ast::Int::new_const(&ctx, "x");
+    // An empty set will always return false for member
+    let forall: ast::Bool =
+        ast::forall_const(&ctx, &[&x.clone().into()], &[], &set.member(&x).not())
+            .try_into()
+            .unwrap();
+    solver.assert(&forall);
+    assert_eq!(solver.check(), SatResult::Sat);
+    solver.pop(1);
+
+    solver.pop(1);
+
+    solver.push();
+    // A singleton set of 1 will contain 1
+    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
+    solver.assert(&set.member(&one));
+    assert_eq!(solver.check(), SatResult::Sat);
+    solver.pop(1);
+}
+
+#[test]
+fn test_dynamic_as_set() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let set_sort = Sort::set(&ctx, &Sort::int(&ctx));
+    let array_sort = Sort::array(&ctx, &Sort::int(&ctx), &Sort::int(&ctx));
+    let array_of_sets = ast::Array::new_const(&ctx, "array_of_sets", &Sort::int(&ctx), &set_sort);
+    let array_of_arrays =
+        ast::Array::new_const(&ctx, "array_of_arrays", &Sort::int(&ctx), &array_sort);
+    assert!(array_of_sets
+        .select(&ast::Int::from_u64(&ctx, 0))
+        .as_set()
+        .is_some());
+    assert!(array_of_arrays
+        .select(&ast::Int::from_u64(&ctx, 0))
+        .as_set()
+        .is_none());
+}
+
+#[test]
+fn test_array_store_select() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let one = ast::Int::from_u64(&ctx, 1);
+    let set = ast::Array::new_const(&ctx, "integer_array", &Sort::int(&ctx), &Sort::int(&ctx))
+        .store(&zero, &one);
+
+    solver.assert(&set.select(&zero)._eq(&one.into()).not());
+    assert_eq!(solver.check(), SatResult::Unsat);
+}
+
 #[test]
 #[should_panic]
 fn test_goal_get_formulas_empty() {
@@ -991,4 +1121,13 @@ fn test_goal_apply_tactic() {
     let true_and_false_and_true = ast::Bool::and(&ctx, &[&true_bool, &false_bool, &true_bool]);
     goal.assert(&true_and_false_and_true);
     test_apply_tactic(&ctx, goal, vec![false_bool.clone()], vec![false_bool.clone()]);
+}
+  
+fn test_issue_94() {
+    let cfg = Config::new();
+    let ctx0 = Context::new(&cfg);
+    let ctx1 = Context::new(&cfg);
+    let i0 = ast::Int::fresh_const(&ctx0, "a");
+    let i1 = ast::Int::fresh_const(&ctx1, "b");
+    ast::Int::add(&ctx0, &[&i0, &i1]);
 }

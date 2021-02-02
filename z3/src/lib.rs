@@ -56,8 +56,6 @@ pub struct Config {
 /// An application may use multiple Z3 contexts. Objects created in one context
 /// cannot be used in another one. However, several objects may be "translated" from
 /// one context to another. It is not safe to access Z3 objects from multiple threads.
-/// The only exception is the method [`interrupt()`] that can be used to interrupt a long
-/// computation.
 ///
 /// # Examples:
 ///
@@ -73,6 +71,12 @@ pub struct Config {
 #[derive(PartialEq, Eq, Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
+}
+
+/// Handle that can be used to interrupt a computation from another thread.
+#[derive(PartialEq, Eq, Debug)]
+pub struct ContextHandle<'ctx> {
+    ctx: &'ctx Context,
 }
 
 /// Symbols are used to name several term and type constructors.
@@ -131,6 +135,8 @@ pub struct FuncDecl<'ctx> {
     z3_func_decl: Z3_func_decl,
 }
 
+pub use z3_sys::DeclKind;
+
 /// Build a datatype sort.
 ///
 /// Example:
@@ -144,7 +150,7 @@ pub struct FuncDecl<'ctx> {
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+///     vec![("value", DatatypeAccessor::Sort(&Sort::int(&ctx)))],
 /// )
 /// .finish();
 ///
@@ -165,15 +171,15 @@ pub struct FuncDecl<'ctx> {
 /// assert_eq!(3, model.eval(&ast.as_int().unwrap()).unwrap().as_i64().unwrap());
 /// ```
 #[derive(Debug)]
-pub struct DatatypeBuilder<'ctx> {
+pub struct DatatypeBuilder<'sort, 'ctx: 'sort> {
     ctx: &'ctx Context,
     name: Symbol,
-    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'ctx>)>)>,
+    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'sort, 'ctx>)>)>,
 }
 
 #[derive(Debug)]
-pub enum DatatypeAccessor<'ctx> {
-    Sort(Sort<'ctx>),
+pub enum DatatypeAccessor<'sort, 'ctx: 'sort> {
+    Sort(&'sort Sort<'ctx>),
     Datatype(Symbol),
 }
 

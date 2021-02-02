@@ -1,6 +1,7 @@
 use z3_sys::*;
 use Config;
 use Context;
+use ContextHandle;
 use Z3_MUTEX;
 
 impl Context {
@@ -17,15 +18,29 @@ impl Context {
     }
 
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
-    ///
-    /// This method can be invoked from a thread different from the one executing the
-    /// interruptible procedure.
     pub fn interrupt(&self) {
-        unsafe {
-            Z3_interrupt(self.z3_ctx);
+        self.handle().interrupt()
+    }
+
+    /// Obtain a handle that can be used to interrupt computation from another thread.
+    pub fn handle(&self) -> ContextHandle {
+        ContextHandle {
+            ctx: self
         }
     }
 }
+
+impl<'ctx> ContextHandle<'ctx> {
+    /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
+    pub fn interrupt(&self) {
+        unsafe {
+            Z3_interrupt(self.ctx.z3_ctx);
+        }
+    }
+}
+
+unsafe impl<'ctx> Sync for ContextHandle<'ctx> {}
+unsafe impl<'ctx> Send for ContextHandle<'ctx> {}
 
 impl Drop for Context {
     fn drop(&mut self) {
