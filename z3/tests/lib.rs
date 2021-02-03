@@ -812,7 +812,10 @@ fn check_application_of_tactic_to_goal() {
     goal.assert(&y_greater_than_one);
 
     assert_eq!(format!("{}", goal), "(goal\n  x\n  (>= y 2)\n  (>= y 1))");
-    let goal_result = repeat_tactic.apply(&goal, &params);
+    let apply_results = repeat_tactic.apply(&goal, Some(&params));
+    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
+
     assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 2))");
 }
 
@@ -992,16 +995,6 @@ fn test_array_store_select() {
 }
 
 #[test]
-#[should_panic]
-fn test_goal_get_formulas_empty() {
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-
-    let goal = Goal::new(&ctx, false, false, false);
-    goal.get_formulas::<Bool>();
-}
-
-#[test]
 fn test_goal_get_formulas() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
@@ -1033,7 +1026,9 @@ fn test_tactic_skip() {
     goal.assert(&a_and_b_and_a);
 
     let tactic = Tactic::create_skip(&ctx);
-    let goal_result = tactic.apply(&goal, &params);
+    let apply_results = tactic.apply(&goal, Some(&params));
+    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
     assert_eq!(
         goal_result.get_formulas::<Bool>(),
         vec![a.clone(), b, a],
@@ -1055,7 +1050,9 @@ fn test_tactic_and_then() {
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let and_then_tactic = tactic.and_then(Tactic::new(&ctx, "simplify"));
-    let goal_result = and_then_tactic.apply(&goal, &params);
+    let apply_results = and_then_tactic.apply(&goal, Some(&params));
+    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
 
@@ -1074,7 +1071,9 @@ fn test_tactic_or_else() {
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let or_else_tactic = tactic.or_else(Tactic::new(&ctx, "simplify"));
-    let goal_result = or_else_tactic.apply(&goal, &params);
+    let apply_results = or_else_tactic.apply(&goal, Some(&params));
+    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
 
@@ -1090,7 +1089,9 @@ fn test_goal_apply_tactic() {
 
         let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
         let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
-        let goal_result = repeat_tactic.apply(&goal, &params);
+        let apply_results = repeat_tactic.apply(&goal, Some(&params));
+        let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+        let goal_result = goal_results.first().unwrap();
         assert_eq!(goal_result.get_formulas::<Bool>(), after_formulas);
     }
 
@@ -1122,7 +1123,7 @@ fn test_goal_apply_tactic() {
     goal.assert(&true_and_false_and_true);
     test_apply_tactic(&ctx, goal, vec![false_bool.clone()], vec![false_bool.clone()]);
 }
-  
+
 fn test_issue_94() {
     let cfg = Config::new();
     let ctx0 = Context::new(&cfg);

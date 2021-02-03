@@ -1,5 +1,7 @@
 use std::ffi::{CStr, CString};
 use std::fmt;
+use std::result::Result;
+use std::str::Utf8Error;
 
 use z3_sys::*;
 use Context;
@@ -8,30 +10,60 @@ use Params;
 use Tactic;
 use Z3_MUTEX;
 
+#[derive(Clone, Debug)]
+pub struct ApplyResult<'ctx> {
+    ctx: &'ctx Context,
+    z3_apply_result: Z3_apply_result,
+}
+
+impl<'ctx> ApplyResult<'ctx> {
+    pub fn list_subgoals(&self) -> impl Iterator<Item = Goal> {
+        unsafe {
+            let num_subgoals = Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx, self.z3_apply_result);
+            (0..num_subgoals).into_iter().map(move |i| {
+                let guard = Z3_MUTEX.lock().unwrap();
+                let sg = Z3_apply_result_get_subgoal(self.ctx.z3_ctx, self.z3_apply_result, i);
+                Z3_goal_inc_ref(self.ctx.z3_ctx, sg);
+                Goal::new_from_z3_type(self.ctx, sg, true, true, true)
+            })
+        }
+    }
+}
+
+impl<'ctx> Clone for Tactic<'ctx> {
+    fn clone(&self) -> Self {
+        Tactic {
+            ctx: self.ctx,
+            z3_tactic: unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                Z3_tactic_inc_ref(self.ctx.z3_ctx, self.z3_tactic);
+                self.z3_tactic
+            },
+        }
+    }
+}
+
 impl<'ctx> Tactic<'ctx> {
-    pub fn list_all(ctx: &'ctx Context) {
+    pub fn list_all(ctx: &'ctx Context) -> impl Iterator<Item=std::result::Result<&'ctx str, Utf8Error>> {
         let p = unsafe {
             Z3_get_num_tactics(ctx.z3_ctx)
         };
-        for n in 0..p {
+        (0..p).into_iter().map(move |n| {
             let t = unsafe {
                 Z3_get_tactic_name(ctx.z3_ctx, n)
             };
-            match unsafe { CStr::from_ptr(t) }.to_str() {
-                Ok(s) => println!("{}", s),
-                Err(_) => (),
-            }
-        }
+            unsafe { CStr::from_ptr(t) }.to_str()
+        })
     }
 
-    fn new_from_z3(ctx: &'ctx Context, z3_tactic: Z3_tactic) -> Tactic<'ctx> {
+    pub(crate) fn new_from_z3(ctx: &'ctx Context, z3_tactic: Z3_tactic) -> Tactic<'ctx> {
         Tactic {
             ctx,
             z3_tactic,
         }
     }
 
-    pub fn new(ctx: &'ctx Context, name: &'ctx str) -> Tactic<'ctx> {
+    pub fn new(ctx: &'ctx Context, name: &str) -> Tactic<'ctx> {
         let tactic_name = CString::new(name).unwrap();
         Tactic {
             ctx,
@@ -81,50 +113,50 @@ impl<'ctx> Tactic<'ctx> {
     /// Return a tactic that applies the current tactic to a given goal and
     /// the `then_tactic` to every subgoal produced by the original tactic.
     pub fn and_then(&self, then_tactic: Tactic) -> Tactic {
-        let t = unsafe {
+        unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let t = Z3_tactic_and_then(self.ctx.z3_ctx, self.z3_tactic, then_tactic.z3_tactic);
             Z3_tactic_inc_ref(self.ctx.z3_ctx, t);
-            t
-        };
-        Tactic {
-            ctx: self.ctx,
-            z3_tactic: t,
+            Tactic {
+                ctx: self.ctx,
+                z3_tactic: t,
+            }
         }
     }
 
     /// Return a tactic that current tactic to a given goal,
     /// if it fails then returns the result of `else_tactic` applied to the given goal.
     pub fn or_else(&self, else_tactic: Tactic) -> Tactic {
-        let t = unsafe {
+        unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let t = Z3_tactic_or_else(self.ctx.z3_ctx, self.z3_tactic, else_tactic.z3_tactic);
             Z3_tactic_inc_ref(self.ctx.z3_ctx, t);
-            t
-        };
-        Tactic {
-            ctx: self.ctx,
-            z3_tactic: t,
+            Tactic {
+                ctx: self.ctx,
+                z3_tactic: t,
+            }
         }
     }
 
-    pub fn apply(self, goal: &Goal, params: &Params) -> Goal<'ctx> {
-        let result = unsafe {
-            Z3_tactic_apply(
-                self.ctx.z3_ctx,
-                self.z3_tactic,
-                goal.z3_goal,
-            )
-        };
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_apply_result_inc_ref(self.ctx.z3_ctx, result);
-            if Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx, result) == 1 {
-                let sg = Z3_apply_result_get_subgoal(self.ctx.z3_ctx, result, 0);
-                Z3_goal_inc_ref(self.ctx.z3_ctx, sg);
-                return Goal::new_from_z3_type(self.ctx, sg)
-            } else {
-                panic!("Invalid Goal")
+    pub fn apply(&self, goal: &Goal, params: Option<&Params>) -> ApplyResult<'ctx> {
+        ApplyResult {
+            ctx: self.ctx,
+            z3_apply_result: match params {
+                None => unsafe {
+                    Z3_tactic_apply(
+                        self.ctx.z3_ctx,
+                        self.z3_tactic,
+                        goal.z3_goal,
+                    )
+                },
+                Some(params) => unsafe {
+                    Z3_tactic_apply_ex(
+                        self.ctx.z3_ctx,
+                        self.z3_tactic,
+                        goal.z3_goal,
+                        params.z3_params,
+                    )
+                }
             }
         }
     }

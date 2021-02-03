@@ -9,17 +9,26 @@ use Context;
 use Goal;
 use Z3_MUTEX;
 
+impl<'ctx> Clone for Goal<'ctx> {
+    fn clone(&self) -> Self {
+        Self {
+            ctx: self.ctx,
+            z3_goal: self.z3_goal,
+        }
+    }
+}
 
 impl<'ctx> Goal<'ctx> {
-    pub fn new_from_z3_type(ctx: &'ctx Context, z3_goal: Z3_goal) -> Goal<'ctx>{
+    pub fn new_from_z3_type(ctx: &'ctx Context, z3_goal: Z3_goal, models: bool, unsat_cores: bool, proofs: bool) -> Goal<'ctx>{
         Goal {
             ctx,
-            z3_goal: z3_goal,
+            z3_goal,
         }
     }
 
     pub fn new(ctx: &'ctx Context, models: bool, unsat_cores: bool, proofs: bool) -> Goal<'ctx> {
-        let goal = Self {
+        // NOTE: The Z3 context ctx must have been created with proof generation support.
+        Self {
             ctx,
             z3_goal: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
@@ -27,8 +36,7 @@ impl<'ctx> Goal<'ctx> {
                 Z3_goal_inc_ref(ctx.z3_ctx, g);
                 g
             }
-        };
-        goal
+        }
     }
 
     /// Add a new formula `a` to the given goal.
@@ -100,7 +108,9 @@ impl<'ctx> Goal<'ctx> {
             ctx,
             z3_goal: unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_goal_translate(self.ctx.z3_ctx, self.z3_goal, ctx.z3_ctx)
+                let g = Z3_goal_translate(self.ctx.z3_ctx, self.z3_goal, ctx.z3_ctx);
+                Z3_goal_inc_ref(ctx.z3_ctx, g);
+                g
             }
         }
     }
@@ -113,19 +123,28 @@ impl<'ctx> Goal<'ctx> {
         }
     }
 
-    /// Return a vector of the formulas from the given goal.
-    pub fn get_formulas<T>(&self) -> Vec<T> where T: Ast<'ctx> {
-        let goal_size = self.get_size();
-        let formula = unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, 0)
-        };
-        let mut formulas = vec![T::new(&self.ctx, formula)];
-
-        for i in 1..goal_size {
+    fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a where T: Ast<'a> {
+        let goal_size = self.get_size() as usize;
+        let z3_ctx = self.ctx.z3_ctx;
+        let z3_goal = self.z3_goal.clone();
+        (0..goal_size).into_iter().map(move |i| {
             let formula = unsafe {
                 let guard = Z3_MUTEX.lock().unwrap();
-                Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, i)
+                Z3_goal_formula(z3_ctx, z3_goal, i as u32)
+            };
+            T::new(&self.ctx, formula)
+        })
+    }
+
+    /// Return a vector of the formulas from the given goal.
+    pub fn get_formulas<T>(&self) -> Vec<T> where T: Ast<'ctx> {
+        let goal_size = self.get_size() as usize;
+        let mut formulas: Vec<T> = Vec::with_capacity(goal_size);
+
+        for i in 0..goal_size {
+            let formula = unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, i as u32)
             };
             formulas.push(T::new(&self.ctx, formula));
         };
