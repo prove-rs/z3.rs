@@ -17,12 +17,14 @@ extern crate num;
 use std::ffi::CString;
 use std::sync::Mutex;
 use z3_sys::*;
+pub use z3_sys::GoalPrec;
 
 pub mod ast;
 mod config;
 mod context;
 pub mod datatype_builder;
 mod func_decl;
+mod goal;
 mod model;
 mod ops;
 mod optimize;
@@ -31,6 +33,8 @@ mod pattern;
 mod solver;
 mod sort;
 mod symbol;
+mod tactic;
+
 
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
@@ -213,4 +217,14 @@ pub enum SatResult {
 pub struct Pattern<'ctx> {
     ctx: &'ctx Context,
     z3_pattern: Z3_pattern,
+}
+
+pub struct Tactic<'ctx> {
+    ctx: &'ctx Context,
+    z3_tactic: Z3_tactic,
+}
+
+pub struct Goal<'ctx> {
+    ctx: &'ctx Context,
+    z3_goal: Z3_goal,
 }
