@@ -6,6 +6,7 @@ use std::str::Utf8Error;
 use z3_sys::*;
 use Context;
 use Goal;
+use Probe;
 use Params;
 use Tactic;
 use Z3_MUTEX;
@@ -133,6 +134,61 @@ impl<'ctx> Tactic<'ctx> {
             Z3_tactic_inc_ref(self.ctx.z3_ctx, t);
             Tactic {
                 ctx: self.ctx,
+                z3_tactic: t,
+            }
+        }
+    }
+
+    /// Return a tactic that applies self to a given goal if the probe `p` evaluates to true,
+    /// and `t` if `p` evaluates to false.
+    pub fn probe_or_else(&self, p: Probe, t: Tactic) -> Tactic {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let t = Z3_tactic_cond(self.ctx.z3_ctx, p.z3_probe, self.z3_tactic, t.z3_tactic);
+            Z3_tactic_inc_ref(self.ctx.z3_ctx, t);
+            Tactic {
+                ctx: self.ctx,
+                z3_tactic: t,
+            }
+        }
+    }
+
+    /// Return a tactic that applies itself to a given goal if the probe `p` evaluates to true.
+    /// If `p` evaluates to false, then the new tactic behaves like the skip tactic.
+    pub fn when(&self, p: Probe) -> Tactic {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let t = Z3_tactic_when(self.ctx.z3_ctx, p.z3_probe, self.z3_tactic);
+            Z3_tactic_inc_ref(self.ctx.z3_ctx, t);
+            Tactic {
+                ctx: self.ctx,
+                z3_tactic: t,
+            }
+        }
+    }
+
+    /// Return a tactic that applies `t1` to a given goal if the probe `p` evaluates to true,
+    /// and `t2` if `p` evaluates to false.
+    pub fn cond(ctx: &'ctx Context, p: Probe, t1: Tactic, t2: Tactic) -> Tactic<'ctx> {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let t = Z3_tactic_cond(ctx.z3_ctx, p.z3_probe, t1.z3_tactic, t2.z3_tactic);
+            Z3_tactic_inc_ref(ctx.z3_ctx, t);
+            Tactic {
+                ctx,
+                z3_tactic: t,
+            }
+        }
+    }
+
+    /// Return a tactic that fails if the probe `p` evaluates to false.
+    pub fn fail_if(ctx: &'ctx Context, p: Probe) -> Tactic<'ctx> {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let t = Z3_tactic_fail_if(ctx.z3_ctx, p.z3_probe);
+            Z3_tactic_inc_ref(ctx.z3_ctx, t);
+            Tactic {
+                ctx,
                 z3_tactic: t,
             }
         }
