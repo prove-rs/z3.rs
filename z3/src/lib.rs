@@ -30,6 +30,7 @@ mod ops;
 mod optimize;
 mod params;
 mod pattern;
+mod probe;
 mod solver;
 mod sort;
 mod symbol;
@@ -227,4 +228,9 @@ pub struct Tactic<'ctx> {
 pub struct Goal<'ctx> {
     ctx: &'ctx Context,
     z3_goal: Z3_goal,
+}
+
+pub struct Probe<'ctx> {
+    ctx: &'ctx Context,
+    z3_probe: Z3_probe,
 }
