@@ -1132,3 +1132,23 @@ fn test_issue_94() {
     let i1 = ast::Int::fresh_const(&ctx1, "b");
     ast::Int::add(&ctx0, &[&i0, &i1]);
 }
+
+
+#[test]
+fn test_ast_safe_eq() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let x: ast::Dynamic = ast::Bool::new_const(ctx, "a").into();
+    let y: ast::Dynamic = ast::String::from_str(ctx, "b").unwrap().into();
+
+    let other_bool: ast::Dynamic = ast::Bool::new_const(ctx, "c").into();
+    let other_string: ast::Dynamic = ast::String::from_str(ctx, "d").unwrap().into();
+
+    let sd: SortDiffers<'_> = SortDiffers::new(other_bool.get_sort(), other_string.get_sort());
+
+    let result = x._safe_eq(&y);
+    assert!(result.is_err());
+    let err = result.err().unwrap();
+    assert_eq!(err.left(), sd.left());
+    assert_eq!(err.right(), sd.right());
+}

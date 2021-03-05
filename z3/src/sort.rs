@@ -5,6 +5,7 @@ use z3_sys::*;
 use Context;
 use FuncDecl;
 use Sort;
+use SortDiffers;
 use Symbol;
 use Z3_MUTEX;
 
@@ -293,5 +294,28 @@ impl<'ctx> Drop for Sort<'ctx> {
                 Z3_sort_to_ast(self.ctx.z3_ctx, self.z3_sort),
             );
         }
+    }
+}
+
+impl<'ctx> SortDiffers<'ctx> {
+    pub fn new(left: Sort<'ctx>, right: Sort<'ctx>) -> Self {
+        Self {
+            left,
+            right,
+        }
+    }
+
+    pub fn left(&self) -> &Sort {
+        &self.left
+    }
+
+    pub fn right(&self) -> &Sort {
+        &self.right
+    }
+}
+
+impl<'ctx> fmt::Display for SortDiffers<'ctx> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "Can not compare nodes, Sort does not match.  Nodes contain types {} and {}", self.left, self.right)
     }
 }

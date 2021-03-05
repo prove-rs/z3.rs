@@ -8,6 +8,7 @@ use Context;
 use FuncDecl;
 use Pattern;
 use Sort;
+use SortDiffers;
 use Symbol;
 use Z3_MUTEX;
 
@@ -190,10 +191,26 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     //
     // Note that we can't use the binop! macro because of the `pub` keyword on it
     fn _eq(&self, other: &Self) -> Bool<'ctx> {
-        Bool::new(self.get_ctx(), unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_eq(self.get_ctx().z3_ctx, self.get_z3_ast(), other.get_z3_ast())
-        })
+        self._safe_eq(other).unwrap()
+    }
+
+
+    /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
+    /// match for the two values.
+    fn _safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>> {
+        let ctx = self.get_ctx().z3_ctx;
+        let other_ctx = other.get_ctx().z3_ctx;
+        let left_sort = self.get_sort();
+        let right_sort = other.get_sort();
+        match left_sort == right_sort {
+            true => {
+                Ok(Bool::new(self.get_ctx(), unsafe {
+                    let guard = Z3_MUTEX.lock().unwrap();
+                    Z3_mk_eq(self.get_ctx().z3_ctx, self.get_z3_ast(), other.get_z3_ast())
+                }))
+            },
+            false => Err(SortDiffers::new(left_sort, right_sort))
+        }
     }
 
     /// Compare this `Ast` with a list of other `Ast`s, and get a [`Bool`](struct.Bool.html)
