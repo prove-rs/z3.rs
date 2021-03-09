@@ -123,7 +123,7 @@ impl<'ctx> Goal<'ctx> {
         }
     }
 
-    fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a where T: Ast<'a> {
+    pub fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a where T: Ast<'a> {
         let goal_size = self.get_size() as usize;
         let z3_ctx = self.ctx.z3_ctx;
         let z3_goal = self.z3_goal.clone();

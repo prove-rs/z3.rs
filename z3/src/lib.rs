@@ -102,6 +102,12 @@ pub struct SortDiffers<'ctx> {
   right: Sort<'ctx>,
 }
 
+/// a struct to represent when an ast is not a function application
+#[derive(Debug)]
+pub struct IsNotApp {
+    kind: AstKind,
+}
+
 /// (Incremental) solver, possibly specialized by a particular tactic or logic.
 //
 // Note for in-crate users: Never construct a `Solver` directly; only use
@@ -224,6 +230,12 @@ pub enum SatResult {
 pub struct Pattern<'ctx> {
     ctx: &'ctx Context,
     z3_pattern: Z3_pattern,
+}
+
+#[derive(Clone, Debug)]
+pub struct ApplyResult<'ctx> {
+    ctx: &'ctx Context,
+    z3_apply_result: Z3_apply_result,
 }
 
 pub struct Tactic<'ctx> {

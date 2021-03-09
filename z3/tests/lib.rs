@@ -1152,3 +1152,29 @@ fn test_ast_safe_eq() {
     assert_eq!(err.left(), sd.left());
     assert_eq!(err.right(), sd.right());
 }
+
+#[test]
+fn test_ast_safe_decl() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let x: ast::Bool = ast::Bool::new_const(ctx, "x");
+    let x_not = x.not();
+    assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
+
+    let solver = Solver::new(&ctx);
+    let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
+    let x = ast::Int::new_const(&ctx, "x");
+    let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
+    let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+    let forall = ast::forall_const(
+         &ctx,
+         &[&x.clone().into()],
+         &[&f_x_pattern],
+         &x._eq(&f_x)
+    );
+    assert!(forall.safe_decl().is_err());
+    assert_eq!(
+        format!("{}", forall.safe_decl().err().unwrap()),
+        "ast node is not a function application, has kind Quantifier"
+    );
+}

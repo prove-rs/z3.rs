@@ -6,6 +6,7 @@ use std::hash::{Hash, Hasher};
 use z3_sys::*;
 use Context;
 use FuncDecl;
+use IsNotApp;
 use Pattern;
 use Sort;
 use SortDiffers;
@@ -336,16 +337,21 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     /// This will panic if the `Ast` is not an app, i.e. if AstKind is not App
     /// or Numeral.
     fn decl(&self) -> FuncDecl<'ctx> {
-        let ctx = self.get_ctx();
-        let func_decl = unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            let app = Z3_to_app(ctx.z3_ctx, self.get_z3_ast());
-            assert!(!app.is_null(), "Ast has a null Z3_app.");
-            let func_decl = Z3_get_app_decl(ctx.z3_ctx, app);
-            assert!(!func_decl.is_null(), "Ast has a null Z3_func_decl.");
-            func_decl
-        };
-        unsafe { FuncDecl::from_raw(ctx, func_decl) }
+        self.safe_decl().expect("Ast is not an app")
+    }
+
+    fn safe_decl(&self) -> Result<FuncDecl<'ctx>, IsNotApp> {
+        if !self.is_app() {
+            Err(IsNotApp::new(self.kind()))
+        } else {
+            let ctx = self.get_ctx();
+            let func_decl = unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                let app = Z3_to_app(ctx.z3_ctx, self.get_z3_ast());
+                Z3_get_app_decl(ctx.z3_ctx, app)
+            };
+            Ok(unsafe { FuncDecl::from_raw(ctx, func_decl) })
+        }
     }
 }
 
@@ -1580,7 +1586,7 @@ impl<'ctx> Dynamic<'ctx> {
         Self::new(ast.get_ctx(), ast.get_z3_ast())
     }
 
-    fn sort_kind(&self) -> SortKind {
+    pub fn sort_kind(&self) -> SortKind {
         unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, Z3_get_sort(self.ctx.z3_ctx, self.z3_ast)) }
     }
 
@@ -1827,4 +1833,22 @@ where
             body.get_z3_ast(),
         )
     })
+}
+
+impl IsNotApp {
+    pub fn new(kind: AstKind) -> Self {
+        Self {
+            kind,
+        }
+    }
+
+    pub fn kind(&self) -> AstKind {
+        self.kind
+    }
+}
+
+impl fmt::Display for IsNotApp {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        write!(f, "ast node is not a function application, has kind {:?}", self.kind())
+    }
 }

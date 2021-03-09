@@ -4,17 +4,12 @@ use std::result::Result;
 use std::str::Utf8Error;
 
 use z3_sys::*;
+use ApplyResult;
 use Context;
 use Goal;
 use Params;
 use Tactic;
 use Z3_MUTEX;
-
-#[derive(Clone, Debug)]
-pub struct ApplyResult<'ctx> {
-    ctx: &'ctx Context,
-    z3_apply_result: Z3_apply_result,
-}
 
 impl<'ctx> ApplyResult<'ctx> {
     pub fn list_subgoals(&self) -> impl Iterator<Item = Goal> {
