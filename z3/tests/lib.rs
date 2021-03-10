@@ -1070,7 +1070,8 @@ fn test_tactic_or_else() {
     goal.assert(&a_and_b_and_a);
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
-    let or_else_tactic = tactic.or_else(&Tactic::new(&ctx, "simplify"));
+    let simplify = Tactic::new(&ctx, "simplify");
+    let or_else_tactic = tactic.or_else(&simplify);
     let apply_results = or_else_tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
