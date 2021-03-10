@@ -796,7 +796,7 @@ fn check_application_of_tactic_to_goal() {
     let params = Params::new(&ctx);
 
     let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
-    let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
+    let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
 
     let goal = Goal::new(&ctx, false, false, false);
     let x = ast::Bool::new_const(&ctx, "x");
@@ -1049,7 +1049,7 @@ fn test_tactic_and_then() {
     goal.assert(&a_and_b_and_a);
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
-    let and_then_tactic = tactic.and_then(Tactic::new(&ctx, "simplify"));
+    let and_then_tactic = tactic.and_then(&Tactic::new(&ctx, "simplify"));
     let apply_results = and_then_tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
@@ -1070,7 +1070,7 @@ fn test_tactic_or_else() {
     goal.assert(&a_and_b_and_a);
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
-    let or_else_tactic = tactic.or_else(Tactic::new(&ctx, "simplify"));
+    let or_else_tactic = tactic.or_else(&Tactic::new(&ctx, "simplify"));
     let apply_results = or_else_tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
@@ -1088,7 +1088,7 @@ fn test_goal_apply_tactic() {
         let params = Params::new(&ctx);
 
         let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
-        let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
+        let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
         let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
         let goal_result = goal_results.first().unwrap();

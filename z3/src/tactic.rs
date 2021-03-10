@@ -93,7 +93,7 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
-    pub fn repeat(ctx: &'ctx Context, t: Tactic, max: u32) -> Tactic<'ctx> {
+    pub fn repeat(ctx: &'ctx Context, t: &Tactic, max: u32) -> Tactic<'ctx> {
         Tactic {
             ctx,
             z3_tactic: unsafe {
@@ -107,7 +107,7 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Return a tactic that applies the current tactic to a given goal and
     /// the `then_tactic` to every subgoal produced by the original tactic.
-    pub fn and_then(&self, then_tactic: Tactic) -> Tactic {
+    pub fn and_then(&self, then_tactic: &Tactic) -> Tactic {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let t = Z3_tactic_and_then(self.ctx.z3_ctx, self.z3_tactic, then_tactic.z3_tactic);
@@ -121,7 +121,7 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Return a tactic that current tactic to a given goal,
     /// if it fails then returns the result of `else_tactic` applied to the given goal.
-    pub fn or_else(&self, else_tactic: Tactic) -> Tactic {
+    pub fn or_else(&self, else_tactic: &Tactic) -> Tactic {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let t = Z3_tactic_or_else(self.ctx.z3_ctx, self.z3_tactic, else_tactic.z3_tactic);
