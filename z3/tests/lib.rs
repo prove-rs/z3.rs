@@ -1125,6 +1125,172 @@ fn test_goal_apply_tactic() {
     test_apply_tactic(&ctx, goal, vec![false_bool.clone()], vec![false_bool.clone()]);
 }
 
+#[test]
+fn test_tactic_cond() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let t1 = Tactic::new(&ctx, "qfnra");
+    let t2 = Tactic::new(&ctx, "smt");
+    let p = Probe::new(&ctx, "is-qfnra");
+
+    let _t = Tactic::cond(&ctx, p, t1, t2);
+}
+
+#[test]
+fn test_tactic_conditions() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let t1 = Tactic::new(&ctx, "qfnra");
+    let t2 = Tactic::new(&ctx, "smt");
+    let p = Probe::new(&ctx, "is-qfnra");
+
+    t1.probe_or_else(p.clone(), t2.clone());
+    t1.when(p.clone());
+    Tactic::cond(&ctx, p.clone(), t1.clone(), t2.clone());
+    Tactic::fail_if(&ctx, p.clone());
+}
+
+#[test]
+fn test_probe_debug() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let _v: Vec<&str> = Probe::list_all(&ctx).map(|x| x.unwrap()).collect();
+    assert_eq!(
+        "A probe to give an upper bound of Ackermann congruence lemmas that a formula might generate.",
+        Probe::describe(&ctx, "ackr-bound-probe").unwrap(),
+    );
+}
+
+#[test]
+fn test_probe_names() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+    let twenty = ast::Int::from_u64(&ctx, 20);
+    let g = Goal::new(&ctx, false, false, false);
+
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    g.assert(&x.lt(&twenty));
+
+    let num_consts_probe = Probe::new(&ctx, "num-consts");
+    assert_eq!(1.0, num_consts_probe.apply(&g));
+
+    let is_prop_probe = Probe::new(&ctx, "is-propositional");
+    assert_eq!(0.0, is_prop_probe.apply(&g));
+
+    let is_prop_probe = Probe::new(&ctx, "is-qflia");
+    assert_eq!(1.0, is_prop_probe.apply(&g));
+}
+
+#[test]
+fn test_probe_eq() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+
+    let two_probe = Probe::constant(&ctx, 2.0);
+    let size_probe = Probe::new(&ctx, "size");
+    let equals_two_probe = &size_probe.eq(&two_probe);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let g = Goal::new(&ctx, false, false, false);
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    assert_eq!(1.0, equals_two_probe.apply(&g));
+}
+
+#[test]
+fn test_probe_gt() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let ten_probe = Probe::constant(&ctx, 10.0);
+    let size_probe = Probe::new(&ctx, "size");
+    let gt_ten_probe = &size_probe.gt(&ten_probe);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+    let g = Goal::new(&ctx, false, false, false);
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    assert_eq!(0.0, gt_ten_probe.apply(&g));
+}
+
+#[test]
+fn test_probe_gte() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let two_probe = Probe::constant(&ctx, 2.0);
+    let size_probe = Probe::new(&ctx, "size");
+    let ge_two_probe = &size_probe.ge(&two_probe);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+    let g = Goal::new(&ctx, false, false, false);
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    assert_eq!(1.0, ge_two_probe.apply(&g));
+}
+
+#[test]
+fn test_probe_le() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let two_probe = Probe::constant(&ctx, 2.0);
+    let size_probe = Probe::new(&ctx, "size");
+    let le_two_probe = &size_probe.le(&two_probe);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+    let g = Goal::new(&ctx, false, false, false);
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    assert_eq!(1.0, le_two_probe.apply(&g));
+}
+
+#[test]
+fn test_probe_lt() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let ten_probe = Probe::constant(&ctx, 10.0);
+    let size_probe = Probe::new(&ctx, "size");
+    let le_ten_probe = &size_probe.le(&ten_probe);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+    let g = Goal::new(&ctx, false, false, false);
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    assert_eq!(1.0, le_ten_probe.apply(&g));
+}
+
+#[test]
+fn test_probe_ne() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let two_probe = Probe::constant(&ctx, 2.0);
+    let size_probe = Probe::new(&ctx, "size");
+    let ne_two_probe = &size_probe.ne(&two_probe);
+
+    let x = ast::Int::fresh_const(&ctx, "x");
+    let zero = ast::Int::from_u64(&ctx, 0);
+    let ten = ast::Int::from_u64(&ctx, 10);
+    let g = Goal::new(&ctx, false, false, false);
+    g.assert(&x.gt(&zero));
+    g.assert(&x.lt(&ten));
+    assert_eq!(0.0, ne_two_probe.apply(&g));
+}
+
+
 fn test_issue_94() {
     let cfg = Config::new();
     let ctx0 = Context::new(&cfg);
