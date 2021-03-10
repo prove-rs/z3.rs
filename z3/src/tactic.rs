@@ -123,7 +123,7 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Return a tactic that applies self to a given goal if the probe `p` evaluates to true,
     /// and `t` if `p` evaluates to false.
-    pub fn probe_or_else(&self, p: Probe, t: Tactic) -> Tactic {
+    pub fn probe_or_else(&self, p: Probe, t: &Tactic) -> Tactic {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let t = Z3_tactic_cond(self.ctx.z3_ctx, p.z3_probe, self.z3_tactic, t.z3_tactic);
@@ -151,7 +151,7 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Return a tactic that applies `t1` to a given goal if the probe `p` evaluates to true,
     /// and `t2` if `p` evaluates to false.
-    pub fn cond(ctx: &'ctx Context, p: Probe, t1: Tactic, t2: Tactic) -> Tactic<'ctx> {
+    pub fn cond(ctx: &'ctx Context, p: Probe, t1: &Tactic, t2: &Tactic) -> Tactic<'ctx> {
         unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             let t = Z3_tactic_cond(ctx.z3_ctx, p.z3_probe, t1.z3_tactic, t2.z3_tactic);

@@ -1133,7 +1133,7 @@ fn test_tactic_cond() {
     let t2 = Tactic::new(&ctx, "smt");
     let p = Probe::new(&ctx, "is-qfnra");
 
-    let _t = Tactic::cond(&ctx, p, t1, t2);
+    let _t = Tactic::cond(&ctx, p, &t1, &t2);
 }
 
 #[test]
@@ -1144,9 +1144,9 @@ fn test_tactic_conditions() {
     let t2 = Tactic::new(&ctx, "smt");
     let p = Probe::new(&ctx, "is-qfnra");
 
-    t1.probe_or_else(p.clone(), t2.clone());
+    t1.probe_or_else(p.clone(), &t2);
     t1.when(p.clone());
-    Tactic::cond(&ctx, p.clone(), t1.clone(), t2.clone());
+    Tactic::cond(&ctx, p.clone(), &t1, &t2);
     Tactic::fail_if(&ctx, p.clone());
 }
 
