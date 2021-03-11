@@ -796,7 +796,7 @@ fn check_application_of_tactic_to_goal() {
     let params = Params::new(&ctx);
 
     let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
-    let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
+    let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
 
     let goal = Goal::new(&ctx, false, false, false);
     let x = ast::Bool::new_const(&ctx, "x");
@@ -1049,7 +1049,7 @@ fn test_tactic_and_then() {
     goal.assert(&a_and_b_and_a);
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
-    let and_then_tactic = tactic.and_then(Tactic::new(&ctx, "simplify"));
+    let and_then_tactic = tactic.and_then(&Tactic::new(&ctx, "simplify"));
     let apply_results = and_then_tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
@@ -1070,7 +1070,8 @@ fn test_tactic_or_else() {
     goal.assert(&a_and_b_and_a);
 
     let tactic = Tactic::new(&ctx, "sat-preprocess");
-    let or_else_tactic = tactic.or_else(Tactic::new(&ctx, "simplify"));
+    let simplify = Tactic::new(&ctx, "simplify");
+    let or_else_tactic = tactic.or_else(&simplify);
     let apply_results = or_else_tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
@@ -1088,7 +1089,7 @@ fn test_goal_apply_tactic() {
         let params = Params::new(&ctx);
 
         let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
-        let repeat_tactic = Tactic::repeat(&ctx, tactic, 100);
+        let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
         let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
         let goal_result = goal_results.first().unwrap();
@@ -1132,7 +1133,7 @@ fn test_tactic_cond() {
     let t2 = Tactic::new(&ctx, "smt");
     let p = Probe::new(&ctx, "is-qfnra");
 
-    let _t = Tactic::cond(&ctx, p, t1, t2);
+    let _t = Tactic::cond(&ctx, p, &t1, &t2);
 }
 
 #[test]
@@ -1143,9 +1144,9 @@ fn test_tactic_conditions() {
     let t2 = Tactic::new(&ctx, "smt");
     let p = Probe::new(&ctx, "is-qfnra");
 
-    t1.probe_or_else(p.clone(), t2.clone());
+    t1.probe_or_else(p.clone(), &t2);
     t1.when(p.clone());
-    Tactic::cond(&ctx, p.clone(), t1.clone(), t2.clone());
+    Tactic::cond(&ctx, p.clone(), &t1, &t2);
     Tactic::fail_if(&ctx, p.clone());
 }
 
@@ -1297,4 +1298,50 @@ fn test_issue_94() {
     let i0 = ast::Int::fresh_const(&ctx0, "a");
     let i1 = ast::Int::fresh_const(&ctx1, "b");
     ast::Int::add(&ctx0, &[&i0, &i1]);
+}
+
+
+#[test]
+fn test_ast_safe_eq() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let x: ast::Dynamic = ast::Bool::new_const(ctx, "a").into();
+    let y: ast::Dynamic = ast::String::from_str(ctx, "b").unwrap().into();
+
+    let other_bool: ast::Dynamic = ast::Bool::new_const(ctx, "c").into();
+    let other_string: ast::Dynamic = ast::String::from_str(ctx, "d").unwrap().into();
+
+    let sd: SortDiffers<'_> = SortDiffers::new(other_bool.get_sort(), other_string.get_sort());
+
+    let result = x._safe_eq(&y);
+    assert!(result.is_err());
+    let err = result.err().unwrap();
+    assert_eq!(err.left(), sd.left());
+    assert_eq!(err.right(), sd.right());
+}
+
+#[test]
+fn test_ast_safe_decl() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let x: ast::Bool = ast::Bool::new_const(ctx, "x");
+    let x_not = x.not();
+    assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
+
+    let solver = Solver::new(&ctx);
+    let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
+    let x = ast::Int::new_const(&ctx, "x");
+    let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
+    let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+    let forall = ast::forall_const(
+         &ctx,
+         &[&x.clone().into()],
+         &[&f_x_pattern],
+         &x._eq(&f_x)
+    );
+    assert!(forall.safe_decl().is_err());
+    assert_eq!(
+        format!("{}", forall.safe_decl().err().unwrap()),
+        "ast node is not a function application, has kind Quantifier"
+    );
 }

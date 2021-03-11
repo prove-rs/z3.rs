@@ -17,7 +17,7 @@ extern crate num;
 use std::ffi::CString;
 use std::sync::Mutex;
 use z3_sys::*;
-pub use z3_sys::GoalPrec;
+pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
 pub mod ast;
 mod config;
@@ -94,6 +94,19 @@ pub enum Symbol {
 pub struct Sort<'ctx> {
     ctx: &'ctx Context,
     z3_sort: Z3_sort,
+}
+
+/// a struct to represent when two sorts are of different types
+#[derive(Debug)]
+pub struct SortDiffers<'ctx> {
+  left: Sort<'ctx>,
+  right: Sort<'ctx>,
+}
+
+/// a struct to represent when an ast is not a function application
+#[derive(Debug)]
+pub struct IsNotApp {
+    kind: AstKind,
 }
 
 /// (Incremental) solver, possibly specialized by a particular tactic or logic.
@@ -218,6 +231,12 @@ pub enum SatResult {
 pub struct Pattern<'ctx> {
     ctx: &'ctx Context,
     z3_pattern: Z3_pattern,
+}
+
+#[derive(Clone, Debug)]
+pub struct ApplyResult<'ctx> {
+    ctx: &'ctx Context,
+    z3_apply_result: Z3_apply_result,
 }
 
 pub struct Tactic<'ctx> {
