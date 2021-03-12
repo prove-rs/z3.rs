@@ -26,6 +26,16 @@ impl<'ctx> ApplyResult<'ctx> {
     }
 }
 
+impl<'ctx> Drop for ApplyResult<'ctx> {
+    fn drop(&mut self) {
+        let guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Z3_apply_result_dec_ref(self.ctx.z3_ctx, self.z3_apply_result);
+        }
+    }
+}
+
+
 impl<'ctx> Tactic<'ctx> {
     pub fn list_all(ctx: &'ctx Context) -> impl Iterator<Item=std::result::Result<&'ctx str, Utf8Error>> {
         let p = unsafe {
@@ -181,19 +191,23 @@ impl<'ctx> Tactic<'ctx> {
             ctx: self.ctx,
             z3_apply_result: match params {
                 None => unsafe {
-                    Z3_tactic_apply(
+                    let ar = Z3_tactic_apply(
                         self.ctx.z3_ctx,
                         self.z3_tactic,
                         goal.z3_goal,
-                    )
+                    );
+                    Z3_apply_result_inc_ref(self.ctx.z3_ctx, ar);
+                    ar
                 },
                 Some(params) => unsafe {
-                    Z3_tactic_apply_ex(
+                    let ar = Z3_tactic_apply_ex(
                         self.ctx.z3_ctx,
                         self.z3_tactic,
                         goal.z3_goal,
                         params.z3_params,
-                    )
+                    );
+                    Z3_apply_result_inc_ref(self.ctx.z3_ctx, ar);
+                    ar
                 }
             }
         }
