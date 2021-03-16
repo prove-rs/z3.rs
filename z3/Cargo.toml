@@ -34,4 +34,3 @@ semver = "0.9"
 
 [dependencies.z3-sys]
 path = "../z3-sys"
-version = "0.6.3"
