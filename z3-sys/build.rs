@@ -47,10 +47,6 @@ fn build_z3() {
         }
     };
 
-    if let Some(cxx) = cxx {
-        println!("cargo:rustc-link-lib={}", cxx);
-    }
-
     let mut found_lib_dir = false;
     for lib_dir in &[
         "lib",
@@ -80,5 +76,9 @@ fn build_z3() {
         println!("cargo:rustc-link-lib=static=libz3");
     } else {
         println!("cargo:rustc-link-lib=static=z3");
+    }
+
+    if let Some(cxx) = cxx {
+        println!("cargo:rustc-link-lib={}", cxx);
     }
 }
