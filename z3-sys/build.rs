@@ -1,6 +1,40 @@
 fn main() {
     #[cfg(feature = "static-link-z3")]
     build_z3();
+
+    println!("cargo:rerun-if-changed=build.rs");
+
+    let header = if cfg!(feature = "static-link-z3") {
+        "z3/src/api/z3.h"
+    } else {
+        "wrapper.h"
+    };
+    println!("cargo:rerun-if-changed={}", header);
+    let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+
+    for x in &[
+        "ast_kind",
+        "ast_print_mode",
+        "decl_kind",
+        "error_code",
+        "goal_prec",
+        "param_kind",
+        "parameter_kind",
+        "sort_kind",
+        "symbol_kind",
+    ] {
+        let enum_bindings = bindgen::Builder::default()
+            .header(header)
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+            .generate_comments(false)
+            .rustified_enum(format!("Z3_{}", x))
+            .allowlist_type(format!("Z3_{}", x))
+            .generate()
+            .expect("Unable to generate bindings");
+        enum_bindings
+            .write_to_file(out_path.join(format!("{}.rs", x)))
+            .expect("Couldn't write bindings!");
+    }
 }
 
 #[cfg(feature = "static-link-z3")]
