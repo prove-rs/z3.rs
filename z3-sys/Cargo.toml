@@ -2,6 +2,8 @@
 name = "z3-sys"
 version = "0.6.3"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
+build = "build.rs"
+edition = "2018"
 
 description = "Low-level bindings for the Z3 SMT solver from Microsoft Research"
 license = "MIT"
@@ -15,6 +17,7 @@ repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
 cmake = { version = "0.1", optional = true }
+bindgen = "0.58"
 
 [features]
 # Enable this feature to statically link our own build of Z3, rather than
