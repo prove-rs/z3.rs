@@ -1,3 +1,5 @@
+//! Abstract syntax tree (AST).
+
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
