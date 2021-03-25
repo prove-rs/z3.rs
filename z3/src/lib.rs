@@ -87,7 +87,7 @@ pub enum Symbol {
     String(String),
 }
 
-/// Sorts represent the various 'types' of [`Ast`s](trait.Ast.html).
+/// Sorts represent the various 'types' of [`Ast`s](ast/trait.Ast.html).
 //
 // Note for in-crate users: Never construct a `Sort` directly; only use
 // `Sort::new()` which handles Z3 refcounting properly.
@@ -96,14 +96,14 @@ pub struct Sort<'ctx> {
     z3_sort: Z3_sort,
 }
 
-/// a struct to represent when two sorts are of different types
+/// A struct to represent when two sorts are of different types.
 #[derive(Debug)]
 pub struct SortDiffers<'ctx> {
   left: Sort<'ctx>,
   right: Sort<'ctx>,
 }
 
-/// a struct to represent when an ast is not a function application
+/// A struct to represent when an ast is not a function application.
 #[derive(Debug)]
 pub struct IsNotApp {
     kind: AstKind,
@@ -151,7 +151,7 @@ pub struct FuncDecl<'ctx> {
 
 pub use z3_sys::DeclKind;
 
-/// Build a datatype sort.
+/// Build a custom [datatype sort](struct.DatatypeSort.html).
 ///
 /// Example:
 /// ```
@@ -191,12 +191,14 @@ pub struct DatatypeBuilder<'sort, 'ctx: 'sort> {
     constructors: Vec<(String, Vec<(String, DatatypeAccessor<'sort, 'ctx>)>)>,
 }
 
+/// Wrapper which can point to an existing sort (by reference) or to a custom datatype (by name).
 #[derive(Debug)]
 pub enum DatatypeAccessor<'sort, 'ctx: 'sort> {
     Sort(&'sort Sort<'ctx>),
     Datatype(Symbol),
 }
 
+/// Inner variant for a custom [datatype sort](struct.DatatypeSort.html).
 #[derive(Debug)]
 pub struct DatatypeVariant<'ctx> {
     pub constructor: FuncDecl<'ctx>,
@@ -204,6 +206,7 @@ pub struct DatatypeVariant<'ctx> {
     pub accessors: Vec<FuncDecl<'ctx>>,
 }
 
+/// A custom datatype sort.
 #[derive(Debug)]
 pub struct DatatypeSort<'ctx> {
     ctx: &'ctx Context,
@@ -211,6 +214,7 @@ pub struct DatatypeSort<'ctx> {
     pub variants: Vec<DatatypeVariant<'ctx>>,
 }
 
+/// Parameter set used to configure many components (simplifiers, tactics, solvers, etc).
 pub struct Params<'ctx> {
     ctx: &'ctx Context,
     z3_params: Z3_params,
@@ -233,22 +237,28 @@ pub struct Pattern<'ctx> {
     z3_pattern: Z3_pattern,
 }
 
+/// Collection of subgoals resulting from applying of a tactic to a goal.
 #[derive(Clone, Debug)]
 pub struct ApplyResult<'ctx> {
     ctx: &'ctx Context,
     z3_apply_result: Z3_apply_result,
 }
 
+/// Basic building block for creating custom solvers for specific problem domains.
 pub struct Tactic<'ctx> {
     ctx: &'ctx Context,
     z3_tactic: Z3_tactic,
 }
 
+/// Set of formulas that can be solved and/or transformed using tactics and solvers.
 pub struct Goal<'ctx> {
     ctx: &'ctx Context,
     z3_goal: Z3_goal,
 }
 
+/// Function/predicate used to inspect a goal and collect information
+/// that may be used to decide which solver and/or preprocessing step
+/// will be used.
 pub struct Probe<'ctx> {
     ctx: &'ctx Context,
     z3_probe: Z3_probe,

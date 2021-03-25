@@ -350,7 +350,7 @@ pub enum ParameterKind {
     FuncDecl = generated::Z3_parameter_kind::Z3_PARAMETER_FUNC_DECL as u32,
 }
 
-/// The different kinds of Z3 types (See [`Z3_get_sort_kind`](fn.Z3_get_sort_kind.html)).
+/// The different kinds of Z3 types.
 ///
 /// This corresponds to `Z3_sort_kind` in the C API.
 #[repr(u32)]
@@ -1531,9 +1531,7 @@ pub enum ErrorCode {
 pub type Z3_error_handler =
     ::std::option::Option<unsafe extern "C" fn(c: Z3_context, e: ErrorCode)>;
 
-/// A Goal is essentially a set of formulas.
-/// Z3 provide APIs for building strategies/tactics for solving and transforming Goals.
-/// Some of these transformations apply under/over approximations.
+/// Precision of a given goal. Some goals can be transformed using over/under approximations.
 ///
 /// This corresponds to `Z3_goal_prec` in the C API.
 #[repr(u32)]
