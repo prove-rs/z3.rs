@@ -259,6 +259,12 @@ impl<'ctx> Sort<'ctx> {
     }
 }
 
+impl<'ctx> Clone for Sort<'ctx> {
+    fn clone(&self) -> Self {
+        Sort::new(self.ctx, self.z3_sort)
+    }
+}
+
 impl<'ctx> fmt::Display for Sort<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_sort_to_string(self.ctx.z3_ctx, self.z3_sort) };
@@ -299,10 +305,7 @@ impl<'ctx> Drop for Sort<'ctx> {
 
 impl<'ctx> SortDiffers<'ctx> {
     pub fn new(left: Sort<'ctx>, right: Sort<'ctx>) -> Self {
-        Self {
-            left,
-            right,
-        }
+        Self { left, right }
     }
 
     pub fn left(&self) -> &Sort {
@@ -316,6 +319,10 @@ impl<'ctx> SortDiffers<'ctx> {
 
 impl<'ctx> fmt::Display for SortDiffers<'ctx> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        write!(f, "Can not compare nodes, Sort does not match.  Nodes contain types {} and {}", self.left, self.right)
+        write!(
+            f,
+            "Can not compare nodes, Sort does not match.  Nodes contain types {} and {}",
+            self.left, self.right
+        )
     }
 }
