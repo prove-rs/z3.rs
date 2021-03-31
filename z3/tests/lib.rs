@@ -1290,7 +1290,8 @@ fn test_probe_ne() {
     assert_eq!(0.0, ne_two_probe.apply(&g));
 }
 
-
+#[test]
+#[should_panic]
 fn test_issue_94() {
     let cfg = Config::new();
     let ctx0 = Context::new(&cfg);
