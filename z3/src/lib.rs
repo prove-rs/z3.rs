@@ -164,7 +164,7 @@ pub use z3_sys::DeclKind;
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(&Sort::int(&ctx)))],
+///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
 /// )
 /// .finish();
 ///
@@ -185,16 +185,16 @@ pub use z3_sys::DeclKind;
 /// assert_eq!(3, model.eval(&ast.as_int().unwrap()).unwrap().as_i64().unwrap());
 /// ```
 #[derive(Debug)]
-pub struct DatatypeBuilder<'sort, 'ctx: 'sort> {
+pub struct DatatypeBuilder<'ctx> {
     ctx: &'ctx Context,
     name: Symbol,
-    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'sort, 'ctx>)>)>,
+    constructors: Vec<(String, Vec<(String, DatatypeAccessor<'ctx>)>)>,
 }
 
 /// Wrapper which can point to an existing sort (by reference) or to a custom datatype (by name).
 #[derive(Debug)]
-pub enum DatatypeAccessor<'sort, 'ctx: 'sort> {
-    Sort(&'sort Sort<'ctx>),
+pub enum DatatypeAccessor<'ctx> {
+    Sort(Sort<'ctx>),
     Datatype(Symbol),
 }
 
