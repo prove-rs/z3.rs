@@ -585,7 +585,7 @@ fn test_datatype_builder() {
         .variant("Nothing", vec![])
         .variant(
             "Just",
-            vec![("int", DatatypeAccessor::Sort(&Sort::int(&ctx)))],
+            vec![("int", DatatypeAccessor::Sort(Sort::int(&ctx)))],
         )
         .finish();
 
@@ -644,7 +644,7 @@ fn test_recursive_datatype() {
         .variant(
             "cons",
             vec![
-                ("car", DatatypeAccessor::Sort(&Sort::int(&ctx))),
+                ("car", DatatypeAccessor::Sort(Sort::int(&ctx))),
                 ("cdr", DatatypeAccessor::Datatype("List".into())),
             ],
         )
@@ -707,10 +707,11 @@ fn test_mutually_recursive_datatype() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let int_sort = Sort::int(&ctx);
-
     let tree_builder = DatatypeBuilder::new(&ctx, "Tree")
-        .variant("leaf", vec![("val", DatatypeAccessor::Sort(&int_sort))])
+        .variant(
+            "leaf",
+            vec![("val", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+        )
         .variant(
             "node",
             vec![("children", DatatypeAccessor::Datatype("TreeList".into()))],
