@@ -36,7 +36,6 @@ mod sort;
 mod symbol;
 mod tactic;
 
-
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
 lazy_static! {
@@ -99,8 +98,8 @@ pub struct Sort<'ctx> {
 /// A struct to represent when two sorts are of different types.
 #[derive(Debug)]
 pub struct SortDiffers<'ctx> {
-  left: Sort<'ctx>,
-  right: Sort<'ctx>,
+    left: Sort<'ctx>,
+    right: Sort<'ctx>,
 }
 
 /// A struct to represent when an ast is not a function application.
@@ -191,7 +190,7 @@ pub struct DatatypeBuilder<'ctx> {
     constructors: Vec<(String, Vec<(String, DatatypeAccessor<'ctx>)>)>,
 }
 
-/// Wrapper which can point to an existing sort (by reference) or to a custom datatype (by name).
+/// Wrapper which can point to a sort (by value) or to a custom datatype (by name).
 #[derive(Debug)]
 pub enum DatatypeAccessor<'ctx> {
     Sort(Sort<'ctx>),
