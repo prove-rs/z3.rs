@@ -288,3 +288,32 @@ fn test_func_decl_attributes() {
     assert_eq!(binary_decl.name(), "binary");
     assert_eq!(binary_decl.arity(), 2);
 }
+
+#[test]
+fn parallel() {
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let t = std::thread::spawn(|| {
+            let begin = std::time::Instant::now();
+            loop {
+                let now = std::time::Instant::now();
+                let e = now - begin;
+                if e.as_secs() > 60 {
+                    break;
+                }
+                test_ast_attributes();
+                test_ast_children();
+                test_double_ops();
+                test_float32_ops();
+                test_real_ops();
+                test_bool_ops();
+                test_int_ops();
+                test_func_decl_attributes();
+            }
+        });
+        handles.push(t);
+    }
+    for t in handles.into_iter() {
+        t.join().unwrap();
+    }
+}

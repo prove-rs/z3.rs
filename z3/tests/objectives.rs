@@ -150,3 +150,25 @@ fn test_optimize_assert_soft_and_get_objectives() {
         );
     }
 }
+
+#[test]
+fn parallel() {
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let t = std::thread::spawn(|| {
+            let begin = std::time::Instant::now();
+            loop {
+                let now = std::time::Instant::now();
+                let e = now - begin;
+                if e.as_secs() > 60 {
+                    break;
+                }
+                test_optimize_assert_soft_and_get_objectives();
+            }
+        });
+        handles.push(t);
+    }
+    for t in handles.into_iter() {
+        t.join().unwrap();
+    }
+}

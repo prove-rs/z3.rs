@@ -1007,10 +1007,7 @@ fn test_goal_get_formulas() {
     goal.assert(&a);
     goal.assert(&b);
     goal.assert(&c);
-    assert_eq!(
-        goal.get_formulas::<Bool>(),
-        vec![a, b, c],
-    );
+    assert_eq!(goal.get_formulas::<Bool>(), vec![a, b, c],);
 }
 
 #[test]
@@ -1030,10 +1027,7 @@ fn test_tactic_skip() {
     let apply_results = tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
-    assert_eq!(
-        goal_result.get_formulas::<Bool>(),
-        vec![a.clone(), b, a],
-    );
+    assert_eq!(goal_result.get_formulas::<Bool>(), vec![a.clone(), b, a],);
 }
 
 #[test]
@@ -1079,13 +1073,17 @@ fn test_tactic_or_else() {
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
 
-
 #[test]
 fn test_goal_apply_tactic() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
-    pub fn test_apply_tactic(ctx: &Context, goal: Goal, before_formulas: Vec<Bool>, after_formulas: Vec<Bool>) {
+    pub fn test_apply_tactic(
+        ctx: &Context,
+        goal: Goal,
+        before_formulas: Vec<Bool>,
+        after_formulas: Vec<Bool>,
+    ) {
         assert_eq!(goal.get_formulas::<Bool>(), before_formulas);
         let params = Params::new(&ctx);
 
@@ -1104,26 +1102,46 @@ fn test_goal_apply_tactic() {
     let a_and_b_and_a = Bool::and(&ctx, &bools);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
-    test_apply_tactic(&ctx, goal, vec![a.clone(), b.clone(), a.clone()], vec![b.clone(), a.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![a.clone(), b.clone(), a.clone()],
+        vec![b.clone(), a.clone()],
+    );
 
     let a_implies_b = ast::Bool::implies(&a, &b);
     let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
 
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_a_implies_b);
-    test_apply_tactic(&ctx, goal, vec![a.clone(), a_implies_b.clone()], vec![a.clone(), b.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![a.clone(), a_implies_b.clone()],
+        vec![a.clone(), b.clone()],
+    );
 
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a);
     goal.assert(&a_implies_b.clone());
-    test_apply_tactic(&ctx, goal, vec![a.clone(), a_implies_b.clone()], vec![a.clone(), b.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![a.clone(), a_implies_b.clone()],
+        vec![a.clone(), b.clone()],
+    );
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     let true_and_false_and_true = ast::Bool::and(&ctx, &[&true_bool, &false_bool, &true_bool]);
     goal.assert(&true_and_false_and_true);
-    test_apply_tactic(&ctx, goal, vec![false_bool.clone()], vec![false_bool.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![false_bool.clone()],
+        vec![false_bool.clone()],
+    );
 }
 
 #[test]
@@ -1302,7 +1320,6 @@ fn test_issue_94() {
     ast::Int::add(&ctx0, &[&i0, &i1]);
 }
 
-
 #[test]
 fn test_ast_safe_eq() {
     let cfg = Config::new();
@@ -1334,16 +1351,89 @@ fn test_ast_safe_decl() {
     let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
     let x = ast::Int::new_const(&ctx, "x");
     let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
-    let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
-    let forall = ast::forall_const(
-         &ctx,
-         &[&x.clone().into()],
-         &[&f_x_pattern],
-         &x._eq(&f_x)
-    );
+    let f_x_pattern: Pattern = Pattern::new(&ctx, &[&f_x.clone().into()]);
+    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[&f_x_pattern], &x._eq(&f_x));
     assert!(forall.safe_decl().is_err());
     assert_eq!(
         format!("{}", forall.safe_decl().err().unwrap()),
         "ast node is not a function application, has kind Quantifier"
     );
+}
+
+#[test]
+fn parallel() {
+    let mut handles = vec![];
+    for _ in 0..10 {
+        let t = std::thread::spawn(|| {
+            let begin = std::time::Instant::now();
+            loop {
+                let now = std::time::Instant::now();
+                let e = now - begin;
+                if e.as_secs() > 60 {
+                    break;
+                }
+                test_arbitrary_size_int();
+                test_arbitrary_size_real();
+                test_array_store_select();
+                test_ast_safe_eq();
+                test_ast_safe_decl();
+                test_ast_translate();
+                test_bitvectors();
+                test_cloning_ast();
+                test_config();
+                test_context();
+                test_datatype_builder();
+                test_dynamic_as_set();
+                test_float_add();
+                test_floating_point_bits();
+                test_format();
+                test_get_unsat_core();
+                test_goal_apply_tactic();
+                test_goal_depth();
+                test_goal_get_formulas();
+                test_goal_get_precision();
+                test_goal_is_sat();
+                test_goal_num_expr();
+                test_goal_reset();
+                test_goal_size();
+                //test_issue_94();
+                test_model_translate();
+                test_mutually_recursive_datatype();
+                test_optimize_unknown();
+                test_params();
+                test_pb_ops_model();
+                test_probe_debug();
+                test_probe_eq();
+                test_probe_gt();
+                test_probe_gte();
+                test_probe_le();
+                test_probe_lt();
+                test_probe_names();
+                test_probe_ne();
+                test_real_cmp();
+                test_recursive_datatype();
+                test_set_membership();
+                test_solver_translate();
+                test_solver_unknown();
+                test_solving();
+                test_solving_for_model();
+                test_sorts_and_symbols();
+                test_string_as_string();
+                test_string_concat();
+                test_string_eq();
+                test_string_prefix();
+                test_string_suffix();
+                test_substitution();
+                test_tactic_and_then();
+                test_tactic_cond();
+                test_tactic_conditions();
+                test_tactic_or_else();
+                test_tactic_skip();
+            }
+        });
+        handles.push(t);
+    }
+    for t in handles.into_iter() {
+        t.join().unwrap();
+    }
 }

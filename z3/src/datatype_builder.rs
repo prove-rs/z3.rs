@@ -2,7 +2,7 @@
 
 use std::{convert::TryInto, ptr::null_mut};
 use z3_sys::*;
-use Z3_MUTEX;
+
 use {
     Context, DatatypeAccessor, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort,
     Symbol,
@@ -97,7 +97,6 @@ pub fn create_datatypes<'ctx>(
             }
 
             let constructor = unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_mk_constructor(
                     ctx.z3_ctx,
                     cname_symbol,
@@ -113,7 +112,6 @@ pub fn create_datatypes<'ctx>(
         assert!(!cs.is_empty());
 
         let clist = unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_constructor_list(ctx.z3_ctx, num_cs.try_into().unwrap(), cs.as_mut_ptr())
         };
         clists.push(clist);
@@ -124,7 +122,6 @@ pub fn create_datatypes<'ctx>(
     assert_eq!(num, clists.len());
 
     unsafe {
-        let _guard = Z3_MUTEX.lock().unwrap();
         Z3_mk_datatypes(
             ctx.z3_ctx,
             num.try_into().unwrap(),
@@ -139,10 +136,7 @@ pub fn create_datatypes<'ctx>(
     for (z3_sort, datatype_builder) in raw_sorts.into_iter().zip(&datatype_builders) {
         let num_cs = datatype_builder.constructors.len();
 
-        unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort))
-        };
+        unsafe { Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort)) };
         let sort = Sort { ctx, z3_sort };
 
         let mut variants: Vec<DatatypeVariant<'ctx>> = Vec::with_capacity(num_cs as usize);
@@ -151,13 +145,11 @@ pub fn create_datatypes<'ctx>(
             let num_fs = fs.len();
 
             let raw_constructor: Z3_func_decl = unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_get_datatype_sort_constructor(ctx.z3_ctx, z3_sort, j.try_into().unwrap())
             };
             let constructor: FuncDecl<'ctx> = unsafe { FuncDecl::from_raw(ctx, raw_constructor) };
 
             let tester_func: Z3_func_decl = unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_get_datatype_sort_recognizer(ctx.z3_ctx, z3_sort, j.try_into().unwrap())
             };
             let tester = unsafe { FuncDecl::from_raw(ctx, tester_func) };
@@ -165,7 +157,6 @@ pub fn create_datatypes<'ctx>(
             let mut accessors: Vec<FuncDecl<'ctx>> = Vec::new();
             for k in 0..num_fs {
                 let accessor_func: Z3_func_decl = unsafe {
-                    let _guard = Z3_MUTEX.lock().unwrap();
                     Z3_get_datatype_sort_constructor_accessor(
                         ctx.z3_ctx,
                         z3_sort,
