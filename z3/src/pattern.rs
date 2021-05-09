@@ -1,5 +1,4 @@
 use ast::Ast;
-use ast::Dynamic;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
@@ -27,7 +26,7 @@ impl<'ctx> Pattern<'ctx> {
     ///
     /// - `ast::forall_const()`
     /// - `ast::exists_const()`
-    pub fn new(ctx: &'ctx Context, terms: &[&Dynamic]) -> Pattern<'ctx> {
+    pub fn new(ctx: &'ctx Context, terms: &[&dyn Ast]) -> Pattern<'ctx> {
         assert!(!terms.is_empty());
         assert!(terms.iter().all(|t| t.get_ctx().z3_ctx == ctx.z3_ctx));
 

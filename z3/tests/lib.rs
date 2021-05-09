@@ -73,8 +73,8 @@ fn test_solving_for_model() {
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
-    let xv = model.eval(&x).unwrap().as_i64().unwrap();
-    let yv = model.eval(&y).unwrap().as_i64().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
     info!("x: {}", xv);
     info!("y: {}", yv);
     assert!(xv > yv);
@@ -96,8 +96,8 @@ fn test_cloning_ast() {
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
-    let xv = model.eval(&x).unwrap().as_i64().unwrap();
-    let yv = model.eval(&y).unwrap().as_i64().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
     assert_eq!(xv, 0);
     assert_eq!(yv, 0);
 }
@@ -129,8 +129,8 @@ fn test_bitvectors() {
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
-    let av = model.eval(&a).unwrap().as_i64().unwrap();
-    let bv = model.eval(&b).unwrap().as_i64().unwrap();
+    let av = model.eval(&a, true).unwrap().as_i64().unwrap();
+    let bv = model.eval(&b, true).unwrap().as_i64().unwrap();
     assert!(av > bv);
     assert!(bv > 2);
     assert!(bv + 2 > av);
@@ -216,12 +216,12 @@ fn test_model_translate() {
     assert_eq!(slv.check(), SatResult::Sat);
 
     let model = slv.get_model().unwrap();
-    assert_eq!(2, model.eval(&a).unwrap().as_i64().unwrap());
+    assert_eq!(2, model.eval(&a, true).unwrap().as_i64().unwrap());
     let translated_model = model.translate(&destination);
     assert_eq!(
         2,
         translated_model
-            .eval(&translated_a)
+            .eval(&translated_a, true)
             .unwrap()
             .as_i64()
             .unwrap()
@@ -240,8 +240,8 @@ fn test_pb_ops_model() {
     solver.assert(&ast::Bool::pb_eq(&ctx, &[(&x, 1), (&y, 1)], 1));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
-    let xv = model.eval(&x).unwrap().as_bool().unwrap();
-    let yv = model.eval(&y).unwrap().as_bool().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
     info!("y: {}", yv);
     assert!((xv && !yv) || (!xv && yv));
@@ -251,8 +251,8 @@ fn test_pb_ops_model() {
     solver.assert(&ast::Bool::pb_ge(&ctx, &[(&x, 1), (&y, 1)], 2));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
-    let xv = model.eval(&x).unwrap().as_bool().unwrap();
-    let yv = model.eval(&y).unwrap().as_bool().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
     info!("y: {}", yv);
     assert!(xv && yv);
@@ -261,8 +261,8 @@ fn test_pb_ops_model() {
     solver.assert(&ast::Bool::pb_le(&ctx, &[(&x, 1), (&y, 1)], 0));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
-    let xv = model.eval(&x).unwrap().as_bool().unwrap();
-    let yv = model.eval(&y).unwrap().as_bool().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
     info!("x: {}", xv);
     info!("y: {}", yv);
     assert!(!xv && !yv);
@@ -327,9 +327,9 @@ fn test_real_cmp() {
     let x = ast::Real::new_const(&ctx, "x");
     let x_plus_1 = ast::Real::add(&ctx, &[&x, &ast::Real::from_real(&ctx, 1, 1)]);
     // forall x, x < x + 1
-    let forall = ast::forall_const(&ctx, &[&x.clone().into()], &[], &x.lt(&x_plus_1));
+    let forall = ast::forall_const(&ctx, &[&x], &[], &x.lt(&x_plus_1));
 
-    solver.assert(&forall.try_into().unwrap());
+    solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -660,7 +660,7 @@ fn test_datatype_builder() {
     let five = ast::Int::from_i64(&ctx, 5);
     let just_five = maybe_int.variants[1]
         .constructor
-        .apply(&[&five.clone().into()]);
+        .apply(&[&five]);
 
     let nothing_is_nothing = maybe_int.variants[0]
         .tester
@@ -722,7 +722,7 @@ fn test_recursive_datatype() {
     let five = ast::Int::from_i64(&ctx, 5);
     let cons_five_nil = list_sort.variants[1]
         .constructor
-        .apply(&[&five.clone().into(), &nil]);
+        .apply(&[&five, &nil]);
 
     let nil_is_nil = list_sort.variants[0]
         .tester
@@ -809,7 +809,7 @@ fn test_mutually_recursive_datatype() {
     let ten = ast::Int::from_i64(&ctx, 10);
     let leaf_ten = tree_sort.variants[0]
         .constructor
-        .apply(&[&ten.clone().into()]);
+        .apply(&[&ten]);
     let leaf_ten_val_is_ten = tree_sort.variants[0].accessors[0]
         .apply(&[&leaf_ten])
         .as_int()
@@ -821,7 +821,7 @@ fn test_mutually_recursive_datatype() {
     let twenty = ast::Int::from_i64(&ctx, 20);
     let leaf_twenty = tree_sort.variants[0]
         .constructor
-        .apply(&[&twenty.clone().into()]);
+        .apply(&[&twenty]);
     let cons_leaf_twenty_nil = tree_list_sort.variants[1]
         .constructor
         .apply(&[&leaf_twenty, &nil]);
@@ -1022,9 +1022,7 @@ fn test_set_membership() {
     let x = ast::Int::new_const(&ctx, "x");
     // An empty set will always return false for member
     let forall: ast::Bool =
-        ast::forall_const(&ctx, &[&x.clone().into()], &[], &set.member(&x).not())
-            .try_into()
-            .unwrap();
+        ast::forall_const(&ctx, &[&x], &[], &set.member(&x).not());
     solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
@@ -1409,14 +1407,13 @@ fn test_ast_safe_decl() {
     let x_not = x.not();
     assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
 
-    let solver = Solver::new(&ctx);
     let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
     let x = ast::Int::new_const(&ctx, "x");
-    let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
-    let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+    let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+    let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
     let forall = ast::forall_const(
          &ctx,
-         &[&x.clone().into()],
+         &[&x],
          &[&f_x_pattern],
          &x._eq(&f_x)
     );

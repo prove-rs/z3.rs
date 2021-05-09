@@ -1,5 +1,4 @@
 extern crate z3;
-use std::convert::TryInto;
 use z3::ast::Ast;
 use z3::*;
 
@@ -26,12 +25,12 @@ fn test_optimize_assert_soft_and_get_objectives() {
             &ctx,
             &[
                 &well_ordered_fn
-                    .apply(&[&ast::Int::from_u64(&ctx, i).into()])
+                    .apply(&[&ast::Int::from_u64(&ctx, i)])
                     .as_int()
                     .unwrap()
                     .lt(&ast::Int::from_u64(&ctx, COUNT)),
                 &well_ordered_fn
-                    .apply(&[&ast::Int::from_u64(&ctx, i).into()])
+                    .apply(&[&ast::Int::from_u64(&ctx, i)])
                     .as_int()
                     .unwrap()
                     .ge(&ast::Int::from_u64(&ctx, 0)),
@@ -40,11 +39,11 @@ fn test_optimize_assert_soft_and_get_objectives() {
         for j in 0..i {
             opt.assert_soft(
                 &well_ordered_fn
-                    .apply(&[&ast::Int::from_u64(&ctx, i).into()])
+                    .apply(&[&ast::Int::from_u64(&ctx, i)])
                     .as_int()
                     .unwrap()
                     .lt(&well_ordered_fn
-                        .apply(&[&ast::Int::from_u64(&ctx, j).into()])
+                        .apply(&[&ast::Int::from_u64(&ctx, j)])
                         .as_int()
                         .unwrap()),
                 1,
@@ -56,11 +55,11 @@ fn test_optimize_assert_soft_and_get_objectives() {
     // incorrect assertion: COUNT-1 > 0
     opt.assert_soft(
         &well_ordered_fn
-            .apply(&[&ast::Int::from_u64(&ctx, 0).into()])
+            .apply(&[&ast::Int::from_u64(&ctx, 0)])
             .as_int()
             .unwrap()
             .lt(&well_ordered_fn
-                .apply(&[&ast::Int::from_u64(&ctx, COUNT - 1).into()])
+                .apply(&[&ast::Int::from_u64(&ctx, COUNT - 1)])
                 .as_int()
                 .unwrap()),
         1,
@@ -73,7 +72,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
 
     for i in 0..COUNT {
         let i_new_pos = model
-            .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, i).into()]))
+            .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, i)]), true)
             .unwrap()
             .as_int()
             .unwrap()
@@ -81,7 +80,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
             .unwrap();
         for j in 0..i {
             let j_new_pos = model
-                .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, j).into()]))
+                .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, j)]), true)
                 .unwrap()
                 .as_int()
                 .unwrap()
@@ -95,14 +94,14 @@ fn test_optimize_assert_soft_and_get_objectives() {
     // the penalty of all other soft assertions
     assert!(
         model
-            .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, 0).into()]))
+            .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, 0)]), true)
             .unwrap()
             .as_int()
             .unwrap()
             .as_u64()
             .unwrap()
             > model
-                .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, COUNT - 1).into()]))
+                .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(&ctx, COUNT - 1)]), true)
                 .unwrap()
                 .as_int()
                 .unwrap()

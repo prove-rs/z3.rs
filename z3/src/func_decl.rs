@@ -62,7 +62,7 @@ impl<'ctx> FuncDecl<'ctx> {
     /// Create a constant (if `args` has length 0) or function application (otherwise).
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
-    pub fn apply(&self, args: &[&ast::Dynamic<'ctx>]) -> ast::Dynamic<'ctx> {
+    pub fn apply(&self, args: &[&dyn ast::Ast<'ctx>]) -> ast::Dynamic<'ctx> {
         assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
 
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
