@@ -162,13 +162,13 @@ macro_rules! varop {
 
 /// Abstract syntax tree (AST) nodes represent terms, constants, or expressions.
 /// The `Ast` trait contains methods common to all AST subtypes.
-pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
+pub trait Ast<'ctx>: fmt::Debug {
     fn get_ctx(&self) -> &'ctx Context;
     fn get_z3_ast(&self) -> Z3_ast;
 
     // This would be great, but gives error E0071 "expected struct, variant or union type, found Self"
     // so I don't think we can write a generic constructor like this.
-    // Instead we just require the method, and use the new_ast! macro defined below to implement it
+    // Instead we just require the method, and use the impl_ast! macro defined below to implement it
     // on each Ast subtype.
     /*
     fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self {
@@ -184,7 +184,7 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
         }
     }
     */
-    fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self;
+    fn new(ctx: &'ctx Context, ast: Z3_ast) -> Self where Self: Sized;
 
     /// Compare this `Ast` with another `Ast`, and get a [`Bool`](struct.Bool.html)
     /// representing the result.
@@ -193,14 +193,14 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     /// `Ast`s being compared must be the same type.
     //
     // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq(&self, other: &Self) -> Bool<'ctx> {
+    fn _eq(&self, other: &Self) -> Bool<'ctx> where Self: Sized {
         self._safe_eq(other).unwrap()
     }
 
 
     /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
     /// match for the two values.
-    fn _safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>> {
+    fn _safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>> where Self: Sized {
         let ctx = self.get_ctx().z3_ctx;
         let other_ctx = other.get_ctx().z3_ctx;
         let left_sort = self.get_sort();
@@ -223,7 +223,7 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(context: &'ctx Context, values: &[&Self]) -> Bool<'ctx> {
+    fn distinct(context: &'ctx Context, values: &[&Self]) -> Bool<'ctx> where Self: Sized {
         Bool::new(context, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
             assert!(values.len() <= 0xffffffff);
@@ -242,7 +242,7 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
     /// Simplify the `Ast`. Returns a new `Ast` which is equivalent,
     /// but simplified using algebraic simplification rules, such as
     /// constant propagation.
-    fn simplify(&self) -> Self {
+    fn simplify(&self) -> Self where Self: Sized {
         Self::new(self.get_ctx(), unsafe {
             Z3_simplify(self.get_ctx().z3_ctx, self.get_z3_ast())
         })
@@ -250,7 +250,7 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
 
     /// Performs substitution on the `Ast`. The slice `substitutions` contains a
     /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
-    fn substitute<T: Ast<'ctx>>(&self, substitutions: &[(&T, &T)]) -> Self {
+    fn substitute<T: Ast<'ctx>>(&self, substitutions: &[(&T, &T)]) -> Self where Self: Sized {
         Self::new(self.get_ctx(), unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
 
@@ -354,6 +354,13 @@ pub trait Ast<'ctx>: Sized + fmt::Debug + Into<Dynamic<'ctx>> {
             };
             Ok(unsafe { FuncDecl::from_raw(ctx, func_decl) })
         }
+    }
+
+    fn translate<'src_ctx>(&'src_ctx self, dest: &'ctx Context) -> Self where Self: Sized {
+        Self::new(dest, unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_translate(self.get_ctx().z3_ctx, self.get_z3_ast(), dest.z3_ctx)
+        })
     }
 }
 
@@ -600,15 +607,6 @@ impl<'ctx> Bool<'ctx> {
         }
     }
 
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Bool<'dest_ctx> {
-        Bool::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
-    }
-
     // This doesn't quite fit the trinop! macro because of the generic argty
     pub fn ite<T>(&self, a: &T, b: &T) -> T
     where
@@ -778,7 +776,7 @@ impl<'ctx> Int<'ctx> {
     /// assert_eq!(solver.check(), SatResult::Sat);
     /// let model = solver.get_model().unwrap();
     ///
-    /// assert_eq!(-3, model.eval(&x).unwrap().as_i64().unwrap());
+    /// assert_eq!(-3, model.eval(&x, true).unwrap().as_i64().unwrap());
     /// ```
     pub fn from_bv(ast: &BV<'ctx>, signed: bool) -> Int<'ctx> {
         Self::new(ast.ctx, unsafe {
@@ -792,15 +790,6 @@ impl<'ctx> Int<'ctx> {
     /// [`BV::from_int`](struct.BV.html#method.from_int); see notes there
     pub fn to_ast(&self, sz: u32) -> BV<'ctx> {
         BV::from_int(self, sz)
-    }
-
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Int<'dest_ctx> {
-        Int::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
     }
 
     varop! {
@@ -895,15 +884,6 @@ impl<'ctx> Real<'ctx> {
 
     unop! {
         is_int(Z3_mk_is_int, Bool<'ctx>);
-    }
-
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Real<'dest_ctx> {
-        Real::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
     }
 
     varop! {
@@ -1210,7 +1190,7 @@ impl<'ctx> BV<'ctx> {
     /// assert_eq!(solver.check(), SatResult::Sat);
     /// let model = solver.get_model().unwrap();;
     ///
-    /// assert_eq!(-3, model.eval(&x.to_int(true)).unwrap().as_i64().expect("as_i64() shouldn't fail"));
+    /// assert_eq!(-3, model.eval(&x.to_int(true), true).unwrap().as_i64().expect("as_i64() shouldn't fail"));
     /// ```
     pub fn from_int(ast: &Int<'ctx>, sz: u32) -> BV<'ctx> {
         Self::new(ast.ctx, unsafe {
@@ -1230,15 +1210,6 @@ impl<'ctx> BV<'ctx> {
     pub fn get_size(&self) -> u32 {
         let sort = self.get_sort();
         unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx, sort.z3_sort) }
-    }
-
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> BV<'dest_ctx> {
-        BV::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
     }
 
     // Bitwise ops
@@ -1423,15 +1394,6 @@ impl<'ctx> Array<'ctx> {
         })
     }
 
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Array<'dest_ctx> {
-        Array::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
-    }
-
     /// Get the value at a given index in the array.
     ///
     /// Note that the `index` _must be_ of the array's `domain` sort.
@@ -1511,15 +1473,6 @@ impl<'ctx> Set<'ctx> {
         })
     }
 
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Set<'dest_ctx> {
-        Set::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
-    }
-
     /// Add an element to the set.
     ///
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
@@ -1584,7 +1537,7 @@ impl<'ctx> Set<'ctx> {
 }
 
 impl<'ctx> Dynamic<'ctx> {
-    pub fn from_ast(ast: &impl Ast<'ctx>) -> Self {
+    pub fn from_ast(ast: &dyn Ast<'ctx>) -> Self {
         Self::new(ast.get_ctx(), ast.get_z3_ast())
     }
 
@@ -1616,7 +1569,7 @@ impl<'ctx> Dynamic<'ctx> {
         }
     }
 
-    // Returns `None` if the `Dynamic` is not actually a `Float`
+    /// Returns `None` if the `Dynamic` is not actually a `Float`
     pub fn as_float(&self) -> Option<Float<'ctx>> {
         match self.sort_kind() {
             SortKind::FloatingPoint => Some(Float::new(self.ctx, self.z3_ast)),
@@ -1702,15 +1655,6 @@ impl<'ctx> Datatype<'ctx> {
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
-
-    // TODO: this should be on the Ast trait, but I don't know how to return Self<'dest_ctx>.
-    // When I try, it gives the error E0109 "lifetime arguments are not allowed for this type".
-    pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Datatype<'dest_ctx> {
-        Datatype::new(dest, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_translate(self.ctx.z3_ctx, self.z3_ast, dest.z3_ctx)
-        })
-    }
 }
 
 /// Create a universal quantifier.
@@ -1726,11 +1670,11 @@ impl<'ctx> Datatype<'ctx> {
 /// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
 ///
 /// let x = ast::Int::new_const(&ctx, "x");
-/// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
 ///     &ctx,
-///     &[&x.clone().into()],
+///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x)
 /// ).try_into().unwrap();
@@ -1739,24 +1683,21 @@ impl<'ctx> Datatype<'ctx> {
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();;
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
-/// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn forall_const<'ctx, A>(
+pub fn forall_const<'ctx>(
     ctx: &'ctx Context,
-    bounds: &[&Dynamic<'ctx>],
+    bounds: &[&dyn Ast<'ctx>],
     patterns: &[&Pattern<'ctx>],
-    body: &A,
-) -> Dynamic<'ctx>
-where
-    A: Ast<'ctx> + Clone,
-{
+    body: &Bool<'ctx>,
+) -> Bool<'ctx> {
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
 
     if bounds.is_empty() {
-        return (*body).clone().into();
+        return body.clone();
     }
 
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
@@ -1788,11 +1729,11 @@ where
 /// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
 ///
 /// let x = ast::Int::new_const(&ctx, "x");
-/// let f_x: ast::Int = f.apply(&[&x.clone().into()]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x.clone().into() ]);
+/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
 ///     &ctx,
-///     &[&x.clone().into()],
+///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x).not()
 /// ).try_into().unwrap();
@@ -1801,24 +1742,21 @@ where
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();;
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3).into()])]).try_into().unwrap();
-/// assert_eq!(3, model.eval(&f_f_3).unwrap().as_u64().unwrap());
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn exists_const<'ctx, A>(
+pub fn exists_const<'ctx>(
     ctx: &'ctx Context,
-    bounds: &[&Dynamic<'ctx>],
+    bounds: &[&dyn Ast<'ctx>],
     patterns: &[&Pattern<'ctx>],
-    body: &A,
-) -> Dynamic<'ctx>
-where
-    A: Ast<'ctx> + Clone,
-{
+    body: &Bool<'ctx>,
+) -> Bool<'ctx> {
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
 
     if bounds.is_empty() {
-        return (*body).clone().into();
+        return body.clone();
     }
 
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();

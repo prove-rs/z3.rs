@@ -52,7 +52,7 @@ impl<'ctx> Model<'ctx> {
         }
     }
 
-    pub fn eval<T>(&self, ast: &T) -> Option<T>
+    pub fn eval<T>(&self, ast: &T, model_completion: bool) -> Option<T>
     where
         T: Ast<'ctx>,
     {
@@ -64,7 +64,7 @@ impl<'ctx> Model<'ctx> {
                     self.ctx.z3_ctx,
                     self.z3_mdl,
                     ast.get_z3_ast(),
-                    true,
+                    model_completion,
                     &mut tmp,
                 )
             }

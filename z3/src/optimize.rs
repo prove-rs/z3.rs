@@ -236,15 +236,22 @@ macro_rules! impl_weight {
         $(
             impl Weight for $ty {
                 fn to_string(&self) -> String {
-                    assert!(*self >= 0, "Weight cannot be negative");
+                    #[allow(unused_comparisons)]
+                    let weight_valid: bool = *self >= 0;
+                    assert!(weight_valid, "Weight cannot be negative");
                     ToString::to_string(&self)
                 }
             }
 
             impl Weight for ($ty, $ty) {
                 fn to_string(&self) -> String {
-                    assert!(self.0 >= 0, "Weight numerator cannot be negative");
-                    assert!(self.1 >= 0, "Weight denominator cannot be negative");
+                    #[allow(unused_comparisons)]
+                    let num_valid: bool = self.0 >= 0;
+                    #[allow(unused_comparisons)]
+                    let denom_valid: bool = self.1 >= 0;
+                    assert!(num_valid, "Weight numerator cannot be negative");
+                    #[allow(unused_comparisons)]
+                    assert!(denom_valid, "Weight denominator cannot be negative");
                     format!("{} / {}", self.0, self.1)
                 }
             }
@@ -287,6 +294,7 @@ impl Weight for BigRational {
 macro_rules! impl_sealed {
     ($($ty: ty),*) => {
         mod private {
+            #[allow(unused_imports)]
             use super::*;
             pub trait Sealed {}
             $(

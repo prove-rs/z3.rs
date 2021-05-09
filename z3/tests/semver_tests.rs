@@ -274,7 +274,7 @@ fn test_solve_simple_semver_example() {
 
     for k in root.keys() {
         let ast = &asts[k];
-        let idx = model.eval(ast).unwrap().as_i64().unwrap();
+        let idx = model.eval(ast, true).unwrap().as_i64().unwrap();
         info!(
             "solved: {}: #{} = {}",
             k,
@@ -286,8 +286,8 @@ fn test_solve_simple_semver_example() {
     let pg_a = &asts["postgres"];
     let r2_a = &asts["r2d2-postgres"];
 
-    let pg_v = model.eval(pg_a).unwrap().as_i64().unwrap() as usize;
-    let r2_v = model.eval(r2_a).unwrap().as_i64().unwrap() as usize;
+    let pg_v = model.eval(pg_a, true).unwrap().as_i64().unwrap() as usize;
+    let r2_v = model.eval(r2_a, true).unwrap().as_i64().unwrap() as usize;
 
     assert_eq!(
         get_version(&smap, "postgres", pg_v).unwrap(),

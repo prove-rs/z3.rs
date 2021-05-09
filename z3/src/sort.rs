@@ -98,7 +98,7 @@ impl<'ctx> Sort<'ctx> {
     /// assert_eq!(solver.check(), SatResult::Sat);
     /// let model = solver.get_model().unwrap();;
     ///
-    /// assert!(model.eval(&eq).unwrap().as_bool().unwrap().as_bool().unwrap());
+    /// assert!(model.eval(&eq, true).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```
     pub fn enumeration(
         ctx: &'ctx Context,
