@@ -922,6 +922,7 @@ fn test_goal_reset() {
     assert_eq!(format!("{}", goal), "(goal)");
 }
 
+#[test]
 fn test_set_membership() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
@@ -936,6 +937,17 @@ fn test_set_membership() {
     solver.push();
     solver.assert(&set.member(&one));
     // An empty set will never contain 1
+    assert_eq!(solver.check(), SatResult::Unsat);
+    solver.pop(1);
+
+    solver.push();
+    let set_with_one = set.add(&one);
+    // Adding 1 to the empty set means it does now contain 1
+    solver.assert(&set_with_one.member(&one));
+    assert_eq!(solver.check(), SatResult::Sat);
+    let set_without_one = set_with_one.del(&one);
+    // Removing 1 from the set means it no longer contains 1
+    solver.assert(&set_without_one.member(&one));
     assert_eq!(solver.check(), SatResult::Unsat);
     solver.pop(1);
 

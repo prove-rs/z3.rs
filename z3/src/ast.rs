@@ -1546,7 +1546,7 @@ impl<'ctx> Set<'ctx> {
     {
         Set::new(self.ctx, unsafe {
             let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_set_add(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
+            Z3_mk_set_del(self.ctx.z3_ctx, self.z3_ast, element.get_z3_ast())
         })
     }
 
