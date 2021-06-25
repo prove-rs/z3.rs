@@ -24,6 +24,7 @@ mod config;
 mod context;
 pub mod datatype_builder;
 mod func_decl;
+mod rec_func_decl;
 mod goal;
 mod model;
 mod ops;
@@ -140,10 +141,30 @@ pub struct Optimize<'ctx> {
 /// The declaration assigns a name, a sort (i.e., type), and for function
 /// the sort (i.e., type) of each of its arguments. Note that, in Z3,
 /// a constant is a function with 0 arguments.
+///
+/// # See also:
+///
+/// - [`RecFuncDecl`](struct.RecFuncDecl.html)
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
 pub struct FuncDecl<'ctx> {
+    ctx: &'ctx Context,
+    z3_func_decl: Z3_func_decl,
+}
+
+/// Recursive function declaration. Every function has an associated declaration.
+///
+/// The declaration assigns a name, a return sort (i.e., type), and
+/// the sort (i.e., type) of each of its arguments. This is the function declaration type
+/// you should use if you want to add a definition to your function, recursive or not.
+///
+/// # See also:
+///
+/// - [`FuncDecl::add_def`](struct.RecFuncDecl.html#method.add_def)
+// Note for in-crate users: Never construct a `FuncDecl` directly; only use
+// `FuncDecl::new()` which handles Z3 refcounting properly.
+pub struct RecFuncDecl<'ctx> {
     ctx: &'ctx Context,
     z3_func_decl: Z3_func_decl,
 }
