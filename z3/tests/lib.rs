@@ -487,6 +487,73 @@ fn test_string_as_string() {
 }
 
 #[test]
+fn test_rec_func_def() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+
+    let ctx = Context::new(&cfg);
+
+    let mut fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+    let n = ast::Int::new_const(&ctx, "n");
+    let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
+    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
+    let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
+    let body = cond.ite(
+        &ast::Int::from_i64(&ctx, 1),
+        &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]));
+
+    fac.add_def(&[&n.into()], &body);
+
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+
+    let solver = Solver::new(&ctx);
+
+    solver.assert(&x._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()]).as_int().unwrap()));
+    solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx , 5), &x])));
+    solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()]).as_int().unwrap()));
+    solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 120)));
+
+
+
+    assert_eq!(solver.check(), SatResult::Sat)
+}
+
+#[test]
+fn test_rec_func_def_unsat() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+
+    let ctx = Context::new(&cfg);
+
+    let mut fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+    let n = ast::Int::new_const(&ctx, "n");
+    let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
+    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
+    let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
+    let body = cond.ite(
+        &ast::Int::from_i64(&ctx, 1),
+        &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]));
+
+    fac.add_def(&[&n.into()], &body);
+
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+
+    let solver = Solver::new(&ctx);
+
+    solver.assert(&x._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()]).as_int().unwrap()));
+    solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx , 5), &x])));
+    solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()]).as_int().unwrap()));
+
+    // If fac was an uninterpreted function, this assertion would work.
+    // To see this, comment out `fac.add_def(&[&n.into()], &body);`
+    solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 25)));
+
+    assert_eq!(solver.check(), SatResult::Unsat)
+}
+
+#[test]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
