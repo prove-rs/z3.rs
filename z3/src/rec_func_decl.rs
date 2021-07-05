@@ -63,7 +63,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     /// let solver = Solver::new(&ctx);
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
     ///         &ctx,
-    ///         &[&n.clone().into()],
+    ///         &[&n],
     ///         &[],
     ///         &n.lt(&f_of_n.as_int().unwrap())
     ///     ).try_into().unwrap();
