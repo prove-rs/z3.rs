@@ -79,8 +79,10 @@ impl<'ctx> RecFuncDecl<'ctx> {
         args: &[&ast::Dynamic<'ctx>],
         body: &impl Ast<'ctx>,
     ) {
-        let mut args: Vec<_> = args.iter().map(|s| s.get_z3_ast()).collect();
+        assert!(args.iter().all(|arg| arg.ctx == body.get_ctx()));
+        assert_eq!(self.ctx, body.get_ctx());
 
+        let mut args: Vec<_> = args.iter().map(|s| s.get_z3_ast()).collect();
         unsafe {
             assert_eq!(body.get_sort().z3_sort, Z3_get_range(self.ctx.z3_ctx, self.z3_func_decl));
 
