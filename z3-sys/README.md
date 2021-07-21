@@ -21,7 +21,7 @@ Add it to your `Cargo.toml` like so:
 
 ```toml
 [dependencies]
-z3-sys = "0.6.3"
+z3-sys = "0.7.0"
 ```
 
 ## Support and Maintenance
