@@ -29,10 +29,12 @@ fn smoketest() {
 
         // Check that the string-value of the model is as expected
         let model_s = Z3_model_to_string(ctx, model);
-        assert_eq!(
-            CStr::from_ptr(model_s).to_str().unwrap(),
-            "y -> (- 1)\nx -> 0\n"
-        );
+
+        let model_str = CStr::from_ptr(model_s).to_str().unwrap();
+        let model_elements = model_str.split_terminator('\n').collect::<Vec<_>>();
+        assert_eq!(model_elements.len(), 2);
+        assert!(model_elements.contains(&"y -> (- 1)"));
+        assert!(model_elements.contains(&"x -> 0"));
 
         // Grab the actual constant values out of the model
         let mut interp_x: Z3_ast = const_x;

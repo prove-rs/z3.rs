@@ -4,6 +4,7 @@ extern crate log;
 
 extern crate z3;
 use std::convert::TryInto;
+use std::ops::Add;
 use z3::ast::{Ast, Bool};
 use z3::*;
 
@@ -500,7 +501,8 @@ fn test_rec_func_def() {
     let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
-        &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]));
+        &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
+    );
 
     fac.add_def(&[&n.into()], &body);
 
@@ -509,12 +511,22 @@ fn test_rec_func_def() {
 
     let solver = Solver::new(&ctx);
 
-    solver.assert(&x._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()]).as_int().unwrap()));
-    solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx , 5), &x])));
-    solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()]).as_int().unwrap()));
+    solver.assert(
+        &x._eq(
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()])
+                .as_int()
+                .unwrap(),
+        ),
+    );
+    solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
+    solver.assert(
+        &y._eq(
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()])
+                .as_int()
+                .unwrap(),
+        ),
+    );
     solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 120)));
-
-
 
     assert_eq!(solver.check(), SatResult::Sat)
 }
@@ -533,7 +545,8 @@ fn test_rec_func_def_unsat() {
     let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
-        &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]));
+        &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
+    );
 
     fac.add_def(&[&n.into()], &body);
 
@@ -542,9 +555,21 @@ fn test_rec_func_def_unsat() {
 
     let solver = Solver::new(&ctx);
 
-    solver.assert(&x._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()]).as_int().unwrap()));
-    solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx , 5), &x])));
-    solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()]).as_int().unwrap()));
+    solver.assert(
+        &x._eq(
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()])
+                .as_int()
+                .unwrap(),
+        ),
+    );
+    solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
+    solver.assert(
+        &y._eq(
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()])
+                .as_int()
+                .unwrap(),
+        ),
+    );
 
     // If fac was an uninterpreted function, this assertion would work.
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
@@ -658,9 +683,7 @@ fn test_datatype_builder() {
 
     let nothing = maybe_int.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(&ctx, 5);
-    let just_five = maybe_int.variants[1]
-        .constructor
-        .apply(&[&five]);
+    let just_five = maybe_int.variants[1].constructor.apply(&[&five]);
 
     let nothing_is_nothing = maybe_int.variants[0]
         .tester
@@ -720,9 +743,7 @@ fn test_recursive_datatype() {
     assert_eq!(list_sort.variants.len(), 2);
     let nil = list_sort.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(&ctx, 5);
-    let cons_five_nil = list_sort.variants[1]
-        .constructor
-        .apply(&[&five, &nil]);
+    let cons_five_nil = list_sort.variants[1].constructor.apply(&[&five, &nil]);
 
     let nil_is_nil = list_sort.variants[0]
         .tester
@@ -807,9 +828,7 @@ fn test_mutually_recursive_datatype() {
     assert_eq!(tree_list_sort.variants[1].accessors.len(), 2);
 
     let ten = ast::Int::from_i64(&ctx, 10);
-    let leaf_ten = tree_sort.variants[0]
-        .constructor
-        .apply(&[&ten]);
+    let leaf_ten = tree_sort.variants[0].constructor.apply(&[&ten]);
     let leaf_ten_val_is_ten = tree_sort.variants[0].accessors[0]
         .apply(&[&leaf_ten])
         .as_int()
@@ -819,9 +838,7 @@ fn test_mutually_recursive_datatype() {
 
     let nil = tree_list_sort.variants[0].constructor.apply(&[]);
     let twenty = ast::Int::from_i64(&ctx, 20);
-    let leaf_twenty = tree_sort.variants[0]
-        .constructor
-        .apply(&[&twenty]);
+    let leaf_twenty = tree_sort.variants[0].constructor.apply(&[&twenty]);
     let cons_leaf_twenty_nil = tree_list_sort.variants[1]
         .constructor
         .apply(&[&leaf_twenty, &nil]);
@@ -863,28 +880,33 @@ fn check_application_of_tactic_to_goal() {
     let ctx = Context::new(&cfg);
     let params = Params::new(&ctx);
 
-    let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
+    let tactic = Tactic::new(&ctx, "simplify");
     let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
 
     let goal = Goal::new(&ctx, false, false, false);
     let x = ast::Bool::new_const(&ctx, "x");
     goal.assert(&x);
 
-    let y = ast::Int::new_const(&ctx, "y");
-    let two = ast::Int::from_i64(&ctx, 2);
-    let y_greater_than_two = y.ge(&two);
-    goal.assert(&y_greater_than_two);
-
     let one = ast::Int::from_i64(&ctx, 1);
-    let y_greater_than_one = y.ge(&one);
-    goal.assert(&y_greater_than_one);
+    let two = ast::Int::from_i64(&ctx, 2);
 
-    assert_eq!(format!("{}", goal), "(goal\n  x\n  (>= y 2)\n  (>= y 1))");
+    let y = ast::Int::new_const(&ctx, "y");
+
+    let y_plus_one_greater_than_or_equal_to_two = y.clone().add(&one).ge(&two);
+    goal.assert(&y_plus_one_greater_than_or_equal_to_two);
+
+    let y_greater_than_or_equal_to_one = y.ge(&one);
+    goal.assert(&y_greater_than_or_equal_to_one);
+
+    assert_eq!(
+        format!("{}", goal),
+        "(goal\n  x\n  (>= (+ y 1) 2)\n  (>= y 1))"
+    );
     let apply_results = repeat_tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
 
-    assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 2))");
+    assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 1))");
 }
 
 #[test]
@@ -1021,8 +1043,7 @@ fn test_set_membership() {
     solver.push();
     let x = ast::Int::new_const(&ctx, "x");
     // An empty set will always return false for member
-    let forall: ast::Bool =
-        ast::forall_const(&ctx, &[&x], &[], &set.member(&x).not());
+    let forall: ast::Bool = ast::forall_const(&ctx, &[&x], &[], &set.member(&x).not());
     solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
@@ -1084,10 +1105,7 @@ fn test_goal_get_formulas() {
     goal.assert(&a);
     goal.assert(&b);
     goal.assert(&c);
-    assert_eq!(
-        goal.get_formulas::<Bool>(),
-        vec![a, b, c],
-    );
+    assert_eq!(goal.get_formulas::<Bool>(), vec![a, b, c],);
 }
 
 #[test]
@@ -1107,10 +1125,7 @@ fn test_tactic_skip() {
     let apply_results = tactic.apply(&goal, Some(&params));
     let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
-    assert_eq!(
-        goal_result.get_formulas::<Bool>(),
-        vec![a.clone(), b, a],
-    );
+    assert_eq!(goal_result.get_formulas::<Bool>(), vec![a.clone(), b, a],);
 }
 
 #[test]
@@ -1156,22 +1171,31 @@ fn test_tactic_or_else() {
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
 
-
 #[test]
 fn test_goal_apply_tactic() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
-    pub fn test_apply_tactic(ctx: &Context, goal: Goal, before_formulas: Vec<Bool>, after_formulas: Vec<Bool>) {
+    pub fn test_apply_tactic(
+        ctx: &Context,
+        goal: Goal,
+        before_formulas: Vec<Bool>,
+        after_formulas: Vec<Bool>,
+    ) {
         assert_eq!(goal.get_formulas::<Bool>(), before_formulas);
         let params = Params::new(&ctx);
 
-        let tactic = Tactic::new(&ctx, "ctx-solver-simplify");
+        let tactic = Tactic::new(&ctx, "sat-preprocess");
         let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
         let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
         let goal_result = goal_results.first().unwrap();
-        assert_eq!(goal_result.get_formulas::<Bool>(), after_formulas);
+        assert_eq!(
+            goal_result.get_formulas::<Bool>(),
+            after_formulas,
+            "Before: {:?}",
+            before_formulas
+        );
     }
 
     let a = ast::Bool::new_const(&ctx, "a");
@@ -1181,26 +1205,46 @@ fn test_goal_apply_tactic() {
     let a_and_b_and_a = Bool::and(&ctx, &bools);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
-    test_apply_tactic(&ctx, goal, vec![a.clone(), b.clone(), a.clone()], vec![b.clone(), a.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![a.clone(), b.clone(), a.clone()],
+        vec![a.clone(), b.clone()],
+    );
 
     let a_implies_b = ast::Bool::implies(&a, &b);
     let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
 
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_a_implies_b);
-    test_apply_tactic(&ctx, goal, vec![a.clone(), a_implies_b.clone()], vec![a.clone(), b.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![a.clone(), a_implies_b.clone()],
+        vec![a.clone(), b.clone()],
+    );
 
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a);
     goal.assert(&a_implies_b.clone());
-    test_apply_tactic(&ctx, goal, vec![a.clone(), a_implies_b.clone()], vec![a.clone(), b.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![a.clone(), a_implies_b.clone()],
+        vec![a.clone(), b.clone()],
+    );
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     let true_and_false_and_true = ast::Bool::and(&ctx, &[&true_bool, &false_bool, &true_bool]);
     goal.assert(&true_and_false_and_true);
-    test_apply_tactic(&ctx, goal, vec![false_bool.clone()], vec![false_bool.clone()]);
+    test_apply_tactic(
+        &ctx,
+        goal,
+        vec![false_bool.clone()],
+        vec![false_bool.clone()],
+    );
 }
 
 #[test]
@@ -1379,7 +1423,6 @@ fn test_issue_94() {
     ast::Int::add(&ctx0, &[&i0, &i1]);
 }
 
-
 #[test]
 fn test_ast_safe_eq() {
     let cfg = Config::new();
@@ -1410,13 +1453,8 @@ fn test_ast_safe_decl() {
     let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
     let x = ast::Int::new_const(&ctx, "x");
     let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-    let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
-    let forall = ast::forall_const(
-         &ctx,
-         &[&x],
-         &[&f_x_pattern],
-         &x._eq(&f_x)
-    );
+    let f_x_pattern: Pattern = Pattern::new(&ctx, &[&f_x]);
+    let forall = ast::forall_const(&ctx, &[&x], &[&f_x_pattern], &x._eq(&f_x));
     assert!(forall.safe_decl().is_err());
     assert_eq!(
         format!("{}", forall.safe_decl().err().unwrap()),
