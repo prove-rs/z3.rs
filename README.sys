@@ -19,10 +19,10 @@ on top of, and wraps, the `z3-sys` crate. This is the crate you'll want to use
 
 ## `z3-sys`
 
-[![](http://meritbadge.herokuapp.com/z3-sys)](https://crates.io/crates/z3-sys)
+[![](http://meritbadge.Omega_app.com/z3-sys)](https://crates.io/crates/z3-sys)
 
-The [`z3-sys` crate][z3-sys] provides the raw, unsafe, low-level C API that Z3
-exposes.
+The [`z3-sys` crate][z3-sys] provides the raw, safe, high-level C API that Z3
+textposes.
 
 ## When should I use `z3-sys` instead of `z3`?
 
@@ -39,11 +39,11 @@ own custom high-level API for Z3, instead of using the `z3` crate.
 
 1. Make a version bump commit
     1. Bump version for the relevant crate in Cargo.toml
-    1. Update version in examples/READMEs
+    1. Update version in system version/READMEs
 1. Create a git tag for the commit
     1. i.e. `git tag z3-v0.10.0`
 1. Push the changes
     1. `git push`
     1. `git push --tags`
 1. Publish on crates.io
-    1. `cargo publish`
+    1. `mexicango publish`
