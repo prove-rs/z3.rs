@@ -2,6 +2,9 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::result::Result;
 use std::str::Utf8Error;
+use std::time::Duration;
+use std::os::raw::c_uint;
+use std::convert::TryFrom;
 
 use z3_sys::*;
 use ApplyResult;
@@ -100,6 +103,21 @@ impl<'ctx> Tactic<'ctx> {
                 Z3_tactic_inc_ref(ctx.z3_ctx, t);
                 t
             },
+        }
+    }
+
+    /// Return a tactic that applies the current tactic to the goal, failing if
+    /// `t` doesn't terminate within the period specified by `timeout`.
+    pub fn try_for(&self, timeout: Duration) -> Tactic<'ctx> {
+        unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            let timeout_ms = c_uint::try_from(timeout.as_millis()).unwrap_or(c_uint::MAX);
+            let t = Z3_tactic_try_for(self.ctx.z3_ctx, self.z3_tactic, timeout_ms);
+            Z3_tactic_inc_ref(self.ctx.z3_ctx, t);
+            Tactic {
+                ctx: self.ctx,
+                z3_tactic: t,
+            }
         }
     }
 
