@@ -5,6 +5,7 @@ extern crate log;
 extern crate z3;
 use std::convert::TryInto;
 use std::ops::Add;
+use std::time::Duration;
 use z3::ast::{Ast, Bool};
 use z3::*;
 
@@ -1141,6 +1142,29 @@ fn test_tactic_fail() {
     let tactic = Tactic::new(&ctx, "fail");
     let apply_results = tactic.apply(&goal, Some(&params));
     assert!(matches!(apply_results, Err(_)));
+}
+
+#[test]
+fn test_tactic_try_for() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let params = Params::new(&ctx);
+
+    let one = ast::Int::from_i64(&ctx, 1);
+    let two = ast::Int::from_i64(&ctx, 2);
+    let x = ast::Int::new_const(&ctx, "x");
+
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&x.ge(&one.add(&two)));
+
+    let tactic = Tactic::new(&ctx, "simplify");
+    let try_for_tactic = tactic.try_for(Duration::from_secs(u64::MAX));
+
+    // Test that `try_for` can successfully apply the underlying tactic
+    let apply_results = try_for_tactic.apply(&goal, Some(&params));
+    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
+    assert_eq!(format!("{}", goal_result), "(goal\n  (>= x 3))");
 }
 
 #[test]
