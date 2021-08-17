@@ -186,31 +186,43 @@ impl<'ctx> Tactic<'ctx> {
         }
     }
 
-    pub fn apply(&self, goal: &Goal<'ctx>, params: Option<&Params<'ctx>>) -> ApplyResult<'ctx> {
-        ApplyResult {
-            ctx: self.ctx,
-            z3_apply_result: match params {
-                None => unsafe {
-                    let ar = Z3_tactic_apply(
+    /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns
+    /// `Ok(_)` with a `ApplyResult`. If the tactic fails, returns `Err(_)` with
+    /// an error message describing why.
+    pub fn apply(
+        &self,
+        goal: &Goal<'ctx>,
+        params: Option<&Params<'ctx>>,
+    ) -> Result<ApplyResult<'ctx>, String> {
+        let z3_apply_result: Z3_apply_result = unsafe {
+            let z3_apply_result = match params {
+                None => Z3_tactic_apply(
                         self.ctx.z3_ctx,
                         self.z3_tactic,
                         goal.z3_goal,
-                    );
-                    Z3_apply_result_inc_ref(self.ctx.z3_ctx, ar);
-                    ar
-                },
-                Some(params) => unsafe {
-                    let ar = Z3_tactic_apply_ex(
+                    ),
+                Some(params) => Z3_tactic_apply_ex(
                         self.ctx.z3_ctx,
                         self.z3_tactic,
                         goal.z3_goal,
                         params.z3_params,
-                    );
-                    Z3_apply_result_inc_ref(self.ctx.z3_ctx, ar);
-                    ar
-                }
+                    ),
+            };
+            if z3_apply_result.is_null() {
+                let code = Z3_get_error_code(self.ctx.z3_ctx);
+                let msg = Z3_get_error_msg(self.ctx.z3_ctx, code);
+                return Err(String::from(CStr::from_ptr(msg).to_str().unwrap_or(
+                  "Couldn't retrieve error message from z3: got invalid UTF-8"
+                )))
+            } else {
+                Z3_apply_result_inc_ref(self.ctx.z3_ctx, z3_apply_result);
+                z3_apply_result
             }
-        }
+        };
+        Ok(ApplyResult {
+            ctx: self.ctx,
+            z3_apply_result,
+        })
     }
 }
 

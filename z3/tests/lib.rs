@@ -903,7 +903,7 @@ fn check_application_of_tactic_to_goal() {
         "(goal\n  x\n  (>= (+ y 1) 2)\n  (>= y 1))"
     );
     let apply_results = repeat_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
 
     assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 1))");
@@ -1123,9 +1123,24 @@ fn test_tactic_skip() {
 
     let tactic = Tactic::create_skip(&ctx);
     let apply_results = tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a.clone(), b, a],);
+}
+
+#[test]
+fn test_tactic_fail() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let params = Params::new(&ctx);
+
+    let a = ast::Bool::new_const(&ctx, "a");
+    let goal = Goal::new(&ctx, false, false, false);
+    goal.assert(&a);
+
+    let tactic = Tactic::new(&ctx, "fail");
+    let apply_results = tactic.apply(&goal, Some(&params));
+    assert!(matches!(apply_results, Err(_)));
 }
 
 #[test]
@@ -1144,7 +1159,7 @@ fn test_tactic_and_then() {
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let and_then_tactic = tactic.and_then(&Tactic::new(&ctx, "simplify"));
     let apply_results = and_then_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
@@ -1166,7 +1181,7 @@ fn test_tactic_or_else() {
     let simplify = Tactic::new(&ctx, "simplify");
     let or_else_tactic = tactic.or_else(&simplify);
     let apply_results = or_else_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
@@ -1188,7 +1203,7 @@ fn test_goal_apply_tactic() {
         let tactic = Tactic::new(&ctx, "sat-preprocess");
         let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
-        let goal_results = apply_results.list_subgoals().collect::<Vec<Goal>>();
+        let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
         let goal_result = goal_results.first().unwrap();
         assert_eq!(
             goal_result.get_formulas::<Bool>(),
