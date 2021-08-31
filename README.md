@@ -11,7 +11,7 @@ for the [Z3 solver][upstream].
 
 ## `z3`
 
-[![](http://meritbadge.herokuapp.com/z3)](https://crates.io/crates/z3)
+[![](https://img.shields.io/crates/v/z3.svg)](https://crates.io/crates/z3)
 
 The [`z3` crate][z3] provides high-level bindings to the Z3 solver. It is built
 on top of, and wraps, the `z3-sys` crate. This is the crate you'll want to use
@@ -19,7 +19,7 @@ on top of, and wraps, the `z3-sys` crate. This is the crate you'll want to use
 
 ## `z3-sys`
 
-[![](http://meritbadge.herokuapp.com/z3-sys)](https://crates.io/crates/z3-sys)
+[![](https://img.shields.io/crates/v/z3-sys.svg)](https://crates.io/crates/z3-sys)
 
 The [`z3-sys` crate][z3-sys] provides the raw, unsafe, low-level C API that Z3
 exposes.

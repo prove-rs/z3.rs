@@ -1,6 +1,6 @@
 # z3
 
-[![](http://meritbadge.herokuapp.com/z3)](https://crates.io/crates/z3)
+[![](https://img.shields.io/crates/v/z3.svg)](https://crates.io/crates/z3)
 
 High-level rust bindings to the Z3 SMT solver
 
