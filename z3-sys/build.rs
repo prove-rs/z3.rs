@@ -1,3 +1,5 @@
+const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
+
 fn main() {
     #[cfg(feature = "static-link-z3")]
     build_z3();
@@ -5,10 +7,13 @@ fn main() {
     println!("cargo:rerun-if-changed=build.rs");
 
     let header = if cfg!(feature = "static-link-z3") {
-        "z3/src/api/z3.h"
+        "z3/src/api/z3.h".to_string()
+    } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
+        header_path
     } else {
-        "wrapper.h"
+        "wrapper.h".to_string()
     };
+    println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
     println!("cargo:rerun-if-changed={}", header);
     let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
@@ -24,7 +29,7 @@ fn main() {
         "symbol_kind",
     ] {
         let enum_bindings = bindgen::Builder::default()
-            .header(header)
+            .header(&header)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{}", x))
