@@ -24,6 +24,19 @@ Add it to your `Cargo.toml` like so:
 z3-sys = "0.7.1"
 ```
 
+**Note:** This crate requires a `z3.h` during build time.
+
+* By default, the crate will look for a `z3.h` in standard/system include paths.
+* If the feature `static-link-z3` is enabled, the `z3.h` of the built Z3 will be used.
+* Alternatively, the path to the desired `z3.h` can be specified via the environment variable
+`Z3_SYS_Z3_HEADER`. I.e., running:
+
+```console
+$ Z3_SYS_Z3_HEADER="/path/to/my/z3.h" cargo build
+```
+
+in your project will use `/path/to/my/z3.h` instead.
+
 ## Support and Maintenance
 
 I am developing this library largely on my own so far. I am able
