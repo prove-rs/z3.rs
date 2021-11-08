@@ -297,6 +297,21 @@ impl<'ctx> Solver<'ctx> {
         let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_set_params(self.ctx.z3_ctx, self.z3_slv, params.z3_params) };
     }
+
+    pub fn get_implied_equalities(&self, terms: &[&dyn Ast]) -> (Vec<u32>, SatResult) {
+        let mut group_ids = vec![0u32; terms.len()];
+        let terms: Vec<_> = terms.iter().map(|term| term.get_z3_ast()).collect();
+        let result = match unsafe {
+            let guard = Z3_MUTEX.lock().unwrap();
+            Z3_get_implied_equalities(self.ctx.z3_ctx, self.z3_slv, terms.len() as u32, terms.as_ptr(), group_ids.as_mut_ptr())
+        } {
+            Z3_L_FALSE => SatResult::Unsat,
+            Z3_L_UNDEF => SatResult::Unknown,
+            Z3_L_TRUE => SatResult::Sat,
+            _ => unreachable!(),
+        };
+        (group_ids, result)
+    }
 }
 
 impl<'ctx> fmt::Display for Solver<'ctx> {
