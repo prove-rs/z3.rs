@@ -13,7 +13,7 @@ impl<'ctx> Model<'ctx> {
         Some(Model {
             ctx: slv.ctx,
             z3_mdl: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
+                let _guard = Z3_MUTEX.lock().unwrap();
                 let m = Z3_solver_get_model(slv.ctx.z3_ctx, slv.z3_slv);
                 if m.is_null() {
                     return None;
@@ -28,7 +28,7 @@ impl<'ctx> Model<'ctx> {
         Some(Model {
             ctx: opt.ctx,
             z3_mdl: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
+                let _guard = Z3_MUTEX.lock().unwrap();
                 let m = Z3_optimize_get_model(opt.ctx.z3_ctx, opt.z3_opt);
                 if m.is_null() {
                     return None;
@@ -44,7 +44,7 @@ impl<'ctx> Model<'ctx> {
         Model {
             ctx: dest,
             z3_mdl: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
+                let _guard = Z3_MUTEX.lock().unwrap();
                 let m = Z3_model_translate(self.ctx.z3_ctx, self.z3_mdl, dest.z3_ctx);
                 Z3_model_inc_ref(dest.z3_ctx, m);
                 m
@@ -58,7 +58,7 @@ impl<'ctx> Model<'ctx> {
     {
         let mut tmp: Z3_ast = ast.get_z3_ast();
         let res = {
-            let guard = Z3_MUTEX.lock().unwrap();
+            let _guard = Z3_MUTEX.lock().unwrap();
             unsafe {
                 Z3_model_eval(
                     self.ctx.z3_ctx,
@@ -98,7 +98,7 @@ impl<'ctx> fmt::Debug for Model<'ctx> {
 
 impl<'ctx> Drop for Model<'ctx> {
     fn drop(&mut self) {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
     }
 }

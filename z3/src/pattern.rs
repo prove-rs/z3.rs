@@ -35,7 +35,7 @@ impl<'ctx> Pattern<'ctx> {
         Pattern {
             ctx,
             z3_pattern: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
+                let _guard = Z3_MUTEX.lock().unwrap();
                 let p = Z3_mk_pattern(
                     ctx.z3_ctx,
                     terms.len().try_into().unwrap(),
