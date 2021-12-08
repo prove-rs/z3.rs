@@ -2,6 +2,7 @@ macro_rules! declare_generated_mods {
     ($($mod_name: ident),*) => {
         $(
             mod $mod_name {
+                #![allow(dead_code)]
                 include!(concat!(env!("OUT_DIR"), "/", stringify!($mod_name), ".rs"));
             }
         )*
