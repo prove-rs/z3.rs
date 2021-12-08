@@ -495,7 +495,7 @@ fn test_rec_func_def() {
 
     let ctx = Context::new(&cfg);
 
-    let mut fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+    let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
@@ -539,7 +539,7 @@ fn test_rec_func_def_unsat() {
 
     let ctx = Context::new(&cfg);
 
-    let mut fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+    let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
