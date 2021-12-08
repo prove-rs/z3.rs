@@ -19,13 +19,6 @@ impl<'ctx> Clone for Goal<'ctx> {
 }
 
 impl<'ctx> Goal<'ctx> {
-    pub fn new_from_z3_type(ctx: &'ctx Context, z3_goal: Z3_goal, models: bool, unsat_cores: bool, proofs: bool) -> Goal<'ctx>{
-        Goal {
-            ctx,
-            z3_goal,
-        }
-    }
-
     pub fn new(ctx: &'ctx Context, models: bool, unsat_cores: bool, proofs: bool) -> Goal<'ctx> {
         // NOTE: The Z3 context ctx must have been created with proof generation support.
         Self {
