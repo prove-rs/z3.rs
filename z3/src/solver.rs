@@ -230,7 +230,7 @@ impl<'ctx> Solver<'ctx> {
                 let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_ast_vector_get(self.ctx.z3_ctx, z3_unsat_core, i)
             };
-            let elem = ast::Bool::new(self.ctx, elem);
+            let elem = unsafe { ast::Bool::new(self.ctx, elem) };
             unsat_core.push(elem);
         }
 
@@ -290,7 +290,7 @@ impl<'ctx> Solver<'ctx> {
             Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
         };
         if !m.is_null() {
-            Some(ast::Dynamic::new(self.ctx, m))
+            return Some(unsafe { ast::Dynamic::new(self.ctx, m) });
         } else {
             None
         }

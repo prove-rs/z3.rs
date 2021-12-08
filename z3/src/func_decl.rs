@@ -67,15 +67,17 @@ impl<'ctx> FuncDecl<'ctx> {
 
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
-        ast::Dynamic::new(self.ctx, unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_app(
-                self.ctx.z3_ctx,
-                self.z3_func_decl,
-                args.len().try_into().unwrap(),
-                args.as_ptr(),
-            )
-        })
+        unsafe {
+            ast::Dynamic::new(self.ctx, {
+                let _guard = Z3_MUTEX.lock().unwrap();
+                Z3_mk_app(
+                    self.ctx.z3_ctx,
+                    self.z3_func_decl,
+                    args.len().try_into().unwrap(),
+                    args.as_ptr(),
+                )
+            })
+        }
     }
 
     /// Return the `DeclKind` of this `FuncDecl`.
