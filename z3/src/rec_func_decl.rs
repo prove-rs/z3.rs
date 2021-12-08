@@ -33,7 +33,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     }
 
     pub unsafe fn from_raw(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
 
         Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
 
@@ -118,7 +118,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
         ast::Dynamic::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
+            let _guard = Z3_MUTEX.lock().unwrap();
             Z3_mk_app(
                 self.ctx.z3_ctx,
                 self.z3_func_decl,
@@ -131,7 +131,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     /// Return the `DeclKind` of this `RecFuncDecl`.
     pub fn kind(&self) -> DeclKind {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
+            let _guard = Z3_MUTEX.lock().unwrap();
             Z3_get_decl_kind(self.ctx.z3_ctx, self.z3_func_decl)
         }
     }
@@ -142,7 +142,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     /// the `Symbol`.
     pub fn name(&self) -> String {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
+            let _guard = Z3_MUTEX.lock().unwrap();
             let z3_ctx = self.ctx.z3_ctx;
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl);
             match Z3_get_symbol_kind(z3_ctx, symbol) {

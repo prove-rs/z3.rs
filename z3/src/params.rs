@@ -11,7 +11,7 @@ impl<'ctx> Params<'ctx> {
         Params {
             ctx,
             z3_params: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
+                let _guard = Z3_MUTEX.lock().unwrap();
                 let p = Z3_mk_params(ctx.z3_ctx);
                 Z3_params_inc_ref(ctx.z3_ctx, p);
                 p
@@ -20,7 +20,7 @@ impl<'ctx> Params<'ctx> {
     }
 
     pub fn set_symbol<K: Into<Symbol>, V: Into<Symbol>>(&mut self, k: K, v: V) {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_params_set_symbol(
                 self.ctx.z3_ctx,
@@ -32,7 +32,7 @@ impl<'ctx> Params<'ctx> {
     }
 
     pub fn set_bool<K: Into<Symbol>>(&mut self, k: K, v: bool) {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_params_set_bool(
                 self.ctx.z3_ctx,
@@ -44,7 +44,7 @@ impl<'ctx> Params<'ctx> {
     }
 
     pub fn set_f64<K: Into<Symbol>>(&mut self, k: K, v: f64) {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_params_set_double(
                 self.ctx.z3_ctx,
@@ -56,7 +56,7 @@ impl<'ctx> Params<'ctx> {
     }
 
     pub fn set_u32<K: Into<Symbol>>(&mut self, k: K, v: u32) {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_params_set_uint(
                 self.ctx.z3_ctx,
@@ -89,7 +89,7 @@ impl<'ctx> fmt::Debug for Params<'ctx> {
 
 impl<'ctx> Drop for Params<'ctx> {
     fn drop(&mut self) {
-        let guard = Z3_MUTEX.lock().unwrap();
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_params_dec_ref(self.ctx.z3_ctx, self.z3_params) };
     }
 }
