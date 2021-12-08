@@ -24,7 +24,10 @@ impl<'ctx> ApplyResult<'ctx> {
             let _guard = Z3_MUTEX.lock().unwrap();
             let sg = Z3_apply_result_get_subgoal(self.ctx.z3_ctx, self.z3_apply_result, i);
             Z3_goal_inc_ref(self.ctx.z3_ctx, sg);
-            Goal::new_from_z3_type(self.ctx, sg, true, true, true)
+            Goal {
+                ctx: self.ctx,
+                z3_goal: sg
+            }
         })
     }
 }
