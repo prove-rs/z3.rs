@@ -201,8 +201,8 @@ pub trait Ast<'ctx>: fmt::Debug {
     /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
     /// match for the two values.
     fn _safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>> where Self: Sized {
-        let ctx = self.get_ctx().z3_ctx;
-        let other_ctx = other.get_ctx().z3_ctx;
+        assert_eq!(self.get_ctx(), other.get_ctx());
+
         let left_sort = self.get_sort();
         let right_sort = other.get_sort();
         match left_sort == right_sort {
@@ -937,7 +937,7 @@ impl<'ctx> Float<'ctx> {
     }
 
     pub fn fresh_const(ctx: &'ctx Context, prefix: &str, ebits: u32, sbits: u32) -> Float<'ctx> {
-        let sort = Sort::float32(ctx);
+        let sort = Sort::float(ctx, ebits, sbits);
         Self::new(ctx, unsafe {
             let pp = CString::new(prefix).unwrap();
             let p = pp.as_ptr();
@@ -1465,11 +1465,10 @@ impl<'ctx> Set<'ctx> {
     }
 
     /// Creates a set that maps the domain to false by default
-    pub fn empty(ctx: &'ctx Context, eltype: &Sort<'ctx>) -> Set<'ctx> {
-        let sort = Sort::set(ctx, eltype);
+    pub fn empty(ctx: &'ctx Context, domain: &Sort<'ctx>) -> Set<'ctx> {
         Self::new(ctx, unsafe {
             let _guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_const_array(ctx.z3_ctx, eltype.z3_sort, Z3_mk_false(ctx.z3_ctx))
+            Z3_mk_empty_set(ctx.z3_ctx, domain.z3_sort)
         })
     }
 
