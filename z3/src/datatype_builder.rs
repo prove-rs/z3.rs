@@ -77,7 +77,7 @@ pub fn create_datatypes<'ctx>(
                         let matching_names: Vec<_> = datatype_builders
                             .iter()
                             .enumerate()
-                            .filter(|&(i, x)| &x.name == dtype_name)
+                            .filter(|&(_, x)| &x.name == dtype_name)
                             .collect();
 
                         assert_eq!(
