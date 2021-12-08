@@ -250,7 +250,6 @@ macro_rules! impl_weight {
                     #[allow(unused_comparisons)]
                     let denom_valid: bool = self.1 >= 0;
                     assert!(num_valid, "Weight numerator cannot be negative");
-                    #[allow(unused_comparisons)]
                     assert!(denom_valid, "Weight denominator cannot be negative");
                     format!("{} / {}", self.0, self.1)
                 }
