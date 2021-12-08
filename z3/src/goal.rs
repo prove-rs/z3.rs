@@ -125,7 +125,7 @@ impl<'ctx> Goal<'ctx> {
                 let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_goal_formula(z3_ctx, z3_goal, i as u32)
             };
-            T::new(self.ctx, formula)
+            unsafe { T::new(&self.ctx, formula) }
         })
     }
 
@@ -139,8 +139,8 @@ impl<'ctx> Goal<'ctx> {
                 let _guard = Z3_MUTEX.lock().unwrap();
                 Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, i as u32)
             };
-            formulas.push(T::new(self.ctx, formula));
-        };
+            formulas.push(unsafe { T::new(&self.ctx, formula) });
+        }
         formulas
     }
 }

@@ -70,7 +70,7 @@ impl<'ctx> Model<'ctx> {
             }
         };
         if res {
-            Some(T::new(self.ctx, tmp))
+            Some(unsafe { T::new(self.ctx, tmp) })
         } else {
             None
         }
