@@ -16,8 +16,8 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
+bindgen = { version = "0.59", default-features = false, features = ["runtime"] }
 cmake = { version = "0.1", optional = true }
-bindgen = "0.58"
 
 [features]
 # Enable this feature to statically link our own build of Z3, rather than
