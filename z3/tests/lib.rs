@@ -580,6 +580,7 @@ fn test_rec_func_def_unsat() {
 }
 
 #[test]
+#[ignore = "See https://github.com/Z3Prover/z3/issues/5702"]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
@@ -1251,7 +1252,7 @@ fn test_goal_apply_tactic() {
         vec![a.clone(), b.clone()],
     );
 
-    let a_implies_b = ast::Bool::implies(&a, &b);
+    let a_implies_b = ast::Bool::implies(&a, &b).simplify();
     let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
 
     let goal = Goal::new(&ctx, false, false, false);
