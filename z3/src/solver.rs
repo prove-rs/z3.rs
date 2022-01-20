@@ -8,6 +8,7 @@ use Model;
 use Params;
 use SatResult;
 use Solver;
+use Symbol;
 use Z3_MUTEX;
 
 impl<'ctx> Solver<'ctx> {
@@ -59,6 +60,23 @@ impl<'ctx> Solver<'ctx> {
                 s
             },
         }
+    }
+
+    /// Create a new solver customized for the given logic.
+    /// It returns `None` if the logic is unknown or unsupported.
+    pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
+        Some(Solver {
+            ctx,
+            z3_slv: unsafe {
+                let guard = Z3_MUTEX.lock().unwrap();
+                let s = Z3_mk_solver_for_logic(ctx.z3_ctx, logic.into().as_z3_symbol(ctx));
+                if s.is_null() {
+                    return None;
+                }
+                Z3_solver_inc_ref(ctx.z3_ctx, s);
+                s
+            },
+        })
     }
 
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Solver<'dest_ctx> {
