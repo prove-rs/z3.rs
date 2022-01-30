@@ -30,6 +30,11 @@ impl<'ctx> Optimize<'ctx> {
         }
     }
 
+    /// Get this optimizers 's context.
+    pub fn get_context(&self) -> &'ctx Context {
+        self.ctx
+    }
+
     /// Assert hard constraint to the optimization context.
     ///
     /// # See also:
