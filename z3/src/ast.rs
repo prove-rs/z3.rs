@@ -1016,9 +1016,9 @@ impl<'ctx> Float<'ctx> {
     }
     binop! {
         lt(Z3_mk_fpa_lt, Bool<'ctx>);
-        le(Z3_mk_fpa_lt, Bool<'ctx>);
+        le(Z3_mk_fpa_leq, Bool<'ctx>);
         gt(Z3_mk_fpa_gt, Bool<'ctx>);
-        ge(Z3_mk_fpa_gt, Bool<'ctx>);
+        ge(Z3_mk_fpa_geq, Bool<'ctx>);
     }
     trinop! {
         add(Z3_mk_fpa_add, Self);
