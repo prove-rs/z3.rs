@@ -83,6 +83,12 @@ pub struct Dynamic<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`](trait.Ast.html) node representing an uninterpreted value.
+pub struct Uninterpreted<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 macro_rules! unop {
     (
         $(
@@ -496,6 +502,8 @@ impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
 impl_from_try_into_dynamic!(Set, as_set);
+impl_ast!(Uninterpreted);
+impl_from_try_into_dynamic!(Uninterpreted, as_uninterpreted);
 
 impl<'ctx> Int<'ctx> {
     #[cfg(feature = "arbitrary-size-numeral")]
@@ -1631,6 +1639,14 @@ impl<'ctx> Dynamic<'ctx> {
         }
     }
 
+    /// Returns `None` if the `Dynamic` is not actually an `Uninterpreted`
+    pub fn as_uninterpreted(&self) -> Option<Uninterpreted<'ctx>> {
+        match self.sort_kind() {
+            SortKind::Uninterpreted => Some(Uninterpreted::new(self.ctx, self.z3_ast)),
+            _ => None,
+        }
+    }
+
     // TODO as_set. SortKind::Set does not exist
 }
 
@@ -1654,6 +1670,16 @@ impl<'ctx> Datatype<'ctx> {
             Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
         })
     }
+}
+
+impl<'ctx> Uninterpreted<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sort: &Sort<'ctx>) -> Self {
+        Self::new(ctx, unsafe {
+            let _guard = Z3_MUTEX.lock().unwrap();
+            Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+        })
+    }
+
 }
 
 /// Create a universal quantifier.
