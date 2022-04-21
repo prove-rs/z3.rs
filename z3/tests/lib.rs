@@ -4,7 +4,7 @@ extern crate log;
 
 extern crate z3;
 use std::convert::TryInto;
-use std::ops::Add;
+use std::ops::{Add, Not};
 use std::time::Duration;
 use z3::ast::{Ast, Bool};
 use z3::*;
@@ -1500,4 +1500,34 @@ fn test_ast_safe_decl() {
         format!("{}", forall.safe_decl().err().unwrap()),
         "ast node is not a function application, has kind Quantifier"
     );
+}
+
+#[test]
+fn test_uninterpreteds() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let s = Solver::new(&ctx);
+
+    // test taken from https://ericpony.github.io/z3py-tutorial/advanced-examples.htm
+    let a_sort = z3::Sort::uninterpreted(&ctx, z3::Symbol::from("A"));
+
+    let x: ast::Dynamic = z3::ast::Uninterpreted::new_const(&ctx, "x", &a_sort).into();
+    let y: ast::Dynamic = z3::ast::Uninterpreted::new_const(&ctx, "y", &a_sort).into();
+
+    let f = z3::FuncDecl::new(&ctx, "f", &[&a_sort], &a_sort);
+
+    // f(f(x)) == x
+    s.assert(
+        &f.apply(&[&f.apply(&[&x])])._safe_eq(&x).unwrap()
+    );
+
+    //f(x) == y
+    s.assert(
+        &f.apply(&[&x])._safe_eq(&y).unwrap()
+    );
+
+    // x != y
+    s.assert(&z3::ast::Bool::not(&x._safe_eq(&y).unwrap()));
+
+    assert_eq!(s.check(), SatResult::Sat);
 }
