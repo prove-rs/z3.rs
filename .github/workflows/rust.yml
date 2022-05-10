@@ -2,36 +2,56 @@ name: Rust
 
 on:
   push:
-    branches: [ master ]
+    branches: [ master, buildfix3.1 ]
   pull_request:
     branches: [ master ]
 
 env:
   CARGO_INCREMENTAL: 0
-  RUSTFLAGS: "-D warnings"
+  Z3_RELEASE: 'z3-4.8.12'
+  RUST_BACKTRACE: 'full'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        link: [default, static, system]
+    runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2
-    - name: Install Z3
-      run: sudo apt-get install libz3-dev
-    - name: Build
-      run: cargo build -vv --all
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # statically-linked Z3 tests below...
-      if: ${{ success() || failure() }}
-    - name: Run tests
-      run: cargo test -vv --all
-      # See above.
-      if: ${{ success() || failure() }}
-    - name: Run tests with `arbitrary-size-numeral` enabled
-      run: cargo test --manifest-path z3/Cargo.toml -vv --features arbitrary-size-numeral
-      # See above.
-      if: ${{ success() || failure() }}
+    - name: Checkout
+      uses: actions/checkout@v2
+      if: ${{ matrix.link != 'static' }}
+
+    - name: Checkout with submodules
+      uses: actions/checkout@v2
+      if: ${{ matrix.link == 'static' }}
+      with:
+        submodules: recursive
+
+    - name: Uninstall Z3 on Linux for non-system builds
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.link != 'system' }}
+      run: sudo apt-get remove libz3-dev
+
+    - name: Install Z3 on Windows for system builds
+      if: ${{ matrix.os == 'windows-latest' && matrix.link == 'system' }}
+      run: |
+        curl.exe -L "https://github.com/Z3Prover/z3/releases/download/${env:Z3_RELEASE}/${env:Z3_RELEASE}-x64-win.zip" -o "./${env:Z3_RELEASE}-x64-win.zip"
+        tar -xf "./${env:Z3_RELEASE}-x64-win.zip"
+        echo "${PWD}\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_PATH
+        echo "LIB=${PWD}\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_ENV
+
+    - name: Test with Z3 releases
+      if: ${{ matrix.link  == 'default' }}
+      run: cargo test --lib -vv
+
+    - name: Test with Z3 system installation
+      if: ${{ matrix.link == 'system' }}
+      run: cargo test --lib -vv --features dynamic-link-z3
+
+    - name: Test with static Z3 builds
+      if: ${{ matrix.link  == 'static' }}
+      run: cargo test --lib -vv --features static-link-z3
 
   build_on_wasm:
     runs-on: ubuntu-latest
@@ -64,36 +84,3 @@ jobs:
       run: |
         source ~/emsdk/emsdk_env.sh
         cargo build --target=wasm32-unknown-emscripten --manifest-path z3/Cargo.toml -vv --features static-link-z3
-  build_z3_statically:
-    strategy:
-      matrix:
-        build: [linux, macos, windows]
-        include:
-          - build: linux
-            os: ubuntu-latest
-          - build: macos
-            os: macos-latest
-          - build: windows
-            os: windows-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          submodules: recursive
-      - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
-        uses: KyleMayes/install-llvm-action@v1
-        if: matrix.os == 'windows-latest'
-        with:
-          version: "11.0"
-          directory: ${{ runner.temp }}/llvm
-      - name: Set LIBCLANG_PATH
-        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-        if: matrix.os == 'windows-latest'
-      - name: Build z3-sys with statically linked Z3
-        run: cargo build --manifest-path z3-sys/Cargo.toml -vv --features static-link-z3
-      - name: Build z3 with statically linked Z3
-        run: cargo build --manifest-path z3/Cargo.toml -vv --features static-link-z3
-      - name: Test `z3` with statically linked Z3
-        run: cargo test --manifest-path z3/Cargo.toml -vv --features static-link-z3
-      - name: Test `z3` with statically linked Z3 and `arbitrary-size-numeral` enabled
-        run: cargo test --manifest-path z3/Cargo.toml -vv --features 'static-link-z3 arbitrary-size-numeral'

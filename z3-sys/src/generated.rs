@@ -7,7 +7,7 @@ macro_rules! declare_generated_mods {
             // code.
             #[allow(dead_code)]
             mod $mod_name {
-                include!(concat!(env!("OUT_DIR"), "/", stringify!($mod_name), ".rs"));
+                include!(concat!("generated", "/", stringify!($mod_name), ".rs"));
             }
         )*
     };

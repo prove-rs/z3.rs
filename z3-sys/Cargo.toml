@@ -16,10 +16,10 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
-bindgen = { version = "0.64.0", default-features = false, features = ["runtime"] }
+bindgen = { version = "0.64.0", default-features = false, features = ["runtime"], optional = true }
 cmake = { version = "0.1.49", optional = true }
 
 [features]
-# Enable this feature to statically link our own build of Z3, rather than
-# dynamically linking to the system's `libz3.so`.
-static-link-z3 = ["cmake"]
+static-link-z3 = ["cmake"] # Locally build and statically link a fresh Z3 build.
+use-bindgen = ["bindgen"] # Generate fresh bindings with bindgen.
+dynamic-link-z3 = [] # Dynamically link the system's Z3 installation.
