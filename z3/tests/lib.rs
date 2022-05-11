@@ -233,6 +233,21 @@ fn test_ast_translate() {
 }
 
 #[test]
+fn test_solver_new_from_smtlib2() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let problem = r#"
+(declare -const x Real)
+(declare -const y Real)
+(declare -const z Real)
+(assert (=( -(+(* 3 x) (* 2 y)) z) 1))
+(assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
+"#;
+    let solver = Solver::new_from_smtlib2(&ctx, problem.into());
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
 fn test_solver_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
@@ -677,6 +692,22 @@ fn test_optimize_unknown() {
 
     assert_eq!(optimize.check(&[]), SatResult::Unknown);
     assert!(optimize.get_reason_unknown().is_some());
+}
+
+#[test]
+fn test_optimize_new_from_smtlib2() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let problem = r#"
+(declare -const x Real)
+(declare -const y Real)
+(declare -const z Real)
+(assert (=( -(+(* 3 x) (* 2 y)) z) 1))
+(assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
+"#;
+    let optimize = Optimize::new_from_smtlib2(&ctx, problem.into());
+    assert_eq!(optimize.check(&[]), SatResult::Sat);
 }
 
 #[test]
