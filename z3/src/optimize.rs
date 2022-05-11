@@ -30,6 +30,22 @@ impl<'ctx> Optimize<'ctx> {
         }
     }
 
+    /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
+    /// Add the parsed constraints and objectives to a new created optimization context.
+    pub fn new_from_smtlib2(ctx: &'ctx Context, source_string: String) -> Optimize<'ctx> {
+        let source_cstring = CString::new(source_string).unwrap();
+        Optimize {
+            ctx,
+            z3_opt: unsafe {
+                let _guard = Z3_MUTEX.lock().unwrap();
+                let opt = Z3_mk_optimize(ctx.z3_ctx);
+                Z3_optimize_inc_ref(ctx.z3_ctx, opt);
+                Z3_optimize_from_string(ctx.z3_ctx, opt, source_cstring.as_ptr());
+                opt
+            },
+        }
+    }
+
     /// Get this optimizers 's context.
     pub fn get_context(&self) -> &'ctx Context {
         self.ctx
