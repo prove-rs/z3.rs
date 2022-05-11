@@ -1,6 +1,6 @@
 use ast;
 use ast::Ast;
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use z3_sys::*;
 use Context;
@@ -51,6 +51,22 @@ impl<'ctx> Solver<'ctx> {
     pub fn new(ctx: &'ctx Context) -> Solver<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx)) }
     }
+
+    /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
+    /// Add the parsed constraints and objectives to a new created solver context.
+    pub fn new_from_smtlib2(ctx: &'ctx Context, source_string: String) -> Solver<'ctx> {
+        let source_cstring = CString::new(source_string).unwrap();
+        Solver {
+            ctx,
+            z3_slv: unsafe {
+                let _guard = Z3_MUTEX.lock().unwrap();
+                let opt = Z3_mk_solver(ctx.z3_ctx);
+                Z3_solver_from_string(ctx.z3_ctx, opt, source_cstring.as_ptr());
+                opt
+            },
+        }
+    }
+
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
