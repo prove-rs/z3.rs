@@ -1112,6 +1112,21 @@ macro_rules! bv_overflow_check_signed {
 }
 
 impl<'ctx> BV<'ctx> {
+    pub fn from_str(ctx: &'ctx Context, sz: u32, value: &str) -> Option<BV<'ctx>> {
+        let sort = Sort::bitvector(ctx, sz);
+        let ast = unsafe {
+            let _guard = Z3_MUTEX.lock().unwrap();
+            let bv_cstring = CString::new(value).unwrap();
+            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx, bv_cstring.as_ptr(), sort.z3_sort);
+            if numeral_ptr.is_null() {
+                return None;
+            }
+
+            numeral_ptr
+        };
+        Some(Self::new(ctx, ast))
+    }
+
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         Self::new(ctx, unsafe {
