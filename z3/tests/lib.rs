@@ -139,6 +139,24 @@ fn test_bitvectors() {
 }
 
 #[test]
+fn test_bitvector_from_str() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let a = ast::BV::new_const(&ctx, "a", 129);
+    // 2 ** 128
+    let b = ast::BV::from_str(&ctx, 129, "340282366920938463463374607431768211456").unwrap();
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&a._eq(&b));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let model = solver.get_model().unwrap();
+    let av = model.eval(&a, true).unwrap().to_string();
+    assert_eq!(av, "#b100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".to_string());
+}
+
+#[test]
 fn test_floating_point_bits() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
