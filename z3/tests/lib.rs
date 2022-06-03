@@ -1331,6 +1331,20 @@ fn test_tactic_conditions() {
 }
 
 #[test]
+fn test_tactic_to_solver() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let t1 = Tactic::new(&ctx, "qfnra");
+    let s = t1.solver();
+
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+
+    s.assert(&x.gt(&y));
+    assert_eq!(s.check(), SatResult::Sat);
+}
+
+#[test]
 fn test_probe_debug() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
