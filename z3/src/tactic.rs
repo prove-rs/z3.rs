@@ -12,8 +12,10 @@ use Context;
 use Goal;
 use Probe;
 use Params;
+use Solver;
 use Tactic;
 use Z3_MUTEX;
+
 
 impl<'ctx> ApplyResult<'ctx> {
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal<'ctx>> {
@@ -241,6 +243,19 @@ impl<'ctx> Tactic<'ctx> {
             ctx: self.ctx,
             z3_apply_result,
         })
+    }
+
+    /// Create a new solver that is implemented using the given tactic.
+    pub fn solver(&self) -> Solver<'ctx> {
+        Solver {
+            ctx: self.ctx,
+            z3_slv: unsafe {
+                let _guard = Z3_MUTEX.lock().unwrap();
+                let s = Z3_mk_solver_from_tactic(self.ctx.z3_ctx, self.z3_tactic);
+                Z3_solver_inc_ref(self.ctx.z3_ctx, s);
+                s
+            },
+        }
     }
 }
 
