@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use z3_sys::*;
 use Context;
@@ -66,6 +66,35 @@ impl<'ctx> Params<'ctx> {
             )
         };
     }
+}
+
+/// Set a global (or module) parameter. This setting is shared by all Z3 contexts.
+pub fn set_global_param(param_id: &str, param_value: &str) {
+    let param_id = CString::new(param_id).unwrap();
+    let param_value = CString::new(param_value).unwrap();
+    let _guard = Z3_MUTEX.lock().unwrap();
+    unsafe {
+        Z3_global_param_set(param_id.as_ptr(), param_value.as_ptr());
+    }
+}
+
+/// Get a global (or module) parameter.
+pub fn get_global_param(param_id: &str) -> Option<String> {
+    let param_id = CString::new(param_id).unwrap();
+    let _guard = Z3_MUTEX.lock().unwrap();
+    let mut ptr = std::ptr::null();
+    if unsafe { Z3_global_param_get(param_id.as_ptr(), &mut ptr as *mut *const i8) } {
+        let s = unsafe { CStr::from_ptr(ptr) };
+        s.to_str().ok().map(|s| s.to_owned())
+    } else {
+        None
+    }
+}
+
+/// Restore the value of all global (and module) parameters. This command will not affect already created objects (such as tactics and solvers).
+pub fn reset_all_global_params() {
+    let _guard = Z3_MUTEX.lock().unwrap();
+    unsafe { Z3_global_param_reset_all() };
 }
 
 impl<'ctx> fmt::Display for Params<'ctx> {
