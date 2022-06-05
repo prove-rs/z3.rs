@@ -1781,7 +1781,7 @@ extern "C" {
     /// Return the number of parameters in the given parameter description set.
     pub fn Z3_param_descrs_size(c: Z3_context, p: Z3_param_descrs) -> ::std::os::raw::c_uint;
 
-    /// Return the number of parameters in the given parameter description set.
+    /// Return the name of the parameter at given index `i`.
     ///
     /// # Preconditions:
     ///
@@ -1793,6 +1793,10 @@ extern "C" {
     ) -> Z3_symbol;
 
     /// Retrieve documentation string corresponding to parameter name `s`.
+    /// 
+    /// # Preconditions:
+    /// 
+    /// - `s is a valid parameter name`
     pub fn Z3_param_descrs_get_documentation(
         c: Z3_context,
         p: Z3_param_descrs,
