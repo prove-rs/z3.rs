@@ -304,6 +304,40 @@ fn test_params() {
 }
 
 #[test]
+fn test_param_descrs() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let param_descrs = ParamDescrs::from_solver(&solver);
+    let size = param_descrs.get_size();
+    assert!(size > 0); 
+    let name = param_descrs.get_param_name(0);
+    assert!(name.is_some());
+    let kind = param_descrs.get_param_kind("iDontExist");
+    assert_eq!(kind, z3_sys::ParamKind::Invalid);
+    let kind = param_descrs.get_param_kind("model");
+    assert_eq!(kind, z3_sys::ParamKind::Bool);
+    let doc = param_descrs.get_param_documentation("iDontExist");
+    assert!(doc.is_none());
+    let doc = param_descrs.get_param_documentation("model");
+    assert_eq!(doc.unwrap(), "model generation for solvers, this parameter can be overwritten when creating a solver");
+}
+
+#[test]
+fn test_param_descrs_from_tactic() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let t = Tactic::new(&ctx, "qfnra-nlsat");
+
+    let param_descrs = t.get_param_descrs();
+    let kind = param_descrs.get_param_kind("lazy");
+    assert_eq!(kind, z3_sys::ParamKind::UInt);
+}
+
+#[test]
 fn test_substitution() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);

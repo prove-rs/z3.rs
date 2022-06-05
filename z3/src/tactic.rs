@@ -15,6 +15,8 @@ use Params;
 use Tactic;
 use Z3_MUTEX;
 
+use crate::ParamDescrs;
+
 impl<'ctx> ApplyResult<'ctx> {
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal<'ctx>> {
         let num_subgoals = unsafe {
@@ -241,6 +243,10 @@ impl<'ctx> Tactic<'ctx> {
             ctx: self.ctx,
             z3_apply_result,
         })
+    }
+
+    pub fn get_param_descrs(&'ctx self) -> ParamDescrs<'ctx> {
+        ParamDescrs::from_tactic(&self)
     }
 }
 

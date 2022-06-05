@@ -11,6 +11,8 @@ use Solver;
 use Symbol;
 use Z3_MUTEX;
 
+use crate::ParamDescrs;
+
 impl<'ctx> Solver<'ctx> {
     /// Create a new solver. This solver is a "combined solver"
     /// that internally uses a non-incremental (`solver1`) and an
@@ -314,6 +316,10 @@ impl<'ctx> Solver<'ctx> {
     pub fn set_params(&self, params: &Params<'ctx>) {
         let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_set_params(self.ctx.z3_ctx, self.z3_slv, params.z3_params) };
+    }
+
+    pub fn get_param_descrs(&'ctx self) -> ParamDescrs<'ctx> {
+        ParamDescrs::from_solver(&self)
     }
 }
 
