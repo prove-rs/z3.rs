@@ -29,6 +29,9 @@ impl Symbol {
                     .map(|i| Symbol::Int(i)),
                 SymbolKind::String => {
                     let s = Z3_get_symbol_string(ctx.z3_ctx, z3_symbol);
+                    if s.is_null() {
+                        return None;
+                    }
                     CStr::from_ptr(s)
                         .to_str()
                         .ok()

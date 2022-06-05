@@ -77,7 +77,11 @@ impl<'ctx> ParamDescrs<'ctx> {
                 self.z3_param_descrs,
                 n.into().as_z3_symbol(self.ctx),
             );
-            CStr::from_ptr(d).to_str().ok()
+            if d.is_null() {
+                None
+            } else {
+                CStr::from_ptr(d).to_str().ok()
+            }
         }
     }
 }
