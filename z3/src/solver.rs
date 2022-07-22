@@ -68,7 +68,7 @@ impl<'ctx> Solver<'ctx> {
         Some(Solver {
             ctx,
             z3_slv: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
+                let _guard = Z3_MUTEX.lock().unwrap();
                 let s = Z3_mk_solver_for_logic(ctx.z3_ctx, logic.into().as_z3_symbol(ctx));
                 if s.is_null() {
                     return None;
