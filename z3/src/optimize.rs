@@ -61,7 +61,7 @@ impl<'ctx> Optimize<'ctx> {
         let weight_cstring = CString::new(weight_string).unwrap();
         let group = group
             .map(|g| g.as_z3_symbol(self.ctx))
-            .unwrap_or_else(|| std::ptr::null_mut());
+            .unwrap_or_else(std::ptr::null_mut);
         let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_optimize_assert_soft(
