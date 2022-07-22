@@ -290,9 +290,9 @@ impl<'ctx> Solver<'ctx> {
             Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv)
         };
         if !m.is_null() {
-            return Some(ast::Dynamic::new(self.ctx, m));
+            Some(ast::Dynamic::new(self.ctx, m))
         } else {
-            return None;
+            None
         }
     }
 
