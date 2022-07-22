@@ -1,6 +1,11 @@
 macro_rules! declare_generated_mods {
     ($($mod_name: ident),*) => {
         $(
+            // Allow dead code in the generated module as varying versions
+            // of Z3 in use might mean that we don't have the exact same
+            // symbols available, so not all will be used by our mapping
+            // code.
+            #[allow(dead_code)]
             mod $mod_name {
                 include!(concat!(env!("OUT_DIR"), "/", stringify!($mod_name), ".rs"));
             }
