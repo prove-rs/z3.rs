@@ -5,9 +5,6 @@
 
 mod generated;
 
-pub const Z3_TRUE: bool = true;
-pub const Z3_FALSE: bool = false;
-
 #[doc(hidden)]
 #[repr(C)]
 #[derive(Debug, Copy, Clone)]
