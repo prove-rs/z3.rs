@@ -119,7 +119,7 @@ impl<'ctx> Goal<'ctx> {
     pub fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a where T: Ast<'a> {
         let goal_size = self.get_size() as usize;
         let z3_ctx = self.ctx.z3_ctx;
-        let z3_goal = self.z3_goal.clone();
+        let z3_goal = self.z3_goal;
         (0..goal_size).into_iter().map(move |i| {
             let formula = unsafe {
                 let _guard = Z3_MUTEX.lock().unwrap();
