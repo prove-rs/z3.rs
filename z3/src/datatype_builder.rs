@@ -147,7 +147,7 @@ pub fn create_datatypes<'ctx>(
 
         let mut variants: Vec<DatatypeVariant<'ctx>> = Vec::with_capacity(num_cs as usize);
 
-        for (j, (cname, fs)) in datatype_builder.constructors.iter().enumerate() {
+        for (j, (_cname, fs)) in datatype_builder.constructors.iter().enumerate() {
             let num_fs = fs.len();
 
             let raw_constructor: Z3_func_decl = unsafe {
