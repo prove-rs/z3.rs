@@ -350,7 +350,7 @@ pub enum ParameterKind {
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum SortKind {
-    /// This corresponds to `Z3_UINTERPRETED_SORT` in the C API.
+    /// This corresponds to `Z3_UNINTERPRETED_SORT` in the C API.
     Uninterpreted = generated::Z3_sort_kind::Z3_UNINTERPRETED_SORT as u32,
     /// This corresponds to `Z3_BOOL_SORT` in the C API.
     Bool = generated::Z3_sort_kind::Z3_BOOL_SORT as u32,
@@ -1606,13 +1606,13 @@ extern "C" {
     ///
     /// `Z3_set_param_value(cfg, "proof", "true")`
     ///
-    /// NOTE: In previous versions of Z3, the `Z3_config` was used to store
-    /// global and module configurations. Now, we should use `Z3_global_param_set`.
+    /// NOTE: In previous versions of Z3, the [`Z3_config`] was used to store
+    /// global and module configurations. Now, we should use [`Z3_global_param_set`].
     ///
     /// The following parameters can be set:
     ///
     /// - proof  (Boolean)           Enable proof generation
-    /// - debug_ref_count (Boolean)  Enable debug support for `Z3_ast` reference counting
+    /// - debug_ref_count (Boolean)  Enable debug support for [`Z3_ast`] reference counting
     /// - trace  (Boolean)           Tracing support for VCC
     /// - trace_file_name (String)   Trace out file for VCC traces
     /// - timeout (unsigned)         default timeout (in milliseconds) used for solvers
@@ -1648,22 +1648,22 @@ extern "C" {
     ///
     /// After a context is created, the configuration cannot be changed,
     /// although some parameters can be changed using [`Z3_update_param_value`].
-    /// All main interaction with Z3 happens in the context of a `Z3_context`.
+    /// All main interaction with Z3 happens in the context of a [`Z3_context`].
     ///
-    /// In contrast to [`Z3_mk_context_rc`], the life time of `Z3_ast`
+    /// In contrast to [`Z3_mk_context_rc`], the life time of [`Z3_ast`]
     /// objects are determined by the scope level of [`Z3_solver_push`]
-    /// and [`Z3_solver_pop`]. In other words, a `Z3_ast` object remains
+    /// and [`Z3_solver_pop`]. In other words, a [`Z3_ast`] object remains
     /// valid until there is a call to [`Z3_solver_pop`] that
     /// takes the current scope below the level where
     /// the object was created.
     ///
-    /// Note that all other reference counted objects, including `Z3_model`,
-    /// `Z3_solver`, `Z3_func_interp` have to be managed by the caller.
+    /// Note that all other reference counted objects, including [`Z3_model`],
+    /// [`Z3_solver`], [`Z3_func_interp`] have to be managed by the caller.
     /// Their reference counts are not handled by the context.
     ///
     /// Further remarks:
-    /// - `Z3_sort`, `Z3_func_decl`, `Z3_app`, `Z3_pattern` are `Z3_ast`'s.
-    /// - Z3 uses hash-consing, i.e., when the same `Z3_ast` is created twice,
+    /// - [`Z3_sort`], [`Z3_func_decl`], [`Z3_app`], [`Z3_pattern`] are [`Z3_ast`]'s.
+    /// - Z3 uses hash-consing, i.e., when the same [`Z3_ast`] is created twice,
     ///   Z3 will return the same pointer twice.
     ///
     /// # See also:
@@ -1674,20 +1674,20 @@ extern "C" {
     /// Create a context using the given configuration.
     /// This function is similar to [`Z3_mk_context`]. However,
     /// in the context returned by this function, the user
-    /// is responsible for managing `Z3_ast` reference counters.
+    /// is responsible for managing [`Z3_ast`] reference counters.
     /// Managing reference counters is a burden and error-prone,
     /// but allows the user to use the memory more efficiently.
-    /// The user must invoke [`Z3_inc_ref`] for any `Z3_ast` returned
-    /// by Z3, and [`Z3_dec_ref`] whenever the `Z3_ast` is not needed
+    /// The user must invoke [`Z3_inc_ref`] for any [`Z3_ast`] returned
+    /// by Z3, and [`Z3_dec_ref`] whenever the [`Z3_ast`] is not needed
     /// anymore. This idiom is similar to the one used in
     /// BDD (binary decision diagrams) packages such as CUDD.
     ///
     /// Remarks:
     ///
-    /// - `Z3_sort`, `Z3_func_decl`, `Z3_app`, `Z3_pattern` are `Z3_ast`'s.
+    /// - [`Z3_sort`], [`Z3_func_decl`], [`Z3_app`], [`Z3_pattern`] are [`Z3_ast`]'s.
     /// - After a context is created, the configuration cannot be changed.
-    /// - All main interaction with Z3 happens in the context of a `Z3_context`.
-    /// - Z3 uses hash-consing, i.e., when the same `Z3_ast` is created twice,
+    /// - All main interaction with Z3 happens in the context of a [`Z3_context`].
+    /// - Z3 uses hash-consing, i.e., when the same [`Z3_ast`] is created twice,
     ///   Z3 will return the same pointer twice.
     pub fn Z3_mk_context_rc(c: Z3_config) -> Z3_context;
 
@@ -1728,7 +1728,7 @@ extern "C" {
     /// simplifiers, tactics, solvers, etc.
     ///
     /// NOTE: Reference counting must be used to manage parameter
-    /// sets, even when the `Z3_context` was created using
+    /// sets, even when the [`Z3_context`] was created using
     /// [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
     pub fn Z3_mk_params(c: Z3_context) -> Z3_params;
 
@@ -2789,7 +2789,7 @@ extern "C" {
     /// The node `a` must have an array sort `[domain -> range]`, `i` must have sort `domain`,
     /// `v` must have sort range. The sort of the result is `[domain -> range]`.
     /// The semantics of this function is given by the theory of arrays described in the SMT-LIB
-    /// standard. See http://smtlib.org for more details.
+    /// standard. See <http://smtlib.org/> for more details.
     /// The result of this function is an array that is equal to `a` (with respect to `select`)
     /// on all indices except for `i`, where it maps to `v` (and the `select` of `a` with
     /// respect to `i` may be a different value).
@@ -3505,7 +3505,13 @@ extern "C" {
     /// Return a unique identifier for `s`.
     pub fn Z3_get_sort_id(c: Z3_context, s: Z3_sort) -> ::std::os::raw::c_uint;
 
-    /// Convert a `Z3_sort` into `Z3_ast`. This is just type casting.
+    /// Convert a [`Z3_sort`] into [`Z3_ast`]. This is just type casting.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_app_to_ast`]
+    /// - [`Z3_func_decl_to_ast`]
+    /// - [`Z3_pattern_to_ast`]
     pub fn Z3_sort_to_ast(c: Z3_context, s: Z3_sort) -> Z3_ast;
 
     /// compare sorts.
@@ -3779,7 +3785,14 @@ extern "C" {
         k: ::std::os::raw::c_int,
     ) -> Z3_ast;
 
-    /// Convert a `Z3_func_decl` into `Z3_ast`. This is just type casting.
+    /// Convert a [`Z3_func_decl`] into [`Z3_ast`]. This is just type casting.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_app_to_ast`]
+    /// - [`Z3_pattern_to_ast`]
+    /// - [`Z3_sort_to_ast`]
+    /// - [`Z3_to_func_decl`]
     pub fn Z3_func_decl_to_ast(c: Z3_context, f: Z3_func_decl) -> Z3_ast;
 
     /// Compare terms.
@@ -3917,7 +3930,14 @@ extern "C" {
         idx: ::std::os::raw::c_uint,
     ) -> Z3_string;
 
-    /// Convert a `Z3_app` into `Z3_ast`. This is just type casting.
+    /// Convert a [`Z3_app`] into [`Z3_ast`]. This is just type casting.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_to_app`]
+    /// - [`Z3_func_decl_to_ast`]
+    /// - [`Z3_pattern_to_ast`]
+    /// - [`Z3_sort_to_ast`]
     pub fn Z3_app_to_ast(c: Z3_context, a: Z3_app) -> Z3_ast;
 
     /// Return the declaration of a constant or function application.
@@ -3925,6 +3945,10 @@ extern "C" {
 
     /// Return the number of argument of an application. If `t`
     /// is an constant, then the number of arguments is 0.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_app_arg`]
     pub fn Z3_get_app_num_args(c: Z3_context, a: Z3_app) -> ::std::os::raw::c_uint;
 
     /// Return the i-th argument of the given application.
@@ -3932,6 +3956,10 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `i < Z3_get_app_num_args(c, a)`
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_app_num_args`]
     pub fn Z3_get_app_arg(c: Z3_context, a: Z3_app, i: ::std::os::raw::c_uint) -> Z3_ast;
 
     /// Compare terms.
@@ -3975,7 +4003,7 @@ extern "C" {
     /// Return true if the given AST is a real algebraic number.
     pub fn Z3_is_algebraic_number(c: Z3_context, a: Z3_ast) -> bool;
 
-    /// Convert an `ast` into an `Z3_App`. This is just type casting.
+    /// Convert an `ast` into an [`Z3_app`]. This is just type casting.
     ///
     /// # Preconditions:
     ///
@@ -3983,11 +4011,12 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_app_to_ast`]
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::App`]
     pub fn Z3_to_app(c: Z3_context, a: Z3_ast) -> Z3_app;
 
-    /// Convert an AST into a `Z3_func_decl`. This is just type casting.
+    /// Convert an AST into a [`Z3_func_decl`]. This is just type casting.
     ///
     /// # Preconditions:
     ///
@@ -3995,6 +4024,7 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_func_decl_to_ast`]
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::FuncDecl`]
     pub fn Z3_to_func_decl(c: Z3_context, a: Z3_ast) -> Z3_func_decl;
@@ -4196,7 +4226,13 @@ extern "C" {
         precision: ::std::os::raw::c_uint,
     ) -> Z3_ast;
 
-    /// Convert a `Z3_pattern` into `Z3_ast`. This is just type casting.
+    /// Convert a [`Z3_pattern`] into [`Z3_ast`]. This is just type casting.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_app_to_ast`]
+    /// - [`Z3_func_decl_to_ast`]
+    /// - [`Z3_sort_to_ast`]
     pub fn Z3_pattern_to_ast(c: Z3_context, p: Z3_pattern) -> Z3_ast;
 
     /// Return number of terms in pattern.
@@ -4459,7 +4495,7 @@ extern "C" {
     ///
     /// - `Z3_get_arity(c, f) > 0`
     ///
-    /// NOTE: Reference counting must be used to manage `Z3_func_interp`
+    /// NOTE: Reference counting must be used to manage [`Z3_func_interp`]
     /// objects, even when the `Z3_context` was created using
     /// [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
     pub fn Z3_model_get_func_interp(c: Z3_context, m: Z3_model, f: Z3_func_decl) -> Z3_func_interp;
@@ -4480,6 +4516,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_model_eval`]
+    /// - [`Z3_model_get_num_consts`]
     pub fn Z3_model_get_const_decl(
         c: Z3_context,
         m: Z3_model,
@@ -4490,6 +4527,10 @@ extern "C" {
     ///
     /// A function interpretation is represented as a finite map and an 'else' value.
     /// Each entry in the finite map represents the value of a function given a set of arguments.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_model_get_func_decl`]
     pub fn Z3_model_get_num_funcs(c: Z3_context, m: Z3_model) -> ::std::os::raw::c_uint;
 
     /// Return the declaration of the i-th function in the given model.
@@ -4593,6 +4634,10 @@ extern "C" {
     /// an 'else' value. Each entry in the finite map represents the
     /// value of a function given a set of arguments. This procedure
     /// return the number of element in the finite map of `f`.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_func_interp_get_entry`]
     pub fn Z3_func_interp_get_num_entries(
         c: Z3_context,
         f: Z3_func_interp,
@@ -4669,6 +4714,7 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_func_entry_get_arg`]
     /// - [`Z3_func_interp_get_entry`]
     pub fn Z3_func_entry_get_num_args(c: Z3_context, e: Z3_func_entry) -> ::std::os::raw::c_uint;
 
@@ -4680,6 +4726,7 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_func_entry_get_num_args`]
     /// - [`Z3_func_interp_get_entry`]
     pub fn Z3_func_entry_get_arg(
         c: Z3_context,
@@ -4688,6 +4735,11 @@ extern "C" {
     ) -> Z3_ast;
 
     /// Log interaction to a file.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_append_log`]
+    /// - [`Z3_close_log`]
     pub fn Z3_open_log(filename: Z3_string) -> bool;
 
     /// Append user-defined string to interaction log.
@@ -4695,9 +4747,19 @@ extern "C" {
     /// The interaction log is opened using [`Z3_open_log`].
     /// It contains the formulas that are checked using Z3.
     /// You can use this command to append comments, for instance.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_open_log`]
+    /// - [`Z3_close_log`]
     pub fn Z3_append_log(string: Z3_string);
 
     /// Close interaction log.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_append_log`]
+    /// - [`Z3_open_log`]
     pub fn Z3_close_log();
 
     /// Enable/disable printing warning messages to the console.
@@ -4736,14 +4798,60 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_func_decl_to_string`]
     /// - [`Z3_pattern_to_string`]
     /// - [`Z3_sort_to_string`]
     pub fn Z3_ast_to_string(c: Z3_context, a: Z3_ast) -> Z3_string;
 
+    /// Convert the given pattern AST node into a string.
+    ///
+    /// This is a wrapper around [`Z3_ast_to_string`].
+    ///
+    /// Warning: The result buffer is statically allocated by Z3.
+    /// It will be automatically deallocated when
+    /// [`Z3_del_context`] is invoked.
+    /// So, the buffer is invalidated in the next call to
+    /// [`Z3_ast_to_string`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_ast_to_string`]
+    /// - [`Z3_func_decl_to_string`]
+    /// - [`Z3_sort_to_string`]
     pub fn Z3_pattern_to_string(c: Z3_context, p: Z3_pattern) -> Z3_string;
 
+    /// Convert the given sort AST node into a string.
+    ///
+    /// This is a wrapper around [`Z3_ast_to_string`].
+    ///
+    /// Warning: The result buffer is statically allocated by Z3.
+    /// It will be automatically deallocated when
+    /// [`Z3_del_context`] is invoked.
+    /// So, the buffer is invalidated in the next call to
+    /// [`Z3_ast_to_string`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_ast_to_string`]
+    /// - [`Z3_func_decl_to_string`]
+    /// - [`Z3_pattern_to_string`]
     pub fn Z3_sort_to_string(c: Z3_context, s: Z3_sort) -> Z3_string;
 
+    /// Convert the given func decl AST node into a string.
+    ///
+    /// This is a wrapper around [`Z3_ast_to_string`].
+    ///
+    /// Warning: The result buffer is statically allocated by Z3.
+    /// It will be automatically deallocated when
+    /// [`Z3_del_context`] is invoked.
+    /// So, the buffer is invalidated in the next call to
+    /// [`Z3_ast_to_string`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_ast_to_string`]
+    /// - [`Z3_pattern_to_string`]
+    /// - [`Z3_sort_to_string`]
     pub fn Z3_func_decl_to_string(c: Z3_context, d: Z3_func_decl) -> Z3_string;
 
     /// Convert the given model into a string.
@@ -4911,7 +5019,7 @@ extern "C" {
     /// generation support.
     ///
     /// NOTE: Reference counting must be used to manage goals, even
-    /// when the `Z3_context` was created using
+    /// when the [`Z3_context`] was created using
     /// [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
     pub fn Z3_mk_goal(c: Z3_context, models: bool, unsat_cores: bool, proofs: bool) -> Z3_goal;
 
@@ -4927,13 +5035,20 @@ extern "C" {
     pub fn Z3_goal_precision(c: Z3_context, g: Z3_goal) -> GoalPrec;
 
     /// Add a new formula `a` to the given goal.
-    /// The formula is split according to the following procedure that is applied
-    /// until a fixed-point:
-    /// Conjunctions are split into separate formulas.
-    /// Negations are distributed over disjunctions, resulting in separate formulas.
+    ///
+    /// The formula is split according to the following procedure that
+    /// is applied until a fixed-point:
+    ///
+    /// - Conjunctions are split into separate formulas.
+    /// - Negations are distributed over disjunctions, resulting in
+    ///   separate formulas.
+    ///
     /// If the goal is `false`, adding new formulas is a no-op.
+    ///
     /// If the formula `a` is `true`, then nothing is added.
-    /// If the formula `a` is `false`, then the entire goal is replaced by the formula `false`.
+    ///
+    /// If the formula `a` is `false`, then the entire goal is
+    /// replaced by the formula `false`.
     pub fn Z3_goal_assert(c: Z3_context, g: Z3_goal, a: Z3_ast);
 
     /// Return true if the given goal contains the formula `false`.
@@ -5106,6 +5221,10 @@ extern "C" {
     pub fn Z3_probe_not(x: Z3_context, p: Z3_probe) -> Z3_probe;
 
     /// Return the number of builtin tactics available in Z3.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_tactic_name`]
     pub fn Z3_get_num_tactics(c: Z3_context) -> ::std::os::raw::c_uint;
 
     /// Return the name of the idx tactic.
@@ -5113,9 +5232,17 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `i < Z3_get_num_tactics(c)`
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_num_tactics`]
     pub fn Z3_get_tactic_name(c: Z3_context, i: ::std::os::raw::c_uint) -> Z3_string;
 
     /// Return the number of builtin probes available in Z3.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_probe_name`]
     pub fn Z3_get_num_probes(c: Z3_context) -> ::std::os::raw::c_uint;
 
     /// Return the name of the `i` probe.
@@ -5123,6 +5250,10 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `i < Z3_get_num_probes(c)`
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_get_num_probes`]
     pub fn Z3_get_probe_name(c: Z3_context, i: ::std::os::raw::c_uint) -> Z3_string;
 
     /// Return a string containing a description of parameters accepted by the given tactic.
@@ -5142,9 +5273,17 @@ extern "C" {
     pub fn Z3_probe_apply(c: Z3_context, p: Z3_probe, g: Z3_goal) -> f64;
 
     /// Apply tactic `t` to the goal `g`.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_tactic_apply_ex`]
     pub fn Z3_tactic_apply(c: Z3_context, t: Z3_tactic, g: Z3_goal) -> Z3_apply_result;
 
     /// Apply tactic `t` to the goal `g` using the parameter set `p`.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_tactic_apply`]
     pub fn Z3_tactic_apply_ex(
         c: Z3_context,
         t: Z3_tactic,
@@ -5162,6 +5301,10 @@ extern "C" {
     pub fn Z3_apply_result_to_string(c: Z3_context, r: Z3_apply_result) -> Z3_string;
 
     /// Return the number of subgoals in the `Z3_apply_result` object returned by [`Z3_tactic_apply`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_apply_result_get_subgoal`]
     pub fn Z3_apply_result_get_num_subgoals(
         c: Z3_context,
         r: Z3_apply_result,
@@ -5172,6 +5315,10 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `i < Z3_apply_result_get_num_subgoals(c, r)`
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_apply_result_get_num_subgoals`]
     pub fn Z3_apply_result_get_subgoal(
         c: Z3_context,
         r: Z3_apply_result,
@@ -5184,9 +5331,9 @@ extern "C" {
     /// on how it is used and how its parameters are set.
     ///
     /// If the solver is used in a non incremental way (i.e. no calls to
-    /// `Z3_solver_push()` or `Z3_solver_pop()`, and no calls to
-    /// `Z3_solver_assert()` or `Z3_solver_assert_and_track()` after checking
-    /// satisfiability without an intervening `Z3_solver_reset()`) then solver1
+    /// [`Z3_solver_push`] or [`Z3_solver_pop`], and no calls to
+    /// [`Z3_solver_assert`] or [`Z3_solver_assert_and_track`] after checking
+    /// satisfiability without an intervening [`Z3_solver_reset`]) then solver1
     /// will be used. This solver will apply Z3's "default" tactic.
     ///
     /// The "default" tactic will attempt to probe the logic used by the
@@ -5210,13 +5357,19 @@ extern "C" {
     ///
     /// NOTE: User must use [`Z3_solver_inc_ref`] and [`Z3_solver_dec_ref`] to manage solver objects.
     /// Even if the context was created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_simple_solver`]
+    /// - [`Z3_mk_solver_for_logic`]
+    /// - [`Z3_mk_solver_from_tactic`]
     pub fn Z3_mk_solver(c: Z3_context) -> Z3_solver;
 
     /// Create a new incremental solver.
     ///
     /// This is equivalent to applying the "smt" tactic.
     ///
-    /// Unlike `Z3_mk_solver()` this solver
+    /// Unlike [`Z3_mk_solver`] this solver
     /// - Does not attempt to apply any logic specific tactics.
     /// - Does not change its behaviour based on whether it used
     /// incrementally/non-incrementally.
@@ -5233,6 +5386,12 @@ extern "C" {
     ///
     /// NOTE: User must use [`Z3_solver_inc_ref`] and [`Z3_solver_dec_ref`] to manage solver objects.
     /// Even if the context was created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_solver`]
+    /// - [`Z3_mk_solver_for_logic`]
+    /// - [`Z3_mk_solver_from_tactic`]
     pub fn Z3_mk_simple_solver(c: Z3_context) -> Z3_solver;
 
     /// Create a new solver customized for the given logic.
@@ -5240,6 +5399,12 @@ extern "C" {
     ///
     /// NOTE: User must use [`Z3_solver_inc_ref`] and [`Z3_solver_dec_ref`] to manage solver objects.
     /// Even if the context was created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_solver`]
+    /// - [`Z3_mk_simple_solver`]
+    /// - [`Z3_mk_solver_from_tactic`]
     pub fn Z3_mk_solver_for_logic(c: Z3_context, logic: Z3_symbol) -> Z3_solver;
 
     /// Create a new solver that is implemented using the given tactic.
@@ -5248,6 +5413,12 @@ extern "C" {
     ///
     /// NOTE: User must use [`Z3_solver_inc_ref`] and [`Z3_solver_dec_ref`] to manage solver objects.
     /// Even if the context was created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_solver`]
+    /// - [`Z3_mk_simple_solver`]
+    /// - [`Z3_mk_solver_for_logic`]
     pub fn Z3_mk_solver_from_tactic(c: Z3_context, t: Z3_tactic) -> Z3_solver;
 
     /// Copy a solver `s` from the context `source` to the context `target`.
@@ -5491,7 +5662,7 @@ extern "C" {
 
     /// Return statistics for the given solver.
     ///
-    /// NOTE: User must use [`Z3_stats_inc_ref`] and [`Z3_stats_dec_ref`] to manage `Z3_stats` objects.
+    /// NOTE: User must use [`Z3_stats_inc_ref`] and [`Z3_stats_dec_ref`] to manage [`Z3_stats`] objects.
     pub fn Z3_solver_get_statistics(c: Z3_context, s: Z3_solver) -> Z3_stats;
 
     /// Convert a solver into a string.
@@ -6497,7 +6668,7 @@ extern "C" {
 
     /// Retrieve lower bound value or approximation for the i'th optimization objective.
     /// The returned vector is of length 3. It always contains numerals.
-    /// The three numerals are coefficients a, b, c and encode the result of `Z3_optimize_get_lower`
+    /// The three numerals are coefficients a, b, c and encode the result of [`Z3_optimize_get_lower`]
     /// a * infinity + b + c * epsilon.
     ///
     /// - `c`: - context
