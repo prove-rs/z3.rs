@@ -322,23 +322,6 @@ fn test_params() {
 }
 
 #[test]
-fn test_global_params() {
-    let _ = env_logger::try_init();
-    // could interfere with other tests if they use global params
-    reset_all_global_params();
-    let val = get_global_param("iDontExist");
-    assert_eq!(val, None);
-    let val = get_global_param(":pp.decimal");
-    assert_eq!(val, Some("false".to_owned()));
-    set_global_param(":pp.decimal", "true");
-    let val = get_global_param(":pp.decimal");
-    assert_eq!(val, Some("true".to_owned()));
-    reset_all_global_params();
-    let val = get_global_param(":pp.decimal");
-    assert_eq!(val, Some("false".to_owned()));
-}
-
-#[test]
 fn test_substitution() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);

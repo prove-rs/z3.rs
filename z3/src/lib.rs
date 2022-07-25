@@ -35,8 +35,6 @@ mod sort;
 mod symbol;
 mod tactic;
 
-pub use params::{get_global_param, set_global_param, reset_all_global_params};
-
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
 lazy_static! {
