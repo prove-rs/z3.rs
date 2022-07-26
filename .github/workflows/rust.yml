@@ -18,19 +18,10 @@ jobs:
       run: sudo apt-get install libz3-dev
     - name: Build
       run: cargo build -vv --all
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # statically-linked Z3 tests below...
-      if: ${{ success() || failure() }}
     - name: Run tests
       run: cargo test -vv --all
-      # See above.
-      if: ${{ success() || failure() }}
     - name: Run tests with `arbitrary-size-numeral` enabled
       run: cargo test --manifest-path z3/Cargo.toml -vv --features arbitrary-size-numeral
-      # See above.
-      if: ${{ success() || failure() }}
 
   build_z3_statically:
     strategy:
