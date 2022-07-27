@@ -598,7 +598,6 @@ fn test_rec_func_def_unsat() {
 }
 
 #[test]
-#[ignore = "See https://github.com/Z3Prover/z3/issues/5702"]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
