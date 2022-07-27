@@ -1394,8 +1394,8 @@ fn test_probe_names() {
     let is_prop_probe = Probe::new(&ctx, "is-propositional");
     assert_eq!(0.0, is_prop_probe.apply(&g));
 
-    let is_prop_probe = Probe::new(&ctx, "is-qflia");
-    assert_eq!(1.0, is_prop_probe.apply(&g));
+    let is_qflia_probe = Probe::new(&ctx, "is-qflia");
+    assert_eq!(1.0, is_qflia_probe.apply(&g));
 }
 
 #[test]
