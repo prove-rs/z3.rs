@@ -19,17 +19,15 @@ impl<'ctx> Clone for Goal<'ctx> {
 }
 
 impl<'ctx> Goal<'ctx> {
+    pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_goal: Z3_goal) -> Goal<'ctx> {
+        Z3_goal_inc_ref(ctx.z3_ctx, z3_goal);
+        Goal { ctx, z3_goal }
+    }
+
     pub fn new(ctx: &'ctx Context, models: bool, unsat_cores: bool, proofs: bool) -> Goal<'ctx> {
         // NOTE: The Z3 context ctx must have been created with proof generation support.
-        Self {
-            ctx,
-            z3_goal: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let g = Z3_mk_goal(ctx.z3_ctx, models, unsat_cores, proofs);
-                Z3_goal_inc_ref(ctx.z3_ctx, g);
-                g
-            },
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(ctx, Z3_mk_goal(ctx.z3_ctx, models, unsat_cores, proofs)) }
     }
 
     /// Add a new formula `a` to the given goal.
@@ -97,14 +95,12 @@ impl<'ctx> Goal<'ctx> {
 
     /// Copy a goal `g` from the context `source` to the context `target`.
     pub fn translate<'dest_ctx>(self, ctx: &'dest_ctx Context) -> Goal<'dest_ctx> {
-        Goal {
-            ctx,
-            z3_goal: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let g = Z3_goal_translate(self.ctx.z3_ctx, self.z3_goal, ctx.z3_ctx);
-                Z3_goal_inc_ref(ctx.z3_ctx, g);
-                g
-            },
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Goal::wrap(
+                ctx,
+                Z3_goal_translate(self.ctx.z3_ctx, self.z3_goal, ctx.z3_ctx),
+            )
         }
     }
 

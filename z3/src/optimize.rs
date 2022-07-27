@@ -17,17 +17,15 @@ use num::{
 };
 
 impl<'ctx> Optimize<'ctx> {
+    unsafe fn wrap(ctx: &'ctx Context, z3_opt: Z3_optimize) -> Optimize<'ctx> {
+        Z3_optimize_inc_ref(ctx.z3_ctx, z3_opt);
+        Optimize { ctx, z3_opt }
+    }
+
     /// Create a new optimize context.
     pub fn new(ctx: &'ctx Context) -> Optimize<'ctx> {
-        Optimize {
-            ctx,
-            z3_opt: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let opt = Z3_mk_optimize(ctx.z3_ctx);
-                Z3_optimize_inc_ref(ctx.z3_ctx, opt);
-                opt
-            },
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx)) }
     }
 
     /// Get this optimizers 's context.

@@ -10,6 +10,11 @@ use Probe;
 use Z3_MUTEX;
 
 impl<'ctx> Probe<'ctx> {
+    unsafe fn wrap(ctx: &'ctx Context, z3_probe: Z3_probe) -> Probe<'ctx> {
+        Z3_probe_inc_ref(ctx.z3_ctx, z3_probe);
+        Probe { ctx, z3_probe }
+    }
+
     pub fn list_all(
         ctx: &'ctx Context,
     ) -> impl Iterator<Item = std::result::Result<&'ctx str, Utf8Error>> {
@@ -25,17 +30,10 @@ impl<'ctx> Probe<'ctx> {
         unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx, probe_name.as_ptr())).to_str() }
     }
 
-    pub fn new(c: &'ctx Context, name: &str) -> Probe<'ctx> {
+    pub fn new(ctx: &'ctx Context, name: &str) -> Probe<'ctx> {
         let probe_name = CString::new(name).unwrap();
-        Probe {
-            ctx: c,
-            z3_probe: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let p = Z3_mk_probe(c.z3_ctx, probe_name.as_ptr());
-                Z3_probe_inc_ref(c.z3_ctx, p);
-                p
-            },
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx, probe_name.as_ptr())) }
     }
 
     pub fn apply(&self, goal: &'ctx Goal) -> f64 {
@@ -44,146 +42,105 @@ impl<'ctx> Probe<'ctx> {
 
     /// Return a probe that always evaluates to val.
     pub fn constant(ctx: &'ctx Context, val: f64) -> Probe<'ctx> {
-        unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_const(ctx.z3_ctx, val);
-            Z3_probe_inc_ref(ctx.z3_ctx, z3_probe);
-            Probe { ctx, z3_probe }
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx, val)) }
     }
 
     /// Return a probe that evaluates to "true" when the value returned by `self` is less than the value returned by `p`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
     pub fn lt(&self, p: Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_lt(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_lt(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when the value returned by `self` is greater than the value returned by `p`.
     pub fn gt(&self, p: &Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_gt(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_gt(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when the value returned by `self` is less than or equal to the value returned by `p`.
     pub fn le(&self, p: &Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_le(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_le(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when the value returned by `self` is greater than or equal to the value returned by `p`.
     pub fn ge(&self, p: &Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_ge(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_ge(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when the value returned by `self` is equal to the value returned by `p`.
     pub fn eq(&self, p: &Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_eq(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_eq(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when `self` and `p` evaluates to true.
     pub fn and(&self, p: &Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_and(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_and(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when `p1` or `p2` evaluates to true.
     pub fn or(&self, p: &Probe) -> Probe<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_or(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
+            Self::wrap(
+                self.ctx,
+                Z3_probe_or(self.ctx.z3_ctx, self.z3_probe, p.z3_probe),
+            )
         }
     }
 
     /// Return a probe that evaluates to "true" when `p` does not evaluate to true.
     pub fn not(&self) -> Probe<'ctx> {
-        unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_not(self.ctx.z3_ctx, self.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx: self.ctx,
-                z3_probe,
-            }
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(self.ctx, Z3_probe_not(self.ctx.z3_ctx, self.z3_probe)) }
     }
 
     /// Return a probe that evaluates to "true" when the value returned by `self` is not equal to the value returned by `p`.
     pub fn ne(&self, p: &Probe) -> Probe<'ctx> {
-        unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
-            let z3_probe = Z3_probe_eq(self.ctx.z3_ctx, self.z3_probe, p.z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe);
-            let z3_probe_not = Z3_probe_not(self.ctx.z3_ctx, z3_probe);
-            Z3_probe_inc_ref(self.ctx.z3_ctx, z3_probe_not);
-            Probe {
-                ctx: self.ctx,
-                z3_probe: z3_probe_not,
-            }
-        }
+        self.eq(p).not()
     }
 }
 
 impl<'ctx> Clone for Probe<'ctx> {
     fn clone(&self) -> Self {
-        Probe {
-            ctx: self.ctx,
-            z3_probe: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                Z3_probe_inc_ref(self.ctx.z3_ctx, self.z3_probe);
-                self.z3_probe
-            },
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(self.ctx, self.z3_probe) }
     }
 }
 

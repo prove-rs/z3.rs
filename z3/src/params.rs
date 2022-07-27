@@ -7,16 +7,14 @@ use Symbol;
 use Z3_MUTEX;
 
 impl<'ctx> Params<'ctx> {
+    unsafe fn wrap(ctx: &'ctx Context, z3_params: Z3_params) -> Params<'ctx> {
+        Z3_params_inc_ref(ctx.z3_ctx, z3_params);
+        Params { ctx, z3_params }
+    }
+
     pub fn new(ctx: &'ctx Context) -> Params<'ctx> {
-        Params {
-            ctx,
-            z3_params: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let p = Z3_mk_params(ctx.z3_ctx);
-                Z3_params_inc_ref(ctx.z3_ctx, p);
-                p
-            },
-        }
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx)) }
     }
 
     pub fn set_symbol<K: Into<Symbol>, V: Into<Symbol>>(&mut self, k: K, v: V) {

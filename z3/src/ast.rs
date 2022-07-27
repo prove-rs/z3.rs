@@ -254,9 +254,12 @@ pub trait Ast<'ctx>: fmt::Debug {
 
     /// Get the [`Sort`](../struct.Sort.html) of the `Ast`
     fn get_sort(&self) -> Sort<'ctx> {
-        Sort::new(self.get_ctx(), unsafe {
-            Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast())
-        })
+        unsafe {
+            Sort::wrap(
+                self.get_ctx(),
+                Z3_get_sort(self.get_ctx().z3_ctx, self.get_z3_ast()),
+            )
+        }
     }
 
     /// Simplify the `Ast`. Returns a new `Ast` which is equivalent,

@@ -12,6 +12,11 @@ use Symbol;
 use Z3_MUTEX;
 
 impl<'ctx> Solver<'ctx> {
+    pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {
+        Z3_solver_inc_ref(ctx.z3_ctx, z3_slv);
+        Solver { ctx, z3_slv }
+    }
+
     /// Create a new solver. This solver is a "combined solver"
     /// that internally uses a non-incremental (`solver1`) and an
     /// incremental solver (`solver2`). This combined solver changes
@@ -50,44 +55,32 @@ impl<'ctx> Solver<'ctx> {
     /// [`Solver::push()`]: #method.push
     /// [`Solver::reset()`]: #method.reset
     ///
-    pub fn new(ctx: &Context) -> Solver {
-        Solver {
-            ctx,
-            z3_slv: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let s = Z3_mk_solver(ctx.z3_ctx);
-                Z3_solver_inc_ref(ctx.z3_ctx, s);
-                s
-            },
-        }
+    pub fn new(ctx: &'ctx Context) -> Solver<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx)) }
     }
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
-    pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
-        Some(Solver {
-            ctx,
-            z3_slv: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let s = Z3_mk_solver_for_logic(ctx.z3_ctx, logic.into().as_z3_symbol(ctx));
-                if s.is_null() {
-                    return None;
-                }
-                Z3_solver_inc_ref(ctx.z3_ctx, s);
-                s
-            },
-        })
+    pub fn new_for_logic<S: Into<Symbol>>(ctx: &'ctx Context, logic: S) -> Option<Solver<'ctx>> {
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            let s = Z3_mk_solver_for_logic(ctx.z3_ctx, logic.into().as_z3_symbol(ctx));
+            if s.is_null() {
+                None
+            } else {
+                Some(Self::wrap(ctx, s))
+            }
+        }
     }
 
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Solver<'dest_ctx> {
-        Solver {
-            ctx: dest,
-            z3_slv: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let s = Z3_solver_translate(self.ctx.z3_ctx, self.z3_slv, dest.z3_ctx);
-                Z3_solver_inc_ref(dest.z3_ctx, s);
-                s
-            },
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Solver::wrap(
+                dest,
+                Z3_solver_translate(self.ctx.z3_ctx, self.z3_slv, dest.z3_ctx),
+            )
         }
     }
 
