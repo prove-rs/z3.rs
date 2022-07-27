@@ -10,23 +10,19 @@ use Probe;
 use Z3_MUTEX;
 
 impl<'ctx> Probe<'ctx> {
-    pub fn list_all(ctx: &'ctx Context) -> impl Iterator<Item=std::result::Result<&'ctx str, Utf8Error>> {
-        let p = unsafe {
-            Z3_get_num_probes(ctx.z3_ctx)
-        };
+    pub fn list_all(
+        ctx: &'ctx Context,
+    ) -> impl Iterator<Item = std::result::Result<&'ctx str, Utf8Error>> {
+        let p = unsafe { Z3_get_num_probes(ctx.z3_ctx) };
         (0..p).into_iter().map(move |n| {
-            let t = unsafe {
-                Z3_get_probe_name(ctx.z3_ctx, n)
-            };
+            let t = unsafe { Z3_get_probe_name(ctx.z3_ctx, n) };
             unsafe { CStr::from_ptr(t) }.to_str()
         })
     }
 
     pub fn describe(ctx: &'ctx Context, name: &str) -> std::result::Result<&'ctx str, Utf8Error> {
         let probe_name = CString::new(name).unwrap();
-        unsafe {
-            CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx, probe_name.as_ptr())).to_str()
-        }
+        unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx, probe_name.as_ptr())).to_str() }
     }
 
     pub fn new(c: &'ctx Context, name: &str) -> Probe<'ctx> {
@@ -43,9 +39,7 @@ impl<'ctx> Probe<'ctx> {
     }
 
     pub fn apply(&self, goal: &'ctx Goal) -> f64 {
-        unsafe {
-            Z3_probe_apply(self.ctx.z3_ctx, self.z3_probe, goal.z3_goal)
-        }
+        unsafe { Z3_probe_apply(self.ctx.z3_ctx, self.z3_probe, goal.z3_goal) }
     }
 
     /// Return a probe that always evaluates to val.
@@ -54,10 +48,7 @@ impl<'ctx> Probe<'ctx> {
             let _guard = Z3_MUTEX.lock().unwrap();
             let z3_probe = Z3_probe_const(ctx.z3_ctx, val);
             Z3_probe_inc_ref(ctx.z3_ctx, z3_probe);
-            Probe {
-                ctx,
-                z3_probe,
-            }
+            Probe { ctx, z3_probe }
         }
     }
 

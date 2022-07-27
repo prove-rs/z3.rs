@@ -114,7 +114,7 @@ macro_rules! impl_binary_op_without_numbers {
         );
         impl_binary_assign_op_raw!(
             $ty,
-            & $ty,
+            &$ty,
             $base_trait,
             $assign_trait,
             $base_fn,
@@ -122,7 +122,7 @@ macro_rules! impl_binary_op_without_numbers {
             $function
         );
         impl_binary_op_raw!(
-            & $ty,
+            &$ty,
             $ty,
             $ty,
             $base_trait,
@@ -132,8 +132,8 @@ macro_rules! impl_binary_op_without_numbers {
             $function
         );
         impl_binary_op_raw!(
-            & $ty,
-            & $ty,
+            &$ty,
+            &$ty,
             $ty,
             $base_trait,
             $assign_trait,
@@ -340,31 +340,15 @@ macro_rules! impl_binary_mult_op_without_numbers {
         impl_binary_mult_op_assign_raw!(
             $base_ty,
             $ty,
-            & $ty,
+            &$ty,
             $base_trait,
             $assign_trait,
             $base_fn,
             $assign_fn,
             $function
         );
-        impl_binary_mult_op_raw!(
-            $base_ty,
-            & $ty,
-            $ty,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function
-        );
-        impl_binary_mult_op_raw!(
-            $base_ty,
-            & $ty,
-            & $ty,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function
-        );
+        impl_binary_mult_op_raw!($base_ty, &$ty, $ty, $ty, $base_trait, $base_fn, $function);
+        impl_binary_mult_op_raw!($base_ty, &$ty, &$ty, $ty, $base_trait, $base_fn, $function);
     };
     ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident) => {
         impl_binary_mult_op_without_numbers!(
@@ -402,7 +386,7 @@ macro_rules! impl_binary_mult_op_bool {
             mk_const_bool
         );
         impl_binary_mult_op_number_raw!(
-            & $ty,
+            &$ty,
             bool,
             from_bool,
             $ty,
@@ -435,7 +419,7 @@ macro_rules! impl_binary_mult_op {
             $construct_constant
         );
         impl_binary_mult_op_number_raw!(
-            & $ty,
+            &$ty,
             u64,
             from_u64,
             $ty,
@@ -455,7 +439,7 @@ macro_rules! impl_binary_mult_op {
             $construct_constant
         );
         impl_binary_mult_op_number_raw!(
-            & $ty,
+            &$ty,
             i64,
             from_i64,
             $ty,

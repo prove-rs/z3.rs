@@ -74,19 +74,24 @@ impl<'ctx> RecFuncDecl<'ctx> {
     /// ```
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `RecFuncDecl`.
-    pub fn add_def(
-        &self,
-        args: &[&ast::Dynamic<'ctx>],
-        body: &impl Ast<'ctx>,
-    ) {
+    pub fn add_def(&self, args: &[&ast::Dynamic<'ctx>], body: &impl Ast<'ctx>) {
         assert!(args.iter().all(|arg| arg.ctx == body.get_ctx()));
         assert_eq!(self.ctx, body.get_ctx());
 
         let mut args: Vec<_> = args.iter().map(|s| s.get_z3_ast()).collect();
         unsafe {
-            assert_eq!(body.get_sort().z3_sort, Z3_get_range(self.ctx.z3_ctx, self.z3_func_decl));
+            assert_eq!(
+                body.get_sort().z3_sort,
+                Z3_get_range(self.ctx.z3_ctx, self.z3_func_decl)
+            );
 
-            Z3_add_rec_def(self.ctx.z3_ctx, self.z3_func_decl, self.arity() as u32, args.as_mut_ptr(), body.get_z3_ast());
+            Z3_add_rec_def(
+                self.ctx.z3_ctx,
+                self.z3_func_decl,
+                self.arity() as u32,
+                args.as_mut_ptr(),
+                body.get_z3_ast(),
+            );
         }
     }
 

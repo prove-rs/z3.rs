@@ -28,7 +28,7 @@ impl<'ctx> Goal<'ctx> {
                 let g = Z3_mk_goal(ctx.z3_ctx, models, unsat_cores, proofs);
                 Z3_goal_inc_ref(ctx.z3_ctx, g);
                 g
-            }
+            },
         }
     }
 
@@ -104,19 +104,20 @@ impl<'ctx> Goal<'ctx> {
                 let g = Z3_goal_translate(self.ctx.z3_ctx, self.z3_goal, ctx.z3_ctx);
                 Z3_goal_inc_ref(ctx.z3_ctx, g);
                 g
-            }
+            },
         }
     }
 
     /// Return the "precision" of the given goal. Goals can be transformed using over and under approximations.
     pub fn get_precision(&self) -> GoalPrec {
         let _guard = Z3_MUTEX.lock().unwrap();
-        unsafe {
-            Z3_goal_precision(self.ctx.z3_ctx, self.z3_goal)
-        }
+        unsafe { Z3_goal_precision(self.ctx.z3_ctx, self.z3_goal) }
     }
 
-    pub fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a where T: Ast<'a> {
+    pub fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a
+    where
+        T: Ast<'a>,
+    {
         let goal_size = self.get_size() as usize;
         let z3_ctx = self.ctx.z3_ctx;
         let z3_goal = self.z3_goal;
@@ -130,7 +131,10 @@ impl<'ctx> Goal<'ctx> {
     }
 
     /// Return a vector of the formulas from the given goal.
-    pub fn get_formulas<T>(&self) -> Vec<T> where T: Ast<'ctx> {
+    pub fn get_formulas<T>(&self) -> Vec<T>
+    where
+        T: Ast<'ctx>,
+    {
         let goal_size = self.get_size() as usize;
         let mut formulas: Vec<T> = Vec::with_capacity(goal_size);
 
