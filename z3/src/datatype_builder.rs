@@ -185,7 +185,6 @@ pub fn create_datatypes<'ctx>(
         }
 
         datatype_sorts.push(DatatypeSort {
-            ctx,
             sort,
             variants,
         })

@@ -227,7 +227,6 @@ pub struct DatatypeVariant<'ctx> {
 /// A custom datatype sort.
 #[derive(Debug)]
 pub struct DatatypeSort<'ctx> {
-    ctx: &'ctx Context,
     pub sort: Sort<'ctx>,
     pub variants: Vec<DatatypeVariant<'ctx>>,
 }
