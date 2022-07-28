@@ -23,7 +23,6 @@ static-link-z3 = ["z3-sys/static-link-z3"]
 
 [dependencies]
 log = "0.4"
-lazy_static = "1"
 
 # optional dependencies
 num = { version = "0.4.0", optional=true }

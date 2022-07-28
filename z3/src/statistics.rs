@@ -4,7 +4,6 @@ use std::fmt;
 use z3_sys::*;
 use Context;
 use Statistics;
-use Z3_MUTEX;
 
 /// The value for a key in [`Statistics`].
 ///
@@ -82,7 +81,6 @@ impl<'ctx> Statistics<'ctx> {
 
 impl<'ctx> Clone for Statistics<'ctx> {
     fn clone(&self) -> Self {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(self.ctx, self.z3_stats) }
     }
 }
@@ -108,7 +106,6 @@ impl<'ctx> fmt::Debug for Statistics<'ctx> {
 
 impl<'ctx> Drop for Statistics<'ctx> {
     fn drop(&mut self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_stats_dec_ref(self.ctx.z3_ctx, self.z3_stats);
         }

@@ -2,13 +2,11 @@ use z3_sys::*;
 use Config;
 use Context;
 use ContextHandle;
-use Z3_MUTEX;
 
 impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
                 let p = Z3_mk_context_rc(cfg.z3_cfg);
                 debug!("new context {:p}", p);
                 Z3_set_error_handler(p, None);

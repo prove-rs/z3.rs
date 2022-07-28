@@ -6,7 +6,6 @@ use Context;
 use Model;
 use Optimize;
 use Solver;
-use Z3_MUTEX;
 
 impl<'ctx> Model<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_mdl: Z3_model) -> Model<'ctx> {
@@ -15,7 +14,6 @@ impl<'ctx> Model<'ctx> {
     }
 
     pub fn of_solver(slv: &Solver<'ctx>) -> Option<Model<'ctx>> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             let m = Z3_solver_get_model(slv.ctx.z3_ctx, slv.z3_slv);
             if m.is_null() {
@@ -27,7 +25,6 @@ impl<'ctx> Model<'ctx> {
     }
 
     pub fn of_optimize(opt: &Optimize<'ctx>) -> Option<Model<'ctx>> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             let m = Z3_optimize_get_model(opt.ctx.z3_ctx, opt.z3_opt);
             if m.is_null() {
@@ -40,7 +37,6 @@ impl<'ctx> Model<'ctx> {
 
     /// Translate model to context `dest`
     pub fn translate<'dest_ctx>(&self, dest: &'dest_ctx Context) -> Model<'dest_ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Model::wrap(
                 dest,
@@ -55,7 +51,6 @@ impl<'ctx> Model<'ctx> {
     {
         let mut tmp: Z3_ast = ast.get_z3_ast();
         let res = {
-            let _guard = Z3_MUTEX.lock().unwrap();
             unsafe {
                 Z3_model_eval(
                     self.ctx.z3_ctx,
@@ -95,7 +90,6 @@ impl<'ctx> fmt::Debug for Model<'ctx> {
 
 impl<'ctx> Drop for Model<'ctx> {
     fn drop(&mut self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
     }
 }

@@ -9,7 +9,6 @@ use Optimize;
 use SatResult;
 use Statistics;
 use Symbol;
-use Z3_MUTEX;
 
 #[cfg(feature = "arbitrary-size-numeral")]
 use num::{
@@ -25,7 +24,6 @@ impl<'ctx> Optimize<'ctx> {
 
     /// Create a new optimize context.
     pub fn new(ctx: &'ctx Context) -> Optimize<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx)) }
     }
 
@@ -42,7 +40,6 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::maximize()`](#method.maximize)
     /// - [`Optimize::minimize()`](#method.minimize)
     pub fn assert(&self, ast: &impl Ast<'ctx>) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -61,7 +58,6 @@ impl<'ctx> Optimize<'ctx> {
         let group = group
             .map(|g| g.as_z3_symbol(self.ctx))
             .unwrap_or_else(std::ptr::null_mut);
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_optimize_assert_soft(
                 self.ctx.z3_ctx,
@@ -80,7 +76,6 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::assert()`](#method.assert)
     /// - [`Optimize::minimize()`](#method.minimize)
     pub fn maximize(&self, ast: &impl Ast<'ctx>) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -91,7 +86,6 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::assert()`](#method.assert)
     /// - [`Optimize::maximize()`](#method.maximize)
     pub fn minimize(&self, ast: &impl Ast<'ctx>) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -105,7 +99,6 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// - [`Optimize::pop()`](#method.pop)
     pub fn push(&self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_push(self.ctx.z3_ctx, self.z3_opt) };
     }
 
@@ -120,7 +113,6 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// - [`Optimize::push()`](#method.push)
     pub fn pop(&self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_pop(self.ctx.z3_ctx, self.z3_opt) };
     }
 
@@ -130,7 +122,6 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// - [`Optimize::get_model()`](#method.get_model)
     pub fn check(&self, assumptions: &[Bool<'ctx>]) -> SatResult {
-        let _guard = Z3_MUTEX.lock().unwrap();
         let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
             Z3_optimize_check(
@@ -161,7 +152,6 @@ impl<'ctx> Optimize<'ctx> {
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic<'ctx>> {
         let (z3_objectives, len) = unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
             let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx, self.z3_opt);
             let len = Z3_ast_vector_size(self.ctx.z3_ctx, objectives);
             (objectives, len)
@@ -170,10 +160,7 @@ impl<'ctx> Optimize<'ctx> {
         let mut objectives = Vec::with_capacity(len as usize);
 
         for i in 0..len {
-            let elem = unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                Z3_ast_vector_get(self.ctx.z3_ctx, z3_objectives, i)
-            };
+            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx, z3_objectives, i) };
             let elem = unsafe { Dynamic::new(self.ctx, elem) };
             objectives.push(elem);
         }
@@ -197,7 +184,6 @@ impl<'ctx> Optimize<'ctx> {
 
     /// Retrieve the statistics for the last [`Optimize::check()`].
     pub fn get_statistics(&self) -> Statistics<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Statistics::wrap(
                 self.ctx,
@@ -228,7 +214,6 @@ impl<'ctx> fmt::Debug for Optimize<'ctx> {
 
 impl<'ctx> Drop for Optimize<'ctx> {
     fn drop(&mut self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx, self.z3_opt) };
     }
 }

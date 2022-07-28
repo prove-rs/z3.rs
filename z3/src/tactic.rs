@@ -14,7 +14,6 @@ use Params;
 use Probe;
 use Solver;
 use Tactic;
-use Z3_MUTEX;
 
 impl<'ctx> ApplyResult<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_apply_result: Z3_apply_result) -> ApplyResult<'ctx> {
@@ -29,7 +28,6 @@ impl<'ctx> ApplyResult<'ctx> {
         let num_subgoals =
             unsafe { Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx, self.z3_apply_result) };
         (0..num_subgoals).into_iter().map(move |i| unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
             Goal::wrap(
                 self.ctx,
                 Z3_apply_result_get_subgoal(self.ctx.z3_ctx, self.z3_apply_result, i),
@@ -40,7 +38,6 @@ impl<'ctx> ApplyResult<'ctx> {
 
 impl<'ctx> Drop for ApplyResult<'ctx> {
     fn drop(&mut self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_apply_result_dec_ref(self.ctx.z3_ctx, self.z3_apply_result);
         }
@@ -65,26 +62,22 @@ impl<'ctx> Tactic<'ctx> {
 
     pub fn new(ctx: &'ctx Context, name: &str) -> Tactic<'ctx> {
         let tactic_name = CString::new(name).unwrap();
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_tactic(ctx.z3_ctx, tactic_name.as_ptr())) }
     }
 
     /// Return a tactic that just return the given goal.
     pub fn create_skip(ctx: &'ctx Context) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx)) }
     }
 
     /// Return a tactic that always fails.
     pub fn create_fail(ctx: &'ctx Context) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx)) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
     pub fn repeat(ctx: &'ctx Context, t: &Tactic<'ctx>, max: u32) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx, t.z3_tactic, max)) }
     }
 
@@ -92,7 +85,6 @@ impl<'ctx> Tactic<'ctx> {
     /// if it doesn't terminate within the period specified by `timeout`.
     pub fn try_for(&self, timeout: Duration) -> Tactic<'ctx> {
         let timeout_ms = c_uint::try_from(timeout.as_millis()).unwrap_or(c_uint::MAX);
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 self.ctx,
@@ -104,7 +96,6 @@ impl<'ctx> Tactic<'ctx> {
     /// Return a tactic that applies the current tactic to a given goal and
     /// the `then_tactic` to every subgoal produced by the original tactic.
     pub fn and_then(&self, then_tactic: &Tactic<'ctx>) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 self.ctx,
@@ -116,7 +107,6 @@ impl<'ctx> Tactic<'ctx> {
     /// Return a tactic that current tactic to a given goal,
     /// if it fails then returns the result of `else_tactic` applied to the given goal.
     pub fn or_else(&self, else_tactic: &Tactic<'ctx>) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 self.ctx,
@@ -128,7 +118,6 @@ impl<'ctx> Tactic<'ctx> {
     /// Return a tactic that applies self to a given goal if the probe `p` evaluates to true,
     /// and `t` if `p` evaluates to false.
     pub fn probe_or_else(&self, p: &Probe<'ctx>, t: &Tactic<'ctx>) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 self.ctx,
@@ -140,7 +129,6 @@ impl<'ctx> Tactic<'ctx> {
     /// Return a tactic that applies itself to a given goal if the probe `p` evaluates to true.
     /// If `p` evaluates to false, then the new tactic behaves like the skip tactic.
     pub fn when(&self, p: &Probe<'ctx>) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 self.ctx,
@@ -157,7 +145,6 @@ impl<'ctx> Tactic<'ctx> {
         t1: &Tactic<'ctx>,
         t2: &Tactic<'ctx>,
     ) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 ctx,
@@ -168,7 +155,6 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Return a tactic that fails if the probe `p` evaluates to false.
     pub fn fail_if(ctx: &'ctx Context, p: &Probe<'ctx>) -> Tactic<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_tactic_fail_if(ctx.z3_ctx, p.z3_probe)) }
     }
 
@@ -204,7 +190,6 @@ impl<'ctx> Tactic<'ctx> {
 
     /// Create a new solver that is implemented using the given tactic.
     pub fn solver(&self) -> Solver<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Solver::wrap(
                 self.ctx,
@@ -235,7 +220,6 @@ impl<'ctx> fmt::Debug for Tactic<'ctx> {
 
 impl<'ctx> Drop for Tactic<'ctx> {
     fn drop(&mut self) {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Z3_tactic_dec_ref(self.ctx.z3_ctx, self.z3_tactic);
         }
