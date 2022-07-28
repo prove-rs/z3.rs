@@ -161,7 +161,7 @@ impl<'ctx> Optimize<'ctx> {
 
         for i in 0..len {
             let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx, z3_objectives, i) };
-            let elem = unsafe { Dynamic::new(self.ctx, elem) };
+            let elem = unsafe { Dynamic::wrap(self.ctx, elem) };
             objectives.push(elem);
         }
 

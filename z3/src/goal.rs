@@ -91,7 +91,7 @@ impl<'ctx> Goal<'ctx> {
         let z3_goal = self.z3_goal;
         (0..goal_size).into_iter().map(move |i| {
             let formula = unsafe { Z3_goal_formula(z3_ctx, z3_goal, i as u32) };
-            unsafe { T::new(self.ctx, formula) }
+            unsafe { T::wrap(self.ctx, formula) }
         })
     }
 
@@ -105,7 +105,7 @@ impl<'ctx> Goal<'ctx> {
 
         for i in 0..goal_size {
             let formula = unsafe { Z3_goal_formula(self.ctx.z3_ctx, self.z3_goal, i as u32) };
-            formulas.push(unsafe { T::new(self.ctx, formula) });
+            formulas.push(unsafe { T::wrap(self.ctx, formula) });
         }
         formulas
     }

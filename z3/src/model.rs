@@ -62,7 +62,7 @@ impl<'ctx> Model<'ctx> {
             }
         };
         if res {
-            Some(unsafe { T::new(self.ctx, tmp) })
+            Some(unsafe { T::wrap(self.ctx, tmp) })
         } else {
             None
         }

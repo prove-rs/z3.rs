@@ -206,7 +206,7 @@ impl<'ctx> Solver<'ctx> {
 
         for i in 0..len {
             let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx, z3_unsat_core, i) };
-            let elem = unsafe { ast::Bool::new(self.ctx, elem) };
+            let elem = unsafe { ast::Bool::wrap(self.ctx, elem) };
             unsat_core.push(elem);
         }
 
@@ -261,7 +261,7 @@ impl<'ctx> Solver<'ctx> {
     pub fn get_proof(&self) -> Option<impl Ast<'ctx>> {
         let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv) };
         if !m.is_null() {
-            Some(unsafe { ast::Dynamic::new(self.ctx, m) })
+            Some(unsafe { ast::Dynamic::wrap(self.ctx, m) })
         } else {
             None
         }

@@ -120,7 +120,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
         unsafe {
-            ast::Dynamic::new(self.ctx, {
+            ast::Dynamic::wrap(self.ctx, {
                 Z3_mk_app(
                     self.ctx.z3_ctx,
                     self.z3_func_decl,
