@@ -371,7 +371,7 @@ pub trait Ast<'ctx>: fmt::Debug {
                 let app = Z3_to_app(ctx.z3_ctx, self.get_z3_ast());
                 Z3_get_app_decl(ctx.z3_ctx, app)
             };
-            Ok(unsafe { FuncDecl::from_raw(ctx, func_decl) })
+            Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
         }
     }
 

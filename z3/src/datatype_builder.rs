@@ -146,12 +146,12 @@ pub fn create_datatypes<'ctx>(
             let raw_constructor: Z3_func_decl = unsafe {
                 Z3_get_datatype_sort_constructor(ctx.z3_ctx, z3_sort, j.try_into().unwrap())
             };
-            let constructor: FuncDecl<'ctx> = unsafe { FuncDecl::from_raw(ctx, raw_constructor) };
+            let constructor: FuncDecl<'ctx> = unsafe { FuncDecl::wrap(ctx, raw_constructor) };
 
             let tester_func: Z3_func_decl = unsafe {
                 Z3_get_datatype_sort_recognizer(ctx.z3_ctx, z3_sort, j.try_into().unwrap())
             };
-            let tester = unsafe { FuncDecl::from_raw(ctx, tester_func) };
+            let tester = unsafe { FuncDecl::wrap(ctx, tester_func) };
 
             let mut accessors: Vec<FuncDecl<'ctx>> = Vec::new();
             for k in 0..num_fs {
@@ -164,7 +164,7 @@ pub fn create_datatypes<'ctx>(
                     )
                 };
 
-                accessors.push(unsafe { FuncDecl::from_raw(ctx, accessor_func) });
+                accessors.push(unsafe { FuncDecl::wrap(ctx, accessor_func) });
             }
 
             variants.push(DatatypeVariant {

@@ -7,6 +7,11 @@ use z3_sys::*;
 use {Context, FuncDecl, Sort, Symbol};
 
 impl<'ctx> FuncDecl<'ctx> {
+    pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
+        Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
+        Self { ctx, z3_func_decl }
+    }
+
     pub fn new<S: Into<Symbol>>(
         ctx: &'ctx Context,
         name: S,
@@ -19,7 +24,7 @@ impl<'ctx> FuncDecl<'ctx> {
         let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
 
         unsafe {
-            Self::from_raw(
+            Self::wrap(
                 ctx,
                 Z3_mk_func_decl(
                     ctx.z3_ctx,
@@ -30,12 +35,6 @@ impl<'ctx> FuncDecl<'ctx> {
                 ),
             )
         }
-    }
-
-    pub unsafe fn from_raw(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
-        Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
-
-        Self { ctx, z3_func_decl }
     }
 
     /// Return the number of arguments of a function declaration.
