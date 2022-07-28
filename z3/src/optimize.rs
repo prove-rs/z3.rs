@@ -7,6 +7,7 @@ use Context;
 use Model;
 use Optimize;
 use SatResult;
+use Statistics;
 use Symbol;
 use Z3_MUTEX;
 
@@ -192,6 +193,17 @@ impl<'ctx> Optimize<'ctx> {
             .to_str()
             .ok()
             .map(|s| s.to_string())
+    }
+
+    /// Retrieve the statistics for the last [`Optimize::check()`].
+    pub fn get_statistics(&self) -> Statistics<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Statistics::wrap(
+                self.ctx,
+                Z3_optimize_get_statistics(self.ctx.z3_ctx, self.z3_opt),
+            )
+        }
     }
 }
 

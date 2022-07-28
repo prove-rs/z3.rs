@@ -32,8 +32,11 @@ mod probe;
 mod rec_func_decl;
 mod solver;
 mod sort;
+mod statistics;
 mod symbol;
 mod tactic;
+
+pub use statistics::{StatisticsEntry, StatisticsValue};
 
 // Z3 appears to be only mostly-threadsafe, a few initializers
 // and such race; so we mutex-guard all access to the library.
@@ -279,4 +282,15 @@ pub struct Goal<'ctx> {
 pub struct Probe<'ctx> {
     ctx: &'ctx Context,
     z3_probe: Z3_probe,
+}
+
+/// Statistical data about a solver.
+///
+/// # See also:
+///
+/// - [`Optimize::get_statistics()`]
+/// - [`Solver::get_statistics()`]
+pub struct Statistics<'ctx> {
+    ctx: &'ctx Context,
+    z3_stats: Z3_stats,
 }

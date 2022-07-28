@@ -8,6 +8,7 @@ use Model;
 use Params;
 use SatResult;
 use Solver;
+use Statistics;
 use Symbol;
 use Z3_MUTEX;
 
@@ -307,6 +308,17 @@ impl<'ctx> Solver<'ctx> {
     pub fn set_params(&self, params: &Params<'ctx>) {
         let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_solver_set_params(self.ctx.z3_ctx, self.z3_slv, params.z3_params) };
+    }
+
+    /// Retrieve the statistics for the last [`Solver::check()`].
+    pub fn get_statistics(&self) -> Statistics<'ctx> {
+        let _guard = Z3_MUTEX.lock().unwrap();
+        unsafe {
+            Statistics::wrap(
+                self.ctx,
+                Z3_solver_get_statistics(self.ctx.z3_ctx, self.z3_slv),
+            )
+        }
     }
 }
 
