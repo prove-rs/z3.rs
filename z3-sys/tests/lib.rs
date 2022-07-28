@@ -40,18 +40,18 @@ fn smoketest() {
         let mut interp_x: Z3_ast = const_x;
         let mut interp_y: Z3_ast = const_y;
         assert_eq!(
-            Z3_model_eval(ctx, model, const_x, Z3_TRUE, &mut interp_x),
-            Z3_TRUE
+            Z3_model_eval(ctx, model, const_x, true, &mut interp_x),
+            true
         );
         assert_eq!(
-            Z3_model_eval(ctx, model, const_y, Z3_TRUE, &mut interp_y),
-            Z3_TRUE
+            Z3_model_eval(ctx, model, const_y, true, &mut interp_y),
+            true
         );
 
         let mut val_x: i32 = -5;
         let mut val_y: i32 = -5;
-        assert_eq!(Z3_get_numeral_int(ctx, interp_x, &mut val_x), Z3_TRUE);
-        assert_eq!(Z3_get_numeral_int(ctx, interp_y, &mut val_y), Z3_TRUE);
+        assert_eq!(Z3_get_numeral_int(ctx, interp_x, &mut val_x), true);
+        assert_eq!(Z3_get_numeral_int(ctx, interp_y, &mut val_y), true);
         assert_eq!(val_x, 0);
         assert_eq!(val_y, -1);
 

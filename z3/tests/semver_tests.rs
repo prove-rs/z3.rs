@@ -36,14 +36,6 @@ fn get_version(sm: &SpecMap, pkg: &str, ver: usize) -> Option<Version> {
     }
 }
 
-fn version_index(sm: &SpecMap, pkg: &str, ver: &str) -> Option<usize> {
-    let ver = Version::parse(ver).unwrap();
-    match sm.get(pkg) {
-        None => None,
-        Some(specs) => specs.iter().position(|spec| spec.vers == ver),
-    }
-}
-
 fn first_version_req_index(sm: &SpecMap, pkg: &str, req: &VersionReq) -> Option<usize> {
     match sm.get(pkg) {
         None => None,

@@ -24,7 +24,7 @@ macro_rules! mk_const_bool {
 
 macro_rules! impl_binary_op_raw {
     ($ty:ty, $rhs:ty, $output:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl<'a, 'ctx> $base_trait<$rhs> for $ty {
+        impl<'ctx> $base_trait<$rhs> for $ty {
             type Output = $output;
 
             fn $base_fn(self, rhs: $rhs) -> Self::Output {
@@ -46,7 +46,7 @@ macro_rules! impl_binary_assign_op_raw {
             $assign_fn,
             $function
         );
-        impl<'a, 'ctx> $assign_trait<$rhs> for $ty {
+        impl<'ctx> $assign_trait<$rhs> for $ty {
             fn $assign_fn(&mut self, rhs: $rhs) {
                 *self = (self as &$ty).$function(&rhs as &$ty);
             }
@@ -56,7 +56,7 @@ macro_rules! impl_binary_assign_op_raw {
 
 macro_rules! impl_binary_op_number_raw {
     ($ty:ty, $other:ty, $other_fn:ident, $output:ty, $base_trait:ident, $base_fn:ident, $function:ident, $construct_constant:ident) => {
-        impl<'a, 'ctx> $base_trait<$other> for $ty {
+        impl<'ctx> $base_trait<$other> for $ty {
             type Output = $output;
 
             fn $base_fn(self, rhs: $other) -> Self::Output {
@@ -66,7 +66,7 @@ macro_rules! impl_binary_op_number_raw {
             }
         }
 
-        impl<'a, 'ctx> $base_trait<$ty> for $other {
+        impl<'ctx> $base_trait<$ty> for $other {
             type Output = $output;
 
             fn $base_fn(self, rhs: $ty) -> Self::Output {
@@ -91,7 +91,7 @@ macro_rules! impl_binary_op_assign_number_raw {
             $construct_constant
         );
 
-        impl<'a, 'ctx> $assign_trait<$other> for $ty {
+        impl<'ctx> $assign_trait<$other> for $ty {
             fn $assign_fn(&mut self, rhs: $other) {
                 let c;
                 $construct_constant!(c, $other_fn, rhs, self);
@@ -114,7 +114,7 @@ macro_rules! impl_binary_op_without_numbers {
         );
         impl_binary_assign_op_raw!(
             $ty,
-            &'a $ty,
+            &$ty,
             $base_trait,
             $assign_trait,
             $base_fn,
@@ -122,7 +122,7 @@ macro_rules! impl_binary_op_without_numbers {
             $function
         );
         impl_binary_op_raw!(
-            &'a $ty,
+            &$ty,
             $ty,
             $ty,
             $base_trait,
@@ -132,8 +132,8 @@ macro_rules! impl_binary_op_without_numbers {
             $function
         );
         impl_binary_op_raw!(
-            &'a $ty,
-            &'a $ty,
+            &$ty,
+            &$ty,
             $ty,
             $base_trait,
             $assign_trait,
@@ -167,7 +167,7 @@ macro_rules! impl_binary_op_bool {
             mk_const_bool
         );
         impl_binary_op_number_raw!(
-            &'a $ty,
+            &$ty,
             bool,
             from_bool,
             $ty,
@@ -202,7 +202,7 @@ macro_rules! impl_binary_op {
             $construct_constant
         );
         impl_binary_op_number_raw!(
-            &'a $ty,
+            &$ty,
             u64,
             from_u64,
             $ty,
@@ -224,7 +224,7 @@ macro_rules! impl_binary_op {
             $construct_constant
         );
         impl_binary_op_number_raw!(
-            &'a $ty,
+            &$ty,
             i64,
             from_i64,
             $ty,
@@ -238,7 +238,7 @@ macro_rules! impl_binary_op {
 
 macro_rules! impl_unary_op_raw {
     ($ty:ty, $output:ty, $base_trait:ident, $base_fn:ident, $function:ident) => {
-        impl<'a, 'ctx> $base_trait for $ty {
+        impl<'ctx> $base_trait for $ty {
             type Output = $output;
 
             fn $base_fn(self) -> Self::Output {
@@ -251,13 +251,13 @@ macro_rules! impl_unary_op_raw {
 macro_rules! impl_unary_op {
     ($ty:ty, $base_trait:ident, $base_fn:ident, $function:ident) => {
         impl_unary_op_raw!($ty, $ty, $base_trait, $base_fn, $function);
-        impl_unary_op_raw!(&'a $ty, $ty, $base_trait, $base_fn, $function);
+        impl_unary_op_raw!(&$ty, $ty, $base_trait, $base_fn, $function);
     };
 }
 
 macro_rules! impl_binary_mult_op_raw {
     ($base_ty:ident, $ty:ty, $rhs:ty, $output:ty, $base_trait:ident, $base_fn:ident, $function:ident) => {
-        impl<'a, 'ctx> $base_trait<$rhs> for $ty {
+        impl<'ctx> $base_trait<$rhs> for $ty {
             type Output = $output;
 
             fn $base_fn(self, other: $rhs) -> Self::Output {
@@ -271,7 +271,7 @@ macro_rules! impl_binary_mult_op_assign_raw {
     ($base_ty:ident, $ty:ty, $rhs:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
         impl_binary_mult_op_raw!($base_ty, $ty, $rhs, $ty, $base_trait, $base_fn, $function);
 
-        impl<'a, 'ctx> $assign_trait<$rhs> for $ty {
+        impl<'ctx> $assign_trait<$rhs> for $ty {
             fn $assign_fn(&mut self, other: $rhs) {
                 *self = $base_ty::$function(self.get_ctx(), &[&self as &$ty, &other as &$ty])
             }
@@ -281,7 +281,7 @@ macro_rules! impl_binary_mult_op_assign_raw {
 
 macro_rules! impl_binary_mult_op_number_raw {
     ($ty:ty, $other:ty, $other_fn:ident, $output:ty, $base_trait:ident, $base_fn:ident, $construct_constant:ident) => {
-        impl<'a, 'ctx> $base_trait<$other> for $ty {
+        impl<'ctx> $base_trait<$other> for $ty {
             type Output = $output;
 
             fn $base_fn(self, rhs: $other) -> Self::Output {
@@ -291,7 +291,7 @@ macro_rules! impl_binary_mult_op_number_raw {
             }
         }
 
-        impl<'a, 'ctx> $base_trait<$ty> for $other {
+        impl<'ctx> $base_trait<$ty> for $other {
             type Output = $output;
 
             fn $base_fn(self, rhs: $ty) -> Self::Output {
@@ -315,7 +315,7 @@ macro_rules! impl_binary_mult_op_assign_number_raw {
             $construct_constant
         );
 
-        impl<'a, 'ctx> $assign_trait<$other> for $ty {
+        impl<'ctx> $assign_trait<$other> for $ty {
             fn $assign_fn(&mut self, rhs: $other) {
                 let c;
                 $construct_constant!(c, $other_fn, rhs, self);
@@ -340,31 +340,15 @@ macro_rules! impl_binary_mult_op_without_numbers {
         impl_binary_mult_op_assign_raw!(
             $base_ty,
             $ty,
-            &'a $ty,
+            &$ty,
             $base_trait,
             $assign_trait,
             $base_fn,
             $assign_fn,
             $function
         );
-        impl_binary_mult_op_raw!(
-            $base_ty,
-            &'a $ty,
-            $ty,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function
-        );
-        impl_binary_mult_op_raw!(
-            $base_ty,
-            &'a $ty,
-            &'a $ty,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function
-        );
+        impl_binary_mult_op_raw!($base_ty, &$ty, $ty, $ty, $base_trait, $base_fn, $function);
+        impl_binary_mult_op_raw!($base_ty, &$ty, &$ty, $ty, $base_trait, $base_fn, $function);
     };
     ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident) => {
         impl_binary_mult_op_without_numbers!(
@@ -402,7 +386,7 @@ macro_rules! impl_binary_mult_op_bool {
             mk_const_bool
         );
         impl_binary_mult_op_number_raw!(
-            &'a $ty,
+            &$ty,
             bool,
             from_bool,
             $ty,
@@ -435,7 +419,7 @@ macro_rules! impl_binary_mult_op {
             $construct_constant
         );
         impl_binary_mult_op_number_raw!(
-            &'a $ty,
+            &$ty,
             u64,
             from_u64,
             $ty,
@@ -455,7 +439,7 @@ macro_rules! impl_binary_mult_op {
             $construct_constant
         );
         impl_binary_mult_op_number_raw!(
-            &'a $ty,
+            &$ty,
             i64,
             from_i64,
             $ty,
