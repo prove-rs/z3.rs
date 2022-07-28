@@ -231,7 +231,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if
-    /// the result was `Z3_L_FALSE`.
+    /// the result was [`SatResult::Unsat`].
     pub fn get_model(&self) -> Option<Model<'ctx>> {
         Model::of_solver(self)
     }
@@ -241,7 +241,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// The error handler is invoked if [proof generation is not enabled],
     /// or if the commands above were not invoked for the given solver,
-    /// or if the result was different from `Z3_L_FALSE`.
+    /// or if the result was different from [`SatResult::Unsat`].
     ///
     /// # See also:
     ///

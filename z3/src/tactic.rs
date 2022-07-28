@@ -45,6 +45,18 @@ impl<'ctx> Drop for ApplyResult<'ctx> {
 }
 
 impl<'ctx> Tactic<'ctx> {
+    /// Iterate through the valid tactic names.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use z3::{Config, Context, Tactic};
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let tactics: Vec<_> = Tactic::list_all(&ctx).filter_map(|r| r.ok()).collect();
+    /// assert!(tactics.contains(&"nlsat"));
+    /// ```
     pub fn list_all(
         ctx: &'ctx Context,
     ) -> impl Iterator<Item = std::result::Result<&'ctx str, Utf8Error>> {
@@ -60,6 +72,21 @@ impl<'ctx> Tactic<'ctx> {
         Tactic { ctx, z3_tactic }
     }
 
+    /// Create a tactic by name.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use z3::{Config, Context, Tactic};
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let tactic = Tactic::new(&ctx, "nlsat");
+    /// ```
+    ///
+    /// # See also
+    ///
+    /// - [`Tactic::list_all()`]
     pub fn new(ctx: &'ctx Context, name: &str) -> Tactic<'ctx> {
         let tactic_name = CString::new(name).unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_tactic(ctx.z3_ctx, tactic_name.as_ptr())) }
@@ -189,6 +216,24 @@ impl<'ctx> Tactic<'ctx> {
     }
 
     /// Create a new solver that is implemented using the given tactic.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// use z3::{ast, Config, Context, SatResult, Tactic};
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let tactic = Tactic::new(&ctx, "qfnra");
+    /// let solver = tactic.solver();
+    ///
+    /// let x = ast::Int::new_const(&ctx, "x");
+    /// let y = ast::Int::new_const(&ctx, "y");
+    ///
+    /// solver.assert(&x.gt(&y));
+    /// assert_eq!(solver.check(), SatResult::Sat);
+    /// ```
+    ///
     pub fn solver(&self) -> Solver<'ctx> {
         unsafe {
             Solver::wrap(

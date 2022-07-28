@@ -21,6 +21,11 @@ impl Context {
     }
 
     /// Obtain a handle that can be used to interrupt computation from another thread.
+    ///
+    /// # See also:
+    ///
+    /// - [`ContextHandle`]
+    /// - [`ContextHandle::interrupt()`]
     pub fn handle(&self) -> ContextHandle {
         ContextHandle { ctx: self }
     }

@@ -1,3 +1,7 @@
+//! # Z3
+//!
+//! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
+
 #![allow(clippy::unreadable_literal)]
 #![deny(missing_debug_implementations)]
 
@@ -35,6 +39,10 @@ mod tactic;
 pub use statistics::{StatisticsEntry, StatisticsValue};
 
 /// Configuration used to initialize [logical contexts](Context).
+///
+/// # See also:
+///
+/// - [`Context::new()`]
 #[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,
@@ -56,12 +64,23 @@ pub struct Config {
 /// let cfg = Config::new();
 /// let ctx = Context::new(&cfg);
 /// ```
+///
+/// # See also:
+///
+/// - [`Config`]
+/// - [`Context::new()`]
 #[derive(PartialEq, Eq, Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
 }
 
 /// Handle that can be used to interrupt a computation from another thread.
+///
+/// # See also:
+///
+/// - [`Context::interrupt()`]
+/// - [`Context::handle()`]
+/// - [`ContextHandle::interrupt()`]
 #[derive(PartialEq, Eq, Debug)]
 pub struct ContextHandle<'ctx> {
     ctx: &'ctx Context,
@@ -251,6 +270,23 @@ pub struct ApplyResult<'ctx> {
 }
 
 /// Basic building block for creating custom solvers for specific problem domains.
+///
+/// Z3 provides a variety of tactics, which can be queried via
+/// [`Tactic::list_all()`]. Individual tactics can be created via
+/// [`Tactic::new()`].
+///
+/// Various combinators are available to combine tactics:
+///
+/// - [`Tactic::repeat()`]
+/// - [`Tactic::try_for()`]
+/// - [`Tactic::and_then()`]
+/// - [`Tactic::or_else()`]
+/// - [`Tactic::probe_or_else()`]
+/// - [`Tactic::when()`]
+/// - [`Tactic::cond()`]
+///
+/// Finally, a solver utilizing a tactic can be created via
+/// [`Tactic::solver()`].
 pub struct Tactic<'ctx> {
     ctx: &'ctx Context,
     z3_tactic: Z3_tactic,
@@ -265,6 +301,9 @@ pub struct Goal<'ctx> {
 /// Function/predicate used to inspect a goal and collect information
 /// that may be used to decide which solver and/or preprocessing step
 /// will be used.
+///
+/// Z3 provides a variety of probes, which can be queried via
+/// [`Probe::list_all()`].
 pub struct Probe<'ctx> {
     ctx: &'ctx Context,
     z3_probe: Z3_probe,
