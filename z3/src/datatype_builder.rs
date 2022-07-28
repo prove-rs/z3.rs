@@ -1,4 +1,4 @@
-//! Helpers for building custom [datatype sorts](struct.DatatypeSort.html).
+//! Helpers for building custom [datatype sorts](DatatypeSort).
 
 use std::{convert::TryInto, ptr::null_mut};
 use z3_sys::*;

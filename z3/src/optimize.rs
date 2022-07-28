@@ -36,9 +36,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert_soft()`](#method.assert_soft)
-    /// - [`Optimize::maximize()`](#method.maximize)
-    /// - [`Optimize::minimize()`](#method.minimize)
+    /// - [`Optimize::assert_soft()`]
+    /// - [`Optimize::maximize()`]
+    /// - [`Optimize::minimize()`]
     pub fn assert(&self, ast: &impl Ast<'ctx>) {
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
@@ -49,9 +49,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert()`](#method.assert)
-    /// - [`Optimize::maximize()`](#method.maximize)
-    /// - [`Optimize::minimize()`](#method.minimize)
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::maximize()`]
+    /// - [`Optimize::minimize()`]
     pub fn assert_soft(&self, ast: &impl Ast<'ctx>, weight: impl Weight, group: Option<Symbol>) {
         let weight_string = weight.to_string();
         let weight_cstring = CString::new(weight_string).unwrap();
@@ -73,8 +73,8 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert()`](#method.assert)
-    /// - [`Optimize::minimize()`](#method.minimize)
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::minimize()`]
     pub fn maximize(&self, ast: &impl Ast<'ctx>) {
         unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
@@ -83,8 +83,8 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert()`](#method.assert)
-    /// - [`Optimize::maximize()`](#method.maximize)
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::maximize()`]
     pub fn minimize(&self, ast: &impl Ast<'ctx>) {
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
@@ -93,11 +93,11 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// The optimize solver contains a set of rules, added facts and assertions.
     /// The set of rules, facts and assertions are restored upon calling
-    /// [`Optimize::pop()`](#method.pop).
+    /// [`Optimize::pop()`].
     ///
     /// # See also:
     ///
-    /// - [`Optimize::pop()`](#method.pop)
+    /// - [`Optimize::pop()`]
     pub fn push(&self) {
         unsafe { Z3_optimize_push(self.ctx.z3_ctx, self.z3_opt) };
     }
@@ -107,11 +107,11 @@ impl<'ctx> Optimize<'ctx> {
     /// # Preconditions:
     ///
     /// - The number of calls to [`Optimize::pop`] cannot exceed the number of calls to
-    ///   [`Optimize::push()`](#method.push).
+    ///   [`Optimize::push()`].
     ///
     /// # See also:
     ///
-    /// - [`Optimize::push()`](#method.push)
+    /// - [`Optimize::push()`]
     pub fn pop(&self) {
         unsafe { Z3_optimize_pop(self.ctx.z3_ctx, self.z3_opt) };
     }
@@ -120,7 +120,7 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::get_model()`](#method.get_model)
+    /// - [`Optimize::get_model()`]
     pub fn check(&self, assumptions: &[Bool<'ctx>]) -> SatResult {
         let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
@@ -138,7 +138,7 @@ impl<'ctx> Optimize<'ctx> {
         }
     }
 
-    /// Retrieve the model for the last [`Optimize::check()`](#method.check)
+    /// Retrieve the model for the last [`Optimize::check()`].
     ///
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given optimization
@@ -147,7 +147,7 @@ impl<'ctx> Optimize<'ctx> {
         Model::of_optimize(self)
     }
 
-    /// Retrieve the objectives for the last [`Optimize::check()`](#method.check)
+    /// Retrieve the objectives for the last [`Optimize::check()`].
     ///
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic<'ctx>> {
@@ -168,9 +168,9 @@ impl<'ctx> Optimize<'ctx> {
         objectives
     }
 
-    /// Retrieve a string that describes the last status returned by [`Optimize::check()`](#method.check).
+    /// Retrieve a string that describes the last status returned by [`Optimize::check()`].
     ///
-    /// Use this method when [`Optimize::check()`](#method.check) returns `SatResult::Unknown`.
+    /// Use this method when [`Optimize::check()`] returns [`SatResult::Unknown`].
     pub fn get_reason_unknown(&self) -> Option<String> {
         let p = unsafe { Z3_optimize_get_reason_unknown(self.ctx.z3_ctx, self.z3_opt) };
         if p.is_null() {
@@ -224,7 +224,7 @@ impl<'ctx> Drop for Optimize<'ctx> {
 ///
 /// # See also:
 ///
-/// - [`Optimize::assert_soft()`](#method.assert_soft)
+/// - [`Optimize::assert_soft()`]
 pub trait Weight: private::Sealed {
     /// This is purposefully distinct from `ToString` to allow
     /// specifying a `to_string` for tuples.

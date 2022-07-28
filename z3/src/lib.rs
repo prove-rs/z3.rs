@@ -34,9 +34,7 @@ mod tactic;
 
 pub use statistics::{StatisticsEntry, StatisticsValue};
 
-/// Configuration used to initialize [logical contexts].
-///
-/// [logical contexts]: struct.Context.html
+/// Configuration used to initialize [logical contexts](Context).
 #[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,
@@ -58,8 +56,6 @@ pub struct Config {
 /// let cfg = Config::new();
 /// let ctx = Context::new(&cfg);
 /// ```
-///
-/// [`interrupt()`]: #method.interrupt
 #[derive(PartialEq, Eq, Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
@@ -78,7 +74,7 @@ pub enum Symbol {
     String(String),
 }
 
-/// Sorts represent the various 'types' of [`Ast`s](ast/trait.Ast.html).
+/// Sorts represent the various 'types' of [`Ast`s](ast::Ast).
 //
 // Note for in-crate users: Never construct a `Sort` directly; only use
 // `Sort::new()` which handles Z3 refcounting properly.
@@ -135,7 +131,7 @@ pub struct Optimize<'ctx> {
 ///
 /// # See also:
 ///
-/// - [`RecFuncDecl`](struct.RecFuncDecl.html)
+/// - [`RecFuncDecl`]
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
@@ -152,7 +148,7 @@ pub struct FuncDecl<'ctx> {
 ///
 /// # See also:
 ///
-/// - [`FuncDecl::add_def`](struct.RecFuncDecl.html#method.add_def)
+/// - [`RecFuncDecl::add_def`]
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
 pub struct RecFuncDecl<'ctx> {
@@ -162,7 +158,7 @@ pub struct RecFuncDecl<'ctx> {
 
 pub use z3_sys::DeclKind;
 
-/// Build a custom [datatype sort](struct.DatatypeSort.html).
+/// Build a custom [datatype sort](DatatypeSort).
 ///
 /// Example:
 /// ```
@@ -209,7 +205,7 @@ pub enum DatatypeAccessor<'ctx> {
     Datatype(Symbol),
 }
 
-/// Inner variant for a custom [datatype sort](struct.DatatypeSort.html).
+/// Inner variant for a custom [datatype sort](DatatypeSort).
 #[derive(Debug)]
 pub struct DatatypeVariant<'ctx> {
     pub constructor: FuncDecl<'ctx>,

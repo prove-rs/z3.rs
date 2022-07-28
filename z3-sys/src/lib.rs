@@ -1219,7 +1219,7 @@ pub enum DeclKind {
     ///
     /// The function is logically the identity, but
     /// in the context of a register machine allows
-    /// for [`DeclKind::RA_UNION`](#variant.RA_UNION)
+    /// for [`DeclKind::RA_UNION`]
     /// to perform destructive updates to the first argument.
     RA_CLONE = generated::Z3_decl_kind::Z3_OP_RA_CLONE as u32,
     FD_CONSTANT = generated::Z3_decl_kind::Z3_OP_FD_CONSTANT as u32,

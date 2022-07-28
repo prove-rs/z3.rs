@@ -21,62 +21,62 @@ use num::bigint::BigInt;
 #[cfg(feature = "arbitrary-size-numeral")]
 use num::rational::BigRational;
 
-/// [`Ast`](trait.Ast.html) node representing a boolean value.
+/// [`Ast`] node representing a boolean value.
 pub struct Bool<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing an integer value.
+/// [`Ast`] node representing an integer value.
 pub struct Int<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing a real value.
+/// [`Ast`] node representing a real value.
 pub struct Real<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing a float value.
+/// [`Ast`] node representing a float value.
 pub struct Float<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing a string value.
+/// [`Ast`] node representing a string value.
 pub struct String<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing a bitvector value.
+/// [`Ast`] node representing a bitvector value.
 pub struct BV<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing an array value.
+/// [`Ast`] node representing an array value.
 /// An array in Z3 is a mapping from indices to values.
 pub struct Array<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing a set value.
+/// [`Ast`] node representing a set value.
 pub struct Set<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// [`Ast`](trait.Ast.html) node representing a datatype or enumeration value.
+/// [`Ast`] node representing a datatype or enumeration value.
 pub struct Datatype<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
 }
 
-/// A dynamically typed [`Ast`](trait.Ast.html) node.
+/// A dynamically typed [`Ast`] node.
 pub struct Dynamic<'ctx> {
     pub(crate) ctx: &'ctx Context,
     pub(crate) z3_ast: Z3_ast,
@@ -195,7 +195,7 @@ pub trait Ast<'ctx>: fmt::Debug {
     where
         Self: Sized;
 
-    /// Compare this `Ast` with another `Ast`, and get a [`Bool`](struct.Bool.html)
+    /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
     /// representing the result.
     ///
     /// This operation works with all possible `Ast`s (int, real, BV, etc), but the two
@@ -229,7 +229,7 @@ pub trait Ast<'ctx>: fmt::Debug {
         }
     }
 
-    /// Compare this `Ast` with a list of other `Ast`s, and get a [`Bool`](struct.Bool.html)
+    /// Compare this `Ast` with a list of other `Ast`s, and get a [`Bool`]
     /// which is true only if all arguments (including Self) are pairwise distinct.
     ///
     /// This operation works with all possible `Ast`s (int, real, BV, etc), but the
@@ -249,7 +249,7 @@ pub trait Ast<'ctx>: fmt::Debug {
         }
     }
 
-    /// Get the [`Sort`](../struct.Sort.html) of the `Ast`
+    /// Get the [`Sort`] of the `Ast`.
     fn get_sort(&self) -> Sort<'ctx> {
         unsafe {
             Sort::wrap(
@@ -569,7 +569,7 @@ impl<'ctx> Real<'ctx> {
 }
 
 impl<'ctx> Float<'ctx> {
-    // Create a 32-bit (IEEE-754) Float [`Ast`](trait.Ast.html) from a rust f32
+    // Create a 32-bit (IEEE-754) Float [`Ast`] from a rust f32
     pub fn from_f32(ctx: &'ctx Context, value: f32) -> Float<'ctx> {
         let sort = Sort::float32(ctx);
         unsafe {
@@ -579,7 +579,7 @@ impl<'ctx> Float<'ctx> {
         }
     }
 
-    // Create a 364-bit (IEEE-754) Float [`Ast`](trait.Ast.html) from a rust f64
+    // Create a 364-bit (IEEE-754) Float [`Ast`] from a rust f64
     pub fn from_f64(ctx: &'ctx Context, value: f64) -> Float<'ctx> {
         let sort = Sort::double(ctx);
         unsafe {
@@ -778,7 +778,7 @@ impl<'ctx> Int<'ctx> {
 
     /// Create a real from an integer.
     /// This is just a convenience wrapper around
-    /// [`Real::from_int`](struct.Real.html#method.from_int); see notes there
+    /// [`Real::from_int()`]; see notes there.
     pub fn to_real(&self) -> Real<'ctx> {
         Real::from_int(self)
     }
@@ -814,7 +814,7 @@ impl<'ctx> Int<'ctx> {
 
     /// Create a bitvector from an integer.
     /// This is just a convenience wrapper around
-    /// [`BV::from_int`](struct.BV.html#method.from_int); see notes there
+    /// [`BV::from_int()`]; see notes there.
     pub fn to_ast(&self, sz: u32) -> BV<'ctx> {
         BV::from_int(self, sz)
     }
@@ -903,7 +903,7 @@ impl<'ctx> Real<'ctx> {
 
     /// Create an integer from a real.
     /// This is just a convenience wrapper around
-    /// [`Int::from_real`](struct.Int.html#method.from_real); see notes there
+    /// [`Int::from_real()`]; see notes there.
     pub fn to_int(&self) -> Int<'ctx> {
         Int::from_real(self)
     }
@@ -945,7 +945,7 @@ impl<'ctx> Float<'ctx> {
         }
     }
 
-    // Create a 32-bit (IEEE-754) Float [`Ast`](trait.Ast.html)
+    /// Create a 32-bit (IEEE-754) Float [`Ast`].
     pub fn new_const_float32<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Float<'ctx> {
         let sort = Sort::float32(ctx);
         unsafe {
@@ -955,7 +955,7 @@ impl<'ctx> Float<'ctx> {
         }
     }
 
-    // Create a 64-bit (IEEE-754) Float [`Ast`](trait.Ast.html)
+    /// Create a 64-bit (IEEE-754) Float [`Ast`].
     pub fn new_const_double<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Float<'ctx> {
         let sort = Sort::double(ctx);
         unsafe {
@@ -1233,7 +1233,7 @@ impl<'ctx> BV<'ctx> {
 
     /// Create an integer from a bitvector.
     /// This is just a convenience wrapper around
-    /// [`Int::from_bv`](struct.Int.html#method.from_bv); see notes there
+    /// [`Int::from_bv()`]; see notes there.
     pub fn to_int(&self, signed: bool) -> Int<'ctx> {
         Int::from_bv(self, signed)
     }

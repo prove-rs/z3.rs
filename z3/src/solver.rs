@@ -47,14 +47,7 @@ impl<'ctx> Solver<'ctx> {
     /// if the result is `SatResult::Unknown`, but the returned model
     /// is not guaranteed to satisfy quantified assertions.
     ///
-    /// [model construction is enabled]: struct.Config.html#method.set_model_generation
-    /// [`Solver::assert()`]: #method.assert
-    /// [`Solver::assert_and_track()`]: #method.assert_and_track
-    /// [`Solver::get_model()`]: #method.get_model
-    /// [`Solver::pop()`]: #method.pop
-    /// [`Solver::push()`]: #method.push
-    /// [`Solver::reset()`]: #method.reset
-    ///
+    /// [model construction is enabled]: crate::Config::set_model_generation
     pub fn new(ctx: &'ctx Context) -> Solver<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx)) }
     }
@@ -88,13 +81,13 @@ impl<'ctx> Solver<'ctx> {
 
     /// Assert a constraint into the solver.
     ///
-    /// The functions [`Solver::check()`](#method.check) and
-    /// [`Solver::check_assumptions()`](#method.check_assumptions) should be
-    /// used to check whether the logical context is consistent or not.
+    /// The functions [`Solver::check()`] and [`Solver::check_assumptions()`]
+    /// should be used to check whether the logical context is consistent
+    /// or not.
     ///
     /// # See also:
     ///
-    /// - [`Solver::assert_and_track()`](#method.assert_and_track)
+    /// - [`Solver::assert_and_track()`]
     pub fn assert(&self, ast: &ast::Bool<'ctx>) {
         debug!("assert: {:?}", ast);
         unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
@@ -104,16 +97,16 @@ impl<'ctx> Solver<'ctx> {
     /// unsat) core using the Boolean constant `p`.
     ///
     /// This API is an alternative to
-    /// [`Solver::check_assumptions()`](#method.check_assumptions)
+    /// [`Solver::check_assumptions()`]
     /// for extracting unsat cores. Both APIs can be used in the same solver.
     /// The unsat core will contain a combination of the Boolean variables
-    /// provided using [`Solver::assert_and_track()`](#method.assert_and_track)
+    /// provided using [`Solver::assert_and_track()`]
     /// and the Boolean literals provided using
-    /// [`Solver::check_assumptions()`](#method.check_assumptions).
+    /// [`Solver::check_assumptions()`].
     ///
     /// # See also:
     ///
-    /// - [`Solver::assert()`](#method.assert)
+    /// - [`Solver::assert()`]
     pub fn assert_and_track(&self, ast: &ast::Bool<'ctx>, p: &ast::Bool<'ctx>) {
         debug!("assert_and_track: {:?}", ast);
         unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast, p.z3_ast) };
@@ -126,27 +119,27 @@ impl<'ctx> Solver<'ctx> {
 
     /// Check whether the assertions in a given solver are consistent or not.
     ///
-    /// The function [`Solver::get_model()`](#method.get_model)
+    /// The function [`Solver::get_model()`]
     /// retrieves a model if the assertions is satisfiable (i.e., the
-    /// result is `SatResult::Sat`) and [model construction is enabled].
+    /// result is [`SatResult::Sat`]) and [model construction is enabled].
     /// Note that if the call returns `SatResult::Unknown`, Z3 does not
-    /// ensure that calls to [`Solver::get_model()`](#method.get_model)
+    /// ensure that calls to [`Solver::get_model()`]
     /// succeed and any models produced in this case are not guaranteed
     /// to satisfy the assertions.
     ///
-    /// The function [`Solver::get_proof()`](#method.get_proof)
+    /// The function [`Solver::get_proof()`]
     /// retrieves a proof if [proof generation was enabled] when the context
     /// was created, and the assertions are unsatisfiable (i.e., the result
-    /// is `SatResult::Unsat`).
+    /// is [`SatResult::Unsat`]).
     ///
     /// # See also:
     ///
-    /// - [`Config::set_model_generation()`](struct.Config.html#method.set_model_generation)
-    /// - [`Config::set_proof_generation()`](struct.Config.html#method.set_proof_generation)
-    /// - [`Solver::check_assumptions()`](#method.check_assumptions)
+    /// - [`Config::set_model_generation()`](crate::Config::set_model_generation)
+    /// - [`Config::set_proof_generation()`](crate::Config::set_proof_generation)
+    /// - [`Solver::check_assumptions()`]
     ///
-    /// [model construction is enabled]: struct.Config.html#method.set_model_generation
-    /// [proof generation was enabled]: struct.Config.html#method.set_proof_generation
+    /// [model construction is enabled]: crate::Config::set_model_generation
+    /// [proof generation was enabled]: crate::Config::set_proof_generation
     pub fn check(&self) -> SatResult {
         match unsafe { Z3_solver_check(self.ctx.z3_ctx, self.z3_slv) } {
             Z3_L_FALSE => SatResult::Unsat,
@@ -159,14 +152,13 @@ impl<'ctx> Solver<'ctx> {
     /// Check whether the assertions in the given solver and
     /// optional assumptions are consistent or not.
     ///
-    /// The function
-    /// [`Solver::get_unsat_core()`](#method.get_unsat_core)
+    /// The function [`Solver::get_unsat_core()`]
     /// retrieves the subset of the assumptions used in the
     /// unsatisfiability proof produced by Z3.
     ///
     /// # See also:
     ///
-    /// - [`Solver::check()`](#method.check)
+    /// - [`Solver::check()`]
     pub fn check_assumptions(&self, assumptions: &[ast::Bool<'ctx>]) -> SatResult {
         let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
@@ -181,8 +173,9 @@ impl<'ctx> Solver<'ctx> {
 
     /// Return a subset of the assumptions provided to either the last
     ///
-    /// * `check_assumptions` call, or
-    /// * sequence of `assert_and_track` calls followed by a `check` call.
+    /// * [`Solver::check_assumptions`] call, or
+    /// * sequence of [`Solver::assert_and_track`] calls followed
+    ///   by a [`Solver::check`] call.
     ///
     /// These are the assumptions Z3 used in the unsatisfiability proof.
     /// Assumptions are available in Z3. They are used to extract unsatisfiable
@@ -192,8 +185,8 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Solver::check_assumptions`](#method.check_assumptions)
-    /// - [`Solver::assert_and_track`](#method.assert_and_track)
+    /// - [`Solver::check_assumptions`]
+    /// - [`Solver::assert_and_track`]
     pub fn get_unsat_core(&self) -> Vec<ast::Bool<'ctx>> {
         let z3_unsat_core = unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx, self.z3_slv) };
         if z3_unsat_core.is_null() {
@@ -219,7 +212,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Solver::pop()`](#method.pop)
+    /// - [`Solver::pop()`]
     pub fn push(&self) {
         unsafe { Z3_solver_push(self.ctx.z3_ctx, self.z3_slv) };
     }
@@ -228,13 +221,13 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Solver::push()`](#method.push)
+    /// - [`Solver::push()`]
     pub fn pop(&self, n: u32) {
         unsafe { Z3_solver_pop(self.ctx.z3_ctx, self.z3_slv, n) };
     }
 
-    /// Retrieve the model for the last [`Solver::check()`](#method.check)
-    /// or [`Solver::check_assumptions()`](#method.check_assumptions)
+    /// Retrieve the model for the last [`Solver::check()`]
+    /// or [`Solver::check_assumptions()`].
     ///
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if
@@ -243,8 +236,8 @@ impl<'ctx> Solver<'ctx> {
         Model::of_solver(self)
     }
 
-    /// Retrieve the proof for the last [`Solver::check()`](#method.check)
-    /// or [`Solver::check_assumptions()`](#method.check_assumptions)
+    /// Retrieve the proof for the last [`Solver::check()`]
+    /// or [`Solver::check_assumptions()`].
     ///
     /// The error handler is invoked if [proof generation is not enabled],
     /// or if the commands above were not invoked for the given solver,
@@ -252,9 +245,9 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Config::set_proof_generation()`](struct.Config.html#method.set_proof_generation)
+    /// - [`Config::set_proof_generation()`](crate::Config::set_proof_generation)
     ///
-    /// [proof generation is not enabled]: struct.Config.html#method.set_proof_generation
+    /// [proof generation is not enabled]: crate::Config::set_proof_generation
     //
     // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
     // have an Ast subtype for yet.
@@ -267,9 +260,9 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
-    /// Return a brief justification for an "unknown" result (i.e., `SatResult::Unknown`) for
-    /// the commands [`Solver::check()`](#method.check) and
-    /// [`Solver::check_assumptions()`](#method.check_assumptions)
+    /// Return a brief justification for an "unknown" result (i.e.,
+    /// [`SatResult::Unknown`]) for the commands [`Solver::check()`]
+    /// and [`Solver::check_assumptions()`].
     pub fn get_reason_unknown(&self) -> Option<String> {
         let p = unsafe { Z3_solver_get_reason_unknown(self.ctx.z3_ctx, self.z3_slv) };
         if p.is_null() {
