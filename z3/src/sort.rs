@@ -7,7 +7,6 @@ use FuncDecl;
 use Sort;
 use SortDiffers;
 use Symbol;
-use Z3_MUTEX;
 
 impl<'ctx> Sort<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_sort: Z3_sort) -> Sort<'ctx> {
@@ -16,7 +15,6 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn uninterpreted(ctx: &'ctx Context, name: Symbol) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 ctx,
@@ -26,47 +24,38 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn bool(ctx: &'ctx Context) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx)) }
     }
 
     pub fn int(ctx: &'ctx Context) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx)) }
     }
 
     pub fn real(ctx: &'ctx Context) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx)) }
     }
 
     pub fn float(ctx: &'ctx Context, ebits: u32, sbits: u32) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx, ebits, sbits)) }
     }
 
     pub fn float32(ctx: &'ctx Context) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx, 8, 24)) }
     }
 
     pub fn double(ctx: &'ctx Context) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx, 11, 53)) }
     }
 
     pub fn string(ctx: &'ctx Context) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx)) }
     }
 
     pub fn bitvector(ctx: &'ctx Context, sz: u32) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_bv_sort(ctx.z3_ctx, sz as ::std::os::raw::c_uint)) }
     }
 
     pub fn array(ctx: &'ctx Context, domain: &Sort<'ctx>, range: &Sort<'ctx>) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe {
             Self::wrap(
                 ctx,
@@ -76,7 +65,6 @@ impl<'ctx> Sort<'ctx> {
     }
 
     pub fn set(ctx: &'ctx Context, elt: &Sort<'ctx>) -> Sort<'ctx> {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort)) }
     }
 
@@ -119,8 +107,6 @@ impl<'ctx> Sort<'ctx> {
         name: Symbol,
         enum_names: &[Symbol],
     ) -> (Sort<'ctx>, Vec<FuncDecl<'ctx>>, Vec<FuncDecl<'ctx>>) {
-        let _guard = Z3_MUTEX.lock().unwrap();
-
         let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol(ctx)).collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
@@ -284,7 +270,6 @@ impl<'ctx> Sort<'ctx> {
 
 impl<'ctx> Clone for Sort<'ctx> {
     fn clone(&self) -> Self {
-        let _guard = Z3_MUTEX.lock().unwrap();
         unsafe { Self::wrap(self.ctx, self.z3_sort) }
     }
 }
