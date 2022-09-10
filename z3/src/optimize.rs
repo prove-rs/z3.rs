@@ -7,8 +7,8 @@ use Context;
 use Model;
 use Optimize;
 use SatResult;
+use Statistics;
 use Symbol;
-use Z3_MUTEX;
 
 #[cfg(feature = "arbitrary-size-numeral")]
 use num::{
@@ -17,28 +17,29 @@ use num::{
 };
 
 impl<'ctx> Optimize<'ctx> {
+    unsafe fn wrap(ctx: &'ctx Context, z3_opt: Z3_optimize) -> Optimize<'ctx> {
+        Z3_optimize_inc_ref(ctx.z3_ctx, z3_opt);
+        Optimize { ctx, z3_opt }
+    }
+
     /// Create a new optimize context.
     pub fn new(ctx: &'ctx Context) -> Optimize<'ctx> {
-        Optimize {
-            ctx,
-            z3_opt: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
-                let opt = Z3_mk_optimize(ctx.z3_ctx);
-                Z3_optimize_inc_ref(ctx.z3_ctx, opt);
-                opt
-            },
-        }
+        unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx)) }
+    }
+
+    /// Get this optimizers 's context.
+    pub fn get_context(&self) -> &'ctx Context {
+        self.ctx
     }
 
     /// Assert hard constraint to the optimization context.
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert_soft()`](#method.assert_soft)
-    /// - [`Optimize::maximize()`](#method.maximize)
-    /// - [`Optimize::minimize()`](#method.minimize)
+    /// - [`Optimize::assert_soft()`]
+    /// - [`Optimize::maximize()`]
+    /// - [`Optimize::minimize()`]
     pub fn assert(&self, ast: &impl Ast<'ctx>) {
-        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -48,16 +49,15 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert()`](#method.assert)
-    /// - [`Optimize::maximize()`](#method.maximize)
-    /// - [`Optimize::minimize()`](#method.minimize)
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::maximize()`]
+    /// - [`Optimize::minimize()`]
     pub fn assert_soft(&self, ast: &impl Ast<'ctx>, weight: impl Weight, group: Option<Symbol>) {
         let weight_string = weight.to_string();
         let weight_cstring = CString::new(weight_string).unwrap();
         let group = group
             .map(|g| g.as_z3_symbol(self.ctx))
-            .unwrap_or_else(|| std::ptr::null_mut());
-        let guard = Z3_MUTEX.lock().unwrap();
+            .unwrap_or_else(std::ptr::null_mut);
         unsafe {
             Z3_optimize_assert_soft(
                 self.ctx.z3_ctx,
@@ -73,10 +73,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert()`](#method.assert)
-    /// - [`Optimize::minimize()`](#method.minimize)
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::minimize()`]
     pub fn maximize(&self, ast: &impl Ast<'ctx>) {
-        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -84,10 +83,9 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::assert()`](#method.assert)
-    /// - [`Optimize::maximize()`](#method.maximize)
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::maximize()`]
     pub fn minimize(&self, ast: &impl Ast<'ctx>) {
-        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -95,13 +93,12 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// The optimize solver contains a set of rules, added facts and assertions.
     /// The set of rules, facts and assertions are restored upon calling
-    /// [`Optimize::pop()`](#method.pop).
+    /// [`Optimize::pop()`].
     ///
     /// # See also:
     ///
-    /// - [`Optimize::pop()`](#method.pop)
+    /// - [`Optimize::pop()`]
     pub fn push(&self) {
-        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_push(self.ctx.z3_ctx, self.z3_opt) };
     }
 
@@ -110,13 +107,12 @@ impl<'ctx> Optimize<'ctx> {
     /// # Preconditions:
     ///
     /// - The number of calls to [`Optimize::pop`] cannot exceed the number of calls to
-    ///   [`Optimize::push()`](#method.push).
+    ///   [`Optimize::push()`].
     ///
     /// # See also:
     ///
-    /// - [`Optimize::push()`](#method.push)
+    /// - [`Optimize::push()`]
     pub fn pop(&self) {
-        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_pop(self.ctx.z3_ctx, self.z3_opt) };
     }
 
@@ -124,9 +120,8 @@ impl<'ctx> Optimize<'ctx> {
     ///
     /// # See also:
     ///
-    /// - [`Optimize::get_model()`](#method.get_model)
+    /// - [`Optimize::get_model()`]
     pub fn check(&self, assumptions: &[Bool<'ctx>]) -> SatResult {
-        let guard = Z3_MUTEX.lock().unwrap();
         let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
             Z3_optimize_check(
@@ -143,21 +138,20 @@ impl<'ctx> Optimize<'ctx> {
         }
     }
 
-    /// Retrieve the model for the last [`Optimize::check()`](#method.check)
+    /// Retrieve the model for the last [`Optimize::check()`].
     ///
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given optimization
-    /// solver, or if the result was `Z3_L_FALSE`.
+    /// solver, or if the result was [`SatResult::Unsat`].
     pub fn get_model(&self) -> Option<Model<'ctx>> {
         Model::of_optimize(self)
     }
 
-    /// Retrieve the objectives for the last [`Optimize::check()`](#method.check)
+    /// Retrieve the objectives for the last [`Optimize::check()`].
     ///
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic<'ctx>> {
         let (z3_objectives, len) = unsafe {
-            let _guard = Z3_MUTEX.lock().unwrap();
             let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx, self.z3_opt);
             let len = Z3_ast_vector_size(self.ctx.z3_ctx, objectives);
             (objectives, len)
@@ -166,20 +160,17 @@ impl<'ctx> Optimize<'ctx> {
         let mut objectives = Vec::with_capacity(len as usize);
 
         for i in 0..len {
-            let elem = unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                Z3_ast_vector_get(self.ctx.z3_ctx, z3_objectives, i)
-            };
-            let elem = Dynamic::new(self.ctx, elem);
+            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx, z3_objectives, i) };
+            let elem = unsafe { Dynamic::wrap(self.ctx, elem) };
             objectives.push(elem);
         }
 
         objectives
     }
 
-    /// Retrieve a string that describes the last status returned by [`Optimize::check()`](#method.check).
+    /// Retrieve a string that describes the last status returned by [`Optimize::check()`].
     ///
-    /// Use this method when [`Optimize::check()`](#method.check) returns `SatResult::Unknown`.
+    /// Use this method when [`Optimize::check()`] returns [`SatResult::Unknown`].
     pub fn get_reason_unknown(&self) -> Option<String> {
         let p = unsafe { Z3_optimize_get_reason_unknown(self.ctx.z3_ctx, self.z3_opt) };
         if p.is_null() {
@@ -189,6 +180,16 @@ impl<'ctx> Optimize<'ctx> {
             .to_str()
             .ok()
             .map(|s| s.to_string())
+    }
+
+    /// Retrieve the statistics for the last [`Optimize::check()`].
+    pub fn get_statistics(&self) -> Statistics<'ctx> {
+        unsafe {
+            Statistics::wrap(
+                self.ctx,
+                Z3_optimize_get_statistics(self.ctx.z3_ctx, self.z3_opt),
+            )
+        }
     }
 }
 
@@ -213,7 +214,6 @@ impl<'ctx> fmt::Debug for Optimize<'ctx> {
 
 impl<'ctx> Drop for Optimize<'ctx> {
     fn drop(&mut self) {
-        let guard = Z3_MUTEX.lock().unwrap();
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx, self.z3_opt) };
     }
 }
@@ -224,7 +224,7 @@ impl<'ctx> Drop for Optimize<'ctx> {
 ///
 /// # See also:
 ///
-/// - [`Optimize::assert_soft()`](#method.assert_soft)
+/// - [`Optimize::assert_soft()`]
 pub trait Weight: private::Sealed {
     /// This is purposefully distinct from `ToString` to allow
     /// specifying a `to_string` for tuples.
@@ -236,22 +236,12 @@ macro_rules! impl_weight {
         $(
             impl Weight for $ty {
                 fn to_string(&self) -> String {
-                    #[allow(unused_comparisons)]
-                    let weight_valid: bool = *self >= 0;
-                    assert!(weight_valid, "Weight cannot be negative");
                     ToString::to_string(&self)
                 }
             }
 
             impl Weight for ($ty, $ty) {
                 fn to_string(&self) -> String {
-                    #[allow(unused_comparisons)]
-                    let num_valid: bool = self.0 >= 0;
-                    #[allow(unused_comparisons)]
-                    let denom_valid: bool = self.1 >= 0;
-                    assert!(num_valid, "Weight numerator cannot be negative");
-                    #[allow(unused_comparisons)]
-                    assert!(denom_valid, "Weight denominator cannot be negative");
                     format!("{} / {}", self.0, self.1)
                 }
             }

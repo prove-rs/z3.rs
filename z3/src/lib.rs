@@ -1,13 +1,12 @@
-#![allow(dead_code)]
-#![allow(unused_variables)]
+//! # Z3
+//!
+//! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
+
 #![allow(clippy::unreadable_literal)]
 #![deny(missing_debug_implementations)]
 
 #[macro_use]
 extern crate log;
-
-#[macro_use]
-extern crate lazy_static;
 
 extern crate z3_sys;
 
@@ -15,7 +14,6 @@ extern crate z3_sys;
 extern crate num;
 
 use std::ffi::CString;
-use std::sync::Mutex;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
@@ -24,7 +22,6 @@ mod config;
 mod context;
 pub mod datatype_builder;
 mod func_decl;
-mod rec_func_decl;
 mod goal;
 mod model;
 mod ops;
@@ -32,20 +29,20 @@ mod optimize;
 mod params;
 mod pattern;
 mod probe;
+mod rec_func_decl;
 mod solver;
 mod sort;
+mod statistics;
 mod symbol;
 mod tactic;
 
-// Z3 appears to be only mostly-threadsafe, a few initializers
-// and such race; so we mutex-guard all access to the library.
-lazy_static! {
-    static ref Z3_MUTEX: Mutex<()> = Mutex::new(());
-}
+pub use statistics::{StatisticsEntry, StatisticsValue};
 
-/// Configuration used to initialize [logical contexts].
+/// Configuration used to initialize [logical contexts](Context).
 ///
-/// [logical contexts]: struct.Context.html
+/// # See also:
+///
+/// - [`Context::new()`]
 #[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,
@@ -68,13 +65,22 @@ pub struct Config {
 /// let ctx = Context::new(&cfg);
 /// ```
 ///
-/// [`interrupt()`]: #method.interrupt
+/// # See also:
+///
+/// - [`Config`]
+/// - [`Context::new()`]
 #[derive(PartialEq, Eq, Debug)]
 pub struct Context {
     z3_ctx: Z3_context,
 }
 
 /// Handle that can be used to interrupt a computation from another thread.
+///
+/// # See also:
+///
+/// - [`Context::interrupt()`]
+/// - [`Context::handle()`]
+/// - [`ContextHandle::interrupt()`]
 #[derive(PartialEq, Eq, Debug)]
 pub struct ContextHandle<'ctx> {
     ctx: &'ctx Context,
@@ -87,7 +93,7 @@ pub enum Symbol {
     String(String),
 }
 
-/// Sorts represent the various 'types' of [`Ast`s](ast/trait.Ast.html).
+/// Sorts represent the various 'types' of [`Ast`s](ast::Ast).
 //
 // Note for in-crate users: Never construct a `Sort` directly; only use
 // `Sort::new()` which handles Z3 refcounting properly.
@@ -144,7 +150,7 @@ pub struct Optimize<'ctx> {
 ///
 /// # See also:
 ///
-/// - [`RecFuncDecl`](struct.RecFuncDecl.html)
+/// - [`RecFuncDecl`]
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
@@ -161,7 +167,7 @@ pub struct FuncDecl<'ctx> {
 ///
 /// # See also:
 ///
-/// - [`FuncDecl::add_def`](struct.RecFuncDecl.html#method.add_def)
+/// - [`RecFuncDecl::add_def`]
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
 pub struct RecFuncDecl<'ctx> {
@@ -171,7 +177,7 @@ pub struct RecFuncDecl<'ctx> {
 
 pub use z3_sys::DeclKind;
 
-/// Build a custom [datatype sort](struct.DatatypeSort.html).
+/// Build a custom [datatype sort](DatatypeSort).
 ///
 /// Example:
 /// ```
@@ -218,7 +224,7 @@ pub enum DatatypeAccessor<'ctx> {
     Datatype(Symbol),
 }
 
-/// Inner variant for a custom [datatype sort](struct.DatatypeSort.html).
+/// Inner variant for a custom [datatype sort](DatatypeSort).
 #[derive(Debug)]
 pub struct DatatypeVariant<'ctx> {
     pub constructor: FuncDecl<'ctx>,
@@ -229,7 +235,6 @@ pub struct DatatypeVariant<'ctx> {
 /// A custom datatype sort.
 #[derive(Debug)]
 pub struct DatatypeSort<'ctx> {
-    ctx: &'ctx Context,
     pub sort: Sort<'ctx>,
     pub variants: Vec<DatatypeVariant<'ctx>>,
 }
@@ -265,6 +270,23 @@ pub struct ApplyResult<'ctx> {
 }
 
 /// Basic building block for creating custom solvers for specific problem domains.
+///
+/// Z3 provides a variety of tactics, which can be queried via
+/// [`Tactic::list_all()`]. Individual tactics can be created via
+/// [`Tactic::new()`].
+///
+/// Various combinators are available to combine tactics:
+///
+/// - [`Tactic::repeat()`]
+/// - [`Tactic::try_for()`]
+/// - [`Tactic::and_then()`]
+/// - [`Tactic::or_else()`]
+/// - [`Tactic::probe_or_else()`]
+/// - [`Tactic::when()`]
+/// - [`Tactic::cond()`]
+///
+/// Finally, a solver utilizing a tactic can be created via
+/// [`Tactic::solver()`].
 pub struct Tactic<'ctx> {
     ctx: &'ctx Context,
     z3_tactic: Z3_tactic,
@@ -279,7 +301,21 @@ pub struct Goal<'ctx> {
 /// Function/predicate used to inspect a goal and collect information
 /// that may be used to decide which solver and/or preprocessing step
 /// will be used.
+///
+/// Z3 provides a variety of probes, which can be queried via
+/// [`Probe::list_all()`].
 pub struct Probe<'ctx> {
     ctx: &'ctx Context,
     z3_probe: Z3_probe,
+}
+
+/// Statistical data about a solver.
+///
+/// # See also:
+///
+/// - [`Optimize::get_statistics()`]
+/// - [`Solver::get_statistics()`]
+pub struct Statistics<'ctx> {
+    ctx: &'ctx Context,
+    z3_stats: Z3_stats,
 }

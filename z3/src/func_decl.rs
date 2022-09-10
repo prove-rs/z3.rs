@@ -4,9 +4,14 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
-use {Context, FuncDecl, Sort, Symbol, Z3_MUTEX};
+use {Context, FuncDecl, Sort, Symbol};
 
 impl<'ctx> FuncDecl<'ctx> {
+    pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
+        Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
+        Self { ctx, z3_func_decl }
+    }
+
     pub fn new<S: Into<Symbol>>(
         ctx: &'ctx Context,
         name: S,
@@ -19,7 +24,7 @@ impl<'ctx> FuncDecl<'ctx> {
         let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
 
         unsafe {
-            Self::from_raw(
+            Self::wrap(
                 ctx,
                 Z3_mk_func_decl(
                     ctx.z3_ctx,
@@ -30,14 +35,6 @@ impl<'ctx> FuncDecl<'ctx> {
                 ),
             )
         }
-    }
-
-    pub unsafe fn from_raw(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
-        let guard = Z3_MUTEX.lock().unwrap();
-
-        Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
-
-        Self { ctx, z3_func_decl }
     }
 
     /// Return the number of arguments of a function declaration.
@@ -67,23 +64,21 @@ impl<'ctx> FuncDecl<'ctx> {
 
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
 
-        ast::Dynamic::new(self.ctx, unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_mk_app(
-                self.ctx.z3_ctx,
-                self.z3_func_decl,
-                args.len().try_into().unwrap(),
-                args.as_ptr(),
-            )
-        })
+        unsafe {
+            ast::Dynamic::wrap(self.ctx, {
+                Z3_mk_app(
+                    self.ctx.z3_ctx,
+                    self.z3_func_decl,
+                    args.len().try_into().unwrap(),
+                    args.as_ptr(),
+                )
+            })
+        }
     }
 
     /// Return the `DeclKind` of this `FuncDecl`.
     pub fn kind(&self) -> DeclKind {
-        unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
-            Z3_get_decl_kind(self.ctx.z3_ctx, self.z3_func_decl)
-        }
+        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx, self.z3_func_decl) }
     }
 
     /// Return the name of this `FuncDecl`.
@@ -92,7 +87,6 @@ impl<'ctx> FuncDecl<'ctx> {
     /// the `Symbol`.
     pub fn name(&self) -> String {
         unsafe {
-            let guard = Z3_MUTEX.lock().unwrap();
             let z3_ctx = self.ctx.z3_ctx;
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl);
             match Z3_get_symbol_kind(z3_ctx, symbol) {

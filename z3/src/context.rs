@@ -4,13 +4,11 @@ use z3_sys::*;
 use Config;
 use Context;
 use ContextHandle;
-use Z3_MUTEX;
 
 impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
-                let guard = Z3_MUTEX.lock().unwrap();
                 let p = Z3_mk_context_rc(cfg.z3_cfg);
                 debug!("new context {:p}", p);
                 Z3_set_error_handler(p, None);
@@ -25,10 +23,13 @@ impl Context {
     }
 
     /// Obtain a handle that can be used to interrupt computation from another thread.
+    ///
+    /// # See also:
+    ///
+    /// - [`ContextHandle`]
+    /// - [`ContextHandle::interrupt()`]
     pub fn handle(&self) -> ContextHandle {
-        ContextHandle {
-            ctx: self
-        }
+        ContextHandle { ctx: self }
     }
 
     pub fn dump_smtlib<'ctx>(&'ctx self, formula: impl Ast<'ctx>) -> String {

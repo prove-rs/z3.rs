@@ -139,6 +139,24 @@ fn test_bitvectors() {
 }
 
 #[test]
+fn test_bitvector_from_str() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let a = ast::BV::new_const(&ctx, "a", 129);
+    // 2 ** 128
+    let b = ast::BV::from_str(&ctx, 129, "340282366920938463463374607431768211456").unwrap();
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&a._eq(&b));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let model = solver.get_model().unwrap();
+    let av = model.eval(&a, true).unwrap().to_string();
+    assert_eq!(av, "#b100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000".to_string());
+}
+
+#[test]
 fn test_floating_point_bits() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
@@ -495,7 +513,7 @@ fn test_rec_func_def() {
 
     let ctx = Context::new(&cfg);
 
-    let mut fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+    let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
@@ -539,7 +557,7 @@ fn test_rec_func_def_unsat() {
 
     let ctx = Context::new(&cfg);
 
-    let mut fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+    let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
@@ -580,6 +598,7 @@ fn test_rec_func_def_unsat() {
 }
 
 #[test]
+#[ignore = "See https://github.com/Z3Prover/z3/issues/5702"]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
@@ -904,7 +923,10 @@ fn check_application_of_tactic_to_goal() {
         "(goal\n  x\n  (>= (+ y 1) 2)\n  (>= y 1))"
     );
     let apply_results = repeat_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
 
     assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 1))");
@@ -1124,7 +1146,10 @@ fn test_tactic_skip() {
 
     let tactic = Tactic::create_skip(&ctx);
     let apply_results = tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a.clone(), b, a],);
 }
@@ -1162,7 +1187,10 @@ fn test_tactic_try_for() {
 
     // Test that `try_for` can successfully apply the underlying tactic
     let apply_results = try_for_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(format!("{}", goal_result), "(goal\n  (>= x 3))");
 }
@@ -1183,7 +1211,10 @@ fn test_tactic_and_then() {
     let tactic = Tactic::new(&ctx, "sat-preprocess");
     let and_then_tactic = tactic.and_then(&Tactic::new(&ctx, "simplify"));
     let apply_results = and_then_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
@@ -1205,7 +1236,10 @@ fn test_tactic_or_else() {
     let simplify = Tactic::new(&ctx, "simplify");
     let or_else_tactic = tactic.or_else(&simplify);
     let apply_results = or_else_tactic.apply(&goal, Some(&params));
-    let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas::<Bool>(), vec![a, b]);
 }
@@ -1227,7 +1261,10 @@ fn test_goal_apply_tactic() {
         let tactic = Tactic::new(&ctx, "sat-preprocess");
         let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
-        let goal_results = apply_results.unwrap().list_subgoals().collect::<Vec<Goal>>();
+        let goal_results = apply_results
+            .unwrap()
+            .list_subgoals()
+            .collect::<Vec<Goal>>();
         let goal_result = goal_results.first().unwrap();
         assert_eq!(
             goal_result.get_formulas::<Bool>(),
@@ -1251,7 +1288,7 @@ fn test_goal_apply_tactic() {
         vec![a.clone(), b.clone()],
     );
 
-    let a_implies_b = ast::Bool::implies(&a, &b);
+    let a_implies_b = ast::Bool::implies(&a, &b).simplify();
     let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
 
     let goal = Goal::new(&ctx, false, false, false);
@@ -1343,8 +1380,8 @@ fn test_probe_names() {
     let is_prop_probe = Probe::new(&ctx, "is-propositional");
     assert_eq!(0.0, is_prop_probe.apply(&g));
 
-    let is_prop_probe = Probe::new(&ctx, "is-qflia");
-    assert_eq!(1.0, is_prop_probe.apply(&g));
+    let is_qflia_probe = Probe::new(&ctx, "is-qflia");
+    assert_eq!(1.0, is_qflia_probe.apply(&g));
 }
 
 #[test]
