@@ -1,3 +1,5 @@
+use std::env;
+
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
 fn main() {
@@ -28,15 +30,21 @@ fn main() {
         "sort_kind",
         "symbol_kind",
     ] {
-        let enum_bindings = bindgen::Builder::default()
+        let mut enum_bindings = bindgen::Builder::default()
             .header(&header)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{}", x))
-            .allowlist_type(format!("Z3_{}", x))
-            .generate()
-            .expect("Unable to generate bindings");
+            .allowlist_type(format!("Z3_{}", x));
+        if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
+            enum_bindings = enum_bindings.clang_arg(format!(
+                "--sysroot={}/upstream/emscripten/cache/sysroot",
+                env::var("EMSDK").expect("$EMSDK env var missing. Is emscripten installed?")
+            ));
+        }
         enum_bindings
+            .generate()
+            .expect("Unable to generate bindings")
             .write_to_file(out_path.join(format!("{}.rs", x)))
             .expect("Couldn't write bindings!");
     }

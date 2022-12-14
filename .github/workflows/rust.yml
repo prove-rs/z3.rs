@@ -33,6 +33,21 @@ jobs:
       # See above.
       if: ${{ success() || failure() }}
 
+  build_on_wasm:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Install emscripten
+      run: |
+        git clone https://github.com/emscripten-core/emsdk.git
+        cd emsdk
+        git pull
+        ./emsdk install latest
+        ./emsdk activate latest
+        source ./emsdk_env.sh
+    - name: Build
+      run: cargo build -vv --all --target=wasm32-unknown-emscripten
+
   build_z3_statically:
     strategy:
       matrix:
