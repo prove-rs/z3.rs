@@ -68,6 +68,7 @@ impl<'ctx> Goal<'ctx> {
     }
 
     /// Copy a goal `g` from the context `source` to the context `target`.
+    #[allow(clippy::needless_lifetimes)]
     pub fn translate<'dest_ctx>(self, ctx: &'dest_ctx Context) -> Goal<'dest_ctx> {
         unsafe {
             Goal::wrap(
