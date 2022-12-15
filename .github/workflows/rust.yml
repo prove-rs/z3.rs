@@ -48,11 +48,15 @@ jobs:
     - name: Install wasm32-unknown-emscripten target
       run: rustup target add wasm32-unknown-emscripten
     - name: Build z3-sys with statically linked Z3
-      run: cargo build --target=wasm32-unknown-emscripten --manifest-path z3-sys/Cargo.toml -vv --features static-link-z3
+      run: |
+        source /emsdk/emsdk_env.sh
+        cargo build --target=wasm32-unknown-emscripten --manifest-path z3-sys/Cargo.toml -vv --features static-link-z3
       env:
         EMSDK: /emsdk
     - name: Build z3 with statically linked Z3
-      run: cargo build --target=wasm32-unknown-emscripten --manifest-path z3/Cargo.toml -vv --features static-link-z3
+      run: |
+        source /emsdk/emsdk_env.sh
+        cargo build --target=wasm32-unknown-emscripten --manifest-path z3/Cargo.toml -vv --features static-link-z3
       env:
         EMSDK: /emsdk
   build_z3_statically:
