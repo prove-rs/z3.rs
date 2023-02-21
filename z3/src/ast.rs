@@ -149,13 +149,13 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(context: &'ctx Context, values: &[&Self]) -> $retty {
-                assert!(values.iter().all(|v| v.get_ctx().z3_ctx == context.z3_ctx));
+            pub fn $f(ctx: &'ctx Context, values: &[&Self]) -> $retty {
+                assert!(values.iter().all(|v| v.get_ctx().z3_ctx == ctx.z3_ctx));
                 unsafe {
-                    <$retty>::wrap(context, {
+                    <$retty>::wrap(ctx, {
                         let tmp: Vec<_> = values.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
-                        $z3fn(context.z3_ctx, tmp.len() as u32, tmp.as_ptr())
+                        $z3fn(ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
                     })
                 }
             }
@@ -236,15 +236,15 @@ pub trait Ast<'ctx>: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(context: &'ctx Context, values: &[&Self]) -> Bool<'ctx>
+    fn distinct(ctx: &'ctx Context, values: &[&Self]) -> Bool<'ctx>
     where
         Self: Sized,
     {
         unsafe {
-            Bool::wrap(context, {
+            Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
                 let values: Vec<Z3_ast> = values.iter().map(|nodes| nodes.get_z3_ast()).collect();
-                Z3_mk_distinct(context.z3_ctx, values.len() as u32, values.as_ptr())
+                Z3_mk_distinct(ctx.z3_ctx, values.len() as u32, values.as_ptr())
             })
         }
     }
@@ -663,16 +663,16 @@ impl<'ctx> Bool<'ctx> {
         not(Z3_mk_not, Self);
     }
 
-    pub fn pb_le(context: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
+    pub fn pb_le(ctx: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
         unsafe {
-            Bool::wrap(context, {
+            Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
                 let (values, coefficients): (Vec<Z3_ast>, Vec<i32>) = values
                     .iter()
                     .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
                     .unzip();
                 Z3_mk_pble(
-                    context.z3_ctx,
+                    ctx.z3_ctx,
                     values.len() as u32,
                     values.as_ptr(),
                     coefficients.as_ptr(),
@@ -681,16 +681,16 @@ impl<'ctx> Bool<'ctx> {
             })
         }
     }
-    pub fn pb_ge(context: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
+    pub fn pb_ge(ctx: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
         unsafe {
-            Bool::wrap(context, {
+            Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
                 let (values, coefficients): (Vec<Z3_ast>, Vec<i32>) = values
                     .iter()
                     .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
                     .unzip();
                 Z3_mk_pbge(
-                    context.z3_ctx,
+                    ctx.z3_ctx,
                     values.len() as u32,
                     values.as_ptr(),
                     coefficients.as_ptr(),
@@ -699,16 +699,16 @@ impl<'ctx> Bool<'ctx> {
             })
         }
     }
-    pub fn pb_eq(context: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
+    pub fn pb_eq(ctx: &'ctx Context, values: &[(&Bool<'ctx>, i32)], k: i32) -> Bool<'ctx> {
         unsafe {
-            Bool::wrap(context, {
+            Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
                 let (values, coefficients): (Vec<Z3_ast>, Vec<i32>) = values
                     .iter()
                     .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
                     .unzip();
                 Z3_mk_pbeq(
-                    context.z3_ctx,
+                    ctx.z3_ctx,
                     values.len() as u32,
                     values.as_ptr(),
                     coefficients.as_ptr(),
