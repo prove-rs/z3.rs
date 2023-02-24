@@ -1537,3 +1537,22 @@ fn test_ast_safe_decl() {
         "ast node is not a function application, has kind Quantifier"
     );
 }
+
+//the intersection of "FOO"+"bar" and [a-z]+ is empty
+#[test]
+fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let s = ast::String::new_const(ctx, "s");
+
+    let re = ast::Regexp::intersect(ctx, &[
+        &ast::Regexp::concat(ctx, &[
+            &ast::Regexp::literal(ctx, "FOO"),
+            &ast::Regexp::literal(ctx, "bar")
+        ]),
+        &ast::Regexp::plus(&ast::Regexp::range(ctx, &'a', &'z'))
+    ]);
+    solver.assert(&s.regex_matches(&re));
+    assert!(solver.check() == SatResult::Unsat);
+}

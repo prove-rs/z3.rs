@@ -82,6 +82,33 @@ pub struct Dynamic<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`] node representing a regular expression.
+/// ```
+/// use z3::ast;
+/// use z3::{Config, Context, Solver, SatResult};
+///
+/// let cfg = Config::new();
+/// let ctx = &Context::new(&cfg);
+/// let solver = Solver::new(&ctx);
+/// let s = ast::String::new_const(ctx, "s");
+///
+/// // the regexp representing foo[a-c]*
+/// let a = ast::Regexp::concat(ctx, &[
+///     &ast::Regexp::literal(ctx, "foo"),
+///     &ast::Regexp::range(ctx, &'a', &'c').star()
+/// ]);
+/// // the regexp representing [a-z]+
+/// let b = ast::Regexp::range(ctx, &'a', &'z').plus();
+/// // intersection of a and b is non-empty
+/// let intersect = ast::Regexp::intersect(ctx, &[&a, &b]);
+/// solver.assert(&s.regex_matches(&intersect));
+/// assert!(solver.check() == SatResult::Sat);
+/// ```
+pub struct Regexp<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 macro_rules! unop {
     (
         $(
@@ -523,6 +550,7 @@ impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
 impl_from_try_into_dynamic!(Set, as_set);
+impl_ast!(Regexp);
 
 impl<'ctx> Int<'ctx> {
     #[cfg(feature = "arbitrary-size-numeral")]
@@ -1101,6 +1129,14 @@ impl<'ctx> String<'ctx> {
             } else {
                 Some(CStr::from_ptr(bytes).to_string_lossy().into_owned())
             }
+        }
+    }
+   
+    /// Checks if this string matches a `z3::ast::Regexp` 
+    pub fn regex_matches(&self, regex: &Regexp) -> Bool<'ctx> {
+        assert!(self.ctx == regex.ctx);
+        unsafe {
+            Bool::wrap(self.ctx, Z3_mk_seq_in_re(self.ctx.z3_ctx, self.get_z3_ast(), regex.get_z3_ast()))
         }
     }
 
@@ -1699,6 +1735,87 @@ impl<'ctx> Datatype<'ctx> {
             })
         }
     }
+}
+
+impl<'ctx> Regexp<'ctx> {
+    /// Creates a regular expression that recognizes the string given as parameter
+    pub fn literal(ctx: &'ctx Context, s: &str) -> Self {
+        unsafe {
+            Self::wrap(ctx, {
+                let c_str = CString::new(s).unwrap();
+                Z3_mk_seq_to_re(ctx.z3_ctx, Z3_mk_string(ctx.z3_ctx, c_str.as_ptr()))
+            })
+        }
+    }
+
+    /// Creates a regular expression that recognizes a character in the specificed range (e.g.
+    /// `[a-z]`)
+    pub fn range(ctx: &'ctx Context, lo: &char, hi: &char) -> Self {
+        unsafe {
+            Self::wrap(ctx, {
+                let lo_cs = CString::new(lo.to_string()).unwrap();
+                let hi_cs = CString::new(hi.to_string()).unwrap();
+                let lo_z3s = Z3_mk_string(ctx.z3_ctx, lo_cs.as_ptr());
+                Z3_inc_ref(ctx.z3_ctx, lo_z3s);
+                let hi_z3s = Z3_mk_string(ctx.z3_ctx, hi_cs.as_ptr());
+                Z3_inc_ref(ctx.z3_ctx, hi_z3s);
+                
+                let ret = Z3_mk_re_range(ctx.z3_ctx, lo_z3s, hi_z3s);
+                Z3_dec_ref(ctx.z3_ctx, lo_z3s);
+                Z3_dec_ref(ctx.z3_ctx, hi_z3s);
+                ret
+            })
+        }
+    }
+    
+    /// Creates a regular expression that recognizes this regular expression `lo` to `hi` times (e.g. `a{2,3}`)
+    pub fn r#loop(&self, lo: u32, hi: u32) -> Self {
+        unsafe {
+            Self::wrap(self.ctx, {
+                Z3_mk_re_loop(self.ctx.z3_ctx, self.z3_ast, lo, hi)
+            })
+        }
+    }
+
+    /// Creates a regular expression that recognizes all sequences
+    pub fn full(ctx: &'ctx Context) -> Self {
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_re_full(ctx.z3_ctx, Z3_mk_re_sort(ctx.z3_ctx, Z3_mk_string_sort(ctx.z3_ctx)))
+            })
+        }
+    }
+    
+    /// Creates a regular expression that doesn't recognize any sequences
+    pub fn empty(ctx: &'ctx Context) -> Self {
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_re_empty(ctx.z3_ctx, Z3_mk_re_sort(ctx.z3_ctx, Z3_mk_string_sort(ctx.z3_ctx)))
+            })
+        }
+    }
+
+    unop! {
+       /// Creates a regular expression that recognizes this regular expression one or more times (e.g. `a+`)
+       plus(Z3_mk_re_plus, Self); 
+       /// Creates a regular expression that recognizes this regular expression any number of times
+       /// (Kleene star, e.g. `a*`)
+       star(Z3_mk_re_star, Self);
+       /// Creates a regular expression that recognizes any sequence that this regular expression
+       /// doesn't 
+       complement(Z3_mk_re_complement, Self);
+    }
+    varop! {
+       /// Concatenates regular expressions
+        concat(Z3_mk_re_concat, Self);
+       /// Creates a regular expression that recognizes sequences that any of the regular
+       /// expressions given as parameters recognize
+        union(Z3_mk_re_union, Self);
+        /// Creates a regular expression that only recognizes sequences that all of the parameters
+        /// recognize 
+        intersect(Z3_mk_re_intersect, Self);
+    }
+
 }
 
 /// Create a universal quantifier.
