@@ -524,6 +524,12 @@ macro_rules! impl_from_try_into_dynamic {
             }
         }
 
+        impl<'ctx> From<&$ast<'ctx>> for Dynamic<'ctx> {
+            fn from(ast: &$ast<'ctx>) -> Self {
+                unsafe { Dynamic::wrap(ast.ctx, ast.z3_ast) }
+            }
+        }
+
         impl<'ctx> TryFrom<Dynamic<'ctx>> for $ast<'ctx> {
             type Error = std::string::String;
             fn try_from(ast: Dynamic<'ctx>) -> Result<Self, std::string::String> {
