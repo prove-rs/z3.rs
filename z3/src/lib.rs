@@ -168,8 +168,8 @@ pub struct FuncDecl<'ctx> {
 /// # See also:
 ///
 /// - [`RecFuncDecl::add_def`]
-// Note for in-crate users: Never construct a `FuncDecl` directly; only use
-// `FuncDecl::new()` which handles Z3 refcounting properly.
+// Note for in-crate users: Never construct a `RecFuncDecl` directly; only use
+// `RecFuncDecl::new()` which handles Z3 refcounting properly.
 pub struct RecFuncDecl<'ctx> {
     ctx: &'ctx Context,
     z3_func_decl: Z3_func_decl,
