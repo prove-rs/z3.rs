@@ -243,7 +243,8 @@ fn test_solver_new_from_smtlib2() {
 (assert (=( -(+(* 3 x) (* 2 y)) z) 1))
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
-    let solver = Solver::new_from_smtlib2(&ctx, problem.into());
+    let solver = Solver::new(&ctx);
+    solver.from_string(problem);
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -706,7 +707,8 @@ fn test_optimize_new_from_smtlib2() {
 (assert (=( -(+(* 3 x) (* 2 y)) z) 1))
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
-    let optimize = Optimize::new_from_smtlib2(&ctx, problem.into());
+    let optimize = Optimize::new(&ctx);
+    optimize.from_string(problem);
     assert_eq!(optimize.check(&[]), SatResult::Sat);
 }
 

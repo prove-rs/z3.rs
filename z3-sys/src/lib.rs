@@ -5566,7 +5566,7 @@ extern "C" {
     ///
     /// - [`Z3_solver_from_file`]
     /// - [`Z3_solver_to_string`]
-    pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, file_name: Z3_string);
+    pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, c_str: Z3_string);
 
     /// Return the set of asserted formulas on the solver.
     pub fn Z3_solver_get_assertions(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
