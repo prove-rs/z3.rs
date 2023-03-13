@@ -53,20 +53,13 @@ impl<'ctx> Solver<'ctx> {
     }
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
-    /// Add the parsed constraints and objectives to a new created solver context.
-    pub fn new_from_smtlib2(ctx: &'ctx Context, source_string: String) -> Solver<'ctx> {
+    /// Add the parsed constraints and objectives to the solver.
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
         let source_cstring = CString::new(source_string).unwrap();
-        Solver {
-            ctx,
-            z3_slv: unsafe {
-                let _guard = Z3_MUTEX.lock().unwrap();
-                let opt = Z3_mk_solver(ctx.z3_ctx);
-                Z3_solver_from_string(ctx.z3_ctx, opt, source_cstring.as_ptr());
-                opt
-            },
+        unsafe {
+            Z3_solver_from_string(self.ctx.z3_ctx, self.z3_slv, source_cstring.as_ptr());
         }
     }
-
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
