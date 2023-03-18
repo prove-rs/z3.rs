@@ -314,3 +314,25 @@ impl<'ctx> Drop for Solver<'ctx> {
         unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv) };
     }
 }
+
+impl<'ctx> Clone for Solver<'ctx> {
+    // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
+    fn clone(self: &Solver<'ctx>) -> Self {
+        unsafe {
+            let assertions = z3_sys::Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv);
+            Z3_ast_vector_inc_ref(self.ctx.z3_ctx, assertions);
+            let nr_assertions = z3_sys::Z3_ast_vector_size(self.ctx.z3_ctx, assertions);
+            let new_solver = z3_sys::Z3_mk_solver(self.ctx.z3_ctx);
+            Z3_solver_inc_ref(self.ctx.z3_ctx, new_solver);
+            for i in 0..nr_assertions {
+                let ast = z3_sys::Z3_ast_vector_get(self.ctx.z3_ctx, assertions, i);
+                z3_sys::Z3_solver_assert(self.ctx.z3_ctx, new_solver, ast);
+            }
+            Z3_ast_vector_dec_ref(self.ctx.z3_ctx, assertions);
+            Solver {
+                ctx: self.ctx,
+                z3_slv: new_solver,
+            }
+        }
+    }
+}
