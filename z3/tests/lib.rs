@@ -85,6 +85,36 @@ fn test_solving_for_model() {
 }
 
 #[test]
+fn test_solving_for_model_cloned() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+    let zero = ast::Int::from_i64(&ctx, 0);
+    let two = ast::Int::from_i64(&ctx, 2);
+    let seven = ast::Int::from_i64(&ctx, 7);
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&x.gt(&y));
+    solver.assert(&y.gt(&zero));
+    solver.assert(&y.rem(&seven)._eq(&two));
+    let x_plus_two = ast::Int::add(&ctx, &[&x, &two]);
+    solver.assert(&x_plus_two.gt(&seven));
+    let cloned = solver.clone();
+    assert_eq!(cloned.check(), SatResult::Sat);
+
+    let model = cloned.get_model().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
+    info!("x: {}", xv);
+    info!("y: {}", yv);
+    assert!(xv > yv);
+    assert!(yv % 7 == 2);
+    assert!(xv + 2 > 7);
+}
+
+#[test]
 fn test_cloning_ast() {
     let _ = env_logger::try_init();
     let cfg = Config::new();
