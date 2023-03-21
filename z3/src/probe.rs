@@ -30,7 +30,7 @@ impl<'ctx> Probe<'ctx> {
         ctx: &'ctx Context,
     ) -> impl Iterator<Item = std::result::Result<&'ctx str, Utf8Error>> {
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx) };
-        (0..p).into_iter().map(move |n| {
+        (0..p).map(move |n| {
             let t = unsafe { Z3_get_probe_name(ctx.z3_ctx, n) };
             unsafe { CStr::from_ptr(t) }.to_str()
         })

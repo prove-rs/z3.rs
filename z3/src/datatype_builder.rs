@@ -138,7 +138,7 @@ pub fn create_datatypes<'ctx>(
         unsafe { Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort)) };
         let sort = Sort { ctx, z3_sort };
 
-        let mut variants: Vec<DatatypeVariant<'ctx>> = Vec::with_capacity(num_cs as usize);
+        let mut variants: Vec<DatatypeVariant<'ctx>> = Vec::with_capacity(num_cs);
 
         for (j, (_cname, fs)) in datatype_builder.constructors.iter().enumerate() {
             let num_fs = fs.len();
