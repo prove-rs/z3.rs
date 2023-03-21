@@ -24,7 +24,7 @@ impl<'ctx> Probe<'ctx> {
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
     /// let probes: Vec<_> = Probe::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(probes.contains(&"is-qfbv"));
+    /// assert!(probes.contains(&"is-quasi-pb"));
     /// ```
     pub fn list_all(
         ctx: &'ctx Context,

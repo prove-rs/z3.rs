@@ -55,7 +55,7 @@ impl<'ctx> Tactic<'ctx> {
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
     /// let tactics: Vec<_> = Tactic::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(tactics.contains(&"nlsat"));
+    /// assert!(tactics.contains(&"ufbv"));
     /// ```
     pub fn list_all(
         ctx: &'ctx Context,
