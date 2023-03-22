@@ -7,6 +7,8 @@ use Model;
 use Optimize;
 use Solver;
 
+use crate::{FuncDecl, FuncInterp};
+
 impl<'ctx> Model<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_mdl: Z3_model) -> Model<'ctx> {
         Z3_model_inc_ref(ctx.z3_ctx, z3_mdl);
@@ -42,6 +44,61 @@ impl<'ctx> Model<'ctx> {
                 dest,
                 Z3_model_translate(self.ctx.z3_ctx, self.z3_mdl, dest.z3_ctx),
             )
+        }
+    }
+
+    /// Returns the interpretation of the given `ast` in the `Model`
+    /// Returns `None` if there is no interpretation in the `Model`
+    pub fn get_const_interp<T: Ast<'ctx>>(&self, ast: &T) -> Option<T> {
+        let func = ast.safe_decl().ok()?;
+
+        let ret =
+            unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx, self.z3_mdl, func.z3_func_decl) };
+        if ret.is_null() {
+            None
+        } else {
+            Some(unsafe { T::wrap(self.ctx, ret) })
+        }
+    }
+
+    pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp<'ctx>> {
+        if f.arity() == 0 {
+            let ret =
+                unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx, self.z3_mdl, f.z3_func_decl) };
+            if ret.is_null() {
+                None
+            } else {
+                let sort_kind = unsafe {
+                    Z3_get_sort_kind(
+                        self.ctx.z3_ctx,
+                        Z3_get_range(self.ctx.z3_ctx, f.z3_func_decl),
+                    )
+                };
+                match sort_kind {
+                    SortKind::Array => {
+                        if unsafe { Z3_is_as_array(self.ctx.z3_ctx, ret) } {
+                            let fd = unsafe {
+                                FuncDecl::wrap(
+                                    self.ctx,
+                                    Z3_get_as_array_func_decl(self.ctx.z3_ctx, ret),
+                                )
+                            };
+                            self.get_func_interp(&fd)
+                        } else {
+                            None
+                        }
+                    }
+                    _ => None,
+                }
+            }
+        } else {
+            let ret =
+                unsafe { Z3_model_get_func_interp(self.ctx.z3_ctx, self.z3_mdl, f.z3_func_decl) };
+            if ret.is_null() {
+                None
+            } else {
+                Some(unsafe { FuncInterp::wrap(self.ctx, ret) })
+            }
         }
     }
 
