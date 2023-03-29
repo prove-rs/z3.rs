@@ -126,6 +126,17 @@ impl<'ctx> Model<'ctx> {
             None
         }
     }
+
+    fn len(&self) -> u32 {
+        unsafe {
+            Z3_model_get_num_consts(self.ctx.z3_ctx, self.z3_mdl)
+                + Z3_model_get_num_funcs(self.ctx.z3_ctx, self.z3_mdl)
+        }
+    }
+
+    pub fn iter(&'ctx self) -> ModelIter<'ctx> {
+        self.into_iter()
+    }
 }
 
 impl<'ctx> fmt::Display for Model<'ctx> {
@@ -150,6 +161,62 @@ impl<'ctx> fmt::Debug for Model<'ctx> {
 impl<'ctx> Drop for Model<'ctx> {
     fn drop(&mut self) {
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
+    }
+}
+
+#[derive(Debug)]
+/// https://z3prover.github.io/api/html/classz3py_1_1_model_ref.html#a7890b7c9bc70cf2a26a343c22d2c8367
+pub struct ModelIter<'ctx> {
+    model: &'ctx Model<'ctx>,
+    idx: u32,
+    len: u32,
+}
+
+impl<'ctx> IntoIterator for &'ctx Model<'ctx> {
+    type Item = FuncDecl<'ctx>;
+    type IntoIter = ModelIter<'ctx>;
+
+    fn into_iter(self) -> Self::IntoIter {
+        ModelIter {
+            model: self,
+            idx: 0,
+            len: self.len(),
+        }
+    }
+}
+
+impl<'ctx> Iterator for ModelIter<'ctx> {
+    type Item = FuncDecl<'ctx>;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.idx >= self.len {
+            None
+        } else {
+            let num_consts =
+                unsafe { Z3_model_get_num_consts(self.model.ctx.z3_ctx, self.model.z3_mdl) };
+            if self.idx < num_consts {
+                let const_decl = unsafe {
+                    Z3_model_get_const_decl(self.model.ctx.z3_ctx, self.model.z3_mdl, self.idx)
+                };
+                self.idx += 1;
+                Some(unsafe { FuncDecl::wrap(self.model.ctx, const_decl) })
+            } else {
+                let func_decl = unsafe {
+                    Z3_model_get_func_decl(
+                        self.model.ctx.z3_ctx,
+                        self.model.z3_mdl,
+                        self.idx - num_consts,
+                    )
+                };
+                self.idx += 1;
+                Some(unsafe { FuncDecl::wrap(self.model.ctx, func_decl) })
+            }
+        }
+    }
+
+    fn size_hint(&self) -> (usize, Option<usize>) {
+        let len = (self.len - self.idx) as usize;
+        (len, Some(len))
     }
 }
 
