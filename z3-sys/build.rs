@@ -82,11 +82,10 @@ fn build_z3() {
             let target = std::env::var("TARGET").unwrap();
             if target.contains("msvc") {
                 None
-            } else if target.contains("apple") {
-                Some("c++".to_string())
-            } else if target.contains("freebsd") {
-                Some("c++".to_string())
-            } else if target.contains("openbsd") {
+            } else if target.contains("apple")
+                | target.contains("freebsd")
+                | target.contains("openbsd")
+            {
                 Some("c++".to_string())
             } else {
                 Some("stdc++".to_string())
