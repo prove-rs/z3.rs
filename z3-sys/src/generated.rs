@@ -7,7 +7,14 @@ macro_rules! declare_generated_mods {
             // code.
             #[allow(dead_code)]
             mod $mod_name {
-                include!(concat!("generated", "/", stringify!($mod_name), ".rs"));
+                #[cfg(target_os = "linux")]
+                include!(concat!("generated_linux", "/", stringify!($mod_name), ".rs"));
+                #[cfg(target_os = "windows")]
+                include!(concat!("generated_windows", "/", stringify!($mod_name), ".rs"));
+                #[cfg(target_os = "macos")]
+                include!(concat!("generated_macos", "/", stringify!($mod_name), ".rs"));
+                #[cfg(target_family = "wasm")]
+                include!(concat!("generated_linux", "/", stringify!($mod_name), ".rs"));
             }
         )*
     };

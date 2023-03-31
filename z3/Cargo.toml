@@ -17,7 +17,6 @@ repository = "https://github.com/prove-rs/z3.rs.git"
 default = []
 arbitrary-size-numeral = ["num"]
 static-link-z3 = ["z3-sys/static-link-z3"] # Locally build and statically link a fresh Z3 build.
-use-bindgen = ["z3-sys/use-bindgen"] # Generate fresh bindings with bindgen.
 dynamic-link-z3 = ["z3-sys/dynamic-link-z3"] # Dynamically link the system's Z3 installation.
 
 [dependencies]

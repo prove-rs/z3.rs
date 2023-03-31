@@ -1,2 +1,2 @@
 [workspace]
-members = ["z3", "z3-sys"]
+members = ["z3", "z3-sys", "z3-sys-bindgen"]

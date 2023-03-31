@@ -1,20 +1,16 @@
-#[cfg(feature = "use-bindgen")]
-const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
-
 #[cfg(not(feature = "dynamic-link-z3"))]
 #[cfg(not(feature = "static-link-z3"))]
-const Z3_RELEASE: &str = "z3-4.8.12";
+const Z3_RELEASE: &str = "z3-4.12.1";
 
 #[cfg(target_os = "windows")]
-const Z3_ARCH: &str = "x64-win";
+const ARCHIVE_FILENAME: &str = "z3-4.12.1-x64-win.zip";
 #[cfg(target_os = "linux")]
-const Z3_ARCH: &str = "x64-glibc-2.31";
+const ARCHIVE_FILENAME: &str = "z3-4.12.1-x64-glibc-2.35.zip";
+#[cfg(target_os = "macos")]
+const ARCHIVE_FILENAME: &str = "z3-4.12.1-x64-osx-10.16.zip";
 
 fn main() {
-    println!("cargo:rerun-if-changed=build.rs");
     get_z3();
-    #[cfg(feature = "use-bindgen")]
-    bindgen();
 }
 
 #[cfg(not(feature = "dynamic-link-z3"))]
@@ -22,45 +18,27 @@ fn main() {
 /// Use precompiled Z3 binaries.
 fn get_z3() {
     let out_dir = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
-    let archive_filename = format!("{}-{}", Z3_RELEASE, Z3_ARCH);
-    let archive_url = format!("https://github.com/Z3Prover/z3/releases/download/{}/{}.zip", Z3_RELEASE, archive_filename);
-    let archive_path = out_dir.join(format!("{}.zip", archive_filename));
-    let release_folder = out_dir.join(archive_filename);
+    let archive_url = format!("https://github.com/Z3Prover/z3/releases/download/{}/{}", Z3_RELEASE, ARCHIVE_FILENAME);
+    let archive_path = out_dir.join(ARCHIVE_FILENAME);
 
-    let curl = std::process::Command::new("curl")
-        .arg("-L")
-        .arg("-o")
-        .arg(&archive_path.to_str().unwrap())
-        .arg(&archive_url)
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-    assert!(curl.success());
+    // Download
+    {
+        let f = std::fs::File::create(&archive_path).unwrap();
+        let mut writer = std::io::BufWriter::new(f);
+        let response = ureq::get(&archive_url).call().unwrap();
+        assert_eq!(response.status(), 200);
+        let mut reader = response.into_reader();
+        std::io::copy(&mut reader, &mut writer).unwrap();
+    }
 
-    #[cfg(target_os = "windows")]
-    let tar = std::process::Command::new("tar")
-        .current_dir(archive_path.parent().unwrap())
-        .arg("-x")
-        .arg("-f")
-        .arg(&archive_path.to_str().unwrap())
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-
-    #[cfg(not(target_os = "windows"))]
-    let tar = std::process::Command::new("unzip")
-        .current_dir(archive_path.parent().unwrap())
-        .arg(&archive_path.to_str().unwrap())
-        .spawn()
-        .unwrap()
-        .wait()
-        .unwrap();
-    assert!(tar.success());
+    // Extract
+    let file = std::fs::File::open(&archive_path).unwrap();
+    let mut archive = zip::ZipArchive::new(file).unwrap();
+    archive.extract(&out_dir).unwrap();
+    let lib_dir = out_dir.join(archive_path.file_stem().unwrap());
 
     // Add lib folder to the library search path.
-    println!("cargo:rustc-link-search=native={}/bin", &release_folder.to_str().unwrap());
+    println!("cargo:rustc-link-search=native={}", lib_dir.join("bin").to_str().unwrap());
 }
 
 #[cfg(feature = "dynamic-link-z3")]
@@ -105,7 +83,7 @@ fn get_z3() {
         }
     };
 
-    let mut found_lib_dir = false;
+    let mut found_lib_dir = None;
     for lib_dir in &[
         "lib",
         // Fedora builds seem to use `lib64` rather than `lib` for 64-bit
@@ -121,14 +99,10 @@ fn get_z3() {
                 );
             }
             println!("cargo:rustc-link-search=native={}", full_lib_dir.display());
-            found_lib_dir = true;
+            found_lib_dir = Some(full_lib_dir);
             break;
         }
     }
-    assert!(
-        found_lib_dir,
-        "Should have found the lib directory for our built Z3"
-    );
 
     if let Some(cxx) = cxx {
         println!("cargo:rustc-link-lib={}", cxx);
@@ -160,50 +134,4 @@ fn get_z3() {
 
     // Add lib folder to the library search path.
     println!("cargo:rustc-link-search=native={}/lib", dst.to_str().unwrap());
-}
-
-#[cfg(feature = "use-bindgen")]
-fn bindgen() {
-    let header = if cfg!(feature = "static-link-z3") {
-        "z3/src/api/z3.h".to_string()
-    } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
-        header_path
-    } else {
-        "wrapper.h".to_string()
-    };
-    println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
-    println!("cargo:rerun-if-changed={}", header);
-    let out_path = std::path::PathBuf::from("generated".unwrap());
-
-    for x in &[
-        "ast_kind",
-        "ast_print_mode",
-        "decl_kind",
-        "error_code",
-        "goal_prec",
-        "param_kind",
-        "parameter_kind",
-        "sort_kind",
-        "symbol_kind",
-    ] {
-        let enum_bindings = bindgen::Builder::default()
-            .header(&header)
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
-            .generate_comments(false)
-            .rustified_enum(format!("Z3_{}", x))
-            .allowlist_type(format!("Z3_{}", x))
-            .generate()
-            .expect("Unable to generate bindings");
-
-        if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
-            enum_bindings = enum_bindings.clang_arg(format!(
-                "--sysroot={}/upstream/emscripten/cache/sysroot",
-                env::var("EMSDK").expect("$EMSDK env var missing. Is emscripten installed?")
-            ));
-        }
-
-        enum_bindings
-            .write_to_file(out_path.join(format!("{}.rs", x)))
-            .expect("Couldn't write bindings!");
-    }
 }

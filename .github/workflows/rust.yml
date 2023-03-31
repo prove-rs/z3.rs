@@ -2,21 +2,26 @@ name: Rust
 
 on:
   push:
-    branches: [ master, buildfix3.1 ]
+    branches: [ master, buildfix3.1, buildfix3.2 ]
   pull_request:
     branches: [ master ]
 
 env:
   CARGO_INCREMENTAL: 0
-  Z3_RELEASE: 'z3-4.8.12'
+  Z3_RELEASE: 'z3-4.12.1'
   RUST_BACKTRACE: 'full'
 
 jobs:
   build:
     strategy:
       matrix:
-        os: [ubuntu-latest, windows-latest]
+        os: [ubuntu-latest, windows-latest, macos-latest]
         link: [default, static, system]
+        exclude:
+        - os: ubuntu-latest
+          link: system
+        - os: macos-latest
+          link: system
     runs-on: ${{ matrix.os }}
     steps:
     - name: Checkout
@@ -36,22 +41,66 @@ jobs:
     - name: Install Z3 on Windows for system builds
       if: ${{ matrix.os == 'windows-latest' && matrix.link == 'system' }}
       run: |
-        curl.exe -L "https://github.com/Z3Prover/z3/releases/download/${env:Z3_RELEASE}/${env:Z3_RELEASE}-x64-win.zip" -o "./${env:Z3_RELEASE}-x64-win.zip"
-        tar -xf "./${env:Z3_RELEASE}-x64-win.zip"
-        echo "${PWD}\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_PATH
-        echo "LIB=${PWD}\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_ENV
+        mkdir .tmp
+        curl.exe -L "https://github.com/Z3Prover/z3/releases/download/${env:Z3_RELEASE}/${env:Z3_RELEASE}-x64-win.zip" -o ".tmp/${env:Z3_RELEASE}-x64-win.zip"
+        tar -xf ".tmp/${env:Z3_RELEASE}-x64-win.zip" -C ".tmp"
+        echo "${PWD}\.tmp\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_PATH
+        echo "LIB=${PWD}\.tmp\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_ENV
+        echo "Z3_SYS_Z3_HEADER=${PWD}\.tmp\${env:Z3_RELEASE}-x64-win\include\z3.h" >> $env:GITHUB_ENV
+
+    - name: Build with Z3 releases
+      if: ${{ matrix.link == 'default' }}
+      run: cargo build --workspace --all-targets
+
+    - name: Build with Z3 system installation
+      if: ${{ matrix.link == 'system'}}
+      run: cargo build --workspace --all-targets --features dynamic-link-z3
+
+    - name: Build with static Z3 builds
+      if: ${{ matrix.link == 'static' }}
+      run: cargo build --workspace --all-targets --features static-link-z3
+
+    - name: Mitigate cargo bug (https://github.com/rust-lang/cargo/issues/8531) by setting LD_LIBRARY_PATH
+      if: ${{ matrix.os == 'ubuntu-latest' && matrix.link  == 'default' }}
+      run: echo LD_LIBRARY_PATH=$(pwd)/$(find . -wholename './target/debug/build/z3-sys-*/out/z3-*-x64-glibc-*/bin') >> $GITHUB_ENV
+
+    - name: Mitigate cargo bug (https://github.com/rust-lang/cargo/issues/8531) by setting LD_LIBRARY_PATH
+      if: ${{ matrix.os == 'macos-latest' && matrix.link  == 'default' }}
+      run: echo LD_LIBRARY_PATH=$(pwd)/$(find . -wholename './target/debug/build/z3-sys-*/out/z3-*-x64-osx-*/bin') >> $GITHUB_ENV
+
+    - name: Mitigate cargo bug (https://github.com/rust-lang/cargo/issues/8531) by setting PATH
+      if: ${{ matrix.os == 'windows-latest' && matrix.link  == 'default' }}
+      run: echo (get-item ".\target\debug\build\z3-sys-*\out\z3-*-x64-win\bin").FullName >> $env:GITHUB_PATH
 
     - name: Test with Z3 releases
       if: ${{ matrix.link  == 'default' }}
-      run: cargo test --lib -vv
+      run: cargo test -vv
 
     - name: Test with Z3 system installation
       if: ${{ matrix.link == 'system' }}
-      run: cargo test --lib -vv --features dynamic-link-z3
+      run: cargo test -vv --features dynamic-link-z3
 
     - name: Test with static Z3 builds
       if: ${{ matrix.link  == 'static' }}
-      run: cargo test --lib -vv --features static-link-z3
+      run: cargo test -vv --features static-link-z3
+
+    - name: Assert bindgen correctness for system builds
+      if: ${{ matrix.link == 'system'}}
+      run: |
+        cargo run -p z3-sys-bindgen -- z3-sys/wrapper.h
+        git status && git add . && git diff --cached --exit-code
+
+    - name: Assert bindgen correctness for default builds
+      if: ${{ matrix.link == 'default' }}
+      run: |
+        cargo run -p z3-sys-bindgen -- $(find . -wholename './target/debug/build/z3-sys-*/out/z3-*-x64-*-*/include/z3.h')
+        git status && git add . && git diff --cached --exit-code
+
+    - name: Assert bindgen correctness for static builds
+      if: ${{ matrix.link == 'static' }}
+      run: |
+        cargo run -p z3-sys-bindgen -- z3-sys/z3/src/api/z3.h
+        git status && git add . && git diff --cached --exit-code
 
   build_on_wasm:
     runs-on: ubuntu-latest
@@ -76,11 +125,7 @@ jobs:
         source ./emsdk_env.sh
     - name: Install wasm32-unknown-emscripten target
       run: rustup target add wasm32-unknown-emscripten
-    - name: Build z3-sys with statically linked Z3
+    - name: Build z3 and z3-sys with statically linked Z3
       run: |
         source ~/emsdk/emsdk_env.sh
-        cargo build --target=wasm32-unknown-emscripten --manifest-path z3-sys/Cargo.toml -vv --features static-link-z3
-    - name: Build z3 with statically linked Z3
-      run: |
-        source ~/emsdk/emsdk_env.sh
-        cargo build --target=wasm32-unknown-emscripten --manifest-path z3/Cargo.toml -vv --features static-link-z3
+        cargo build --target=wasm32-unknown-emscripten -vv -p z3 -p z3-sys --features static-link-z3
