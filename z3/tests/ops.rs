@@ -225,7 +225,7 @@ fn test_ast_children() {
 
 fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
     assert_eq!(expr.kind(), AstKind::App);
-    assert_eq!(expr.is_app(), true);
+    assert!(expr.is_app());
     assert_eq!(expr.is_const(), is_const);
 }
 

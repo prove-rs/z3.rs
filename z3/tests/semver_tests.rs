@@ -30,10 +30,7 @@ impl Spec {
 type SpecMap = HashMap<String, Vec<Spec>>;
 
 fn get_version(sm: &SpecMap, pkg: &str, ver: usize) -> Option<Version> {
-    match sm.get(pkg) {
-        None => None,
-        Some(specs) => Some(specs[ver].vers.clone()),
-    }
+    sm.get(pkg).map(|specs| specs[ver].vers.clone())
 }
 
 fn first_version_req_index(sm: &SpecMap, pkg: &str, req: &VersionReq) -> Option<usize> {
@@ -191,7 +188,7 @@ fn test_solve_simple_semver_example() {
     ));
 
     // Ensure we have a constant for every pkg _or_ dep listed
-    for k in (&smap).keys() {
+    for k in (smap).keys() {
         asts.entry(k.clone()).or_insert_with(|| {
             info!("new AST for {}", k);
             ast::Int::fresh_const(&ctx, "pkg")
@@ -199,7 +196,7 @@ fn test_solve_simple_semver_example() {
     }
     for specs in smap.values() {
         for spec in specs {
-            for r in (&spec).reqs.keys() {
+            for r in (spec).reqs.keys() {
                 asts.entry(r.clone()).or_insert_with(|| {
                     info!("new AST for {}", r);
                     ast::Int::fresh_const(&ctx, "dep-pkg")
@@ -223,10 +220,10 @@ fn test_solve_simple_semver_example() {
                             "Asserting: {} == #{} {} => {} >= #{} {}",
                             k,
                             n,
-                            get_version(&smap, k, n as usize).unwrap(),
+                            get_version(&smap, k, n).unwrap(),
                             r,
                             low,
-                            get_version(&smap, r, low as usize).unwrap()
+                            get_version(&smap, r, low).unwrap()
                         );
                         opt.assert(
                             &k_ast
@@ -242,10 +239,10 @@ fn test_solve_simple_semver_example() {
                             "Asserting: {} == #{} {} => {} <= #{} {}",
                             k,
                             n,
-                            get_version(&smap, k, n as usize).unwrap(),
+                            get_version(&smap, k, n).unwrap(),
                             r,
                             high,
-                            get_version(&smap, r, high as usize).unwrap()
+                            get_version(&smap, r, high).unwrap()
                         );
                         opt.assert(
                             &k_ast
