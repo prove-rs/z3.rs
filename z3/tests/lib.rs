@@ -181,8 +181,8 @@ fn test_floating_point_bits() {
     assert!(sig64 == Some(53));
     assert!(exp128 == Some(15));
     assert!(sig128 == Some(113));
-    assert!(expi == None);
-    assert!(sigi == None);
+    assert!(expi.is_none());
+    assert!(sigi.is_none());
 }
 
 #[test]
@@ -361,7 +361,7 @@ fn test_float_add() {
 
     let x = ast::Float::new_const_float32(&ctx, "x");
     let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
-    let y = ast::Float::from_f32(&ctx, 3.14);
+    let y = ast::Float::from_f32(&ctx, std::f32::consts::PI);
 
     solver.assert(&x_plus_one._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
@@ -994,12 +994,12 @@ fn test_goal_is_inconsistent() {
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&false_bool);
-    assert_eq!(goal.is_inconsistent(), true);
+    assert!(goal.is_inconsistent());
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&true_bool);
-    assert_eq!(goal.is_inconsistent(), false);
+    assert!(!goal.is_inconsistent());
 }
 
 #[test]
@@ -1010,14 +1010,14 @@ fn test_goal_is_sat() {
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&false_bool);
-    assert_eq!(goal.is_decided_sat(), false);
-    assert_eq!(goal.is_decided_unsat(), true);
+    assert!(!goal.is_decided_sat());
+    assert!(goal.is_decided_unsat());
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&true_bool);
-    assert_eq!(goal.is_decided_unsat(), false);
-    assert_eq!(goal.is_decided_sat(), true);
+    assert!(!goal.is_decided_unsat());
+    assert!(goal.is_decided_sat());
 }
 
 #[test]
@@ -1255,10 +1255,10 @@ fn test_goal_apply_tactic() {
         after_formulas: Vec<Bool>,
     ) {
         assert_eq!(goal.get_formulas::<Bool>(), before_formulas);
-        let params = Params::new(&ctx);
+        let params = Params::new(ctx);
 
-        let tactic = Tactic::new(&ctx, "sat-preprocess");
-        let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
+        let tactic = Tactic::new(ctx, "sat-preprocess");
+        let repeat_tactic = Tactic::repeat(ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
         let goal_results = apply_results
             .unwrap()
@@ -1525,11 +1525,11 @@ fn test_ast_safe_decl() {
     let x_not = x.not();
     assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
 
-    let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
-    let x = ast::Int::new_const(&ctx, "x");
+    let f = FuncDecl::new(ctx, "f", &[&Sort::int(ctx)], &Sort::int(ctx));
+    let x = ast::Int::new_const(ctx, "x");
     let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-    let f_x_pattern: Pattern = Pattern::new(&ctx, &[&f_x]);
-    let forall = ast::forall_const(&ctx, &[&x], &[&f_x_pattern], &x._eq(&f_x));
+    let f_x_pattern: Pattern = Pattern::new(ctx, &[&f_x]);
+    let forall = ast::forall_const(ctx, &[&x], &[&f_x_pattern], &x._eq(&f_x));
     assert!(forall.safe_decl().is_err());
     assert_eq!(
         format!("{}", forall.safe_decl().err().unwrap()),
@@ -1542,7 +1542,7 @@ fn test_ast_safe_decl() {
 fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
     let cfg = Config::new();
     let ctx = &Context::new(&cfg);
-    let solver = Solver::new(&ctx);
+    let solver = Solver::new(ctx);
     let s = ast::String::new_const(ctx, "s");
 
     let re = ast::Regexp::intersect(
