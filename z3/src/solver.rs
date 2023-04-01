@@ -171,6 +171,18 @@ impl<'ctx> Solver<'ctx> {
         }
     }
 
+    // Return a vector of assumptions in the solver.
+    pub fn get_assertions(&self) -> Vec<ast::Bool> {
+        let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
+
+        (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_vec) })
+            .map(|i| unsafe {
+                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx, z3_vec, i);
+                ast::Bool::wrap(self.ctx, z3_ast)
+            })
+            .collect()
+    }
+
     /// Return a subset of the assumptions provided to either the last
     ///
     /// * [`Solver::check_assumptions`] call, or
@@ -318,21 +330,12 @@ impl<'ctx> Drop for Solver<'ctx> {
 impl<'ctx> Clone for Solver<'ctx> {
     // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
     fn clone(self: &Solver<'ctx>) -> Self {
-        unsafe {
-            let assertions = z3_sys::Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv);
-            Z3_ast_vector_inc_ref(self.ctx.z3_ctx, assertions);
-            let nr_assertions = z3_sys::Z3_ast_vector_size(self.ctx.z3_ctx, assertions);
-            let new_solver = z3_sys::Z3_mk_solver(self.ctx.z3_ctx);
-            Z3_solver_inc_ref(self.ctx.z3_ctx, new_solver);
-            for i in 0..nr_assertions {
-                let ast = z3_sys::Z3_ast_vector_get(self.ctx.z3_ctx, assertions, i);
-                z3_sys::Z3_solver_assert(self.ctx.z3_ctx, new_solver, ast);
-            }
-            Z3_ast_vector_dec_ref(self.ctx.z3_ctx, assertions);
-            Solver {
-                ctx: self.ctx,
-                z3_slv: new_solver,
-            }
-        }
+        let new_solver = Solver::new(self.ctx);
+
+        self.get_assertions().iter().for_each(|a| {
+            new_solver.assert(a);
+        });
+
+        new_solver
     }
 }
