@@ -14,14 +14,17 @@ impl<'ctx> FuncInterp<'ctx> {
         }
     }
 
+    /// Returns the number of arguments in the function interpretation.
     pub fn get_arity(&self) -> usize {
         unsafe { Z3_func_interp_get_arity(self.ctx.z3_ctx, self.z3_func_interp) as usize }
     }
 
+    /// Returns the number of entries in the function interpretation.
     pub fn get_num_entries(&self) -> u32 {
         unsafe { Z3_func_interp_get_num_entries(self.ctx.z3_ctx, self.z3_func_interp) }
     }
 
+    /// Adds an entry to the function interpretation.
     pub fn add_entry(&self, args: &[Dynamic<'ctx>], value: &Dynamic<'ctx>) {
         unsafe {
             let v = Z3_mk_ast_vector(self.ctx.z3_ctx);
@@ -33,6 +36,7 @@ impl<'ctx> FuncInterp<'ctx> {
         }
     }
 
+    /// Returns the entries of the function interpretation.
     pub fn get_entries(&self) -> Vec<FuncEntry> {
         (0..self.get_num_entries())
             .map(|i| unsafe {
@@ -44,6 +48,8 @@ impl<'ctx> FuncInterp<'ctx> {
             .collect()
     }
 
+    /// Returns the else value of the function interpretation.
+    /// Returns None if the else value is not set by Z3.
     pub fn get_else(&self) -> Dynamic<'ctx> {
         unsafe {
             Dynamic::wrap(
@@ -53,6 +59,7 @@ impl<'ctx> FuncInterp<'ctx> {
         }
     }
 
+    /// Sets the else value of the function interpretation.
     pub fn set_else(&self, ast: &Dynamic) {
         unsafe { Z3_func_interp_set_else(self.ctx.z3_ctx, self.z3_func_interp, ast.z3_ast) }
     }

@@ -61,6 +61,8 @@ impl<'ctx> Model<'ctx> {
         }
     }
 
+    /// Returns the interpretation of the given `f` in the `Model`
+    /// Returns `None` if there is no interpretation in the `Model`
     pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp<'ctx>> {
         if f.arity() == 0 {
             let ret =

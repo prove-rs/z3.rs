@@ -11,6 +11,7 @@ impl<'ctx> FuncEntry<'ctx> {
         Self { ctx, z3_func_entry }
     }
 
+    /// Returns the value of the function.
     pub fn get_value(&self) -> Dynamic {
         unsafe {
             Dynamic::wrap(
@@ -20,10 +21,12 @@ impl<'ctx> FuncEntry<'ctx> {
         }
     }
 
+    /// Returns the number of arguments in the function entry.
     pub fn get_num_args(&self) -> u32 {
         unsafe { Z3_func_entry_get_num_args(self.ctx.z3_ctx, self.z3_func_entry) }
     }
 
+    /// Returns the arguments of the function entry.
     pub fn get_args(&self) -> Vec<Dynamic> {
         (0..self.get_num_args())
             .map(|i| unsafe {
