@@ -6,7 +6,7 @@ extern crate z3;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{Ast, Bool};
+use z3::ast::{Array, Ast, Bool, Int, BV};
 use z3::*;
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -1545,13 +1545,112 @@ fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
     let solver = Solver::new(&ctx);
     let s = ast::String::new_const(ctx, "s");
 
-    let re = ast::Regexp::intersect(ctx, &[
-        &ast::Regexp::concat(ctx, &[
-            &ast::Regexp::literal(ctx, "FOO"),
-            &ast::Regexp::literal(ctx, "bar")
-        ]),
-        &ast::Regexp::plus(&ast::Regexp::range(ctx, &'a', &'z'))
-    ]);
+    let re = ast::Regexp::intersect(
+        ctx,
+        &[
+            &ast::Regexp::concat(
+                ctx,
+                &[
+                    &ast::Regexp::literal(ctx, "FOO"),
+                    &ast::Regexp::literal(ctx, "bar"),
+                ],
+            ),
+            &ast::Regexp::plus(&ast::Regexp::range(ctx, &'a', &'z')),
+        ],
+    );
     solver.assert(&s.regex_matches(&re));
     assert!(solver.check() == SatResult::Unsat);
+}
+
+#[test]
+/// https://github.com/Z3Prover/z3/blob/21e59f7c6e5033006265fc6bc16e2c9f023db0e8/examples/dotnet/Program.cs#L329-L370
+fn test_array_example1() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+
+    let g = Goal::new(ctx, true, false, false);
+
+    let aex = Array::new_const(ctx, "MyArray", &Sort::int(ctx), &Sort::bitvector(ctx, 32));
+
+    let sel = aex.select(&Int::from_u64(ctx, 0));
+
+    g.assert(&sel._eq(&BV::from_u64(ctx, 42, 32).into()));
+
+    let xc = Int::new_const(ctx, "x");
+
+    let fd = FuncDecl::new(ctx, "f", &[&Sort::int(ctx)], &Sort::int(ctx));
+
+    let fapp = fd.apply(&[&xc as &dyn Ast]);
+
+    g.assert(&Int::from_u64(ctx, 123)._eq(&xc.clone().add(&fapp.as_int().unwrap())));
+
+    let s = &Solver::new(ctx);
+    for a in g.get_formulas() {
+        s.assert(&a);
+    }
+    println!("Solver: {}", s);
+
+    let q = s.check();
+    println!("Status: {:?}", q);
+
+    if q != SatResult::Sat {
+        panic!("Solver did not return sat");
+    }
+
+    let model = s.get_model().unwrap();
+
+    assert!(
+        model.to_string()
+            == "MyArray -> ((as const (Array Int (_ BitVec 32))) #x0000002a)\nx -> 0\nf -> {\n  123\n}\n"
+    );
+
+    assert!(
+        model.get_const_interp(&aex).unwrap().to_string()
+            == "((as const (Array Int (_ BitVec 32))) #x0000002a)"
+    );
+
+    assert!(model.get_const_interp(&xc).unwrap().to_string() == "0");
+
+    assert!(model.get_func_interp(&fd).unwrap().to_string() == "[else -> 123]");
+}
+
+#[test]
+/// https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html
+fn return_number_args_in_given_entry() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let f = FuncDecl::new(
+        ctx,
+        "f",
+        &[&Sort::int(ctx), &Sort::int(ctx)],
+        &Sort::int(ctx),
+    );
+
+    let solver = Solver::new(ctx);
+    solver.assert(
+        &f.apply(&[&Int::from_u64(ctx, 0), &Int::from_u64(ctx, 1)])
+            ._eq(&Int::from_u64(ctx, 10).into()),
+    );
+    solver.assert(
+        &f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 2)])
+            ._eq(&Int::from_u64(ctx, 20).into()),
+    );
+    solver.assert(
+        &f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 0)])
+            ._eq(&Int::from_u64(ctx, 10).into()),
+    );
+
+    assert!(solver.check() == SatResult::Sat);
+
+    let model = solver.get_model().unwrap();
+    let f_i = model.get_func_interp(&f).unwrap();
+    assert!(f_i.get_num_entries() == 1);
+    let e = &f_i.get_entries()[0];
+    assert!(e.to_string() == "[1, 2, 20]");
+    assert!(e.get_num_args() == 2);
+    assert!(e.get_args()[0].to_string() == "1");
+    assert!(e.get_args()[1].to_string() == "2");
+    assert!(e.get_args().get(2).is_none());
+
+    assert!(model.to_string() == "f -> {\n  1 2 -> 20\n  else -> 10\n}\n");
 }
