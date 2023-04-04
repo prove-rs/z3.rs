@@ -1684,3 +1684,60 @@ fn return_number_args_in_given_entry() {
 
     assert!(model.to_string() == "f -> {\n  1 2 -> 20\n  else -> 10\n}\n");
 }
+
+#[test]
+/// https://stackoverflow.com/questions/13395391/z3-finding-all-satisfying-models
+fn iterate_all_solutions() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let a = &Int::new_const(ctx, "a");
+    let b = &Int::new_const(ctx, "b");
+    let one = Int::from_u64(ctx, 1);
+    let two = Int::from_u64(ctx, 2);
+    let five = &Int::from_u64(ctx, 5);
+
+    solver.assert(&one.le(a));
+    solver.assert(&a.le(five));
+    solver.assert(&one.le(b));
+    solver.assert(&b.le(five));
+    solver.assert(&a.ge(&(two * b)));
+
+    let mut solutions = std::collections::HashSet::new();
+    while solver.check() == SatResult::Sat {
+        let model = solver.get_model().unwrap();
+        let mut modifications = Vec::new();
+        let this_solution = model
+            .iter()
+            .map(|fd| {
+                modifications.push(
+                    fd.apply(&[])
+                        ._eq(&model.get_const_interp(&fd.apply(&[])).unwrap())
+                        .not(),
+                );
+                format!(
+                    "{} = {}",
+                    fd.name(),
+                    model.get_const_interp(&fd.apply(&[])).unwrap()
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        solutions.insert(format!("[{this_solution}]"));
+        solver.assert(&Bool::or(ctx, &modifications.iter().collect::<Vec<_>>()));
+    }
+
+    assert!(
+        solutions
+            == vec![
+                "[b = 1, a = 2]".to_string(),
+                "[b = 2, a = 4]".to_string(),
+                "[b = 1, a = 3]".to_string(),
+                "[b = 2, a = 5]".to_string(),
+                "[b = 1, a = 4]".to_string(),
+                "[b = 1, a = 5]".to_string()
+            ]
+            .into_iter()
+            .collect()
+    )
+}
