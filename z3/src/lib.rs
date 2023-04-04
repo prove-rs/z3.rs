@@ -22,6 +22,8 @@ mod config;
 mod context;
 pub mod datatype_builder;
 mod func_decl;
+mod func_entry;
+mod func_interp;
 mod goal;
 mod model;
 mod ops;
@@ -157,6 +159,20 @@ pub struct Optimize<'ctx> {
 pub struct FuncDecl<'ctx> {
     ctx: &'ctx Context,
     z3_func_decl: Z3_func_decl,
+}
+
+/// Stores the interpretation of a function in a Z3 model.
+/// https://z3prover.github.io/api/html/classz3py_1_1_func_interp.html
+pub struct FuncInterp<'ctx> {
+    ctx: &'ctx Context,
+    z3_func_interp: Z3_func_interp,
+}
+
+/// Store the value of the interpretation of a function in a particular point.
+/// https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html
+pub struct FuncEntry<'ctx> {
+    ctx: &'ctx Context,
+    z3_func_entry: Z3_func_entry,
 }
 
 /// Recursive function declaration. Every function has an associated declaration.

@@ -4692,7 +4692,7 @@ extern "C" {
     /// This procedure returns the 'else' value.
     pub fn Z3_func_interp_get_else(c: Z3_context, f: Z3_func_interp) -> Z3_ast;
 
-    /// Return the 'else' value of the given function interpretation.
+    /// Set the 'else' value of the given function interpretation.
     ///
     /// A function interpretation is represented as a finite map and an 'else' value.
     /// This procedure can be used to update the 'else' value.
