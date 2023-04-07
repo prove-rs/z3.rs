@@ -15,6 +15,8 @@ use Probe;
 use Solver;
 use Tactic;
 
+use crate::ParamDescrs;
+
 impl<'ctx> ApplyResult<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_apply_result: Z3_apply_result) -> ApplyResult<'ctx> {
         Z3_apply_result_inc_ref(ctx.z3_ctx, z3_apply_result);
@@ -241,6 +243,10 @@ impl<'ctx> Tactic<'ctx> {
                 Z3_mk_solver_from_tactic(self.ctx.z3_ctx, self.z3_tactic),
             )
         }
+    }
+
+    pub fn get_param_descrs(&'ctx self) -> ParamDescrs<'ctx> {
+        ParamDescrs::from_tactic(&self)
     }
 }
 

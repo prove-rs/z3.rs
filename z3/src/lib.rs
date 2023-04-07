@@ -15,7 +15,7 @@ extern crate num;
 
 use std::ffi::CString;
 use z3_sys::*;
-pub use z3_sys::{AstKind, GoalPrec, SortKind};
+pub use z3_sys::{AstKind, GoalPrec, SortKind, SymbolKind};
 
 pub mod ast;
 mod config;
@@ -29,6 +29,7 @@ mod model;
 mod ops;
 mod optimize;
 mod params;
+mod param_descrs;
 mod pattern;
 mod probe;
 mod rec_func_decl;
@@ -259,6 +260,12 @@ pub struct DatatypeSort<'ctx> {
 pub struct Params<'ctx> {
     ctx: &'ctx Context,
     z3_params: Z3_params,
+}
+
+/// Provides a collection of parameter names, their types, default values and documentation strings.
+pub struct ParamDescrs<'ctx> {
+    ctx: &'ctx Context,
+    z3_param_descrs: Z3_param_descrs,
 }
 
 /// Result of a satisfiability query.

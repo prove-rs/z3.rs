@@ -11,6 +11,8 @@ use Solver;
 use Statistics;
 use Symbol;
 
+use crate::ParamDescrs;
+
 impl<'ctx> Solver<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {
         Z3_solver_inc_ref(ctx.z3_ctx, z3_slv);
@@ -300,6 +302,10 @@ impl<'ctx> Solver<'ctx> {
         unsafe { Z3_solver_set_params(self.ctx.z3_ctx, self.z3_slv, params.z3_params) };
     }
 
+    pub fn get_param_descrs(&'ctx self) -> ParamDescrs<'ctx> {
+        ParamDescrs::from_solver(&self)
+    }
+    
     /// Retrieve the statistics for the last [`Solver::check()`].
     pub fn get_statistics(&self) -> Statistics<'ctx> {
         unsafe {
