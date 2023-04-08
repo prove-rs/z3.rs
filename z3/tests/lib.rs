@@ -562,7 +562,7 @@ fn test_rec_func_def() {
     let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
-    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
+    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
     let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
@@ -578,7 +578,7 @@ fn test_rec_func_def() {
 
     solver.assert(
         &x._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 4)])
                 .as_int()
                 .unwrap(),
         ),
@@ -586,7 +586,7 @@ fn test_rec_func_def() {
     solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
     solver.assert(
         &y._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 5)])
                 .as_int()
                 .unwrap(),
         ),
@@ -606,7 +606,7 @@ fn test_rec_func_def_unsat() {
     let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
-    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
+    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
     let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
@@ -622,7 +622,7 @@ fn test_rec_func_def_unsat() {
 
     solver.assert(
         &x._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 4)])
                 .as_int()
                 .unwrap(),
         ),
@@ -630,7 +630,7 @@ fn test_rec_func_def_unsat() {
     solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
     solver.assert(
         &y._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 5)])
                 .as_int()
                 .unwrap(),
         ),

@@ -55,7 +55,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     ///     &Int::add(&ctx, &[&n, &Int::from_i64(&ctx, 1)])
     /// );
     ///
-    /// let f_of_n = &f.apply(&[&n.clone().into()]);
+    /// let f_of_n = &f.apply(&[&n.clone()]);
     ///
     /// let solver = Solver::new(&ctx);
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
@@ -114,7 +114,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     /// Create a constant (if `args` has length 0) or function application (otherwise).
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `RecFuncDecl`.
-    pub fn apply(&self, args: &[&ast::Dynamic<'ctx>]) -> ast::Dynamic<'ctx> {
+    pub fn apply(&self, args: &[&dyn ast::Ast<'ctx>]) -> ast::Dynamic<'ctx> {
         assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
 
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
