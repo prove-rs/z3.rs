@@ -181,6 +181,8 @@ pub struct FuncEntry<'ctx> {
 /// the sort (i.e., type) of each of its arguments. This is the function declaration type
 /// you should use if you want to add a definition to your function, recursive or not.
 ///
+/// This struct can dereference into a [`FuncDecl`] to access its methods.
+///
 /// # See also:
 ///
 /// - [`RecFuncDecl::add_def`]
