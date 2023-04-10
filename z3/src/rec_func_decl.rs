@@ -52,7 +52,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     ///     &Sort::int(&ctx));
     /// let n = Int::new_const(&ctx, "n");
     /// f.add_def(
-    ///     &[&n.clone().into()],
+    ///     &[&n],
     ///     &Int::add(&ctx, &[&n, &Int::from_i64(&ctx, 1)])
     /// );
     ///
@@ -72,8 +72,8 @@ impl<'ctx> RecFuncDecl<'ctx> {
     /// ```
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `RecFuncDecl`.
-    pub fn add_def(&self, args: &[&ast::Dynamic<'ctx>], body: &impl Ast<'ctx>) {
-        assert!(args.iter().all(|arg| arg.ctx == body.get_ctx()));
+    pub fn add_def(&self, args: &[&dyn ast::Ast<'ctx>], body: &dyn Ast<'ctx>) {
+        assert!(args.iter().all(|arg| arg.get_ctx() == body.get_ctx()));
         assert_eq!(self.ctx, body.get_ctx());
 
         let mut args: Vec<_> = args.iter().map(|s| s.get_z3_ast()).collect();

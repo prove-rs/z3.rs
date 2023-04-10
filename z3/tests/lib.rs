@@ -569,7 +569,7 @@ fn test_rec_func_def() {
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
     );
 
-    fac.add_def(&[&n.into()], &body);
+    fac.add_def(&[&n], &body);
 
     let x = ast::Int::new_const(&ctx, "x");
     let y = ast::Int::new_const(&ctx, "y");
@@ -613,7 +613,7 @@ fn test_rec_func_def_unsat() {
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
     );
 
-    fac.add_def(&[&n.into()], &body);
+    fac.add_def(&[&n], &body);
 
     let x = ast::Int::new_const(&ctx, "x");
     let y = ast::Int::new_const(&ctx, "y");
