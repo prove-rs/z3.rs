@@ -237,9 +237,9 @@ fn test_solver_new_from_smtlib2() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let problem = r#"
-(declare -const x Real)
-(declare -const y Real)
-(declare -const z Real)
+(declare-const x Real)
+(declare-const y Real)
+(declare-const z Real)
 (assert (=( -(+(* 3 x) (* 2 y)) z) 1))
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
@@ -701,9 +701,9 @@ fn test_optimize_new_from_smtlib2() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let problem = r#"
-(declare -const x Real)
-(declare -const y Real)
-(declare -const z Real)
+(declare-const x Real)
+(declare-const y Real)
+(declare-const z Real)
 (assert (=( -(+(* 3 x) (* 2 y)) z) 1))
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
