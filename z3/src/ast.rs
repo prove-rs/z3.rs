@@ -1673,6 +1673,25 @@ impl<'ctx> Dynamic<'ctx> {
             _ => None,
         }
     }
+
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sort: &Sort<'ctx>) -> Self {
+        assert_eq!(ctx, sort.ctx);
+
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort),
+            )
+        }
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Self {
+        assert_eq!(ctx, sort.ctx);
+
+        let pp = CString::new(prefix).unwrap();
+        let p = pp.as_ptr();
+        unsafe { Self::wrap(ctx, Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)) }
+    }
 }
 
 impl<'ctx> Datatype<'ctx> {
