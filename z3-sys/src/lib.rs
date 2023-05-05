@@ -4929,7 +4929,7 @@ extern "C" {
         num_decls: ::std::os::raw::c_uint,
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
-    ) -> Z3_ast;
+    ) -> Z3_ast_vector;
 
     /// Similar to [`Z3_parse_smtlib2_string`], but reads the benchmark from a file.
     pub fn Z3_parse_smtlib2_file(
@@ -4941,7 +4941,7 @@ extern "C" {
         num_decls: ::std::os::raw::c_uint,
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
-    ) -> Z3_ast;
+    ) -> Z3_ast_vector;
 
     /// Parse and evaluate and SMT-LIB2 command sequence. The state from a previous
     /// call is saved so the next evaluation builds on top of the previous call.
