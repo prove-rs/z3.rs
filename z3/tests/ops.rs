@@ -84,6 +84,15 @@ fn test_int_ops() {
 }
 
 #[test]
+fn test_pow_ret_real() {
+    let cfg = Config::default();
+    let ctx = Context::new(&cfg);
+    let x = Int::new_const(&ctx, "x");
+    let y = x.power(&x);
+    assert!(y.get_sort() == Sort::real(&ctx));
+}
+
+#[test]
 fn test_real_ops() {
     let cfg = Config::default();
     let ctx = Context::new(&cfg);

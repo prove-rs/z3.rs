@@ -865,7 +865,7 @@ impl<'ctx> Int<'ctx> {
         div(Z3_mk_div, Self);
         rem(Z3_mk_rem, Self);
         modulo(Z3_mk_mod, Self);
-        power(Z3_mk_power, Self);
+        power(Z3_mk_power, Real<'ctx>);
         lt(Z3_mk_lt, Bool<'ctx>);
         le(Z3_mk_le, Bool<'ctx>);
         gt(Z3_mk_gt, Bool<'ctx>);
