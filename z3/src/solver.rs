@@ -52,6 +52,15 @@ impl<'ctx> Solver<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx)) }
     }
 
+    /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
+    /// Add the parsed constraints and objectives to the solver.
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
+        let source_cstring = CString::new(source_string).unwrap();
+        unsafe {
+            Z3_solver_from_string(self.ctx.z3_ctx, self.z3_slv, source_cstring.as_ptr());
+        }
+    }
+
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
     pub fn new_for_logic<S: Into<Symbol>>(ctx: &'ctx Context, logic: S) -> Option<Solver<'ctx>> {
@@ -169,6 +178,18 @@ impl<'ctx> Solver<'ctx> {
             Z3_L_TRUE => SatResult::Sat,
             _ => unreachable!(),
         }
+    }
+
+    // Return a vector of assumptions in the solver.
+    pub fn get_assertions(&self) -> Vec<ast::Bool> {
+        let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
+
+        (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_vec) })
+            .map(|i| unsafe {
+                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx, z3_vec, i);
+                ast::Bool::wrap(self.ctx, z3_ast)
+            })
+            .collect()
     }
 
     /// Return a subset of the assumptions provided to either the last
@@ -341,5 +362,18 @@ impl<'ctx> fmt::Debug for Solver<'ctx> {
 impl<'ctx> Drop for Solver<'ctx> {
     fn drop(&mut self) {
         unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv) };
+    }
+}
+
+impl<'ctx> Clone for Solver<'ctx> {
+    // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
+    fn clone(self: &Solver<'ctx>) -> Self {
+        let new_solver = Solver::new(self.ctx);
+
+        self.get_assertions().iter().for_each(|a| {
+            new_solver.assert(a);
+        });
+
+        new_solver
     }
 }

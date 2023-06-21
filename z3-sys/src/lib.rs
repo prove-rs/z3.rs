@@ -4692,7 +4692,7 @@ extern "C" {
     /// This procedure returns the 'else' value.
     pub fn Z3_func_interp_get_else(c: Z3_context, f: Z3_func_interp) -> Z3_ast;
 
-    /// Return the 'else' value of the given function interpretation.
+    /// Set the 'else' value of the given function interpretation.
     ///
     /// A function interpretation is represented as a finite map and an 'else' value.
     /// This procedure can be used to update the 'else' value.
@@ -4929,7 +4929,7 @@ extern "C" {
         num_decls: ::std::os::raw::c_uint,
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
-    ) -> Z3_ast;
+    ) -> Z3_ast_vector;
 
     /// Similar to [`Z3_parse_smtlib2_string`], but reads the benchmark from a file.
     pub fn Z3_parse_smtlib2_file(
@@ -4941,7 +4941,7 @@ extern "C" {
         num_decls: ::std::os::raw::c_uint,
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
-    ) -> Z3_ast;
+    ) -> Z3_ast_vector;
 
     /// Parse and evaluate and SMT-LIB2 command sequence. The state from a previous
     /// call is saved so the next evaluation builds on top of the previous call.
@@ -5566,7 +5566,7 @@ extern "C" {
     ///
     /// - [`Z3_solver_from_file`]
     /// - [`Z3_solver_to_string`]
-    pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, file_name: Z3_string);
+    pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, c_str: Z3_string);
 
     /// Return the set of asserted formulas on the solver.
     pub fn Z3_solver_get_assertions(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;

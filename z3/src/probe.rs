@@ -24,13 +24,13 @@ impl<'ctx> Probe<'ctx> {
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
     /// let probes: Vec<_> = Probe::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(probes.contains(&"is-qfbv"));
+    /// assert!(probes.contains(&"is-quasi-pb"));
     /// ```
     pub fn list_all(
         ctx: &'ctx Context,
     ) -> impl Iterator<Item = std::result::Result<&'ctx str, Utf8Error>> {
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx) };
-        (0..p).into_iter().map(move |n| {
+        (0..p).map(move |n| {
             let t = unsafe { Z3_get_probe_name(ctx.z3_ctx, n) };
             unsafe { CStr::from_ptr(t) }.to_str()
         })

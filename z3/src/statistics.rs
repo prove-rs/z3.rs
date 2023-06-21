@@ -69,7 +69,7 @@ impl<'ctx> Statistics<'ctx> {
     /// Iterate over all of the entries in this set of statistics.
     pub fn entries(&self) -> impl Iterator<Item = StatisticsEntry> + '_ {
         let p = unsafe { Z3_stats_size(self.ctx.z3_ctx, self.z3_stats) };
-        (0..p).into_iter().map(move |n| unsafe {
+        (0..p).map(move |n| unsafe {
             let t = Z3_stats_get_key(self.ctx.z3_ctx, self.z3_stats, n);
             StatisticsEntry {
                 key: CStr::from_ptr(t).to_str().unwrap().to_owned(),

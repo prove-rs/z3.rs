@@ -68,6 +68,7 @@ impl<'ctx> Goal<'ctx> {
     }
 
     /// Copy a goal `g` from the context `source` to the context `target`.
+    #[allow(clippy::needless_lifetimes)]
     pub fn translate<'dest_ctx>(self, ctx: &'dest_ctx Context) -> Goal<'dest_ctx> {
         unsafe {
             Goal::wrap(
@@ -89,7 +90,7 @@ impl<'ctx> Goal<'ctx> {
         let goal_size = self.get_size() as usize;
         let z3_ctx = self.ctx.z3_ctx;
         let z3_goal = self.z3_goal;
-        (0..goal_size).into_iter().map(move |i| {
+        (0..goal_size).map(move |i| {
             let formula = unsafe { Z3_goal_formula(z3_ctx, z3_goal, i as u32) };
             unsafe { T::wrap(self.ctx, formula) }
         })

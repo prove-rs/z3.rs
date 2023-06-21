@@ -27,7 +27,7 @@ impl<'ctx> ApplyResult<'ctx> {
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal<'ctx>> {
         let num_subgoals =
             unsafe { Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx, self.z3_apply_result) };
-        (0..num_subgoals).into_iter().map(move |i| unsafe {
+        (0..num_subgoals).map(move |i| unsafe {
             Goal::wrap(
                 self.ctx,
                 Z3_apply_result_get_subgoal(self.ctx.z3_ctx, self.z3_apply_result, i),
@@ -55,13 +55,13 @@ impl<'ctx> Tactic<'ctx> {
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
     /// let tactics: Vec<_> = Tactic::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(tactics.contains(&"nlsat"));
+    /// assert!(tactics.contains(&"ufbv"));
     /// ```
     pub fn list_all(
         ctx: &'ctx Context,
     ) -> impl Iterator<Item = std::result::Result<&'ctx str, Utf8Error>> {
         let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx) };
-        (0..p).into_iter().map(move |n| {
+        (0..p).map(move |n| {
             let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx, n) };
             unsafe { CStr::from_ptr(t) }.to_str()
         })

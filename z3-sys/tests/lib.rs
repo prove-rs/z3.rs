@@ -39,19 +39,13 @@ fn smoketest() {
         // Grab the actual constant values out of the model
         let mut interp_x: Z3_ast = const_x;
         let mut interp_y: Z3_ast = const_y;
-        assert_eq!(
-            Z3_model_eval(ctx, model, const_x, true, &mut interp_x),
-            true
-        );
-        assert_eq!(
-            Z3_model_eval(ctx, model, const_y, true, &mut interp_y),
-            true
-        );
+        assert!(Z3_model_eval(ctx, model, const_x, true, &mut interp_x));
+        assert!(Z3_model_eval(ctx, model, const_y, true, &mut interp_y));
 
         let mut val_x: i32 = -5;
         let mut val_y: i32 = -5;
-        assert_eq!(Z3_get_numeral_int(ctx, interp_x, &mut val_x), true);
-        assert_eq!(Z3_get_numeral_int(ctx, interp_y, &mut val_y), true);
+        assert!(Z3_get_numeral_int(ctx, interp_x, &mut val_x));
+        assert!(Z3_get_numeral_int(ctx, interp_y, &mut val_y));
         assert_eq!(val_x, 0);
         assert_eq!(val_y, -1);
 

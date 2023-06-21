@@ -22,6 +22,8 @@ mod config;
 mod context;
 pub mod datatype_builder;
 mod func_decl;
+mod func_entry;
+mod func_interp;
 mod goal;
 mod model;
 mod ops;
@@ -159,17 +161,33 @@ pub struct FuncDecl<'ctx> {
     z3_func_decl: Z3_func_decl,
 }
 
+/// Stores the interpretation of a function in a Z3 model.
+/// https://z3prover.github.io/api/html/classz3py_1_1_func_interp.html
+pub struct FuncInterp<'ctx> {
+    ctx: &'ctx Context,
+    z3_func_interp: Z3_func_interp,
+}
+
+/// Store the value of the interpretation of a function in a particular point.
+/// https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html
+pub struct FuncEntry<'ctx> {
+    ctx: &'ctx Context,
+    z3_func_entry: Z3_func_entry,
+}
+
 /// Recursive function declaration. Every function has an associated declaration.
 ///
 /// The declaration assigns a name, a return sort (i.e., type), and
 /// the sort (i.e., type) of each of its arguments. This is the function declaration type
 /// you should use if you want to add a definition to your function, recursive or not.
 ///
+/// This struct can dereference into a [`FuncDecl`] to access its methods.
+///
 /// # See also:
 ///
 /// - [`RecFuncDecl::add_def`]
-// Note for in-crate users: Never construct a `FuncDecl` directly; only use
-// `FuncDecl::new()` which handles Z3 refcounting properly.
+// Note for in-crate users: Never construct a `RecFuncDecl` directly; only use
+// `RecFuncDecl::new()` which handles Z3 refcounting properly.
 pub struct RecFuncDecl<'ctx> {
     ctx: &'ctx Context,
     z3_func_decl: Z3_func_decl,

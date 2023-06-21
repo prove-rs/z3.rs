@@ -6,7 +6,7 @@ extern crate z3;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{Ast, Bool};
+use z3::ast::{Array, Ast, Bool, Int, BV};
 use z3::*;
 
 #[cfg(feature = "arbitrary-size-numeral")]
@@ -75,6 +75,36 @@ fn test_solving_for_model() {
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
+    let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
+    let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
+    info!("x: {}", xv);
+    info!("y: {}", yv);
+    assert!(xv > yv);
+    assert!(yv % 7 == 2);
+    assert!(xv + 2 > 7);
+}
+
+#[test]
+fn test_solving_for_model_cloned() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let x = ast::Int::new_const(&ctx, "x");
+    let y = ast::Int::new_const(&ctx, "y");
+    let zero = ast::Int::from_i64(&ctx, 0);
+    let two = ast::Int::from_i64(&ctx, 2);
+    let seven = ast::Int::from_i64(&ctx, 7);
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&x.gt(&y));
+    solver.assert(&y.gt(&zero));
+    solver.assert(&y.rem(&seven)._eq(&two));
+    let x_plus_two = ast::Int::add(&ctx, &[&x, &two]);
+    solver.assert(&x_plus_two.gt(&seven));
+    let cloned = solver.clone();
+    assert_eq!(cloned.check(), SatResult::Sat);
+
+    let model = cloned.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
     let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
     info!("x: {}", xv);
@@ -181,8 +211,8 @@ fn test_floating_point_bits() {
     assert!(sig64 == Some(53));
     assert!(exp128 == Some(15));
     assert!(sig128 == Some(113));
-    assert!(expi == None);
-    assert!(sigi == None);
+    assert!(expi.is_none());
+    assert!(sigi.is_none());
 }
 
 #[test]
@@ -200,6 +230,22 @@ fn test_ast_translate() {
 
     slv.assert(&translated_a._eq(&ast::Int::from_u64(&destination, 3)));
     assert_eq!(slv.check(), SatResult::Unsat);
+}
+
+#[test]
+fn test_solver_new_from_smtlib2() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let problem = r#"
+(declare-const x Real)
+(declare-const y Real)
+(declare-const z Real)
+(assert (=( -(+(* 3 x) (* 2 y)) z) 1))
+(assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
+"#;
+    let solver = Solver::new(&ctx);
+    solver.from_string(problem);
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -361,7 +407,7 @@ fn test_float_add() {
 
     let x = ast::Float::new_const_float32(&ctx, "x");
     let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
-    let y = ast::Float::from_f32(&ctx, 3.14);
+    let y = ast::Float::from_f32(&ctx, std::f32::consts::PI);
 
     solver.assert(&x_plus_one._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
@@ -516,14 +562,14 @@ fn test_rec_func_def() {
     let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
-    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
+    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
     let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
     );
 
-    fac.add_def(&[&n.into()], &body);
+    fac.add_def(&[&n], &body);
 
     let x = ast::Int::new_const(&ctx, "x");
     let y = ast::Int::new_const(&ctx, "y");
@@ -532,7 +578,7 @@ fn test_rec_func_def() {
 
     solver.assert(
         &x._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 4)])
                 .as_int()
                 .unwrap(),
         ),
@@ -540,7 +586,7 @@ fn test_rec_func_def() {
     solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
     solver.assert(
         &y._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 5)])
                 .as_int()
                 .unwrap(),
         ),
@@ -560,14 +606,14 @@ fn test_rec_func_def_unsat() {
     let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
-    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1.into()]);
+    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
     let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
     );
 
-    fac.add_def(&[&n.into()], &body);
+    fac.add_def(&[&n], &body);
 
     let x = ast::Int::new_const(&ctx, "x");
     let y = ast::Int::new_const(&ctx, "y");
@@ -576,7 +622,7 @@ fn test_rec_func_def_unsat() {
 
     solver.assert(
         &x._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 4).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 4)])
                 .as_int()
                 .unwrap(),
         ),
@@ -584,7 +630,7 @@ fn test_rec_func_def_unsat() {
     solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
     solver.assert(
         &y._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 5).into()])
+            &fac.apply(&[&ast::Int::from_i64(&ctx, 5)])
                 .as_int()
                 .unwrap(),
         ),
@@ -598,7 +644,6 @@ fn test_rec_func_def_unsat() {
 }
 
 #[test]
-#[ignore = "See https://github.com/Z3Prover/z3/issues/5702"]
 fn test_solver_unknown() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
@@ -648,6 +693,23 @@ fn test_optimize_unknown() {
 
     assert_eq!(optimize.check(&[]), SatResult::Unknown);
     assert!(optimize.get_reason_unknown().is_some());
+}
+
+#[test]
+fn test_optimize_new_from_smtlib2() {
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let problem = r#"
+(declare-const x Real)
+(declare-const y Real)
+(declare-const z Real)
+(assert (=( -(+(* 3 x) (* 2 y)) z) 1))
+(assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
+"#;
+    let optimize = Optimize::new(&ctx);
+    optimize.from_string(problem);
+    assert_eq!(optimize.check(&[]), SatResult::Sat);
 }
 
 #[test]
@@ -995,12 +1057,12 @@ fn test_goal_is_inconsistent() {
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&false_bool);
-    assert_eq!(goal.is_inconsistent(), true);
+    assert!(goal.is_inconsistent());
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&true_bool);
-    assert_eq!(goal.is_inconsistent(), false);
+    assert!(!goal.is_inconsistent());
 }
 
 #[test]
@@ -1011,14 +1073,14 @@ fn test_goal_is_sat() {
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&false_bool);
-    assert_eq!(goal.is_decided_sat(), false);
-    assert_eq!(goal.is_decided_unsat(), true);
+    assert!(!goal.is_decided_sat());
+    assert!(goal.is_decided_unsat());
 
     let true_bool = ast::Bool::from_bool(&ctx, true);
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&true_bool);
-    assert_eq!(goal.is_decided_unsat(), false);
-    assert_eq!(goal.is_decided_sat(), true);
+    assert!(!goal.is_decided_unsat());
+    assert!(goal.is_decided_sat());
 }
 
 #[test]
@@ -1256,10 +1318,10 @@ fn test_goal_apply_tactic() {
         after_formulas: Vec<Bool>,
     ) {
         assert_eq!(goal.get_formulas::<Bool>(), before_formulas);
-        let params = Params::new(&ctx);
+        let params = Params::new(ctx);
 
-        let tactic = Tactic::new(&ctx, "sat-preprocess");
-        let repeat_tactic = Tactic::repeat(&ctx, &tactic, 100);
+        let tactic = Tactic::new(ctx, "sat-preprocess");
+        let repeat_tactic = Tactic::repeat(ctx, &tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
         let goal_results = apply_results
             .unwrap()
@@ -1526,14 +1588,189 @@ fn test_ast_safe_decl() {
     let x_not = x.not();
     assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
 
-    let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(ctx));
-    let x = ast::Int::new_const(&ctx, "x");
+    let f = FuncDecl::new(ctx, "f", &[&Sort::int(ctx)], &Sort::int(ctx));
+    let x = ast::Int::new_const(ctx, "x");
     let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-    let f_x_pattern: Pattern = Pattern::new(&ctx, &[&f_x]);
-    let forall = ast::forall_const(&ctx, &[&x], &[&f_x_pattern], &x._eq(&f_x));
+    let f_x_pattern: Pattern = Pattern::new(ctx, &[&f_x]);
+    let forall = ast::forall_const(ctx, &[&x], &[&f_x_pattern], &x._eq(&f_x));
     assert!(forall.safe_decl().is_err());
     assert_eq!(
         format!("{}", forall.safe_decl().err().unwrap()),
         "ast node is not a function application, has kind Quantifier"
     );
+}
+
+//the intersection of "FOO"+"bar" and [a-z]+ is empty
+#[test]
+fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let s = ast::String::new_const(ctx, "s");
+
+    let re = ast::Regexp::intersect(
+        ctx,
+        &[
+            &ast::Regexp::concat(
+                ctx,
+                &[
+                    &ast::Regexp::literal(ctx, "FOO"),
+                    &ast::Regexp::literal(ctx, "bar"),
+                ],
+            ),
+            &ast::Regexp::plus(&ast::Regexp::range(ctx, &'a', &'z')),
+        ],
+    );
+    solver.assert(&s.regex_matches(&re));
+    assert!(solver.check() == SatResult::Unsat);
+}
+
+#[test]
+/// https://github.com/Z3Prover/z3/blob/21e59f7c6e5033006265fc6bc16e2c9f023db0e8/examples/dotnet/Program.cs#L329-L370
+fn test_array_example1() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+
+    let g = Goal::new(ctx, true, false, false);
+
+    let aex = Array::new_const(ctx, "MyArray", &Sort::int(ctx), &Sort::bitvector(ctx, 32));
+
+    let sel = aex.select(&Int::from_u64(ctx, 0));
+
+    g.assert(&sel._eq(&BV::from_u64(ctx, 42, 32).into()));
+
+    let xc = Int::new_const(ctx, "x");
+
+    let fd = FuncDecl::new(ctx, "f", &[&Sort::int(ctx)], &Sort::int(ctx));
+
+    let fapp = fd.apply(&[&xc as &dyn Ast]);
+
+    g.assert(&Int::from_u64(ctx, 123)._eq(&xc.clone().add(&fapp.as_int().unwrap())));
+
+    let s = &Solver::new(ctx);
+    for a in g.get_formulas() {
+        s.assert(&a);
+    }
+    println!("Solver: {}", s);
+
+    let q = s.check();
+    println!("Status: {:?}", q);
+
+    if q != SatResult::Sat {
+        panic!("Solver did not return sat");
+    }
+
+    let model = s.get_model().unwrap();
+
+    assert!(
+        model.to_string()
+            == "MyArray -> ((as const (Array Int (_ BitVec 32))) #x0000002a)\nx -> 0\nf -> {\n  123\n}\n"
+    );
+
+    assert!(
+        model.get_const_interp(&aex).unwrap().to_string()
+            == "((as const (Array Int (_ BitVec 32))) #x0000002a)"
+    );
+
+    assert!(model.get_const_interp(&xc).unwrap().to_string() == "0");
+
+    assert!(model.get_func_interp(&fd).unwrap().to_string() == "[else -> 123]");
+}
+
+#[test]
+/// https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html
+fn return_number_args_in_given_entry() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let f = FuncDecl::new(
+        ctx,
+        "f",
+        &[&Sort::int(ctx), &Sort::int(ctx)],
+        &Sort::int(ctx),
+    );
+
+    let solver = Solver::new(ctx);
+    solver.assert(
+        &f.apply(&[&Int::from_u64(ctx, 0), &Int::from_u64(ctx, 1)])
+            ._eq(&Int::from_u64(ctx, 10).into()),
+    );
+    solver.assert(
+        &f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 2)])
+            ._eq(&Int::from_u64(ctx, 20).into()),
+    );
+    solver.assert(
+        &f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 0)])
+            ._eq(&Int::from_u64(ctx, 10).into()),
+    );
+
+    assert!(solver.check() == SatResult::Sat);
+
+    let model = solver.get_model().unwrap();
+    let f_i = model.get_func_interp(&f).unwrap();
+    assert!(f_i.get_num_entries() == 1);
+    let e = &f_i.get_entries()[0];
+    assert!(e.to_string() == "[1, 2, 20]");
+    assert!(e.get_num_args() == 2);
+    assert!(e.get_args()[0].to_string() == "1");
+    assert!(e.get_args()[1].to_string() == "2");
+    assert!(e.get_args().get(2).is_none());
+
+    assert!(model.to_string() == "f -> {\n  1 2 -> 20\n  else -> 10\n}\n");
+}
+
+#[test]
+/// https://stackoverflow.com/questions/13395391/z3-finding-all-satisfying-models
+fn iterate_all_solutions() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let a = &Int::new_const(ctx, "a");
+    let b = &Int::new_const(ctx, "b");
+    let one = Int::from_u64(ctx, 1);
+    let two = Int::from_u64(ctx, 2);
+    let five = &Int::from_u64(ctx, 5);
+
+    solver.assert(&one.le(a));
+    solver.assert(&a.le(five));
+    solver.assert(&one.le(b));
+    solver.assert(&b.le(five));
+    solver.assert(&a.ge(&(two * b)));
+
+    let mut solutions = std::collections::HashSet::new();
+    while solver.check() == SatResult::Sat {
+        let model = solver.get_model().unwrap();
+        let mut modifications = Vec::new();
+        let this_solution = model
+            .iter()
+            .map(|fd| {
+                modifications.push(
+                    fd.apply(&[])
+                        ._eq(&model.get_const_interp(&fd.apply(&[])).unwrap())
+                        .not(),
+                );
+                format!(
+                    "{} = {}",
+                    fd.name(),
+                    model.get_const_interp(&fd.apply(&[])).unwrap()
+                )
+            })
+            .collect::<Vec<_>>()
+            .join(", ");
+        solutions.insert(format!("[{this_solution}]"));
+        solver.assert(&Bool::or(ctx, &modifications.iter().collect::<Vec<_>>()));
+    }
+
+    assert!(
+        solutions
+            == vec![
+                "[b = 1, a = 2]".to_string(),
+                "[b = 2, a = 4]".to_string(),
+                "[b = 1, a = 3]".to_string(),
+                "[b = 2, a = 5]".to_string(),
+                "[b = 1, a = 4]".to_string(),
+                "[b = 1, a = 5]".to_string()
+            ]
+            .into_iter()
+            .collect()
+    )
 }

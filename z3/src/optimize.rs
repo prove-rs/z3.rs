@@ -27,6 +27,15 @@ impl<'ctx> Optimize<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx)) }
     }
 
+    /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
+    /// Add the parsed constraints and objectives to the optimizer.
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
+        let source_cstring = CString::new(source_string).unwrap();
+        unsafe {
+            Z3_optimize_from_string(self.ctx.z3_ctx, self.z3_opt, source_cstring.as_ptr());
+        }
+    }
+
     /// Get this optimizers 's context.
     pub fn get_context(&self) -> &'ctx Context {
         self.ctx

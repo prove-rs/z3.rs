@@ -84,6 +84,15 @@ fn test_int_ops() {
 }
 
 #[test]
+fn test_pow_ret_real() {
+    let cfg = Config::default();
+    let ctx = Context::new(&cfg);
+    let x = Int::new_const(&ctx, "x");
+    let y = x.power(&x);
+    assert!(y.get_sort() == Sort::real(&ctx));
+}
+
+#[test]
 fn test_real_ops() {
     let cfg = Config::default();
     let ctx = Context::new(&cfg);
@@ -225,7 +234,7 @@ fn test_ast_children() {
 
 fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
     assert_eq!(expr.kind(), AstKind::App);
-    assert_eq!(expr.is_app(), true);
+    assert!(expr.is_app());
     assert_eq!(expr.is_const(), is_const);
 }
 
