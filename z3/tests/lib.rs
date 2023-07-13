@@ -368,6 +368,23 @@ fn test_params() {
 }
 
 #[test]
+fn test_global_params() {
+    let _ = env_logger::try_init();
+    // could interfere with other tests if they use global params
+    reset_all_global_params();
+    let val = get_global_param("iDontExist");
+    assert_eq!(val, None);
+    let val = get_global_param("verbose");
+    assert_eq!(val, Some("0".into()));
+    set_global_param("verbose", "1");
+    let val = get_global_param("verbose");
+    assert_eq!(val, Some("1".into()));
+    reset_all_global_params();
+    let val = get_global_param("verbose");
+    assert_eq!(val, Some("0".into()));
+}
+
+#[test]
 fn test_substitution() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);

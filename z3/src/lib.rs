@@ -38,6 +38,7 @@ mod statistics;
 mod symbol;
 mod tactic;
 
+pub use params::{get_global_param, reset_all_global_params, set_global_param};
 pub use statistics::{StatisticsEntry, StatisticsValue};
 
 /// Configuration used to initialize [logical contexts](Context).
