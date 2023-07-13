@@ -1,4 +1,4 @@
-use std::ffi::CStr;
+use std::ffi::{CStr, CString};
 use std::fmt;
 use z3_sys::*;
 use Context;
@@ -58,6 +58,45 @@ impl<'ctx> Params<'ctx> {
             )
         };
     }
+}
+
+/// Get a global (or module) parameter.
+///
+/// # See also
+///
+/// - [`set_global_param()`]
+/// - [`reset_all_global_params()`]
+pub fn get_global_param(k: &str) -> Option<String> {
+    let ks = CString::new(k).unwrap();
+    let mut ptr = std::ptr::null();
+    if unsafe { Z3_global_param_get(ks.as_ptr(), &mut ptr as *mut *const i8) } {
+        let vs = unsafe { CStr::from_ptr(ptr) };
+        vs.to_str().ok().map(|vs| vs.to_owned())
+    } else {
+        None
+    }
+}
+
+/// Set a global (or module) parameter. This setting is shared by all Z3 contexts.
+///
+/// # See also
+///
+/// - [`get_global_param()`]
+/// - [`reset_all_global_params()`]
+pub fn set_global_param(k: &str, v: &str) {
+    let ks = CString::new(k).unwrap();
+    let vs = CString::new(v).unwrap();
+    unsafe { Z3_global_param_set(ks.as_ptr(), vs.as_ptr()) };
+}
+
+/// Restore the value of all global (and module) parameters. This command will not affect already created objects (such as tactics and solvers).
+///
+/// # See also
+///
+/// - [`get_global_param()`]
+/// - [`set_global_param()`]
+pub fn reset_all_global_params() {
+    unsafe { Z3_global_param_reset_all() };
 }
 
 impl<'ctx> fmt::Display for Params<'ctx> {

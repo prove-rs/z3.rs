@@ -1,3 +1,4 @@
+use std::ffi::CString;
 use z3_sys::*;
 use Config;
 use Context;
@@ -28,6 +29,28 @@ impl Context {
     /// - [`ContextHandle::interrupt()`]
     pub fn handle(&self) -> ContextHandle {
         ContextHandle { ctx: self }
+    }
+
+    /// Update a global parameter.
+    ///
+    /// # See also
+    ///
+    /// - [`Context::update_bool_param_value()`]
+    pub fn update_param_value(&mut self, k: &str, v: &str) {
+        let ks = CString::new(k).unwrap();
+        let vs = CString::new(v).unwrap();
+        unsafe { Z3_update_param_value(self.z3_ctx, ks.as_ptr(), vs.as_ptr()) };
+    }
+
+    /// Update a global parameter.
+    ///
+    /// This is a helper function.
+    ///
+    /// # See also
+    ///
+    /// - [`Context::update_param_value()`]
+    pub fn update_bool_param_value(&mut self, k: &str, v: bool) {
+        self.update_param_value(k, if v { "true" } else { "false" })
     }
 }
 
