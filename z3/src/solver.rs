@@ -309,6 +309,35 @@ impl<'ctx> Solver<'ctx> {
             )
         }
     }
+
+    pub fn get_implied_equalities(&self, terms: &[&dyn Ast]) -> (Vec<u32>, SatResult) {
+        let mut group_ids = vec![0u32; terms.len()];
+        let terms: Vec<_> = terms.iter().map(|term| term.get_z3_ast()).collect();
+        let result = match unsafe {
+            Z3_get_implied_equalities(self.ctx.z3_ctx, self.z3_slv, terms.len() as u32, terms.as_ptr(), group_ids.as_mut_ptr())
+        } {
+            Z3_L_FALSE => SatResult::Unsat,
+            Z3_L_UNDEF => SatResult::Unknown,
+            Z3_L_TRUE => SatResult::Sat,
+            _ => unreachable!(),
+        };
+        (group_ids, result)
+    }
+
+    pub fn dump_smtlib(&self, formula: impl Ast<'ctx>) -> String {
+        let name = CString::new("").unwrap();
+        let logic = CString::new("").unwrap();
+        let status = CString::new("").unwrap();
+        let attributes = CString::new("").unwrap();
+        let ctx = self.ctx.z3_ctx;
+        let assertions = unsafe { z3_sys::Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
+        let len = unsafe { z3_sys::Z3_ast_vector_size(ctx, assertions) };
+        let assumptions: Vec<_> = (0..len).map(|i| unsafe { z3_sys::Z3_ast_vector_get(ctx, assertions, i) }).collect();
+        unsafe {
+            let dump = Z3_benchmark_to_smtlib_string(self.ctx.z3_ctx, name.as_ptr(), logic.as_ptr(), status.as_ptr(), attributes.as_ptr(), len, assumptions.as_ptr(), formula.get_z3_ast());
+            CStr::from_ptr(dump).to_str().unwrap().to_string()
+        }
+    }
 }
 
 impl<'ctx> fmt::Display for Solver<'ctx> {

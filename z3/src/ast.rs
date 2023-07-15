@@ -1158,6 +1158,16 @@ impl<'ctx> String<'ctx> {
         prefix(Z3_mk_seq_prefix, Bool<'ctx>);
         /// Checks whether `Self` is a sufix of the argument
         suffix(Z3_mk_seq_suffix, Bool<'ctx>);
+        le(Z3_mk_str_le, Bool<'ctx>);
+        lt(Z3_mk_str_lt, Bool<'ctx>);
+    }
+
+    pub fn ge(&self, other: &String<'ctx>) -> Bool<'ctx> {
+        other.le(self)
+    }
+
+    pub fn gt(&self, other: &String<'ctx>) -> Bool<'ctx> {
+        other.lt(self)
     }
 }
 
@@ -1714,6 +1724,25 @@ impl<'ctx> Dynamic<'ctx> {
             SortKind::Datatype => Some(unsafe { Datatype::wrap(self.ctx, self.z3_ast) }),
             _ => None,
         }
+    }
+
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sort: &Sort<'ctx>) -> Self {
+        assert_eq!(ctx, sort.ctx);
+
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort),
+            )
+        }
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Self {
+        assert_eq!(ctx, sort.ctx);
+
+        let pp = CString::new(prefix).unwrap();
+        let p = pp.as_ptr();
+        unsafe { Self::wrap(ctx, Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)) }
     }
 }
 

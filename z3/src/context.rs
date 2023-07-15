@@ -1,3 +1,5 @@
+use std::ffi::{CStr, CString};
+use ast::Ast;
 use z3_sys::*;
 use Config;
 use Context;
@@ -28,6 +30,18 @@ impl Context {
     /// - [`ContextHandle::interrupt()`]
     pub fn handle(&self) -> ContextHandle {
         ContextHandle { ctx: self }
+    }
+
+    pub fn dump_smtlib<'ctx>(&'ctx self, formula: impl Ast<'ctx>) -> String {
+        let name = CString::new("").unwrap();
+        let logic = CString::new("").unwrap();
+        let status = CString::new("").unwrap();
+        let attributes = CString::new("").unwrap();
+        let assumptions: Vec<Z3_ast> = vec![];
+        unsafe {
+            let dump = Z3_benchmark_to_smtlib_string(self.z3_ctx, name.as_ptr(), logic.as_ptr(), status.as_ptr(), attributes.as_ptr(), 0, assumptions.as_ptr(), formula.get_z3_ast());
+            CStr::from_ptr(dump).to_str().unwrap().to_string()
+        }
     }
 }
 
