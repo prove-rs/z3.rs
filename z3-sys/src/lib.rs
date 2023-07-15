@@ -3087,6 +3087,12 @@ extern "C" {
     /// - `container` and `containee` are the same sequence sorts.
     pub fn Z3_mk_seq_contains(c: Z3_context, container: Z3_ast, containee: Z3_ast) -> Z3_ast;
 
+    /// Check if `s1` is lexicographically strictly less than `s2`.
+    pub fn Z3_mk_str_lt(c: Z3_context, s1: Z3_ast, s2: Z3_ast) -> Z3_ast;
+
+    /// Check if `s1` is equal or lexicographically strictly less than `s2`.
+    pub fn Z3_mk_str_le(c: Z3_context, s1: Z3_ast, s2: Z3_ast) -> Z3_ast;
+
     /// Extract subsequence starting at `offset` of `length`.
     pub fn Z3_mk_seq_extract(c: Z3_context, s: Z3_ast, offset: Z3_ast, length: Z3_ast) -> Z3_ast;
 

@@ -1158,6 +1158,16 @@ impl<'ctx> String<'ctx> {
         prefix(Z3_mk_seq_prefix, Bool<'ctx>);
         /// Checks whether `Self` is a sufix of the argument
         suffix(Z3_mk_seq_suffix, Bool<'ctx>);
+        le(Z3_mk_str_le, Bool<'ctx>);
+        lt(Z3_mk_str_lt, Bool<'ctx>);
+    }
+
+    pub fn ge(&self, other: &String<'ctx>) -> Bool<'ctx> {
+        other.le(self)
+    }
+
+    pub fn gt(&self, other: &String<'ctx>) -> Bool<'ctx> {
+        other.lt(self)
     }
 }
 
