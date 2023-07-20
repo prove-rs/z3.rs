@@ -1591,7 +1591,7 @@ extern "C" {
     /// Thus, the following parameter names are considered equivalent: "pp.decimal-precision"  and "PP.DECIMAL_PRECISION".
     ///
     /// This function can be used to set parameters for a specific Z3 module.
-    /// This can be done by using <module-name>.<parameter-name>.
+    /// This can be done by using `<module-name>.<parameter-name>`.
     ///
     /// For example:
     /// `Z3_global_param_set('pp.decimal', 'true')`

@@ -163,14 +163,14 @@ pub struct FuncDecl<'ctx> {
 }
 
 /// Stores the interpretation of a function in a Z3 model.
-/// https://z3prover.github.io/api/html/classz3py_1_1_func_interp.html
+/// <https://z3prover.github.io/api/html/classz3py_1_1_func_interp.html>
 pub struct FuncInterp<'ctx> {
     ctx: &'ctx Context,
     z3_func_interp: Z3_func_interp,
 }
 
 /// Store the value of the interpretation of a function in a particular point.
-/// https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html
+/// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 pub struct FuncEntry<'ctx> {
     ctx: &'ctx Context,
     z3_func_entry: Z3_func_entry,
