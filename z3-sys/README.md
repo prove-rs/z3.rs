@@ -21,7 +21,7 @@ Add it to your `Cargo.toml` like so:
 
 ```toml
 [dependencies]
-z3-sys = "0.7.1"
+z3-sys = "0.8"
 ```
 
 **Note:** This crate requires a `z3.h` during build time.

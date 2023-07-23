@@ -21,7 +21,7 @@ Add it to your `Cargo.toml` like so:
 
 ```toml
 [dependencies]
-z3 = "0.11.2"
+z3 = "0.12"
 ```
 
 **Note:** This library has a dependency on Z3. You will either need to
@@ -30,7 +30,7 @@ to our build of Z3 like so:
 
 ```toml
 [dependencies]
-z3 = {version="0.11.2", features = ["static-link-z3"]}
+z3 = {version="0.12", features = ["static-link-z3"]}
 ```
 
 ## Support and Maintenance
