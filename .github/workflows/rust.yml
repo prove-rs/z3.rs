@@ -12,6 +12,13 @@ env:
   RUSTFLAGS: "-D warnings"
 
 jobs:
+  check-formatting:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+    - name: Check formatting
+      run: cargo fmt -- --check
+
   build:
     runs-on: ubuntu-latest
     steps:
