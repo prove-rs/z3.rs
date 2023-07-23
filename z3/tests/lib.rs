@@ -593,21 +593,9 @@ fn test_rec_func_def() {
 
     let solver = Solver::new(&ctx);
 
-    solver.assert(
-        &x._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 4)])
-                .as_int()
-                .unwrap(),
-        ),
-    );
+    solver.assert(&x._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
     solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
-    solver.assert(
-        &y._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 5)])
-                .as_int()
-                .unwrap(),
-        ),
-    );
+    solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
     solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 120)));
 
     assert_eq!(solver.check(), SatResult::Sat)
@@ -637,21 +625,9 @@ fn test_rec_func_def_unsat() {
 
     let solver = Solver::new(&ctx);
 
-    solver.assert(
-        &x._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 4)])
-                .as_int()
-                .unwrap(),
-        ),
-    );
+    solver.assert(&x._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
     solver.assert(&y._eq(&ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
-    solver.assert(
-        &y._eq(
-            &fac.apply(&[&ast::Int::from_i64(&ctx, 5)])
-                .as_int()
-                .unwrap(),
-        ),
-    );
+    solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
 
     // If fac was an uninterpreted function, this assertion would work.
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
