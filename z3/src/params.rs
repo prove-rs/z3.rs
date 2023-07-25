@@ -69,7 +69,7 @@ impl<'ctx> Params<'ctx> {
 pub fn get_global_param(k: &str) -> Option<String> {
     let ks = CString::new(k).unwrap();
     let mut ptr = std::ptr::null();
-    if unsafe { Z3_global_param_get(ks.as_ptr(), &mut ptr as *mut *const i8) } {
+    if unsafe { Z3_global_param_get(ks.as_ptr(), &mut ptr as Z3_string_ptr) } {
         let vs = unsafe { CStr::from_ptr(ptr) };
         vs.to_str().ok().map(|vs| vs.to_owned())
     } else {
