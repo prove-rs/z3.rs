@@ -1,5 +1,6 @@
 //! Abstract syntax tree (AST).
 
+use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
@@ -176,11 +177,11 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(ctx: &'ctx Context, values: &[&Self]) -> $retty {
-                assert!(values.iter().all(|v| v.get_ctx().z3_ctx == ctx.z3_ctx));
+            pub fn $f(ctx: &'ctx Context, values: &[impl Borrow<Self>]) -> $retty {
+                assert!(values.iter().all(|v| v.borrow().get_ctx().z3_ctx == ctx.z3_ctx));
                 unsafe {
                     <$retty>::wrap(ctx, {
-                        let tmp: Vec<_> = values.iter().map(|x| x.z3_ast).collect();
+                        let tmp: Vec<_> = values.iter().map(|x| x.borrow().z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
                         $z3fn(ctx.z3_ctx, tmp.len() as u32, tmp.as_ptr())
                     })
