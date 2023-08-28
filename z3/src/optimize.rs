@@ -85,6 +85,11 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::assert()`]
     /// - [`Optimize::minimize()`]
     pub fn maximize(&self, ast: &impl Ast<'ctx>) {
+        // https://github.com/Z3Prover/z3/blob/09f911d8a84cd91988e5b96b69485b2a9a2edba3/src/opt/opt_context.cpp#L118-L120
+        assert!(matches!(
+            ast.get_sort().kind(),
+            SortKind::Int | SortKind::Real | SortKind::BV
+        ));
         unsafe { Z3_optimize_maximize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -95,6 +100,10 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::assert()`]
     /// - [`Optimize::maximize()`]
     pub fn minimize(&self, ast: &impl Ast<'ctx>) {
+        assert!(matches!(
+            ast.get_sort().kind(),
+            SortKind::Int | SortKind::Real | SortKind::BV
+        ));
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
     }
 
