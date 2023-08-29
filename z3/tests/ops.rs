@@ -209,6 +209,7 @@ fn test_ast_children() {
     assert_eq!(not_a.nth_child(1), None);
 
     let b = Bool::new_const(&ctx, "b");
+    // This is specifically testing for an array of values, not an array of slices
     let a_or_b = Bool::or(&ctx, &[a.clone(), b.clone()]);
     assert_eq!(a_or_b.num_children(), 2);
     assert_bool_child(&a_or_b, 0, &a);
