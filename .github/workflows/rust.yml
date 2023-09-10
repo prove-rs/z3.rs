@@ -20,11 +20,23 @@ jobs:
       run: cargo fmt -- --check
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        build: [linux, macos]
+        include:
+          - build: linux
+            os: ubuntu-latest
+          - build: macos
+            os: macos-latest
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
     - name: Install Z3
+      if: matrix.os == 'ubuntu-latest'
       run: sudo apt-get install libz3-dev
+    - name: Install Z3
+      if: matrix.os == 'macos-latest'
+      run: brew install z3
     - name: Build
       run: cargo build -vv --all
       # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
