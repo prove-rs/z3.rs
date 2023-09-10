@@ -1,16 +1,37 @@
 use std::env;
+use std::path::PathBuf;
 
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
+#[cfg(feature = "static-link-z3")]
+fn build_static() -> Vec<PathBuf> {
+    if let Ok(lib) = pkg_config::Config::new().statik(true).probe("z3") {
+        lib.include_paths
+    } else {
+        // Oh, we don't have a shipped z3
+        vec![build_z3()]
+    }
+}
+
+fn build_dynamic() -> Vec<PathBuf> {
+    if let Ok(lib) = pkg_config::Config::new().statik(false).probe("z3") {
+        lib.include_paths
+    } else {
+        // Nothing more to do, hope users have setup everything
+        vec![]
+    }
+}
+
 fn main() {
     #[cfg(feature = "static-link-z3")]
-    build_z3();
+    let includes = build_static();
+
+    #[cfg(not(feature = "static-link-z3"))]
+    let includes = build_dynamic();
 
     println!("cargo:rerun-if-changed=build.rs");
 
-    let header = if cfg!(feature = "static-link-z3") {
-        "z3/src/api/z3.h".to_string()
-    } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
+    let header = if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
         header_path
     } else {
         "wrapper.h".to_string()
@@ -35,7 +56,8 @@ fn main() {
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{}", x))
-            .allowlist_type(format!("Z3_{}", x));
+            .allowlist_type(format!("Z3_{}", x))
+            .clang_args(includes.iter().map(|v| format!("-I{}", v.display())));
         if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
             enum_bindings = enum_bindings.clang_arg(format!(
                 "--sysroot={}/upstream/emscripten/cache/sysroot",
@@ -51,7 +73,7 @@ fn main() {
 }
 
 #[cfg(feature = "static-link-z3")]
-fn build_z3() {
+fn build_z3() -> PathBuf {
     let mut cfg = cmake::Config::new("z3");
     cfg
         // Don't build `libz3.so`, build `libz3.a` instead.
@@ -127,4 +149,6 @@ fn build_z3() {
     if let Some(cxx) = cxx {
         println!("cargo:rustc-link-lib={}", cxx);
     }
+
+    dst.join("include")
 }
