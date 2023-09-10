@@ -13,6 +13,7 @@ fn build_static() -> Vec<PathBuf> {
     }
 }
 
+#[cfg(not(feature = "static-link-z3"))]
 fn build_dynamic() -> Vec<PathBuf> {
     if let Ok(lib) = pkg_config::Config::new().statik(false).probe("z3") {
         lib.include_paths
