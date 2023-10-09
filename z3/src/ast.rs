@@ -264,14 +264,17 @@ pub trait Ast<'ctx>: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(ctx: &'ctx Context, values: &[&Self]) -> Bool<'ctx>
+    fn distinct(ctx: &'ctx Context, values: &[impl Borrow<Self>]) -> Bool<'ctx>
     where
         Self: Sized,
     {
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
-                let values: Vec<Z3_ast> = values.iter().map(|nodes| nodes.get_z3_ast()).collect();
+                let values: Vec<Z3_ast> = values
+                    .iter()
+                    .map(|nodes| nodes.borrow().get_z3_ast())
+                    .collect();
                 Z3_mk_distinct(ctx.z3_ctx, values.len() as u32, values.as_ptr())
             })
         }
