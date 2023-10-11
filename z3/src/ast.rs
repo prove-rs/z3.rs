@@ -1528,6 +1528,27 @@ impl<'ctx> Array<'ctx> {
             })
         }
     }
+
+    /// Returns true if the array is a const array (i.e. a.is_const_array() => exists v, forall i. select(a, i) == v)
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{ast, Config, Context, ast::{Array, Int}, Sort};
+    /// # use z3::ast::Ast;
+    /// # use std::convert::TryInto;
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// let arr = Array::const_array(&ctx, &Sort::int(&ctx), &Int::from_u64(&ctx, 9));
+    /// assert!(arr.is_const_array());
+    /// let arr2 = Array::fresh_const(&ctx, "a", &Sort::int(&ctx), &Sort::int(&ctx));
+    /// assert!(!arr2.is_const_array());
+    /// ```
+    pub fn is_const_array(&self) -> bool {
+        // python:
+        // is_app_of(a, Z3_OP_CONST_ARRAY)
+        // >> is_app(a) and a.decl().kind() == Z3_OP_CONST_ARRAY
+        self.is_app() && matches!(self.decl().kind(), DeclKind::CONST_ARRAY)
+    }
 }
 
 impl<'ctx> Set<'ctx> {
