@@ -10,6 +10,8 @@ env:
   CARGO_INCREMENTAL: 0
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
   RUSTFLAGS: "-D warnings"
+  Z3_RELEASE: 'z3-4.12.1'
+  RUST_BACKTRACE: 'full'
 
 jobs:
   check-formatting:
@@ -20,26 +22,77 @@ jobs:
       run: cargo fmt -- --check
 
   build:
-    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+        link: [download, build, system]
+    runs-on: ${{ matrix.os }}
     steps:
     - uses: actions/checkout@v3
-    - name: Install Z3
-      run: sudo apt-get install libz3-dev
+      with:
+        submodules: recursive
+    - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
+      uses: KyleMayes/install-llvm-action@v1
+      if: runner.os == 'Windows'
+      with:
+        version: "11.0"
+        directory: ${{ runner.temp }}/llvm
+    - name: install c++ runtime on windows
+      if: runner.os == 'Windows'
+      shell: bash
+      run: |
+        choco install vcredist2017
+        echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
+    - name: Uninstall Z3 on Linux for non-system builds
+      if: runner.os == 'Linux' && matrix.link != 'system'
+      run: sudo apt-get remove libz3-dev
+    - name: Setup homebrew (macOS)
+      if: runner.os == 'macOS' && matrix.link == 'system'
+      shell: bash
+      run: |
+        echo "/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin" >> $GITHUB_PATH
+    - name: Install Z3 (macOS)
+      if: runner.os == 'macOS' && matrix.link == 'system'
+      shell: bash
+      run: (yes || true) | brew install z3
+
+    - name: Install Z3 on Windows for system builds
+      if: startsWith(matrix.os, 'windows-') && matrix.link == 'system'
+      run: |
+        mkdir .tmp
+        curl.exe -L "https://github.com/Z3Prover/z3/releases/download/${env:Z3_RELEASE}/${env:Z3_RELEASE}-x64-win.zip" -o ".tmp/${env:Z3_RELEASE}-x64-win.zip"
+        tar -xf ".tmp/${env:Z3_RELEASE}-x64-win.zip" -C ".tmp"
+        echo "${PWD}\.tmp\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_PATH
+        echo "LIB=${PWD}\.tmp\${env:Z3_RELEASE}-x64-win\bin" >> $env:GITHUB_ENV
+        echo "Z3_SYS_Z3_HEADER=${PWD}\.tmp\${env:Z3_RELEASE}-x64-win\include\z3.h" >> $env:GITHUB_ENV
+    - name: Config rust for windows
+      if: matrix.os == 'windows-latest'
+      run: rustup set default-host x86_64-pc-windows-msvc
+
+    - id: build-param
+      shell: bash
+      run: |
+        case "${{ matrix.link }}" in
+          "system" ) echo "param=" >> $GITHUB_OUTPUT ;;
+          "build" ) echo "param=--features force-build-z3" >> $GITHUB_OUTPUT ;;
+          "download" ) echo "param=--features static-link-z3" >> $GITHUB_OUTPUT ;;
+        esac
     - name: Build
-      run: cargo build -vv --all
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # statically-linked Z3 tests below...
-      if: ${{ success() || failure() }}
-    - name: Run tests
-      run: cargo test -vv --all
-      # See above.
-      if: ${{ success() || failure() }}
-    - name: Run tests with `arbitrary-size-numeral` enabled
-      run: cargo test --manifest-path z3/Cargo.toml -vv --features arbitrary-size-numeral
-      # See above.
-      if: ${{ success() || failure() }}
+      run: cargo build -vv --workspace --all-targets ${{ steps.build-param.outputs.param }}
+    # Avoid to run rustdoc tests due to toolchain bug (https://github.com/rust-lang/cargo/issues/8531)
+    - name: Run tests (non-Windows)
+      if: runner.os != 'Windows'
+      run: cargo test -vv --workspace ${{ steps.build-param.outputs.param }}
+    - name: Run tests (Windows)
+      if: runner.os == 'Windows'
+      run: cargo test -vv --workspace --tests ${{ steps.build-param.outputs.param }}
+    - name: Run tests with `arbitrary-size-numeral` enabled (non-Windows)
+      if: runner.os != 'Windows'
+      run: cargo test --manifest-path z3/Cargo.toml -vv --features=arbitrary-size-numeral ${{ steps.build-param.outputs.param }}
+    - name: Run tests with `arbitrary-size-numeral` enabled (Windows)
+      if: runner.os == 'Windows'
+      run: cargo test --manifest-path z3/Cargo.toml --tests -vv --features=arbitrary-size-numeral ${{ steps.build-param.outputs.param }}
 
   build_on_wasm:
     runs-on: ubuntu-latest
@@ -62,38 +115,6 @@ jobs:
       run: |
         source ~/emsdk/emsdk_env.sh
         cargo build --target=wasm32-unknown-emscripten -vv --features static-link-z3
-
-  build_z3_statically:
-    strategy:
-      matrix:
-        build: [linux, macos, windows]
-        include:
-          - build: linux
-            os: ubuntu-latest
-          - build: macos
-            os: macos-latest
-          - build: windows
-            os: windows-latest
-    runs-on: ${{ matrix.os }}
-    steps:
-      - uses: actions/checkout@v3
-        with:
-          submodules: recursive
-      - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
-        uses: KyleMayes/install-llvm-action@v1
-        if: matrix.os == 'windows-latest'
-        with:
-          version: "11.0"
-          directory: ${{ runner.temp }}/llvm
-      - name: Set LIBCLANG_PATH
-        run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
-        if: matrix.os == 'windows-latest'
-      - name: Build `z3-sys` and `z3` with statically linked Z3
-        run: cargo build -vv --features static-link-z3
-      - name: Test `z3-sys` and `z3` with statically linked Z3
-        run: cargo test -vv --features static-link-z3
-      - name: Test `z3` with statically linked Z3 and `arbitrary-size-numeral` enabled
-        run: cargo test --manifest-path z3/Cargo.toml -vv --features 'static-link-z3 arbitrary-size-numeral'
 
   run_clippy:
     runs-on: ubuntu-latest

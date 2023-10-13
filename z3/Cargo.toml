@@ -17,9 +17,14 @@ repository = "https://github.com/prove-rs/z3.rs.git"
 default = []
 arbitrary-size-numeral = ["num"]
 
-# Enable this feature to statically link our own build of Z3, rather than
+# Enable this feature to statically link Z3 library, rather than
 # dynamically linking to the system's `libz3.so`.
+# If binary release of z3 is not available for the architecture,
+# then fallback to 'force-build-z3'.
 static-link-z3 = ["z3-sys/static-link-z3"]
+
+# Force to build z3 locally, which may reads to more efficiency.
+force-build-z3 = ["z3-sys/force-build-z3"]
 
 [dependencies]
 log = "0.4"
