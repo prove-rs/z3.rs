@@ -1221,7 +1221,7 @@ fn test_tactic_fail() {
 
     let tactic = Tactic::new(&ctx, "fail");
     let apply_results = tactic.apply(&goal, Some(&params));
-    assert!(matches!(apply_results, Err(_)));
+    assert!(apply_results.is_err());
 }
 
 #[test]
