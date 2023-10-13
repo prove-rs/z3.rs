@@ -1,5 +1,6 @@
 use std::env;
 
+#[cfg(not(feature = "vcpkg"))]
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
 #[cfg(not(feature = "vcpkg"))]
