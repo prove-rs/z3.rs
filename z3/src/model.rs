@@ -165,7 +165,7 @@ impl<'ctx> Drop for Model<'ctx> {
 }
 
 #[derive(Debug)]
-/// https://z3prover.github.io/api/html/classz3py_1_1_model_ref.html#a7890b7c9bc70cf2a26a343c22d2c8367
+/// <https://z3prover.github.io/api/html/classz3py_1_1_model_ref.html#a7890b7c9bc70cf2a26a343c22d2c8367>
 pub struct ModelIter<'ctx> {
     model: &'ctx Model<'ctx>,
     idx: u32,

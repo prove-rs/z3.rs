@@ -389,8 +389,8 @@ pub trait Ast<'ctx>: fmt::Debug {
 
     /// Return the `FuncDecl` of the `Ast`.
     ///
-    /// This will panic if the `Ast` is not an app, i.e. if AstKind is not App
-    /// or Numeral.
+    /// This will panic if the `Ast` is not an app, i.e. if [`AstKind`] is not
+    /// [`AstKind::App`] or [`AstKind::Numeral`].
     fn decl(&self) -> FuncDecl<'ctx> {
         self.safe_decl().expect("Ast is not an app")
     }

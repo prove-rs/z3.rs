@@ -1619,7 +1619,7 @@ fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
 }
 
 #[test]
-/// https://github.com/Z3Prover/z3/blob/21e59f7c6e5033006265fc6bc16e2c9f023db0e8/examples/dotnet/Program.cs#L329-L370
+/// <https://github.com/Z3Prover/z3/blob/21e59f7c6e5033006265fc6bc16e2c9f023db0e8/examples/dotnet/Program.cs#L329-L370>
 fn test_array_example1() {
     let cfg = Config::new();
     let ctx = &Context::new(&cfg);
@@ -1671,7 +1671,7 @@ fn test_array_example1() {
 }
 
 #[test]
-/// https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html
+/// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 fn return_number_args_in_given_entry() {
     let cfg = Config::new();
     let ctx = &Context::new(&cfg);
@@ -1712,7 +1712,7 @@ fn return_number_args_in_given_entry() {
 }
 
 #[test]
-/// https://stackoverflow.com/questions/13395391/z3-finding-all-satisfying-models
+/// <https://stackoverflow.com/questions/13395391/z3-finding-all-satisfying-models>
 fn iterate_all_solutions() {
     let cfg = Config::new();
     let ctx = &Context::new(&cfg);
