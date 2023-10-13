@@ -59,16 +59,26 @@ fn generate_binding(header: &str) {
         "symbol_kind",
     ] {
         let mut enum_bindings = bindgen::Builder::default()
-            .header(&header)
+            .header(header)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{}", x))
             .allowlist_type(format!("Z3_{}", x));
-        if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
-            enum_bindings = enum_bindings.clang_arg(format!(
-                "--sysroot={}/upstream/emscripten/cache/sysroot",
-                env::var("EMSDK").expect("$EMSDK env var missing. Is emscripten installed?")
-            ));
+        let target = env::var("TARGET").unwrap();
+        let wasm32 = target.starts_with("wasm32-unknown");
+        let wasm32_emscripten = target == "wasm32-unknown-emscripten";
+        if wasm32 {
+            let sysroot = env::var("EMSDK")
+                .map(|emsdk| format!("{}/upstream/emscripten/cache/sysroot", emsdk))
+                .or_else(|_err| {
+                    env::var("EMSCRIPTEN_ROOT")
+                        .map(|emscripten_root| format!("{}/cache/sysroot", emscripten_root))
+                });
+            if let Ok(sysroot) = sysroot {
+                enum_bindings = enum_bindings.clang_arg(format!("--sysroot={}", sysroot));
+            } else if wasm32_emscripten {
+                panic!("$EMSDK and $EMSCRIPTEN_ROOT env var missing. Is emscripten installed?");
+            }
         }
         enum_bindings
             .generate()
