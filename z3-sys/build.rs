@@ -2,6 +2,7 @@ use std::env;
 
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
+#[cfg(not(feature = "vcpkg"))]
 fn main() {
     #[cfg(feature = "static-link-z3")]
     build_z3();
@@ -17,6 +18,33 @@ fn main() {
     };
     println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
     println!("cargo:rerun-if-changed={}", header);
+
+    generate_binding(&header);
+}
+
+#[cfg(feature = "vcpkg")]
+fn main() {
+    let lib = vcpkg::Config::new()
+        .emit_includes(true)
+        .find_package("z3")
+        .unwrap();
+    let found_header = lib.include_paths.iter().any(|include| {
+        let mut include = include.clone();
+        include.push("z3.h");
+        if include.exists() {
+            generate_binding(include.to_str().unwrap());
+            true
+        } else {
+            false
+        }
+    });
+    assert!(
+        found_header,
+        "z3.h is not found in include path of installed z3."
+    );
+}
+
+fn generate_binding(header: &str) {
     let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     for x in &[
