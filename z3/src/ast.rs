@@ -1529,7 +1529,7 @@ impl<'ctx> Array<'ctx> {
         }
     }
 
-    /// Returns true if the array is a const array (i.e. a.is_const_array() => exists v, forall i. select(a, i) == v)
+    /// Returns true if the array is a const array (i.e. `a.is_const_array() => exists v, forall i. select(a, i) == v`)
     ///
     /// # Examples
     /// ```
