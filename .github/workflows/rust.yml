@@ -135,6 +135,8 @@ jobs:
           revision: master
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
+      - name: Show default toolchain of rust.
+        run: rustup default
       - name: Build `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo build -vv --features vcpkg
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
