@@ -1163,7 +1163,7 @@ impl<'ctx> String<'ctx> {
         contains(Z3_mk_seq_contains, Bool<'ctx>);
         /// Checks whether `Self` is a prefix of the argument
         prefix(Z3_mk_seq_prefix, Bool<'ctx>);
-        /// Checks whether `Self` is a sufix of the argument
+        /// Checks whether `Self` is a suffix of the argument
         suffix(Z3_mk_seq_suffix, Bool<'ctx>);
     }
 }
@@ -1529,7 +1529,7 @@ impl<'ctx> Array<'ctx> {
         }
     }
 
-    /// Returns true if the array is a const array (i.e. a.is_const_array() => exists v, forall i. select(a, i) == v)
+    /// Returns true if the array is a const array (i.e. `a.is_const_array() => exists v, forall i. select(a, i) == v`)
     ///
     /// # Examples
     /// ```
