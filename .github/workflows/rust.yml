@@ -98,7 +98,7 @@ jobs:
     strategy:
       matrix:
         build: [linux, macos, windows]
-        config:
+        include:
           - os: ubuntu-latest
             vcpkg_triplet: x64-linux
           - os: macos-latest
@@ -124,8 +124,8 @@ jobs:
         id: vcpkg
         with:
           pkgs: z3
-          triplet: ${{ matrix.config.vcpkg_triplet }}
-          cache-key: ${{ matrix.config.os }}
+          triplet: ${{ matrix.vcpkg_triplet }}
+          cache-key: ${{ matrix.os }}
           revision: master
           token: ${{ github.token }}
       - name: Build `z3-sys` and `z3` with vcpkg installed Z3
