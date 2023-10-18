@@ -96,16 +96,16 @@ jobs:
         run: cargo test --manifest-path z3/Cargo.toml -vv --features 'static-link-z3 arbitrary-size-numeral'
   build_with_vcpkg_installed_z3:
     strategy:
+      fail-fast: false
       matrix:
         build: [linux, macos, windows]
         include:
           - build: linux
             os: ubuntu-latest
             vcpkg_triplet: x64-linux
-          # It fails on macos.
-          # - build: macos
-          #   os: macos-latest
-          #   vcpkg_triplet: x64-osx
+          - build: macos
+            os: macos-latest
+            vcpkg_triplet: x64-osx
           - build: windows
             os: windows-latest
             vcpkg_triplet: x64-windows-static-md
