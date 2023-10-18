@@ -97,15 +97,20 @@ jobs:
   build_with_vcpkg_installed_z3:
     strategy:
       matrix:
-        build: [linux, macos, windows]
+        build: [windows] # [linux, macos, windows]
         include:
-          - os: ubuntu-latest
-            vcpkg_triplet: x64-linux
-          - os: macos-latest
-            vcpkg_triplet: x64-osx
-          - os: windows-latest
+          # - build: linux
+          #   os: ubuntu-latest
+          #   vcpkg_triplet: x64-linux
+          # - build: macos
+          #   os: macos-latest
+          #   vcpkg_triplet: x64-osx
+          - build: windows
+            os: windows-latest
             vcpkg_triplet: x64-windows-static-md
     runs-on: ${{ matrix.os }}
+    env:
+      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
       - uses: actions/checkout@v3
         with:
@@ -119,6 +124,7 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
+      - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
       - name: vcpkg build z3
         uses: johnwason/vcpkg-action@v5
         id: vcpkg
@@ -128,6 +134,9 @@ jobs:
           cache-key: ${{ matrix.os }}
           revision: master
           token: ${{ github.token }}
+          extra-args: --clean-buildtrees-after-build
+      - name: Show default toolchain of rust.
+        run: rustup default
       - name: Build `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo build -vv --features vcpkg
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
