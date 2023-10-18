@@ -29,6 +29,7 @@
 
 #![allow(non_camel_case_types)]
 #![allow(clippy::unreadable_literal)]
+#![warn(clippy::doc_markdown)]
 
 mod generated;
 

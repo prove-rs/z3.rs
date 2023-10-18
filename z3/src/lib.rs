@@ -3,6 +3,7 @@
 //! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
 
 #![allow(clippy::unreadable_literal)]
+#![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
 
 #[macro_use]
