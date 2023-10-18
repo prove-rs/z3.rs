@@ -1163,7 +1163,7 @@ impl<'ctx> String<'ctx> {
         contains(Z3_mk_seq_contains, Bool<'ctx>);
         /// Checks whether `Self` is a prefix of the argument
         prefix(Z3_mk_seq_prefix, Bool<'ctx>);
-        /// Checks whether `Self` is a sufix of the argument
+        /// Checks whether `Self` is a suffix of the argument
         suffix(Z3_mk_seq_suffix, Bool<'ctx>);
     }
 }
