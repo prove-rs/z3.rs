@@ -98,7 +98,7 @@ jobs:
     strategy:
       matrix:
         build: [linux, macos, windows]
-        include:
+        config:
           - os: ubuntu-latest
             vcpkg_triplet: x64-linux
           - os: macos-latest
@@ -123,7 +123,7 @@ jobs:
         uses: johnwason/vcpkg-action@v5
         id: vcpkg
         with:
-          pkgs: boost-date-time
+          pkgs: z3
           triplet: ${{ matrix.config.vcpkg_triplet }}
           cache-key: ${{ matrix.config.os }}
           revision: master
