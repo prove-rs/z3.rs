@@ -4,9 +4,11 @@ use std::env;
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
 fn main() {
+    // Feature `vcpkg` is prior to `static-link-z3` as vcpkg-installed z3 is also statically linked.
+
     #[cfg(not(feature = "vcpkg"))]
     #[cfg(feature = "static-link-z3")]
-    build_z3();
+    build_bundled_z3();
 
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -94,8 +96,10 @@ fn generate_binding(header: &str) {
     }
 }
 
+/// Build z3 with bundled source codes.
+#[cfg(not(feature = "vcpkg"))]
 #[cfg(feature = "static-link-z3")]
-fn build_z3() {
+fn build_bundled_z3() {
     let mut cfg = cmake::Config::new("z3");
     cfg
         // Don't build `libz3.so`, build `libz3.a` instead.
