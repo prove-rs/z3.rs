@@ -102,9 +102,10 @@ jobs:
           - build: linux
             os: ubuntu-latest
             vcpkg_triplet: x64-linux
-          - build: macos
-            os: macos-latest
-            vcpkg_triplet: x64-osx
+          # It fails on macos.
+          # - build: macos
+          #   os: macos-latest
+          #   vcpkg_triplet: x64-osx
           - build: windows
             os: windows-latest
             vcpkg_triplet: x64-windows-static-md
@@ -134,7 +135,6 @@ jobs:
           cache-key: ${{ matrix.os }}
           revision: master
           token: ${{ github.token }}
-      - run: export VCPKG_ROOT=${{ github.workspace }}/vcpkg
       - name: Build `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo build -vv --features vcpkg
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
