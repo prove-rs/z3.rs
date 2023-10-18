@@ -21,6 +21,9 @@ arbitrary-size-numeral = ["num"]
 # dynamically linking to the system's `libz3.so`.
 static-link-z3 = ["z3-sys/static-link-z3"]
 
+
+# Enable this feature to use z3 that is built with vcpkg.
+# Note that by default vcpkg-rs uses *-windows-static-md triplet on Windows.
 vcpkg = ["z3-sys/vcpkg"]
 
 [dependencies]

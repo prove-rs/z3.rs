@@ -24,4 +24,7 @@ vcpkg = { version = "0.2.15", optional = true }
 # Enable this feature to statically link our own build of Z3, rather than
 # dynamically linking to the system's `libz3.so`.
 static-link-z3 = ["cmake"]
+
+# Enable this feature to use z3 that is built with vcpkg.
+# Note that by default vcpkg-rs uses *-windows-static-md triplet on Windows.
 vcpkg = ["dep:vcpkg"]
