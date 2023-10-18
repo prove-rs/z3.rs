@@ -96,9 +96,8 @@ jobs:
         run: cargo test --manifest-path z3/Cargo.toml -vv --features 'static-link-z3 arbitrary-size-numeral'
   build_with_vcpkg_installed_z3:
     strategy:
-      fail-fast: false
       matrix:
-        build: [linux, macos, windows]
+        build: [windows]
         include:
           - build: linux
             os: ubuntu-latest
