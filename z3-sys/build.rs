@@ -3,13 +3,41 @@ use std::env;
 #[cfg(not(feature = "vcpkg"))]
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
-#[cfg(not(feature = "vcpkg"))]
 fn main() {
+    #[cfg(not(feature = "vcpkg"))]
     #[cfg(feature = "static-link-z3")]
     build_z3();
 
     println!("cargo:rerun-if-changed=build.rs");
 
+    #[cfg(not(feature = "vcpkg"))]
+    let header = find_header_by_env();
+    #[cfg(feature = "vcpkg")]
+    let header = find_library_header_by_vcpkg();
+
+    generate_binding(&header);
+}
+
+#[cfg(feature = "vcpkg")]
+fn find_library_header_by_vcpkg() -> String {
+    let lib = vcpkg::Config::new()
+        .emit_includes(true)
+        .find_package("z3")
+        .unwrap();
+    for include in lib.include_paths.iter() {
+        let mut include = include.clone();
+        include.push("z3.h");
+        if include.exists() {
+            let header = include.to_str().unwrap().to_owned();
+            println!("cargo:rerun-if-changed={}", header);
+            return header;
+        }
+    }
+    panic!("z3.h is not found in include path of installed z3.");
+}
+
+#[cfg(not(feature = "vcpkg"))]
+fn find_header_by_env() -> String {
     let header = if cfg!(feature = "static-link-z3") {
         "z3/src/api/z3.h".to_string()
     } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
@@ -19,30 +47,7 @@ fn main() {
     };
     println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
     println!("cargo:rerun-if-changed={}", header);
-
-    generate_binding(&header);
-}
-
-#[cfg(feature = "vcpkg")]
-fn main() {
-    let lib = vcpkg::Config::new()
-        .emit_includes(true)
-        .find_package("z3")
-        .unwrap();
-    let found_header = lib.include_paths.iter().any(|include| {
-        let mut include = include.clone();
-        include.push("z3.h");
-        if include.exists() {
-            generate_binding(include.to_str().unwrap());
-            true
-        } else {
-            false
-        }
-    });
-    assert!(
-        found_header,
-        "z3.h is not found in include path of installed z3."
-    );
+    header
 }
 
 fn generate_binding(header: &str) {
