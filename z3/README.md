@@ -26,11 +26,11 @@ z3 = "0.12"
 
 **Note:** This library has a dependency on Z3. You will either need to
 have the Z3 dependency already installed, or you can statically link
-to our build of Z3 like so:
+to the build of our bundled Z3 like so:
 
 ```toml
 [dependencies]
-z3 = {version="0.12", features = ["static-link-z3"]}
+z3 = {version="0.12", features = ["bundled-z3"]}
 ```
 
 ## Support and Maintenance

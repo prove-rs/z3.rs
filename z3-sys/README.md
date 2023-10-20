@@ -27,7 +27,7 @@ z3-sys = "0.8"
 **Note:** This crate requires a `z3.h` during build time.
 
 * By default, the crate will look for a `z3.h` in standard/system include paths.
-* If the feature `static-link-z3` is enabled, the `z3.h` of the built Z3 will be used.
+* If the feature `bundled-z3` is enabled, the `z3.h` of the built Z3 will be used.
 * If the feature `vcpkg` is enabled, the `z3.h` of the built Z3 in vcpkg will be used.
   Please note that [vcpkg-rs](https://docs.rs/vcpkg-rs) uses `*-windows-static-md` on Windows platform by default.
 * Alternatively, the path to the desired `z3.h` can be specified via the environment variable

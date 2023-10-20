@@ -4,10 +4,12 @@ use std::env;
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
 fn main() {
-    // Feature `vcpkg` is prior to `static-link-z3` as vcpkg-installed z3 is also statically linked.
+    #[cfg(feature = "vcpkg")]
+    #[cfg(feature = "bundled-z3")]
+    panic!("Feature `vcpkg` conflicts with `bundled-z3`.");
 
     #[cfg(not(feature = "vcpkg"))]
-    #[cfg(feature = "static-link-z3")]
+    #[cfg(feature = "bundled-z3")]
     build_bundled_z3();
 
     println!("cargo:rerun-if-changed=build.rs");
@@ -40,7 +42,7 @@ fn find_library_header_by_vcpkg() -> String {
 
 #[cfg(not(feature = "vcpkg"))]
 fn find_header_by_env() -> String {
-    let header = if cfg!(feature = "static-link-z3") {
+    let header = if cfg!(feature = "bundled-z3") {
         "z3/src/api/z3.h".to_string()
     } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
         header_path
@@ -88,7 +90,7 @@ fn generate_binding(header: &str) {
 
 /// Build z3 with bundled source codes.
 #[cfg(not(feature = "vcpkg"))]
-#[cfg(feature = "static-link-z3")]
+#[cfg(feature = "bundled-z3")]
 fn build_bundled_z3() {
     let mut cfg = cmake::Config::new("z3");
     cfg
