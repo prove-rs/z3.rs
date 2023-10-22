@@ -4092,6 +4092,8 @@ extern "C" {
     ///
     /// - `Z3_get_ast_kind(c, a) == AstKind::Numeral || Z3_is_algebraic_number(c, a)`
     ///
+    /// # See also:
+    ///
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::Numeral`]
     pub fn Z3_get_numeral_double(c: Z3_context, a: Z3_ast) -> f64;
