@@ -407,6 +407,15 @@ fn test_real_cmp() {
 }
 
 #[test]
+fn test_float() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let f = ast::Float::from_f64(&ctx, 1.0);
+    assert_eq!(f.as_f64(), 1.0);
+}
+
+#[test]
 fn test_float_add() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
