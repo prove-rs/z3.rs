@@ -18,8 +18,10 @@ repository = "https://github.com/prove-rs/z3.rs.git"
 [build-dependencies]
 bindgen = { version = "0.66.0", default-features = false, features = ["runtime"] }
 cmake = { version = "0.1.49", optional = true }
+vcpkg = { version = "0.2.15", optional = true }
 
 [features]
 # Enable this feature to statically link our own build of Z3, rather than
 # dynamically linking to the system's `libz3.so`.
 static-link-z3 = ["cmake"]
+vcpkg = ["dep:vcpkg"]

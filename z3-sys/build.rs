@@ -1,13 +1,45 @@
 use std::env;
 
+#[cfg(not(feature = "vcpkg"))]
 const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
 
 fn main() {
+    // Feature `vcpkg` is prior to `static-link-z3` as vcpkg-installed z3 is also statically linked.
+
+    #[cfg(not(feature = "vcpkg"))]
     #[cfg(feature = "static-link-z3")]
-    build_z3();
+    build_bundled_z3();
 
     println!("cargo:rerun-if-changed=build.rs");
 
+    #[cfg(not(feature = "vcpkg"))]
+    let header = find_header_by_env();
+    #[cfg(feature = "vcpkg")]
+    let header = find_library_header_by_vcpkg();
+
+    generate_binding(&header);
+}
+
+#[cfg(feature = "vcpkg")]
+fn find_library_header_by_vcpkg() -> String {
+    let lib = vcpkg::Config::new()
+        .emit_includes(true)
+        .find_package("z3")
+        .unwrap();
+    for include in lib.include_paths.iter() {
+        let mut include = include.clone();
+        include.push("z3.h");
+        if include.exists() {
+            let header = include.to_str().unwrap().to_owned();
+            println!("cargo:rerun-if-changed={}", header);
+            return header;
+        }
+    }
+    panic!("z3.h is not found in include path of installed z3.");
+}
+
+#[cfg(not(feature = "vcpkg"))]
+fn find_header_by_env() -> String {
     let header = if cfg!(feature = "static-link-z3") {
         "z3/src/api/z3.h".to_string()
     } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
@@ -17,6 +49,10 @@ fn main() {
     };
     println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
     println!("cargo:rerun-if-changed={}", header);
+    header
+}
+
+fn generate_binding(header: &str) {
     let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
 
     for x in &[
@@ -31,7 +67,7 @@ fn main() {
         "symbol_kind",
     ] {
         let mut enum_bindings = bindgen::Builder::default()
-            .header(&header)
+            .header(header)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{}", x))
@@ -50,8 +86,10 @@ fn main() {
     }
 }
 
+/// Build z3 with bundled source codes.
+#[cfg(not(feature = "vcpkg"))]
 #[cfg(feature = "static-link-z3")]
-fn build_z3() {
+fn build_bundled_z3() {
     let mut cfg = cmake::Config::new("z3");
     cfg
         // Don't build `libz3.so`, build `libz3.a` instead.
