@@ -31,7 +31,7 @@ fn find_library_header_by_vcpkg() -> String {
         include.push("z3.h");
         if include.exists() {
             let header = include.to_str().unwrap().to_owned();
-            println!("cargo:rerun-if-changed={}", header);
+            println!("cargo:rerun-if-changed={header}");
             return header;
         }
     }
@@ -70,8 +70,8 @@ fn generate_binding(header: &str) {
             .header(header)
             .parse_callbacks(Box::new(bindgen::CargoCallbacks))
             .generate_comments(false)
-            .rustified_enum(format!("Z3_{}", x))
-            .allowlist_type(format!("Z3_{}", x));
+            .rustified_enum(format!("Z3_{x}"))
+            .allowlist_type(format!("Z3_{x}"));
         if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
             enum_bindings = enum_bindings.clang_arg(format!(
                 "--sysroot={}/upstream/emscripten/cache/sysroot",
@@ -81,7 +81,7 @@ fn generate_binding(header: &str) {
         enum_bindings
             .generate()
             .expect("Unable to generate bindings")
-            .write_to_file(out_path.join(format!("{}.rs", x)))
+            .write_to_file(out_path.join(format!("{x}.rs")))
             .expect("Couldn't write bindings!");
     }
 }

@@ -84,7 +84,7 @@ impl Config {
     }
 
     pub fn set_timeout_msec(&mut self, ms: u64) {
-        self.set_param_value("timeout", &format!("{}", ms));
+        self.set_param_value("timeout", &format!("{ms}"));
     }
 }
 

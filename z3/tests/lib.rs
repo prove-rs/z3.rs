@@ -139,10 +139,10 @@ fn test_format() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let ast = ast::Int::new_const(&ctx, "x");
-    assert_eq!("x", format!("{}", ast));
+    assert_eq!("x", format!("{ast}"));
 
     let int = Sort::int(&ctx);
-    assert_eq!("Int", format!("{}", int));
+    assert_eq!("Int", format!("{int}"));
 }
 
 #[test]
@@ -974,7 +974,7 @@ fn check_application_of_tactic_to_goal() {
     goal.assert(&y_greater_than_or_equal_to_one);
 
     assert_eq!(
-        format!("{}", goal),
+        format!("{goal}"),
         "(goal\n  x\n  (>= (+ y 1) 2)\n  (>= y 1))"
     );
     let apply_results = repeat_tactic.apply(&goal, Some(&params));
@@ -984,7 +984,7 @@ fn check_application_of_tactic_to_goal() {
         .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
 
-    assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 1))");
+    assert_eq!(format!("{goal_result}"), "(goal\n  x\n  (>= y 1))");
 }
 
 #[test]
@@ -1084,9 +1084,9 @@ fn test_goal_reset() {
     let a = ast::Bool::new_const(&ctx, "a");
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a);
-    assert_eq!(format!("{}", goal), "(goal\n  a)");
+    assert_eq!(format!("{goal}"), "(goal\n  a)");
     goal.reset();
-    assert_eq!(format!("{}", goal), "(goal)");
+    assert_eq!(format!("{goal}"), "(goal)");
 }
 
 #[test]
@@ -1247,7 +1247,7 @@ fn test_tactic_try_for() {
         .list_subgoals()
         .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
-    assert_eq!(format!("{}", goal_result), "(goal\n  (>= x 3))");
+    assert_eq!(format!("{goal_result}"), "(goal\n  (>= x 3))");
 }
 
 #[test]
@@ -1324,8 +1324,7 @@ fn test_goal_apply_tactic() {
         assert_eq!(
             goal_result.get_formulas::<Bool>(),
             after_formulas,
-            "Before: {:?}",
-            before_formulas
+            "Before: {before_formulas:?}"
         );
     }
 
@@ -1644,10 +1643,10 @@ fn test_array_example1() {
     for a in g.get_formulas() {
         s.assert(&a);
     }
-    println!("Solver: {}", s);
+    println!("Solver: {s}");
 
     let q = s.check();
-    println!("Status: {:?}", q);
+    println!("Status: {q:?}");
 
     if q != SatResult::Sat {
         panic!("Solver did not return sat");
