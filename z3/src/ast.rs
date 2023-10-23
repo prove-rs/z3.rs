@@ -12,7 +12,6 @@ use z3_sys::*;
 
 use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
 
-#[cfg(feature = "arbitrary-size-numeral")]
 use num::{bigint::BigInt, rational::BigRational};
 
 /// [`Ast`] node representing a boolean value.
@@ -556,7 +555,6 @@ impl_from_try_into_dynamic!(Set, as_set);
 impl_ast!(Regexp);
 
 impl<'ctx> Int<'ctx> {
-    #[cfg(feature = "arbitrary-size-numeral")]
     pub fn from_big_int(ctx: &'ctx Context, value: &BigInt) -> Int<'ctx> {
         Int::from_str(ctx, &value.to_str_radix(10)).unwrap()
     }
@@ -577,7 +575,6 @@ impl<'ctx> Int<'ctx> {
 }
 
 impl<'ctx> Real<'ctx> {
-    #[cfg(feature = "arbitrary-size-numeral")]
     pub fn from_big_rational(ctx: &'ctx Context, value: &BigRational) -> Real<'ctx> {
         let num = value.numer();
         let den = value.denom();
