@@ -9,13 +9,8 @@ use std::time::Duration;
 use z3::ast::{Array, Ast, Bool, Int, BV};
 use z3::*;
 
-#[cfg(feature = "arbitrary-size-numeral")]
 extern crate num;
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::bigint::BigInt;
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::rational::BigRational;
-#[cfg(feature = "arbitrary-size-numeral")]
+use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 
 #[test]
@@ -458,7 +453,6 @@ fn test_arbitrary_size_int() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 #[test]
 fn test_arbitrary_size_real_from_bigrational() {
     let cfg = Config::new();
@@ -476,7 +470,6 @@ fn test_arbitrary_size_real_from_bigrational() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 #[test]
 fn test_arbitrary_size_int_from_bigint() {
     let cfg = Config::new();

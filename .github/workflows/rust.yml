@@ -32,10 +32,6 @@ jobs:
       # we figure out how to work around it. At least we have the
       # statically-linked Z3 tests below...
       if: ${{ success() || failure() }}
-    - name: Run tests with `arbitrary-size-numeral` enabled
-      run: cargo test --workspace --features arbitrary-size-numeral
-      # See above.
-      if: ${{ success() || failure() }}
 
   build_on_wasm:
     runs-on: ubuntu-latest
@@ -86,8 +82,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - name: Test `z3-sys` and `z3` with statically linked Z3
         run: cargo test --workspace --features static-link-z3
-      - name: Test `z3` with statically linked Z3 and `arbitrary-size-numeral` enabled
-        run: cargo test --workspace --features 'static-link-z3 arbitrary-size-numeral'
+
   build_with_vcpkg_installed_z3:
     strategy:
       matrix:
@@ -133,8 +128,6 @@ jobs:
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo test --workspace --features vcpkg
-      - name: Test `z3` with vcpkg installed Z3 and `arbitrary-size-numeral` enabled
-        run: cargo test --workspace --features 'vcpkg arbitrary-size-numeral'
 
   run_clippy:
     runs-on: macos-latest

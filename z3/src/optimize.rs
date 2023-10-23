@@ -9,7 +9,6 @@ use crate::{
     Context, Model, Optimize, SatResult, Statistics, Symbol,
 };
 
-#[cfg(feature = "arbitrary-size-numeral")]
 use num::{
     bigint::{BigInt, BigUint, Sign},
     rational::BigRational,
@@ -270,7 +269,6 @@ impl_weight! {
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 impl Weight for BigInt {
     fn to_string(&self) -> String {
         assert_ne!(self.sign(), Sign::Minus);
@@ -278,14 +276,12 @@ impl Weight for BigInt {
     }
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 impl Weight for BigUint {
     fn to_string(&self) -> String {
         self.to_str_radix(10)
     }
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 impl Weight for BigRational {
     fn to_string(&self) -> String {
         assert_ne!(self.numer().sign(), Sign::Minus);
@@ -309,11 +305,8 @@ macro_rules! impl_sealed {
                 impl Sealed for ($ty, $ty) {}
             )*
 
-            #[cfg(feature = "arbitrary-size-numeral")]
             impl Sealed for BigInt {}
-            #[cfg(feature = "arbitrary-size-numeral")]
             impl Sealed for BigUint {}
-            #[cfg(feature = "arbitrary-size-numeral")]
             impl Sealed for BigRational {}
         }
     };
