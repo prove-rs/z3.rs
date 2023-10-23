@@ -1,8 +1,9 @@
-use crate::ast::{Ast, Bool, Float, Int, Real, BV};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
 };
+
+use crate::ast::{Ast, Bool, Float, Int, Real, BV};
 
 macro_rules! mk_const_bv {
     ($constant:expr, $function:ident, $val:expr, $other:expr) => {

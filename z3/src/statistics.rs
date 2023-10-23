@@ -2,8 +2,8 @@ use std::ffi::CStr;
 use std::fmt;
 
 use z3_sys::*;
-use Context;
-use Statistics;
+
+use crate::{Context, Statistics};
 
 /// The value for a key in [`Statistics`].
 ///

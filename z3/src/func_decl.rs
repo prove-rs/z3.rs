@@ -1,10 +1,10 @@
-use ast;
-use ast::Ast;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
+
 use z3_sys::*;
-use {Context, FuncDecl, Sort, Symbol};
+
+use crate::{ast, ast::Ast, Context, FuncDecl, Sort, Symbol};
 
 impl<'ctx> FuncDecl<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {

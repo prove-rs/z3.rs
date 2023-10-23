@@ -1,9 +1,9 @@
 use std::ffi::{CStr, CString};
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Params;
-use Symbol;
+
+use crate::{Context, Params, Symbol};
 
 impl<'ctx> Params<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_params: Z3_params) -> Params<'ctx> {

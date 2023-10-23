@@ -4,9 +4,8 @@ use std::result::Result;
 use std::str::Utf8Error;
 
 use z3_sys::*;
-use Context;
-use Goal;
-use Probe;
+
+use crate::{Context, Goal, Probe};
 
 impl<'ctx> Probe<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_probe: Z3_probe) -> Probe<'ctx> {

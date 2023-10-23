@@ -1,6 +1,8 @@
 use std::ffi::CString;
+
 use z3_sys::*;
-use Config;
+
+use crate::Config;
 
 impl Config {
     /// Create a configuration object for the Z3 context object.

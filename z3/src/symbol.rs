@@ -1,7 +1,8 @@
 use std::ffi::CString;
+
 use z3_sys::*;
-use Context;
-use Symbol;
+
+use crate::{Context, Symbol};
 
 impl Symbol {
     pub fn as_z3_symbol(&self, ctx: &Context) -> Z3_symbol {
