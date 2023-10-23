@@ -1,14 +1,13 @@
-use ast::{Ast, Bool, Dynamic};
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Model;
-use Optimize;
-use SatResult;
-use Statistics;
-use Symbol;
+
+use crate::{
+    ast::{Ast, Bool, Dynamic},
+    Context, Model, Optimize, SatResult, Statistics, Symbol,
+};
 
 #[cfg(feature = "arbitrary-size-numeral")]
 use num::{

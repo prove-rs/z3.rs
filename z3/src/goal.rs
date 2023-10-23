@@ -3,10 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::ast;
-use crate::ast::Ast;
-use Context;
-use Goal;
+use crate::{ast, ast::Ast, Context, Goal};
 
 impl<'ctx> Clone for Goal<'ctx> {
     fn clone(&self) -> Self {

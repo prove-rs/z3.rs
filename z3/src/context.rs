@@ -1,8 +1,8 @@
 use std::ffi::CString;
+
 use z3_sys::*;
-use Config;
-use Context;
-use ContextHandle;
+
+use crate::{Config, Context, ContextHandle};
 
 impl Context {
     pub fn new(cfg: &Config) -> Context {

@@ -6,21 +6,14 @@ use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use z3_sys::*;
-use Context;
-use FuncDecl;
-use IsNotApp;
-use Pattern;
-use Sort;
-use SortDiffers;
-use Symbol;
 
 pub use z3_sys::AstKind;
+use z3_sys::*;
+
+use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
 
 #[cfg(feature = "arbitrary-size-numeral")]
-use num::bigint::BigInt;
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::rational::BigRational;
+use num::{bigint::BigInt, rational::BigRational};
 
 /// [`Ast`] node representing a boolean value.
 pub struct Bool<'ctx> {

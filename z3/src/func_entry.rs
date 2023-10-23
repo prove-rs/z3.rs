@@ -1,9 +1,11 @@
 use std::fmt;
 
-use ast::Ast;
 use z3_sys::*;
 
-use {ast::Dynamic, Context, FuncEntry};
+use crate::{
+    ast::{Ast, Dynamic},
+    Context, FuncEntry,
+};
 
 impl<'ctx> FuncEntry<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_entry: Z3_func_entry) -> Self {

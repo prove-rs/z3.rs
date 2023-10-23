@@ -1,15 +1,9 @@
-use ast;
-use ast::Ast;
 use std::ffi::{CStr, CString};
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Model;
-use Params;
-use SatResult;
-use Solver;
-use Statistics;
-use Symbol;
+
+use crate::{ast, ast::Ast, Context, Model, Params, SatResult, Solver, Statistics, Symbol};
 
 impl<'ctx> Solver<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {

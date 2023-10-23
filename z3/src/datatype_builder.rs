@@ -1,8 +1,10 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
 
 use std::{convert::TryInto, ptr::null_mut};
+
 use z3_sys::*;
-use {
+
+use crate::{
     Context, DatatypeAccessor, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort,
     Symbol,
 };

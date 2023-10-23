@@ -1,10 +1,10 @@
-use ast::Ast;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Pattern;
+
+use crate::{ast::Ast, Context, Pattern};
 
 impl<'ctx> Pattern<'ctx> {
     /// Create a pattern for quantifier instantiation.
