@@ -1,9 +1,4 @@
-extern crate env_logger;
-#[macro_use]
-extern crate log;
-extern crate semver;
-extern crate z3;
-
+use log::info;
 use semver::{Version, VersionReq};
 use std::collections::HashMap;
 use z3::ast::Ast;

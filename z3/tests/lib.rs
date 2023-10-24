@@ -1,15 +1,10 @@
-extern crate env_logger;
-#[macro_use]
-extern crate log;
-
-extern crate z3;
+use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
 use z3::ast::{Array, Ast, Bool, Int, BV};
 use z3::*;
 
-extern crate num;
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 

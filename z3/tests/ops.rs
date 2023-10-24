@@ -1,5 +1,3 @@
-extern crate z3;
-
 use z3::{
     ast,
     ast::{Array, Ast, AstKind, Bool, Dynamic, Float, Int, Real, BV},

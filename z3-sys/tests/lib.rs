@@ -1,5 +1,3 @@
-extern crate z3_sys;
-
 use std::ffi::{CStr, CString};
 use z3_sys::*;
 

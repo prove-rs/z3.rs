@@ -6,13 +6,6 @@
 #![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
 
-#[macro_use]
-extern crate log;
-
-extern crate z3_sys;
-
-extern crate num;
-
 use std::ffi::CString;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};

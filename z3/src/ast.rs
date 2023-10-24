@@ -1,5 +1,6 @@
 //! Abstract syntax tree (AST).
 
+use log::debug;
 use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
