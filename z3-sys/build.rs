@@ -17,7 +17,38 @@ fn main() {
     #[cfg(feature = "vcpkg")]
     let header = find_library_header_by_vcpkg();
 
+    link_against_cxx_stdlib();
+
     generate_binding(&header);
+}
+
+fn link_against_cxx_stdlib() {
+    // Z3 needs a C++ standard library. Customize which one we use with the
+    // `CXXSTDLIB` environment variable, if needed.
+    let cxx = match env::var("CXXSTDLIB") {
+        Ok(s) if s.is_empty() => None,
+        Ok(s) => Some(s),
+        Err(_) => {
+            let target = env::var("TARGET").unwrap();
+            if target.contains("msvc") {
+                None
+            } else if target.contains("apple")
+                | target.contains("freebsd")
+                | target.contains("openbsd")
+            {
+                Some("c++".to_string())
+            } else if target.contains("android") {
+                Some("c++_shared".to_string())
+            } else {
+                Some("stdc++".to_string())
+            }
+        }
+    };
+
+    println!("cargo:rerun-if-env-changed=CXXSTDLIB");
+    if let Some(cxx) = cxx {
+        println!("cargo:rustc-link-lib={}", cxx);
+    }
 }
 
 #[cfg(feature = "vcpkg")]
@@ -111,26 +142,6 @@ fn build_bundled_z3() {
 
     let dst = cfg.build();
 
-    // Z3 needs a C++ standard library. Customize which one we use with the
-    // `CXXSTDLIB` environment variable, if needed.
-    let cxx = match std::env::var("CXXSTDLIB") {
-        Ok(s) if s.is_empty() => None,
-        Ok(s) => Some(s),
-        Err(_) => {
-            let target = std::env::var("TARGET").unwrap();
-            if target.contains("msvc") {
-                None
-            } else if target.contains("apple")
-                | target.contains("freebsd")
-                | target.contains("openbsd")
-            {
-                Some("c++".to_string())
-            } else {
-                Some("stdc++".to_string())
-            }
-        }
-    };
-
     let mut found_lib_dir = false;
     for lib_dir in &[
         "lib",
@@ -160,9 +171,5 @@ fn build_bundled_z3() {
         println!("cargo:rustc-link-lib=static=libz3");
     } else {
         println!("cargo:rustc-link-lib=static=z3");
-    }
-
-    if let Some(cxx) = cxx {
-        println!("cargo:rustc-link-lib={}", cxx);
     }
 }
