@@ -72,11 +72,21 @@ fn generate_binding(header: &str) {
             .generate_comments(false)
             .rustified_enum(format!("Z3_{}", x))
             .allowlist_type(format!("Z3_{}", x));
-        if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
-            enum_bindings = enum_bindings.clang_arg(format!(
-                "--sysroot={}/upstream/emscripten/cache/sysroot",
-                env::var("EMSDK").expect("$EMSDK env var missing. Is emscripten installed?")
-            ));
+        let target = env::var("TARGET").unwrap();
+        let wasm = target.starts_with("wasm");
+        if wasm {
+            // It seems that sometimes the cache mat be missing.
+            let sysroot = env::var("EMSDK")
+                .map(|emsdk| format!("{}/upstream/emscripten/cache/sysroot", emsdk))
+                .or_else(|_err| {
+                    env::var("EMSCRIPTEN_ROOT")
+                        .map(|emscripten_root| format!("{}/cache/sysroot", emscripten_root))
+                });
+            if let Ok(sysroot) = sysroot {
+                enum_bindings = enum_bindings.clang_arg(format!("--sysroot={}", sysroot));
+            } else {
+                panic!("$EMSDK and $EMSCRIPTEN_ROOT env var missing. Is emscripten installed?");
+            }
         }
         enum_bindings
             .generate()
