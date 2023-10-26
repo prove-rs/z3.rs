@@ -56,7 +56,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/x64-linux.tar.gz
-          asset_name: x64-linux.tar.gz
+          asset_path: ${{ github.workspace }}/"""+triplet+""".tar.gz
+          asset_name: """+triplet""".tar.gz
           asset_content_type: application/gzip
         """)
