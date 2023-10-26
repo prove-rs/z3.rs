@@ -16,12 +16,11 @@ edition = "2018"
 
 [features]
 default = []
-
-# Enable this feature to statically link our own build of Z3, rather than
-# dynamically linking to the system's `libz3.so`.
-static-link-z3 = ["z3-sys/static-link-z3"]
-
+bundled = ["z3-sys/bundled"]
 vcpkg = ["z3-sys/vcpkg"]
+
+# This is a legacy feature here for short term compatibility.
+static-link-z3 = ["z3-sys/bundled"]
 
 [dependencies]
 log = "0.4"
