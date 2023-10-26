@@ -13,6 +13,7 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
+    env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       VCPKG_REVISION: 5c82f7e6372c9b0ea25e1fd829dd50235ef37629
       Z3_VERSION: 0.12.2
@@ -37,7 +38,7 @@ jobs:
         with:
           pkgs: z3
           triplet: """+triplet+"""
-          cache-key: """+os+"""
+          disable-cache: true
           revision: ${{ env.VCPKG_REVISION }}
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build""")

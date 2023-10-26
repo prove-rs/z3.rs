@@ -29,7 +29,7 @@ jobs:
         with:
           pkgs: z3
           triplet: x64-linux
-          cache-key: ubuntu-latest
+          disable-cache: true
           revision: ${{ env.VCPKG_REVISION }}
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
@@ -38,7 +38,7 @@ jobs:
         with:
           pkgs: z3
           triplet: x64-osx
-          cache-key: macos-latest
+          disable-cache: true
           revision: ${{ env.VCPKG_REVISION }}
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
@@ -47,7 +47,7 @@ jobs:
         with:
           pkgs: z3
           triplet: x64-windows-static-md
-          cache-key: windows-latest
+          disable-cache: true
           revision: ${{ env.VCPKG_REVISION }}
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
