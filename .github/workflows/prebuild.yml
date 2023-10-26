@@ -2,20 +2,20 @@ on:
   push:
     branches: [ upload-prebuilt-static-z3 ]
 jobs:
-  release:
-    name: Create Release
-    runs-on: ubuntu-latest
-    steps:
-      - name: Create Release
-        id: create_release
-        uses: actions/create-release@v1
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
-          draft: false
-          prerelease: false
+  # release:
+  #   name: Create Release
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Create Release
+  #       id: create_release
+  #       uses: actions/create-release@v1
+  #       env:
+  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+  #       with:
+  #         tag_name: ${{ github.ref }}
+  #         release_name: ${{ github.ref }}
+  #         draft: false
+  #         prerelease: false
   upload_vcpkg_installed_z3:
     strategy:
       fail-fast: false
@@ -25,12 +25,15 @@ jobs:
           - build: linux
             os: ubuntu-latest
             vcpkg_triplet: x64-linux
+            lib: libz3.a
           - build: macos
             os: macos-latest
             vcpkg_triplet: x64-osx
+            lib: libz3.a
           - build: windows
             os: windows-latest
             vcpkg_triplet: x64-windows-static-md
+            lib: libz3.lib
     runs-on: ${{ matrix.os }}
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
@@ -46,7 +49,7 @@ jobs:
           pkgs: z3
           triplet: ${{ matrix.vcpkg_triplet }}
           cache-key: ${{ matrix.os }}
-          revision: master
+          revision: 5c82f7e6372c9b0ea25e1fd829dd50235ef37629
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
       - name: list
@@ -55,13 +58,13 @@ jobs:
           ls ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include
       - name: compress
         run: |
-          mkdir ${{ github.workspace }}/tmp
+          mkdir ${{ github.workspace }}/pack
           headers=("z3.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
           for file in $headers
           do
             cp ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/$file ${{ github.workspace }}/pack/$file
           done
-          cp ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib/libz3.a ${{ github.workspace }}/pack/libz3.a
+          cp ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib/${{ matrix.lib }} ${{ github.workspace }}/pack/${{ matrix.lib }}
           tar -jcvf ${{ github.workspace }}/pack.tar.gz ${{ github.workspace }}/pack
       # - name: release
       #   uses: actions/create-release@v1
