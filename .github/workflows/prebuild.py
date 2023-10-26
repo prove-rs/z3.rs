@@ -13,9 +13,9 @@ jobs:
   release:
     name: Create Release
     runs-on: ubuntu-latest
-    env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
       VCPKG_REVISION: 5c82f7e6372c9b0ea25e1fd829dd50235ef37629
+      Z3_VERSION: 0.12.2
     steps:
       - name: Create Release
         id: create_release
@@ -23,8 +23,8 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
-          tag_name: ${{ github.ref }}
-          release_name: ${{ github.ref }}
+          tag_name: ${{ env.Z3_VERSION }}
+          release_name: ${{ env.Z3_VERSION }}
           draft: false
           prerelease: false
       - uses: actions/checkout@v4
