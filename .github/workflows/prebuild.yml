@@ -36,8 +36,8 @@ jobs:
         uses: johnwason/vcpkg-action@v5
         with:
           pkgs: z3
-          triplet: macos-latest
-          cache-key: x64-osx
+          triplet: x64-osx
+          cache-key: macos-latest
           revision: ${{ env.VCPKG_REVISION }}
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
@@ -64,3 +64,24 @@ jobs:
           asset_path: ${{ github.workspace }}/x64-linux.tar.gz
           asset_name: x64-linux.tar.gz
           asset_content_type: application/gzip
+        
+      - name: upload artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/x64-linux.tar.gz
+          asset_name: x64-linux.tar.gz
+          asset_content_type: application/gzip
+        
+      - name: upload artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/x64-linux.tar.gz
+          asset_name: x64-linux.tar.gz
+          asset_content_type: application/gzip
+        
