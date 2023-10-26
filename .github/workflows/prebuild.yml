@@ -18,6 +18,7 @@ jobs:
           prerelease: false
   upload_vcpkg_installed_z3:
     strategy:
+      fail-fast: false
       matrix:
         build: [linux, macos, windows]
         include:
@@ -55,7 +56,7 @@ jobs:
       - name: compress
         run: |
           mkdir ${{ github.workspace }}/tmp
-          headers = ("z3.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
+          headers=("z3.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
           for file in $headers
           do
             cp ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/$file ${{ github.workspace }}/pack/$file
