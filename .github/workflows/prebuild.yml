@@ -1,87 +1,66 @@
+name: Upload prebuilt Z3
 on:
   push:
     branches: [ upload-prebuilt-static-z3 ]
 jobs:
-  # release:
-  #   name: Create Release
-  #   runs-on: ubuntu-latest
-  #   steps:
-  #     - name: Create Release
-  #       id: create_release
-  #       uses: actions/create-release@v1
-  #       env:
-  #         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-  #       with:
-  #         tag_name: ${{ github.ref }}
-  #         release_name: ${{ github.ref }}
-  #         draft: false
-  #         prerelease: false
-  upload_vcpkg_installed_z3:
-    strategy:
-      fail-fast: false
-      matrix:
-        build: [linux, macos, windows]
-        include:
-          - build: linux
-            os: ubuntu-latest
-            vcpkg_triplet: x64-linux
-            lib: libz3.a
-          - build: macos
-            os: macos-latest
-            vcpkg_triplet: x64-osx
-            lib: libz3.a
-          - build: windows
-            os: windows-latest
-            vcpkg_triplet: x64-windows-static-md
-            lib: libz3.lib
-    runs-on: ${{ matrix.os }}
+  release:
+    name: Create Release
+    runs-on: ubuntu-latest
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_REVISION: 5c82f7e6372c9b0ea25e1fd829dd50235ef37629
     steps:
+      - name: Create Release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: ${{ github.ref }}
+          draft: false
+          prerelease: false
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - run: echo "Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}."
       - name: vcpkg build z3
         uses: johnwason/vcpkg-action@v5
-        id: vcpkg
         with:
           pkgs: z3
-          triplet: ${{ matrix.vcpkg_triplet }}
-          cache-key: ${{ matrix.os }}
-          revision: 5c82f7e6372c9b0ea25e1fd829dd50235ef37629
+          triplet: x64-linux
+          cache-key: ubuntu-latest
+          revision: ${{ env.VCPKG_REVISION }}
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
-      - name: list
+      - name: vcpkg build z3
+        uses: johnwason/vcpkg-action@v5
+        with:
+          pkgs: z3
+          triplet: macos-latest
+          cache-key: x64-osx
+          revision: ${{ env.VCPKG_REVISION }}
+          token: ${{ github.token }}
+          extra-args: --clean-buildtrees-after-build
+      - name: vcpkg build z3
+        uses: johnwason/vcpkg-action@v5
+        with:
+          pkgs: z3
+          triplet: x64-windows-static-md
+          cache-key: windows-latest
+          revision: ${{ env.VCPKG_REVISION }}
+          token: ${{ github.token }}
+          extra-args: --clean-buildtrees-after-build
+      - name: prepare artifact
         run: |
-          ls ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib
-          ls ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include
-      - name: compress
-        run: |
-          mkdir ${{ github.workspace }}/pack
-          headers=("z3.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
-          for file in $headers
-          do
-            cp ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/$file ${{ github.workspace }}/pack/$file
-          done
-          cp ${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib/${{ matrix.lib }} ${{ github.workspace }}/pack/${{ matrix.lib }}
-          tar -jcvf ${{ github.workspace }}/pack.tar.gz ${{ github.workspace }}/pack
-      # - name: release
-      #   uses: actions/create-release@v1
-      #   id: create_release
-      #   with:
-      #     draft: false
-      #     prerelease: false
-      #     release_name: ${{ github.ref }}
-      #     tag_name: ${{ github.ref }}
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      # - name: upload artifact
-      #   uses: actions/upload-release-asset@v1
-      #   env:
-      #     GITHUB_TOKEN: ${{ github.token }}
-      #   with:
-      #     upload_url: ${{ steps.create_release.outputs.upload_url }}
-      #     asset_path: ${{ github.workspace }}
-      #     asset_name: pack.tar.gz
-      #     asset_content_type: application/gzip
+          sh z3-sys/scripts/make_artifact.sh ${{ github.workspace }} ${{ env.VCPKG_ROOT }} x64-linux libz3.a
+          sh z3-sys/scripts/make_artifact.sh ${{ github.workspace }} ${{ env.VCPKG_ROOT }} x64-osx libz3.a
+          sh z3-sys/scripts/make_artifact.sh ${{ github.workspace }} ${{ env.VCPKG_ROOT }} x64-windows-static-md libz3.lib
+      - name: upload artifact
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/x64-linux.tar.gz
+          asset_name: x64-linux.tar.gz
+          asset_content_type: application/gzip
