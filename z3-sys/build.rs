@@ -1,8 +1,5 @@
 use std::env;
 
-#[cfg(not(feature = "vcpkg"))]
-const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
-
 fn main() {
     // Feature `vcpkg` is prior to `static-link-z3` as vcpkg-installed z3 is also statically linked.
 
@@ -47,7 +44,7 @@ fn link_against_cxx_stdlib() {
 
     println!("cargo:rerun-if-env-changed=CXXSTDLIB");
     if let Some(cxx) = cxx {
-        println!("cargo:rustc-link-lib={}", cxx);
+        println!("cargo:rustc-link-lib={cxx}");
     }
 }
 
@@ -57,7 +54,7 @@ fn find_library_header_by_vcpkg() -> String {
         .emit_includes(true)
         .find_package("z3")
         .unwrap();
-    for include in lib.include_paths.iter() {
+    for include in &lib.include_paths {
         let mut include = include.clone();
         include.push("z3.h");
         if include.exists() {
@@ -71,20 +68,21 @@ fn find_library_header_by_vcpkg() -> String {
 
 #[cfg(not(feature = "vcpkg"))]
 fn find_header_by_env() -> String {
+    const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "static-link-z3") {
         "z3/src/api/z3.h".to_string()
-    } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
+    } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
         header_path
     } else {
         "wrapper.h".to_string()
     };
-    println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
-    println!("cargo:rerun-if-changed={}", header);
+    println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
+    println!("cargo:rerun-if-changed={header}");
     header
 }
 
 fn generate_binding(header: &str) {
-    let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let out_path = std::path::PathBuf::from(env::var("OUT_DIR").unwrap());
 
     for x in &[
         "ast_kind",
@@ -152,10 +150,7 @@ fn build_bundled_z3() {
         let full_lib_dir = dst.join(lib_dir);
         if full_lib_dir.exists() {
             if *lib_dir == "lib64" {
-                assert_eq!(
-                    std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap(),
-                    "64"
-                );
+                assert_eq!(env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap(), "64");
             }
             println!("cargo:rustc-link-search=native={}", full_lib_dir.display());
             found_lib_dir = true;
