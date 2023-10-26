@@ -24,13 +24,33 @@ Add it to your `Cargo.toml` like so:
 z3 = "0.12"
 ```
 
-**Note:** This library has a dependency on Z3. You will either need to
-have the Z3 dependency already installed, or you can statically link
-to our build of Z3 like so:
+### Finding Z3 Libraries
+
+**Note:** This library has a dependency on Z3.
+
+There are 3 ways for this crate to currently find Z3:
+
+* By default, it will look for a system-installed copy of Z3.
+  On Linux, this would be via the package manager. On macOS, this
+  might be via Homebrew (`brew install z3`).
+* Enabling the `bundled` feature will use `cmake` to build a
+  locally bundled copy of Z3. This copy is provided via a git
+  submodule within the repository.
+* Enabling the `vcpkg` feature will use `vcpkg` to build and
+  install a copy of Z3 which is then used.
+
+This might look like:
 
 ```toml
 [dependencies]
-z3 = {version="0.12", features = ["static-link-z3"]}
+z3 = {version="0.12", features = ["bundled"]}
+```
+
+or:
+
+```toml
+[dependencies]
+z3 = {version="0.12", features = ["vcpkg"]}
 ```
 
 ## Support and Maintenance
