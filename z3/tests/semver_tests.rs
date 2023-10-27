@@ -163,14 +163,14 @@ fn test_solve_simple_semver_example() {
             None => (),
             Some(low) => {
                 info!("Asserting: {} >= #{} (root)", k, low);
-                opt.assert(&ast.ge(&ast::Int::from_u64(&ctx, low as u64)))
+                opt.assert(&ast.ge(&ast::Int::from_u64(&ctx, low as u64)));
             }
         }
         match last_version_req_index(&smap, k, v) {
             None => (),
             Some(high) => {
                 info!("Asserting: {} <= #{} (root)", k, high);
-                opt.assert(&ast.le(&ast::Int::from_u64(&ctx, high as u64)))
+                opt.assert(&ast.le(&ast::Int::from_u64(&ctx, high as u64)));
             }
         }
         asts.insert(k.clone(), ast);
@@ -224,7 +224,7 @@ fn test_solve_simple_semver_example() {
                             &k_ast
                                 ._eq(&ast::Int::from_u64(&ctx, n as u64))
                                 .implies(&r_ast.ge(&ast::Int::from_u64(&ctx, low as u64))),
-                        )
+                        );
                     }
                 }
                 match last_version_req_index(&smap, r, req) {
@@ -243,7 +243,7 @@ fn test_solve_simple_semver_example() {
                             &k_ast
                                 ._eq(&ast::Int::from_u64(&ctx, n as u64))
                                 .implies(&r_ast.le(&ast::Int::from_u64(&ctx, high as u64))),
-                        )
+                        );
                     }
                 }
             }

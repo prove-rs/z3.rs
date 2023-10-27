@@ -47,7 +47,7 @@ impl Config {
                 self.z3_cfg,
                 self.kvs.last().unwrap().0.as_ptr(),
                 self.kvs.last().unwrap().1.as_ptr(),
-            )
+            );
         };
     }
 

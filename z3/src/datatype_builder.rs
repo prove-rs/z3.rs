@@ -176,7 +176,7 @@ pub fn create_datatypes<'ctx>(
             });
         }
 
-        datatype_sorts.push(DatatypeSort { sort, variants })
+        datatype_sorts.push(DatatypeSort { sort, variants });
     }
 
     for ctor in ctors {

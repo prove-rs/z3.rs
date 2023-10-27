@@ -528,7 +528,7 @@ fn test_string_eq() {
     assert_eq!(solver.check(), SatResult::Sat);
 
     solver.assert(&h._eq(&z));
-    assert_eq!(solver.check(), SatResult::Unsat)
+    assert_eq!(solver.check(), SatResult::Unsat);
 }
 
 #[test]
@@ -542,7 +542,7 @@ fn test_string_concat() {
     let z = ast::String::from_str(&ctx, "foobar").unwrap();
 
     solver.assert(&ast::String::concat(&ctx, &[&x, &y])._eq(&z));
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -555,7 +555,7 @@ fn test_string_prefix() {
     let y = ast::String::from_str(&ctx, "foobar").unwrap();
 
     solver.assert(&x.prefix(&y));
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -568,7 +568,7 @@ fn test_string_suffix() {
     let y = ast::String::from_str(&ctx, "foobar").unwrap();
 
     solver.assert(&x.suffix(&y));
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 fn assert_string_roundtrip(source: &str) {
@@ -615,7 +615,7 @@ fn test_rec_func_def() {
     solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
     solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 120)));
 
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -650,7 +650,7 @@ fn test_rec_func_def_unsat() {
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
     solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 25)));
 
-    assert_eq!(solver.check(), SatResult::Unsat)
+    assert_eq!(solver.check(), SatResult::Unsat);
 }
 
 #[test]
@@ -1781,5 +1781,5 @@ fn iterate_all_solutions() {
             ]
             .into_iter()
             .collect()
-    )
+    );
 }

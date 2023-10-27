@@ -19,7 +19,7 @@ impl Context {
 
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
-        self.handle().interrupt()
+        self.handle().interrupt();
     }
 
     /// Obtain a handle that can be used to interrupt computation from another thread.
@@ -51,7 +51,7 @@ impl Context {
     ///
     /// - [`Context::update_param_value()`]
     pub fn update_bool_param_value(&mut self, k: &str, v: bool) {
-        self.update_param_value(k, if v { "true" } else { "false" })
+        self.update_param_value(k, if v { "true" } else { "false" });
     }
 }
 

@@ -35,7 +35,7 @@ impl<'ctx> FuncInterp<'ctx> {
             args.iter()
                 .for_each(|a| Z3_ast_vector_push(self.ctx.z3_ctx, v, a.z3_ast));
 
-            Z3_func_interp_add_entry(self.ctx.z3_ctx, self.z3_func_interp, v, value.z3_ast)
+            Z3_func_interp_add_entry(self.ctx.z3_ctx, self.z3_func_interp, v, value.z3_ast);
         }
     }
 
@@ -74,7 +74,7 @@ impl<'ctx> fmt::Display for FuncInterp<'ctx> {
         self.get_entries().into_iter().try_for_each(|e| {
             let n = e.get_num_args();
             if n > 1 {
-                write!(f, "[")?
+                write!(f, "[")?;
             };
             write!(
                 f,
@@ -86,7 +86,7 @@ impl<'ctx> fmt::Display for FuncInterp<'ctx> {
                     .join(", ")
             )?;
             if n > 1 {
-                write!(f, "]")?
+                write!(f, "]")?;
             }
             write!(f, " -> {}, ", e.get_value())
         })?;

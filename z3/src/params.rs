@@ -22,7 +22,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v.into().as_z3_symbol(self.ctx),
-            )
+            );
         };
     }
 
@@ -33,7 +33,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v,
-            )
+            );
         };
     }
 
@@ -44,7 +44,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v,
-            )
+            );
         };
     }
 
@@ -55,7 +55,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v,
-            )
+            );
         };
     }
 }
