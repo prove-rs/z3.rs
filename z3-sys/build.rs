@@ -4,6 +4,9 @@ fn main() {
     #[cfg(feature = "bundled")]
     build_bundled_z3();
 
+    #[cfg(feature = "deprecated-static-link-z3")]
+    println!("cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature.");
+
     println!("cargo:rerun-if-changed=build.rs");
 
     #[cfg(not(feature = "vcpkg"))]

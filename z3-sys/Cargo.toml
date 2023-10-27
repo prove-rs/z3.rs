@@ -25,4 +25,5 @@ bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
 vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
 
 # Legacy feature for short term compatibility
-static-link-z3 = ["bundled"]
+static-link-z3 = ["bundled", "deprecated-static-link-z3"]
+deprecated-static-link-z3 = []
