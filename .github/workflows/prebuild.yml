@@ -7,7 +7,7 @@ jobs:
     name: Create Release
     runs-on: ubuntu-latest
     env:
-      VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      VCPKG_ROOT: "${{ github.workspace }}/vcpkg"
       VCPKG_REVISION: 5c82f7e6372c9b0ea25e1fd829dd50235ef37629
       Z3_VERSION: 0.12.2
     steps:
@@ -24,33 +24,35 @@ jobs:
       - uses: actions/checkout@v4
         with:
           submodules: recursive
-      - name: vcpkg build z3
-        uses: johnwason/vcpkg-action@v5
+      - name: Get latest Github release
+        uses: cardinalby/git-get-release-action@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
         with:
-          pkgs: z3
-          triplet: x64-linux
-          disable-cache: true
-          revision: ${{ env.VCPKG_REVISION }}
-          token: ${{ github.token }}
-          extra-args: --clean-buildtrees-after-build
-      - name: vcpkg build z3
-        uses: johnwason/vcpkg-action@v5
+          latest: true
+          repo: microsoft/vcpkg
+          prerelease: false
+          draft: false
+      - name: checkout-vcpkg
+        uses: actions/checkout@v3
         with:
-          pkgs: z3
-          triplet: x64-osx
-          disable-cache: true
-          revision: ${{ env.VCPKG_REVISION }}
-          token: ${{ github.token }}
-          extra-args: --clean-buildtrees-after-build
+          path: ${{ env.VCPKG_ROOT }}
+          repository: microsoft/vcpkg
+          ref: ${{ env.VCPKG_REVISION }}
+          fetch-depth: 1
+      - name: bootstrap-vcpkg
+        working-directory: ${{ env.VCPKG_ROOT }}
+        run: ./bootstrap-vcpkg.sh
+        shell: bash
       - name: vcpkg build z3
-        uses: johnwason/vcpkg-action@v5
-        with:
-          pkgs: z3
-          triplet: x64-windows-static-md
-          disable-cache: true
-          revision: ${{ env.VCPKG_REVISION }}
-          token: ${{ github.token }}
-          extra-args: --clean-buildtrees-after-build
+        working-directory: ${{ env.VCPKG_ROOT }}
+        run: ./vcpkg install --clean-buildtrees-after-build z3:x64-linux
+      - name: vcpkg build z3
+        working-directory: ${{ env.VCPKG_ROOT }}
+        run: ./vcpkg install --clean-buildtrees-after-build z3:x64-osx
+      - name: vcpkg build z3
+        working-directory: ${{ env.VCPKG_ROOT }}
+        run: ./vcpkg install --clean-buildtrees-after-build z3:x64-windows-static-md
       - name: prepare artifact
         run: |
           sh z3-sys/scripts/make_artifact.sh ${{ github.workspace }} ${{ env.VCPKG_ROOT }} x64-linux libz3.a
@@ -72,8 +74,8 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/x64-linux.tar.gz
-          asset_name: x64-linux.tar.gz
+          asset_path: ${{ github.workspace }}/x64-osx.tar.gz
+          asset_name: x64-osx.tar.gz
           asset_content_type: application/gzip
         
       - name: upload artifact
@@ -82,7 +84,7 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/x64-linux.tar.gz
-          asset_name: x64-linux.tar.gz
+          asset_path: ${{ github.workspace }}/x64-windows-static-md.tar.gz
+          asset_name: x64-windows-static-md.tar.gz
           asset_content_type: application/gzip
         
