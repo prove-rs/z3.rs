@@ -1,3 +1,4 @@
+# Used to generate prebuild.yml
 with open("prebuild.yml", "w") as f:
     PLATFORM = [
         ["ubuntu-latest", "x64-linux", "libz3.a"],
@@ -50,26 +51,33 @@ jobs:
         working-directory: ${{ env.VCPKG_ROOT }}
         run: ./bootstrap-vcpkg.sh
         shell: bash""")
-    for os, triplet, _ in PLATFORM:
+    for os, triplet, lib in PLATFORM:
       f.write("""
-      - name: vcpkg build z3
+      - name: vcpkg build z3 with triplet """+triplet+"""
         working-directory: ${{ env.VCPKG_ROOT }}
         run: ./vcpkg install --clean-buildtrees-after-build """ + f"z3:{triplet}")
-    f.write(f"""
-      - name: prepare artifact
+      
+      FROM = "${{ env.VCPKG_ROOT }}/installed/"+triplet
+      TO = '${{ github.workspace }}/'+triplet
+      f.write(f"""
+      - name: prepare artifact for {triplet}
         run: |""")
-    for _, triplet, lib in PLATFORM:
+      for header in ["z3.h", "z3++.h", "z3_algebraic.h", "z3_api.h", "z3_ast_containers.h", "z3_fixedpoint.h", "z3_fpa.h", "z3_macros.h", "z3_optimization.h", "z3_polynomial.h", "z3_rcf.h", "z3_spacer.h", "z3_v1.h", "z3_version.h"]:
+        f.write(f'''
+          cp "{FROM}/include/{header}" "{TO}/{header}"''')
+      f.write(f'''
+          cp "{FROM}/lib/{lib}" "{TO}/{lib}"''')
+      ARTIFACT = "${{ github.workspace }}/"+triplet+".tar.gz"
+      f.write(f'''
+          tar -jcvf "{ARTIFACT}" "{TO}"''')
       f.write("""
-          sh z3-sys/scripts/make_artifact.sh ${{ github.workspace }} ${{ env.VCPKG_ROOT }} """ + f"{triplet} {lib}")
-    for _, triplet, _ in PLATFORM:
-      f.write("""
-      - name: upload artifact
+      - name: upload artifact for """+triplet+"""
         uses: actions/upload-release-asset@v1
         env:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/"""+triplet+""".tar.gz
+          asset_path: """+ARTIFACT+"""
           asset_name: """+triplet+""".tar.gz
           asset_content_type: application/gzip
         """)
