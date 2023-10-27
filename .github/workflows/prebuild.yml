@@ -48,20 +48,13 @@ jobs:
         run: ./vcpkg install --clean-buildtrees-after-build z3:x64-linux
       - name: prepare artifact for x64-linux
         run: |
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3.h" "${{ github.workspace }}/x64-linux/z3.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3++.h" "${{ github.workspace }}/x64-linux/z3++.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_algebraic.h" "${{ github.workspace }}/x64-linux/z3_algebraic.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_api.h" "${{ github.workspace }}/x64-linux/z3_api.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_ast_containers.h" "${{ github.workspace }}/x64-linux/z3_ast_containers.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_fixedpoint.h" "${{ github.workspace }}/x64-linux/z3_fixedpoint.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_fpa.h" "${{ github.workspace }}/x64-linux/z3_fpa.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_macros.h" "${{ github.workspace }}/x64-linux/z3_macros.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_optimization.h" "${{ github.workspace }}/x64-linux/z3_optimization.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_polynomial.h" "${{ github.workspace }}/x64-linux/z3_polynomial.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_rcf.h" "${{ github.workspace }}/x64-linux/z3_rcf.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_spacer.h" "${{ github.workspace }}/x64-linux/z3_spacer.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_v1.h" "${{ github.workspace }}/x64-linux/z3_v1.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/z3_version.h" "${{ github.workspace }}/x64-linux/z3_version.h"
+          ls "${{ env.VCPKG_ROOT }}/installed/x64-linux/lib"
+          ls "${{ env.VCPKG_ROOT }}/installed/x64-linux/include"
+          headers=("z3.h" "z3++.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
+          for header in $headers
+          do
+            cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/include/$header" "${{ github.workspace }}/x64-linux/$header"
+          done
           cp "${{ env.VCPKG_ROOT }}/installed/x64-linux/lib/libz3.a" "${{ github.workspace }}/x64-linux/libz3.a"
           tar -jcvf "${{ github.workspace }}/x64-linux.tar.gz" "${{ github.workspace }}/x64-linux"
       - name: upload artifact for x64-linux
@@ -79,20 +72,13 @@ jobs:
         run: ./vcpkg install --clean-buildtrees-after-build z3:x64-osx
       - name: prepare artifact for x64-osx
         run: |
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3.h" "${{ github.workspace }}/x64-osx/z3.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3++.h" "${{ github.workspace }}/x64-osx/z3++.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_algebraic.h" "${{ github.workspace }}/x64-osx/z3_algebraic.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_api.h" "${{ github.workspace }}/x64-osx/z3_api.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_ast_containers.h" "${{ github.workspace }}/x64-osx/z3_ast_containers.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_fixedpoint.h" "${{ github.workspace }}/x64-osx/z3_fixedpoint.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_fpa.h" "${{ github.workspace }}/x64-osx/z3_fpa.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_macros.h" "${{ github.workspace }}/x64-osx/z3_macros.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_optimization.h" "${{ github.workspace }}/x64-osx/z3_optimization.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_polynomial.h" "${{ github.workspace }}/x64-osx/z3_polynomial.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_rcf.h" "${{ github.workspace }}/x64-osx/z3_rcf.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_spacer.h" "${{ github.workspace }}/x64-osx/z3_spacer.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_v1.h" "${{ github.workspace }}/x64-osx/z3_v1.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/z3_version.h" "${{ github.workspace }}/x64-osx/z3_version.h"
+          ls "${{ env.VCPKG_ROOT }}/installed/x64-osx/lib"
+          ls "${{ env.VCPKG_ROOT }}/installed/x64-osx/include"
+          headers=("z3.h" "z3++.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
+          for header in $headers
+          do
+            cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/include/$header" "${{ github.workspace }}/x64-osx/$header"
+          done
           cp "${{ env.VCPKG_ROOT }}/installed/x64-osx/lib/libz3.a" "${{ github.workspace }}/x64-osx/libz3.a"
           tar -jcvf "${{ github.workspace }}/x64-osx.tar.gz" "${{ github.workspace }}/x64-osx"
       - name: upload artifact for x64-osx
@@ -110,20 +96,13 @@ jobs:
         run: ./vcpkg install --clean-buildtrees-after-build z3:x64-windows-static-md
       - name: prepare artifact for x64-windows-static-md
         run: |
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3.h" "${{ github.workspace }}/x64-windows-static-md/z3.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3++.h" "${{ github.workspace }}/x64-windows-static-md/z3++.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_algebraic.h" "${{ github.workspace }}/x64-windows-static-md/z3_algebraic.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_api.h" "${{ github.workspace }}/x64-windows-static-md/z3_api.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_ast_containers.h" "${{ github.workspace }}/x64-windows-static-md/z3_ast_containers.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_fixedpoint.h" "${{ github.workspace }}/x64-windows-static-md/z3_fixedpoint.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_fpa.h" "${{ github.workspace }}/x64-windows-static-md/z3_fpa.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_macros.h" "${{ github.workspace }}/x64-windows-static-md/z3_macros.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_optimization.h" "${{ github.workspace }}/x64-windows-static-md/z3_optimization.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_polynomial.h" "${{ github.workspace }}/x64-windows-static-md/z3_polynomial.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_rcf.h" "${{ github.workspace }}/x64-windows-static-md/z3_rcf.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_spacer.h" "${{ github.workspace }}/x64-windows-static-md/z3_spacer.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_v1.h" "${{ github.workspace }}/x64-windows-static-md/z3_v1.h"
-          cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/z3_version.h" "${{ github.workspace }}/x64-windows-static-md/z3_version.h"
+          ls "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/lib"
+          ls "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include"
+          headers=("z3.h" "z3++.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
+          for header in $headers
+          do
+            cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include/$header" "${{ github.workspace }}/x64-windows-static-md/$header"
+          done
           cp "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/lib/libz3.lib" "${{ github.workspace }}/x64-windows-static-md/libz3.lib"
           tar -jcvf "${{ github.workspace }}/x64-windows-static-md.tar.gz" "${{ github.workspace }}/x64-windows-static-md"
       - name: upload artifact for x64-windows-static-md

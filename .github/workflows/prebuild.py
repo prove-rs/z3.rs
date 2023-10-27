@@ -62,9 +62,15 @@ jobs:
       f.write(f"""
       - name: prepare artifact for {triplet}
         run: |""")
-      for header in ["z3.h", "z3++.h", "z3_algebraic.h", "z3_api.h", "z3_ast_containers.h", "z3_fixedpoint.h", "z3_fpa.h", "z3_macros.h", "z3_optimization.h", "z3_polynomial.h", "z3_rcf.h", "z3_spacer.h", "z3_v1.h", "z3_version.h"]:
-        f.write(f'''
-          cp "{FROM}/include/{header}" "{TO}/{header}"''')
+      HEADERS = ["z3.h", "z3++.h", "z3_algebraic.h", "z3_api.h", "z3_ast_containers.h", "z3_fixedpoint.h", "z3_fpa.h", "z3_macros.h", "z3_optimization.h", "z3_polynomial.h", "z3_rcf.h", "z3_spacer.h", "z3_v1.h", "z3_version.h"]
+      f.write(f"""
+          ls "{FROM}/lib"
+          ls "{FROM}/include"
+          headers=("{'" "'.join(HEADERS)}")
+          for header in $headers
+          do
+            cp "{FROM}/include/$header" "{TO}/$header"
+          done""")
       f.write(f'''
           cp "{FROM}/lib/{lib}" "{TO}/{lib}"''')
       ARTIFACT = "${{ github.workspace }}/"+triplet+".tar.gz"
