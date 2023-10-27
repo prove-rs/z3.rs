@@ -107,6 +107,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      Z3_VERSION: 0.12.2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -135,6 +136,33 @@ jobs:
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo test --workspace --features vcpkg
+      - name: git-get-release-action
+        continue-on-error: true
+        id: get_release
+        uses: cardinalby/git-get-release-action@1.2.4
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          releaseName: ${{ env.Z3_VERSION }}
+      - name: Compress built z3.
+        continue-on-error: true
+        run:
+          ls "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib"
+          ls "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include"
+          mkdir "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}"
+          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3*.h" "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}"
+          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib/libz3.*" "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}"
+          tar -jcvf "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz" "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}"
+      - name: Upload built z3.
+        continue-on-error: true
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          upload_url: ${{ steps.get_release.outputs.upload_url }}
+          asset_path: ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz
+          asset_name: ${{ matrix.vcpkg_triplet }}.tar.gz
+          asset_content_type: application/gzip
 
   run_clippy:
     runs-on: macos-latest
