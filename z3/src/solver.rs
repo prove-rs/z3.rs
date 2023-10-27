@@ -176,7 +176,7 @@ impl<'ctx> Solver<'ctx> {
     }
 
     // Return a vector of assumptions in the solver.
-    pub fn get_assertions(&self) -> Vec<ast::Bool> {
+    pub fn get_assertions(&self) -> Vec<ast::Bool<'ctx>> {
         let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
 
         (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_vec) })
