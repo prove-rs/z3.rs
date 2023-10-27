@@ -146,7 +146,7 @@ jobs:
           releaseName: ${{ env.Z3_VERSION }}
       - name: Compress built z3.
         continue-on-error: true
-        run:
+        run: |
           ls "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib"
           ls "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include"
           mkdir "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}"
