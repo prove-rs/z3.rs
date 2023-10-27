@@ -7,8 +7,7 @@ with open("prebuild.yml", "w") as f:
     f.write("""\
 name: Upload prebuilt Z3
 on:
-  push:
-    branches: [ upload-prebuilt-static-z3 ]
+  workflow_dispatch:
 jobs:
   release:
     name: Create Release
