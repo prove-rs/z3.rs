@@ -52,6 +52,7 @@ jobs:
         run: |
           ls "${{ env.VCPKG_ROOT }}/installed/x64-linux/lib"
           ls "${{ env.VCPKG_ROOT }}/installed/x64-linux/include"
+          mkdir "${{ github.workspace }}/x64-linux"
           headers=("z3.h" "z3++.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
           for header in $headers
           do
@@ -76,6 +77,7 @@ jobs:
         run: |
           ls "${{ env.VCPKG_ROOT }}/installed/x64-osx/lib"
           ls "${{ env.VCPKG_ROOT }}/installed/x64-osx/include"
+          mkdir "${{ github.workspace }}/x64-osx"
           headers=("z3.h" "z3++.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
           for header in $headers
           do
@@ -100,6 +102,7 @@ jobs:
         run: |
           ls "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/lib"
           ls "${{ env.VCPKG_ROOT }}/installed/x64-windows-static-md/include"
+          mkdir "${{ github.workspace }}/x64-windows-static-md"
           headers=("z3.h" "z3++.h" "z3_algebraic.h" "z3_api.h" "z3_ast_containers.h" "z3_fixedpoint.h" "z3_fpa.h" "z3_macros.h" "z3_optimization.h" "z3_polynomial.h" "z3_rcf.h" "z3_spacer.h" "z3_v1.h" "z3_version.h")
           for header in $headers
           do

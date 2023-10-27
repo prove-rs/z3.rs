@@ -68,6 +68,7 @@ jobs:
       f.write(f"""
           ls "{FROM}/lib"
           ls "{FROM}/include"
+          mkdir "{TO}"
           headers=("{'" "'.join(HEADERS)}")
           for header in $headers
           do
