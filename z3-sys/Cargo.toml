@@ -16,7 +16,7 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
-bindgen = { version = "0.66.0", default-features = false, features = ["runtime"] }
+bindgen = { version = "0.68", default-features = false, features = ["runtime"] }
 cmake = { version = "0.1.49", optional = true }
 vcpkg = { version = "0.2.15", optional = true }
 
@@ -24,9 +24,9 @@ vcpkg = { version = "0.2.15", optional = true }
 # If you set neither features below,
 # we hope there is a z3 installed as a system library.
 
-# Enable this feature to build bundled Z3 in z3-sys.
-bundled-z3 = ["cmake"]
+bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
+vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
 
-# Enable this feature to use z3 that is built with vcpkg.
-# Note that by default vcpkg-rs uses *-windows-static-md triplet on Windows.
-vcpkg = ["dep:vcpkg"]
+# Legacy feature for short term compatibility
+static-link-z3 = ["bundled", "deprecated-static-link-z3"]
+deprecated-static-link-z3 = []

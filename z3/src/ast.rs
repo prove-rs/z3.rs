@@ -1,26 +1,19 @@
 //! Abstract syntax tree (AST).
 
+use log::debug;
 use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::hash::{Hash, Hasher};
-use z3_sys::*;
-use Context;
-use FuncDecl;
-use IsNotApp;
-use Pattern;
-use Sort;
-use SortDiffers;
-use Symbol;
 
 pub use z3_sys::AstKind;
+use z3_sys::*;
 
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::bigint::BigInt;
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::rational::BigRational;
+use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
+
+use num::{bigint::BigInt, rational::BigRational};
 
 /// [`Ast`] node representing a boolean value.
 pub struct Bool<'ctx> {
@@ -563,7 +556,6 @@ impl_from_try_into_dynamic!(Set, as_set);
 impl_ast!(Regexp);
 
 impl<'ctx> Int<'ctx> {
-    #[cfg(feature = "arbitrary-size-numeral")]
     pub fn from_big_int(ctx: &'ctx Context, value: &BigInt) -> Int<'ctx> {
         Int::from_str(ctx, &value.to_str_radix(10)).unwrap()
     }
@@ -584,7 +576,6 @@ impl<'ctx> Int<'ctx> {
 }
 
 impl<'ctx> Real<'ctx> {
-    #[cfg(feature = "arbitrary-size-numeral")]
     pub fn from_big_rational(ctx: &'ctx Context, value: &BigRational) -> Real<'ctx> {
         let num = value.numer();
         let den = value.denom();
@@ -594,7 +585,7 @@ impl<'ctx> Real<'ctx> {
     pub fn from_real_str(ctx: &'ctx Context, num: &str, den: &str) -> Option<Real<'ctx>> {
         let sort = Sort::real(ctx);
         let ast = unsafe {
-            let fraction_cstring = CString::new(format!("{:} / {:}", num, den)).unwrap();
+            let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
             let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx, fraction_cstring.as_ptr(), sort.z3_sort);
             if numeral_ptr.is_null() {
                 return None;
@@ -625,6 +616,10 @@ impl<'ctx> Float<'ctx> {
                 Z3_mk_fpa_numeral_double(ctx.z3_ctx, value, sort.z3_sort)
             })
         }
+    }
+
+    pub fn as_f64(&self) -> f64 {
+        unsafe { Z3_get_numeral_double(self.ctx.z3_ctx, self.z3_ast) }
     }
 }
 

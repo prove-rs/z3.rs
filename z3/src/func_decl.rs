@@ -1,10 +1,10 @@
-use ast;
-use ast::Ast;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
+
 use z3_sys::*;
-use {Context, FuncDecl, Sort, Symbol};
+
+use crate::{ast, ast::Ast, Context, FuncDecl, Sort, Symbol};
 
 impl<'ctx> FuncDecl<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
@@ -106,7 +106,7 @@ impl<'ctx> fmt::Display for FuncDecl<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

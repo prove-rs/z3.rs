@@ -1,13 +1,9 @@
-use ast::Ast;
 use std::ffi::CStr;
 use std::fmt;
-use z3_sys::*;
-use Context;
-use Model;
-use Optimize;
-use Solver;
 
-use crate::{FuncDecl, FuncInterp};
+use z3_sys::*;
+
+use crate::{ast::Ast, Context, FuncDecl, FuncInterp, Model, Optimize, Solver};
 
 impl<'ctx> Model<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_mdl: Z3_model) -> Model<'ctx> {
@@ -146,7 +142,7 @@ impl<'ctx> fmt::Display for Model<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

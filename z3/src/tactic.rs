@@ -7,13 +7,8 @@ use std::str::Utf8Error;
 use std::time::Duration;
 
 use z3_sys::*;
-use ApplyResult;
-use Context;
-use Goal;
-use Params;
-use Probe;
-use Solver;
-use Tactic;
+
+use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 
 impl<'ctx> ApplyResult<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_apply_result: Z3_apply_result) -> ApplyResult<'ctx> {
@@ -251,7 +246,7 @@ impl<'ctx> fmt::Display for Tactic<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

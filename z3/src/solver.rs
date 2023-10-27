@@ -1,15 +1,10 @@
-use ast;
-use ast::Ast;
+use log::debug;
 use std::ffi::{CStr, CString};
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Model;
-use Params;
-use SatResult;
-use Solver;
-use Statistics;
-use Symbol;
+
+use crate::{ast, ast::Ast, Context, Model, Params, SatResult, Solver, Statistics, Symbol};
 
 impl<'ctx> Solver<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {
@@ -181,7 +176,7 @@ impl<'ctx> Solver<'ctx> {
     }
 
     // Return a vector of assumptions in the solver.
-    pub fn get_assertions(&self) -> Vec<ast::Bool> {
+    pub fn get_assertions(&self) -> Vec<ast::Bool<'ctx>> {
         let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
 
         (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_vec) })
@@ -318,7 +313,7 @@ impl<'ctx> fmt::Display for Solver<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

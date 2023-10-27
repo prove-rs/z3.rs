@@ -1,16 +1,14 @@
-use ast::{Ast, Bool, Dynamic};
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
-use z3_sys::*;
-use Context;
-use Model;
-use Optimize;
-use SatResult;
-use Statistics;
-use Symbol;
 
-#[cfg(feature = "arbitrary-size-numeral")]
+use z3_sys::*;
+
+use crate::{
+    ast::{Ast, Bool, Dynamic},
+    Context, Model, Optimize, SatResult, Statistics, Symbol,
+};
+
 use num::{
     bigint::{BigInt, BigUint, Sign},
     rational::BigRational,
@@ -218,7 +216,7 @@ impl<'ctx> fmt::Display for Optimize<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }
@@ -271,7 +269,6 @@ impl_weight! {
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 impl Weight for BigInt {
     fn to_string(&self) -> String {
         assert_ne!(self.sign(), Sign::Minus);
@@ -279,14 +276,12 @@ impl Weight for BigInt {
     }
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 impl Weight for BigUint {
     fn to_string(&self) -> String {
         self.to_str_radix(10)
     }
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 impl Weight for BigRational {
     fn to_string(&self) -> String {
         assert_ne!(self.numer().sign(), Sign::Minus);
@@ -310,11 +305,8 @@ macro_rules! impl_sealed {
                 impl Sealed for ($ty, $ty) {}
             )*
 
-            #[cfg(feature = "arbitrary-size-numeral")]
             impl Sealed for BigInt {}
-            #[cfg(feature = "arbitrary-size-numeral")]
             impl Sealed for BigUint {}
-            #[cfg(feature = "arbitrary-size-numeral")]
             impl Sealed for BigRational {}
         }
     };

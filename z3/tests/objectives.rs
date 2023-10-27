@@ -1,4 +1,3 @@
-extern crate z3;
 use z3::ast::Ast;
 use z3::*;
 

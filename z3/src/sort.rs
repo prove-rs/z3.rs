@@ -1,12 +1,10 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use FuncDecl;
-use Sort;
-use SortDiffers;
-use Symbol;
+
+use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
 impl<'ctx> Sort<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_sort: Z3_sort) -> Sort<'ctx> {
@@ -281,7 +279,7 @@ impl<'ctx> fmt::Display for Sort<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

@@ -24,20 +24,33 @@ Add it to your `Cargo.toml` like so:
 z3-sys = "0.8"
 ```
 
+### Finding Z3 Libraries
+
+**Note:** This library has a dependency on Z3.
+
+There are 3 ways for this crate to currently find Z3:
+
+* By default, it will look for a system-installed copy of Z3.
+  On Linux, this would be via the package manager. On macOS, this
+  might be via Homebrew (`brew install z3`).
+* Enabling the `bundled` feature will use `cmake` to build a
+  locally bundled copy of Z3. This copy is provided via a git
+  submodule within the repository.
+* Enabling the `vcpkg` feature will use `vcpkg` to build and
+  install a copy of Z3 which is then used.
+
 **Note:** This crate requires a `z3.h` during build time.
 
-* By default, the crate will look for a `z3.h` in standard/system include paths.
-* If the feature `bundled-z3` is enabled, the `z3.h` of the built Z3 will be used.
-* If the feature `vcpkg` is enabled, the `z3.h` of the built Z3 in vcpkg will be used.
+* By default, the crate will look for a `z3.h` in standard/system
+  include paths. The `Z3_SYS_Z3_HEADER` environment variable can
+  also be used to customize this.
+* Enabling the`bundled` feature will cause the bundled copy of `z3.h`
+  to be used. The `Z3_SYS_Z3_HEADER` environment variable can also
+  be used to customize this.
+* Enabling the `vcpkg` feature will cause the copy of `z3.h` provided
+  by that version to be used. In this case, there is no override
+  via the environment variable.
   Please note that [vcpkg-rs](https://docs.rs/vcpkg-rs) uses `*-windows-static-md` on Windows platform by default.
-* Alternatively, the path to the desired `z3.h` can be specified via the environment variable
-`Z3_SYS_Z3_HEADER`. I.e., running:
-
-```console
-$ Z3_SYS_Z3_HEADER="/path/to/my/z3.h" cargo build
-```
-
-in your project will use `/path/to/my/z3.h` instead.
 
 ## Support and Maintenance
 
