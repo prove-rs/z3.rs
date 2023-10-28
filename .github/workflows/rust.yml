@@ -15,9 +15,9 @@ jobs:
   check-formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Check formatting
-      run: cargo fmt -- --check
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: cargo fmt -- --check
 
   build:
     strategy:
@@ -25,42 +25,42 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Z3 (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install libz3-dev
-    - name: Install Z3 (macOS)
-      if: matrix.os == 'macos-latest'
-      run: brew install z3
-    - name: Run tests
-      run: cargo test --workspace
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # build using a bundled Z3 below...
-      if: ${{ success() || failure() }}
+      - uses: actions/checkout@v4
+      - name: Install Z3 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install libz3-dev
+      - name: Install Z3 (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install z3
+      - name: Run tests
+        run: cargo test --workspace
+        # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
+        # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
+        # we figure out how to work around it. At least we have the
+        # build using a bundled Z3 below...
+        if: ${{ success() || failure() }}
 
   build_on_wasm:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: Install emscripten
-      run: |
-        cd ~
-        git clone https://github.com/emscripten-core/emsdk.git
-        cd emsdk
-        git pull
-        ./emsdk install latest
-        ./emsdk activate latest
-        source ./emsdk_env.sh
-    - name: Install wasm32-unknown-emscripten target
-      run: rustup target add wasm32-unknown-emscripten
-    - name: Build z3-sys and z3 with bundled Z3
-      run: |
-        source ~/emsdk/emsdk_env.sh
-        cargo build --target=wasm32-unknown-emscripten --features bundled
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install emscripten
+        run: |
+          cd ~
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+      - name: Install wasm32-unknown-emscripten target
+        run: rustup target add wasm32-unknown-emscripten
+      - name: Build z3-sys and z3 with bundled Z3
+        run: |
+          source ~/emsdk/emsdk_env.sh
+          cargo build --target=wasm32-unknown-emscripten --features bundled
 
   build_with_bundled_z3:
     strategy:
@@ -149,26 +149,34 @@ jobs:
           releaseName: ${{ env.Z3_VERSION }}
       - name: Compress built z3.
         continue-on-error: true
+        shell: python
         run: |
-          ls "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib"
-          ls "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include"
-          mkdir ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/lib/${{ matrix.lib }}"       ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3++.h"              ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3.h"                ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_algebraic.h"      ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_api.h"            ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_ast_containers.h" ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_fixedpoint.h"     ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_fpa.h"            ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_macros.h"         ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_optimization.h"   ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_polynomial.h"     ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_rcf.h"            ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_spacer.h"         ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_v1.h"             ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          cp "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/include/z3_version.h"        ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
-          tar -jcvf "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz"                       ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}
+          from shutil import make_archive, copyfile
+          from os import mkdir, listdir
+
+          HEADERS = [
+              "z3++.h", "z3.h", "z3_algebraic.h", "z3_api.h", "z3_ast_containers.h", "z3_fixedpoint.h", "z3_fpa.h", "z3_macros.h", "z3_optimization.h", "z3_polynomial.h", "z3_rcf.h", "z3_spacer.h", "z3_v1.h", "z3_version.h"
+          ]
+          FROM = "${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}/"
+          TO = "${{ github.workspace }}/${{ matrix.vcpkg_triplet }}/"
+          LIB = "${{ matrix.lib }}"
+
+          print("`include` dir:", listdir(FROM + "include/"))
+          print("`lib` dir:", listdir(FROM + "lib/"))
+          mkdir(TO)
+          copyfile(FROM + "lib/" + LIB, TO + LIB)
+          for header in HEADERS:
+              copyfile(FROM + "include/" + header, TO + header)
+
+          make_archive(
+              base_name="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz",
+              format="gztar",
+              root_dir="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}",
+              base_dir="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}",
+              verbose=True,
+          )
+          print("workspace:", "${{ github.workspace }}"))
+
       - name: Upload built z3.
         continue-on-error: true
         uses: actions/upload-release-asset@v1
@@ -183,8 +191,8 @@ jobs:
   run_clippy:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Z3
-      run: brew install z3
-    - name: Run clippy
-      run: cargo clippy --workspace --all-targets
+      - uses: actions/checkout@v4
+      - name: Install Z3
+        run: brew install z3
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets
