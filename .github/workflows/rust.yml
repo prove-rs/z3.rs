@@ -150,6 +150,7 @@ jobs:
       - name: Compress built z3.
         continue-on-error: true
         shell: python
+        working-directory: ${{ github.workspace }}
         run: |
           from shutil import make_archive, copyfile
           from os import mkdir, listdir
@@ -171,11 +172,11 @@ jobs:
           make_archive(
               base_name="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz",
               format="gztar",
-              root_dir="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}",
+              root_dir="${{ github.workspace }}",
               base_dir="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}",
               verbose=True,
           )
-          print("workspace:", "${{ github.workspace }}")
+          print("workspace:", listdir("${{ github.workspace }}"))
 
       - name: Upload built z3.
         continue-on-error: true
