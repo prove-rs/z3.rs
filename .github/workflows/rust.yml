@@ -175,7 +175,7 @@ jobs:
               base_dir="${{ github.workspace }}/${{ matrix.vcpkg_triplet }}",
               verbose=True,
           )
-          print("workspace:", "${{ github.workspace }}"))
+          print("workspace:", "${{ github.workspace }}")
 
       - name: Upload built z3.
         continue-on-error: true
