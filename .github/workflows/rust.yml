@@ -147,6 +147,9 @@ jobs:
           GITHUB_TOKEN: ${{ github.token }}
         with:
           releaseName: ${{ env.Z3_VERSION }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: '3.10' 
       - name: Compress built z3.
         continue-on-error: true
         shell: python
@@ -159,10 +162,9 @@ jobs:
           HEADERS = [
               "z3++.h", "z3.h", "z3_algebraic.h", "z3_api.h", "z3_ast_containers.h", "z3_fixedpoint.h", "z3_fpa.h", "z3_macros.h", "z3_optimization.h", "z3_polynomial.h", "z3_rcf.h", "z3_spacer.h", "z3_v1.h", "z3_version.h"
           ]
-          FROM = Path("${{ env.VCPKG_ROOT }}", "installed",
-                      "${{ matrix.vcpkg_triplet }}")
-          TO = Path("${{ github.workspace }}", "${{ matrix.vcpkg_triplet }}")
-          LIB = Path("${{ matrix.lib }}")
+          FROM = Path(r"${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}")
+          TO = Path(r"${{ github.workspace }}/{{ matrix.vcpkg_triplet }}")
+          LIB = Path(r"${{ matrix.lib }}")
           
           print("`include` dir:", listdir(FROM / "include"))
           print("`lib` dir:", listdir(FROM / "lib"))
@@ -172,14 +174,14 @@ jobs:
               copyfile(FROM / "include/" / header, TO / header)
           
           make_archive(
-              base_name="${{ matrix.vcpkg_triplet }}",
+              base_name=r"${{ matrix.vcpkg_triplet }}",
               format="gztar",
               root_dir=".",
-              base_dir="${{ matrix.vcpkg_triplet }}",
+              base_dir=r"${{ matrix.vcpkg_triplet }}",
               verbose=True,
           )
-          print("workspace:", listdir("${{ github.workspace }}"))
-        
+          print("workspace:", listdir(r"${{ github.workspace }}"))
+          
       - name: Upload built z3.
         continue-on-error: true
         uses: actions/upload-release-asset@v1
