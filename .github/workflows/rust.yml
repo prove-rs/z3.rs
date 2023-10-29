@@ -139,8 +139,17 @@ jobs:
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo test --workspace --features vcpkg
-      - name: git-get-release-action
+      - name: Create Release
         continue-on-error: true
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.Z3_VERSION }}
+          release_name: ${{ env.Z3_VERSION }}
+          draft: false
+          prerelease: false
+      - name: git-get-release-action
         id: get_release
         uses: cardinalby/git-get-release-action@1.2.4
         env:
