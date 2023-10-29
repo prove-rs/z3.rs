@@ -163,28 +163,7 @@ jobs:
           from pathlib import Path
           from json import loads
           
-          # actions-toolkit
-          # from actions_toolkit import core
-          # github-action-utils
-          from github_action_utils import set_output
-          
           def main():
-              ASSETS_STRING = r"""
-              ${{ steps.get_release.outputs.assets }}
-              """
-              ASSETS: list[dict] = loads(ASSETS_STRING)
-          
-              found: bool = False
-              for asset in ASSETS:
-                  if 'name' in asset and asset['name'] == r"${{ matrix.vcpkg_triplet }}.tar.gz":
-                      found = True
-                      break
-          
-              set_output("found", int(found))
-              if found:
-                  print("Archive already uploaded, skipping.")
-                  return
-          
               HEADERS = [
                   "z3++.h", "z3.h", "z3_algebraic.h", "z3_api.h", "z3_ast_containers.h", "z3_fixedpoint.h", "z3_fpa.h", "z3_macros.h", "z3_optimization.h", "z3_polynomial.h", "z3_rcf.h", "z3_spacer.h", "z3_v1.h", "z3_version.h"
               ]
@@ -211,16 +190,13 @@ jobs:
           
           
           main()
-      - name: Upload built z3.
-        uses: actions/upload-release-asset@v1
-        if: ${{ !steps.compress_z3.outputs.found }}
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Upload files to a GitHub release
+        uses: svenstaro/upload-release-action@2.7.0
         with:
-          upload_url: ${{ steps.get_release.outputs.upload_url }}
-          asset_path: ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz
-          asset_name: ${{ matrix.vcpkg_triplet }}.tar.gz
-          asset_content_type: application/gzip
+          file: ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz
+          overwrite: true
+          tag: ${{ env.Z3_VERSION }}
+      
 
   run_clippy:
     runs-on: macos-latest
