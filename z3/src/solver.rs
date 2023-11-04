@@ -304,6 +304,43 @@ impl<'ctx> Solver<'ctx> {
             )
         }
     }
+
+    pub fn to_smt2(&self) -> String {
+        let name = CString::new("benchmark generated from rust API").unwrap();
+        let logic = CString::new("").unwrap();
+        let status = CString::new("unknown").unwrap();
+        let attributes = CString::new("").unwrap();
+        let assumptions = self.get_assertions();
+        let mut num_assumptions = assumptions.len() as u32;
+        let formula = if num_assumptions > 0 {
+            num_assumptions -= 1;
+            assumptions[num_assumptions as usize].z3_ast
+        } else {
+            ast::Bool::from_bool(self.ctx, true).z3_ast
+        };
+        let z3_assumptions = assumptions.iter().map(|a| a.z3_ast).collect::<Vec<_>>();
+
+        let p = unsafe {
+            Z3_benchmark_to_smtlib_string(
+                self.ctx.z3_ctx,
+                name.as_ptr(),
+                logic.as_ptr(),
+                status.as_ptr(),
+                attributes.as_ptr(),
+                num_assumptions,
+                z3_assumptions.as_ptr(),
+                formula,
+            )
+        };
+        if p.is_null() {
+            return String::new();
+        }
+        unsafe { CStr::from_ptr(p) }
+            .to_str()
+            .ok()
+            .map(|s| s.to_string())
+            .unwrap_or_else(|| String::new())
+    }
 }
 
 impl<'ctx> fmt::Display for Solver<'ctx> {
