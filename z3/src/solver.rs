@@ -339,7 +339,7 @@ impl<'ctx> Solver<'ctx> {
             .to_str()
             .ok()
             .map(|s| s.to_string())
-            .unwrap_or_else(|| String::new())
+            .unwrap_or_else(String::new)
     }
 }
 
