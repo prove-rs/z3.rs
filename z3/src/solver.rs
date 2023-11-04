@@ -199,6 +199,11 @@ impl<'ctx> Solver<'ctx> {
     /// assumptions are not really "soft constraints", but they can be used to
     /// implement them.
     ///
+    /// By default, the unsat core will not be minimized. Generation of a minimized
+    /// unsat core can be enabled via the `"sat.core.minimize"` and `"smt.core.minimize"`
+    /// settings for SAT and SMT cores respectively. Generation of minimized unsat cores
+    /// will be more expensive.
+    ///
     /// # See also:
     ///
     /// - [`Solver::check_assumptions`]
