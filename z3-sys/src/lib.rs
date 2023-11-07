@@ -6543,8 +6543,17 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_optimize_assert_and_track`]
     /// - [`Z3_optimize_assert_soft`]
     pub fn Z3_optimize_assert(c: Z3_context, o: Z3_optimize, a: Z3_ast);
+
+    /// Assert tracked hard constraint to the optimization context.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_assert`]
+    /// - [`Z3_optimize_assert_soft`]
+    pub fn Z3_optimize_assert_and_track(c: Z3_context, o: Z3_optimize, a: Z3_ast, t: Z3_ast);
 
     /// Assert soft constraint to the optimization context.
     /// - `c`: - context
@@ -6556,6 +6565,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_optimize_assert`]
+    /// - [`Z3_optimize_assert_and_track`]
     pub fn Z3_optimize_assert_soft(
         c: Z3_context,
         o: Z3_optimize,
