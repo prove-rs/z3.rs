@@ -259,6 +259,20 @@ fn test_solver_new_from_smtlib2() {
 }
 
 #[test]
+fn test_solver_to_smtlib2() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver1 = Solver::new(&ctx);
+    let t1 = ast::Bool::from_bool(&ctx, true);
+    let t2 = ast::Bool::from_bool(&ctx, true);
+    solver1.assert(&t1._eq(&t2));
+    let s1_smt2 = solver1.to_smt2();
+    let solver2 = Solver::new(&ctx);
+    solver2.from_string(s1_smt2);
+    assert_eq!(solver2.check(), solver1.check());
+}
+
+#[test]
 fn test_solver_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
