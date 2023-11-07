@@ -4,6 +4,8 @@ use std::fmt;
 
 use z3_sys::*;
 
+use std::ops::AddAssign;
+
 use crate::{ast, ast::Ast, Context, Model, Params, SatResult, Solver, Statistics, Symbol};
 
 impl<'ctx> Solver<'ctx> {
@@ -88,6 +90,19 @@ impl<'ctx> Solver<'ctx> {
     /// The functions [`Solver::check()`] and [`Solver::check_assumptions()`]
     /// should be used to check whether the logical context is consistent
     /// or not.
+    ///
+    /// ```rust
+    /// use z3::{Config, Context, Solver, ast, SatResult, ast::Bool};
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let mut solver = Solver::new(&ctx);
+    ///
+    /// solver.assert(&Bool::from_bool(&ctx, true));
+    /// solver += &Bool::from_bool(&ctx, false);
+    /// solver += Bool::fresh_const(&ctx, "");
+    ///
+    /// assert_eq!(solver.check(), SatResult::Unsat);
+    /// ````
     ///
     /// # See also:
     ///
@@ -383,5 +398,17 @@ impl<'ctx> Clone for Solver<'ctx> {
         });
 
         new_solver
+    }
+}
+
+impl<'ctx> AddAssign<&ast::Bool<'ctx>> for Solver<'ctx> {
+    fn add_assign(&mut self, rhs: &ast::Bool<'ctx>) {
+        self.assert(rhs);
+    }
+}
+
+impl<'ctx> AddAssign<ast::Bool<'ctx>> for Solver<'ctx> {
+    fn add_assign(&mut self, rhs: ast::Bool<'ctx>) {
+        self.assert(&rhs);
     }
 }
