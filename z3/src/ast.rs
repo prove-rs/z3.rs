@@ -778,6 +778,11 @@ impl<'ctx> Int<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)) }
     }
 
+    pub fn from_i32(ctx: &'ctx Context, i: i32) -> Int<'ctx> {
+        let sort = Sort::int(ctx);
+        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx, i as i64, sort.z3_sort)) }
+    }
+
     pub fn from_u64(ctx: &'ctx Context, u: u64) -> Int<'ctx> {
         let sort = Sort::int(ctx);
         unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx, u, sort.z3_sort)) }
@@ -1220,6 +1225,11 @@ impl<'ctx> BV<'ctx> {
     pub fn from_i64(ctx: &'ctx Context, i: i64, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx, i, sort.z3_sort)) }
+    }
+
+    pub fn from_i32(ctx: &'ctx Context, i: i32, sz: u32) -> BV<'ctx> {
+        let sort = Sort::bitvector(ctx, sz);
+        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx, i as i64, sort.z3_sort)) }
     }
 
     pub fn from_u64(ctx: &'ctx Context, u: u64, sz: u32) -> BV<'ctx> {
