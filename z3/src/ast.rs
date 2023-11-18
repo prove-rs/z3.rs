@@ -1777,7 +1777,7 @@ impl<'ctx> Regexp<'ctx> {
         }
     }
 
-    /// Creates a regular expression that recognizes a character in the specificed range (e.g.
+    /// Creates a regular expression that recognizes a character in the specified range (e.g.
     /// `[a-z]`)
     pub fn range(ctx: &'ctx Context, lo: &char, hi: &char) -> Self {
         unsafe {
