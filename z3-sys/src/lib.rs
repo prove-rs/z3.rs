@@ -3144,6 +3144,11 @@ extern "C" {
     /// Create the range regular expression over two sequences of length 1.
     pub fn Z3_mk_re_range(c: Z3_context, lo: Z3_ast, hi: Z3_ast) -> Z3_ast;
 
+    /// Create a regular expression that accepts all singleton sequences of the regular expression sort.
+    ///
+    /// Requires Z3 4.8.13 or later.
+    pub fn Z3_mk_re_allchar(c: Z3_context, regex_sort: Z3_sort) -> Z3_ast;
+
     /// Create a regular expression loop. The supplied regular expression `r` is repeated
     /// between `lo` and `hi` times. The `lo` should be below `hi` with one execution: when
     /// supplying the value `hi` as 0, the meaning is to repeat the argument `r` at least
@@ -3154,6 +3159,11 @@ extern "C" {
         lo: ::std::os::raw::c_uint,
         hi: ::std::os::raw::c_uint,
     ) -> Z3_ast;
+
+    /// Create a power regular expression.
+    ///
+    /// Requires Z3 4.8.15 or later.
+    pub fn Z3_mk_re_power(c: Z3_context, re: Z3_ast, n: ::std::os::raw::c_uint) -> Z3_ast;
 
     /// Create the intersection of the regular languages.
     ///
@@ -3168,6 +3178,11 @@ extern "C" {
 
     /// Create the complement of the regular language `re`.
     pub fn Z3_mk_re_complement(c: Z3_context, re: Z3_ast) -> Z3_ast;
+
+    /// Create the difference of regular expressions.
+    ///
+    /// Requires Z3 4.8.14 or later.
+    pub fn Z3_mk_re_diff(c: Z3_context, re1: Z3_ast, re2: Z3_ast) -> Z3_ast;
 
     /// Create an empty regular expression of sort `re`.
     ///
