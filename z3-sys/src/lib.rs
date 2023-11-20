@@ -3124,7 +3124,7 @@ extern "C" {
     /// Create the regular language `re*`.
     pub fn Z3_mk_re_star(c: Z3_context, re: Z3_ast) -> Z3_ast;
 
-    /// Create the regular language `[re]`.
+    /// Create the regular language `re?`.
     pub fn Z3_mk_re_option(c: Z3_context, re: Z3_ast) -> Z3_ast;
 
     /// Create the union of the regular languages.
