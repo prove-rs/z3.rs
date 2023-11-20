@@ -1649,6 +1649,44 @@ fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
 }
 
 #[test]
+fn test_regex_union() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let a = ast::String::new_const(ctx, "a");
+    let b = ast::String::new_const(ctx, "b");
+    let c = ast::String::new_const(ctx, "c");
+    let re = ast::Regexp::union(
+        ctx,
+        &[
+            ast::Regexp::literal(ctx, "a"),
+            ast::Regexp::literal(ctx, "b"),
+        ],
+    );
+    solver.assert(&a.regex_matches(&re));
+    solver.assert(&b.regex_matches(&re));
+    solver.assert(&c.regex_matches(&re).not());
+    assert!(solver.check() == SatResult::Sat);
+}
+
+#[test]
+fn test_regex_union2() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let c = ast::String::new_const(ctx, "c");
+    let re = ast::Regexp::union(
+        ctx,
+        &[
+            ast::Regexp::literal(ctx, "a"),
+            ast::Regexp::literal(ctx, "b"),
+        ],
+    );
+    solver.assert(&c.regex_matches(&re));
+    assert!(solver.check() == SatResult::Unsat);
+}
+
+#[test]
 /// <https://github.com/Z3Prover/z3/blob/21e59f7c6e5033006265fc6bc16e2c9f023db0e8/examples/dotnet/Program.cs#L329-L370>
 fn test_array_example1() {
     let cfg = Config::new();
