@@ -22,8 +22,6 @@ vcpkg = ["z3-sys/vcpkg"]
 # This is a legacy feature here for short term compatibility.
 static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]
 
-vcpkg = ["z3-sys/vcpkg"]
-
 [dependencies]
 log = "0.4"
 
