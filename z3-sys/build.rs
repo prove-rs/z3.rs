@@ -1,23 +1,52 @@
 use std::env;
 
-#[cfg(not(feature = "vcpkg"))]
-const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
-
 fn main() {
-    // Feature `vcpkg` is prior to `static-link-z3` as vcpkg-installed z3 is also statically linked.
-
-    #[cfg(not(feature = "vcpkg"))]
-    #[cfg(feature = "static-link-z3")]
+    #[cfg(feature = "bundled")]
     build_bundled_z3();
+
+    #[cfg(feature = "deprecated-static-link-z3")]
+    println!("cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature.");
 
     println!("cargo:rerun-if-changed=build.rs");
 
     #[cfg(not(feature = "vcpkg"))]
     let header = find_header_by_env();
+
     #[cfg(feature = "vcpkg")]
     let header = find_library_header_by_vcpkg();
 
+    link_against_cxx_stdlib();
+
     generate_binding(&header);
+}
+
+fn link_against_cxx_stdlib() {
+    // Z3 needs a C++ standard library. Customize which one we use with the
+    // `CXXSTDLIB` environment variable, if needed.
+    let cxx = match env::var("CXXSTDLIB") {
+        Ok(s) if s.is_empty() => None,
+        Ok(s) => Some(s),
+        Err(_) => {
+            let target = env::var("TARGET").unwrap();
+            if target.contains("msvc") {
+                None
+            } else if target.contains("apple")
+                | target.contains("freebsd")
+                | target.contains("openbsd")
+            {
+                Some("c++".to_string())
+            } else if target.contains("android") {
+                Some("c++_shared".to_string())
+            } else {
+                Some("stdc++".to_string())
+            }
+        }
+    };
+
+    println!("cargo:rerun-if-env-changed=CXXSTDLIB");
+    if let Some(cxx) = cxx {
+        println!("cargo:rustc-link-lib={cxx}");
+    }
 }
 
 #[cfg(feature = "vcpkg")]
@@ -26,12 +55,12 @@ fn find_library_header_by_vcpkg() -> String {
         .emit_includes(true)
         .find_package("z3")
         .unwrap();
-    for include in lib.include_paths.iter() {
+    for include in &lib.include_paths {
         let mut include = include.clone();
         include.push("z3.h");
         if include.exists() {
             let header = include.to_str().unwrap().to_owned();
-            println!("cargo:rerun-if-changed={}", header);
+            println!("cargo:rerun-if-changed={header}");
             return header;
         }
     }
@@ -40,20 +69,21 @@ fn find_library_header_by_vcpkg() -> String {
 
 #[cfg(not(feature = "vcpkg"))]
 fn find_header_by_env() -> String {
-    let header = if cfg!(feature = "static-link-z3") {
+    const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
+    let header = if cfg!(feature = "bundled") {
         "z3/src/api/z3.h".to_string()
-    } else if let Ok(header_path) = std::env::var(Z3_HEADER_VAR) {
+    } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
         header_path
     } else {
         "wrapper.h".to_string()
     };
-    println!("cargo:rerun-if-env-changed={}", Z3_HEADER_VAR);
-    println!("cargo:rerun-if-changed={}", header);
+    println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
+    println!("cargo:rerun-if-changed={header}");
     header
 }
 
 fn generate_binding(header: &str) {
-    let out_path = std::path::PathBuf::from(std::env::var("OUT_DIR").unwrap());
+    let out_path = std::path::PathBuf::from(env::var("OUT_DIR").unwrap());
 
     for x in &[
         "ast_kind",
@@ -91,14 +121,13 @@ fn generate_binding(header: &str) {
         enum_bindings
             .generate()
             .expect("Unable to generate bindings")
-            .write_to_file(out_path.join(format!("{}.rs", x)))
+            .write_to_file(out_path.join(format!("{x}.rs")))
             .expect("Couldn't write bindings!");
     }
 }
 
 /// Build z3 with bundled source codes.
-#[cfg(not(feature = "vcpkg"))]
-#[cfg(feature = "static-link-z3")]
+#[cfg(feature = "bundled")]
 fn build_bundled_z3() {
     let mut cfg = cmake::Config::new("z3");
     cfg
@@ -121,26 +150,6 @@ fn build_bundled_z3() {
 
     let dst = cfg.build();
 
-    // Z3 needs a C++ standard library. Customize which one we use with the
-    // `CXXSTDLIB` environment variable, if needed.
-    let cxx = match std::env::var("CXXSTDLIB") {
-        Ok(s) if s.is_empty() => None,
-        Ok(s) => Some(s),
-        Err(_) => {
-            let target = std::env::var("TARGET").unwrap();
-            if target.contains("msvc") {
-                None
-            } else if target.contains("apple")
-                | target.contains("freebsd")
-                | target.contains("openbsd")
-            {
-                Some("c++".to_string())
-            } else {
-                Some("stdc++".to_string())
-            }
-        }
-    };
-
     let mut found_lib_dir = false;
     for lib_dir in &[
         "lib",
@@ -151,10 +160,7 @@ fn build_bundled_z3() {
         let full_lib_dir = dst.join(lib_dir);
         if full_lib_dir.exists() {
             if *lib_dir == "lib64" {
-                assert_eq!(
-                    std::env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap(),
-                    "64"
-                );
+                assert_eq!(env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap(), "64");
             }
             println!("cargo:rustc-link-search=native={}", full_lib_dir.display());
             found_lib_dir = true;
@@ -170,9 +176,5 @@ fn build_bundled_z3() {
         println!("cargo:rustc-link-lib=static=libz3");
     } else {
         println!("cargo:rustc-link-lib=static=z3");
-    }
-
-    if let Some(cxx) = cxx {
-        println!("cargo:rustc-link-lib={}", cxx);
     }
 }

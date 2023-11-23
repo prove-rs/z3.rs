@@ -1,21 +1,11 @@
-extern crate env_logger;
-#[macro_use]
-extern crate log;
-
-extern crate z3;
+use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
 use z3::ast::{Array, Ast, Bool, Int, BV};
 use z3::*;
 
-#[cfg(feature = "arbitrary-size-numeral")]
-extern crate num;
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::bigint::BigInt;
-#[cfg(feature = "arbitrary-size-numeral")]
-use num::rational::BigRational;
-#[cfg(feature = "arbitrary-size-numeral")]
+use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 
 #[test]
@@ -134,15 +124,35 @@ fn test_cloning_ast() {
     assert_eq!(yv, 0);
 }
 
+fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool> {
+    let s = Solver::new(ctx);
+    let x = ast::Int::new_const(ctx, "x");
+    let y = ast::Int::new_const(ctx, "y");
+    s.assert(&x.gt(&y));
+    s.get_assertions()
+}
+
+#[test]
+fn test_solver_get_assertions_lifetime() {
+    // This makes sure that the assertions created in the function
+    // using the solver have the lifetime of the context rather
+    // than the solver.
+    let _ = env_logger::try_init();
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let assertions = get_some_solver_assertions(&ctx);
+    assert_eq!(assertions.len(), 1);
+}
+
 #[test]
 fn test_format() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let ast = ast::Int::new_const(&ctx, "x");
-    assert_eq!("x", format!("{}", ast));
+    assert_eq!("x", format!("{ast}"));
 
     let int = Sort::int(&ctx);
-    assert_eq!("Int", format!("{}", int));
+    assert_eq!("Int", format!("{int}"));
 }
 
 #[test]
@@ -246,6 +256,20 @@ fn test_solver_new_from_smtlib2() {
     let solver = Solver::new(&ctx);
     solver.from_string(problem);
     assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_solver_to_smtlib2() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver1 = Solver::new(&ctx);
+    let t1 = ast::Bool::from_bool(&ctx, true);
+    let t2 = ast::Bool::from_bool(&ctx, true);
+    solver1.assert(&t1._eq(&t2));
+    let s1_smt2 = solver1.to_smt2();
+    let solver2 = Solver::new(&ctx);
+    solver2.from_string(s1_smt2);
+    assert_eq!(solver2.check(), solver1.check());
 }
 
 #[test]
@@ -417,6 +441,15 @@ fn test_real_cmp() {
 }
 
 #[test]
+fn test_float() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let f = ast::Float::from_f64(&ctx, 1.0);
+    assert_eq!(f.as_f64(), 1.0);
+}
+
+#[test]
 fn test_float_add() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
@@ -458,7 +491,6 @@ fn test_arbitrary_size_int() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 #[test]
 fn test_arbitrary_size_real_from_bigrational() {
     let cfg = Config::new();
@@ -476,7 +508,6 @@ fn test_arbitrary_size_real_from_bigrational() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
-#[cfg(feature = "arbitrary-size-numeral")]
 #[test]
 fn test_arbitrary_size_int_from_bigint() {
     let cfg = Config::new();
@@ -511,7 +542,7 @@ fn test_string_eq() {
     assert_eq!(solver.check(), SatResult::Sat);
 
     solver.assert(&h._eq(&z));
-    assert_eq!(solver.check(), SatResult::Unsat)
+    assert_eq!(solver.check(), SatResult::Unsat);
 }
 
 #[test]
@@ -525,7 +556,7 @@ fn test_string_concat() {
     let z = ast::String::from_str(&ctx, "foobar").unwrap();
 
     solver.assert(&ast::String::concat(&ctx, &[&x, &y])._eq(&z));
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -538,7 +569,7 @@ fn test_string_prefix() {
     let y = ast::String::from_str(&ctx, "foobar").unwrap();
 
     solver.assert(&x.prefix(&y));
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -551,7 +582,7 @@ fn test_string_suffix() {
     let y = ast::String::from_str(&ctx, "foobar").unwrap();
 
     solver.assert(&x.suffix(&y));
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 fn assert_string_roundtrip(source: &str) {
@@ -598,7 +629,7 @@ fn test_rec_func_def() {
     solver.assert(&y._eq(&fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
     solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 120)));
 
-    assert_eq!(solver.check(), SatResult::Sat)
+    assert_eq!(solver.check(), SatResult::Sat);
 }
 
 #[test]
@@ -633,7 +664,7 @@ fn test_rec_func_def_unsat() {
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
     solver.assert(&y._eq(&ast::Int::from_i64(&ctx, 25)));
 
-    assert_eq!(solver.check(), SatResult::Unsat)
+    assert_eq!(solver.check(), SatResult::Unsat);
 }
 
 #[test]
@@ -974,7 +1005,7 @@ fn check_application_of_tactic_to_goal() {
     goal.assert(&y_greater_than_or_equal_to_one);
 
     assert_eq!(
-        format!("{}", goal),
+        format!("{goal}"),
         "(goal\n  x\n  (>= (+ y 1) 2)\n  (>= y 1))"
     );
     let apply_results = repeat_tactic.apply(&goal, Some(&params));
@@ -984,7 +1015,7 @@ fn check_application_of_tactic_to_goal() {
         .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
 
-    assert_eq!(format!("{}", goal_result), "(goal\n  x\n  (>= y 1))");
+    assert_eq!(format!("{goal_result}"), "(goal\n  x\n  (>= y 1))");
 }
 
 #[test]
@@ -1084,9 +1115,9 @@ fn test_goal_reset() {
     let a = ast::Bool::new_const(&ctx, "a");
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a);
-    assert_eq!(format!("{}", goal), "(goal\n  a)");
+    assert_eq!(format!("{goal}"), "(goal\n  a)");
     goal.reset();
-    assert_eq!(format!("{}", goal), "(goal)");
+    assert_eq!(format!("{goal}"), "(goal)");
 }
 
 #[test]
@@ -1247,7 +1278,7 @@ fn test_tactic_try_for() {
         .list_subgoals()
         .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
-    assert_eq!(format!("{}", goal_result), "(goal\n  (>= x 3))");
+    assert_eq!(format!("{goal_result}"), "(goal\n  (>= x 3))");
 }
 
 #[test]
@@ -1324,8 +1355,7 @@ fn test_goal_apply_tactic() {
         assert_eq!(
             goal_result.get_formulas::<Bool>(),
             after_formulas,
-            "Before: {:?}",
-            before_formulas
+            "Before: {before_formulas:?}"
         );
     }
 
@@ -1644,10 +1674,10 @@ fn test_array_example1() {
     for a in g.get_formulas() {
         s.assert(&a);
     }
-    println!("Solver: {}", s);
+    println!("Solver: {s}");
 
     let q = s.check();
-    println!("Status: {:?}", q);
+    println!("Status: {q:?}");
 
     if q != SatResult::Sat {
         panic!("Solver did not return sat");
@@ -1765,5 +1795,5 @@ fn iterate_all_solutions() {
             ]
             .into_iter()
             .collect()
-    )
+    );
 }

@@ -1,6 +1,9 @@
+use log::debug;
 use std::ffi::CString;
+
 use z3_sys::*;
-use Config;
+
+use crate::Config;
 
 impl Config {
     /// Create a configuration object for the Z3 context object.
@@ -44,7 +47,7 @@ impl Config {
                 self.z3_cfg,
                 self.kvs.last().unwrap().0.as_ptr(),
                 self.kvs.last().unwrap().1.as_ptr(),
-            )
+            );
         };
     }
 
@@ -84,7 +87,7 @@ impl Config {
     }
 
     pub fn set_timeout_msec(&mut self, ms: u64) {
-        self.set_param_value("timeout", &format!("{}", ms));
+        self.set_param_value("timeout", &format!("{ms}"));
     }
 }
 

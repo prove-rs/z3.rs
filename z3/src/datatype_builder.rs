@@ -1,8 +1,10 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
 
 use std::{convert::TryInto, ptr::null_mut};
+
 use z3_sys::*;
-use {
+
+use crate::{
     Context, DatatypeAccessor, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort,
     Symbol,
 };
@@ -174,7 +176,7 @@ pub fn create_datatypes<'ctx>(
             });
         }
 
-        datatype_sorts.push(DatatypeSort { sort, variants })
+        datatype_sorts.push(DatatypeSort { sort, variants });
     }
 
     for ctor in ctors {

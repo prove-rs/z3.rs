@@ -1,9 +1,9 @@
 use std::ffi::{CStr, CString};
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Params;
-use Symbol;
+
+use crate::{Context, Params, Symbol};
 
 impl<'ctx> Params<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_params: Z3_params) -> Params<'ctx> {
@@ -22,7 +22,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v.into().as_z3_symbol(self.ctx),
-            )
+            );
         };
     }
 
@@ -33,7 +33,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v,
-            )
+            );
         };
     }
 
@@ -44,7 +44,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v,
-            )
+            );
         };
     }
 
@@ -55,7 +55,7 @@ impl<'ctx> Params<'ctx> {
                 self.z3_params,
                 k.into().as_z3_symbol(self.ctx),
                 v,
-            )
+            );
         };
     }
 }
@@ -106,7 +106,7 @@ impl<'ctx> fmt::Display for Params<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

@@ -1,15 +1,12 @@
-use ast;
-use ast::Ast;
+use log::debug;
 use std::ffi::{CStr, CString};
 use std::fmt;
+
 use z3_sys::*;
-use Context;
-use Model;
-use Params;
-use SatResult;
-use Solver;
-use Statistics;
-use Symbol;
+
+use std::ops::AddAssign;
+
+use crate::{ast, ast::Ast, Context, Model, Params, SatResult, Solver, Statistics, Symbol};
 
 impl<'ctx> Solver<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {
@@ -93,6 +90,19 @@ impl<'ctx> Solver<'ctx> {
     /// The functions [`Solver::check()`] and [`Solver::check_assumptions()`]
     /// should be used to check whether the logical context is consistent
     /// or not.
+    ///
+    /// ```rust
+    /// use z3::{Config, Context, Solver, ast, SatResult, ast::Bool};
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let mut solver = Solver::new(&ctx);
+    ///
+    /// solver.assert(&Bool::from_bool(&ctx, true));
+    /// solver += &Bool::from_bool(&ctx, false);
+    /// solver += Bool::fresh_const(&ctx, "");
+    ///
+    /// assert_eq!(solver.check(), SatResult::Unsat);
+    /// ````
     ///
     /// # See also:
     ///
@@ -181,7 +191,7 @@ impl<'ctx> Solver<'ctx> {
     }
 
     // Return a vector of assumptions in the solver.
-    pub fn get_assertions(&self) -> Vec<ast::Bool> {
+    pub fn get_assertions(&self) -> Vec<ast::Bool<'ctx>> {
         let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
 
         (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_vec) })
@@ -203,6 +213,11 @@ impl<'ctx> Solver<'ctx> {
     /// cores.  They may be also used to "retract" assumptions. Note that,
     /// assumptions are not really "soft constraints", but they can be used to
     /// implement them.
+    ///
+    /// By default, the unsat core will not be minimized. Generation of a minimized
+    /// unsat core can be enabled via the `"sat.core.minimize"` and `"smt.core.minimize"`
+    /// settings for SAT and SMT cores respectively. Generation of minimized unsat cores
+    /// will be more expensive.
     ///
     /// # See also:
     ///
@@ -309,6 +324,43 @@ impl<'ctx> Solver<'ctx> {
             )
         }
     }
+
+    pub fn to_smt2(&self) -> String {
+        let name = CString::new("benchmark generated from rust API").unwrap();
+        let logic = CString::new("").unwrap();
+        let status = CString::new("unknown").unwrap();
+        let attributes = CString::new("").unwrap();
+        let assumptions = self.get_assertions();
+        let mut num_assumptions = assumptions.len() as u32;
+        let formula = if num_assumptions > 0 {
+            num_assumptions -= 1;
+            assumptions[num_assumptions as usize].z3_ast
+        } else {
+            ast::Bool::from_bool(self.ctx, true).z3_ast
+        };
+        let z3_assumptions = assumptions.iter().map(|a| a.z3_ast).collect::<Vec<_>>();
+
+        let p = unsafe {
+            Z3_benchmark_to_smtlib_string(
+                self.ctx.z3_ctx,
+                name.as_ptr(),
+                logic.as_ptr(),
+                status.as_ptr(),
+                attributes.as_ptr(),
+                num_assumptions,
+                z3_assumptions.as_ptr(),
+                formula,
+            )
+        };
+        if p.is_null() {
+            return String::new();
+        }
+        unsafe { CStr::from_ptr(p) }
+            .to_str()
+            .ok()
+            .map(|s| s.to_string())
+            .unwrap_or_else(String::new)
+    }
 }
 
 impl<'ctx> fmt::Display for Solver<'ctx> {
@@ -318,7 +370,7 @@ impl<'ctx> fmt::Display for Solver<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }
@@ -346,5 +398,17 @@ impl<'ctx> Clone for Solver<'ctx> {
         });
 
         new_solver
+    }
+}
+
+impl<'ctx> AddAssign<&ast::Bool<'ctx>> for Solver<'ctx> {
+    fn add_assign(&mut self, rhs: &ast::Bool<'ctx>) {
+        self.assert(rhs);
+    }
+}
+
+impl<'ctx> AddAssign<ast::Bool<'ctx>> for Solver<'ctx> {
+    fn add_assign(&mut self, rhs: ast::Bool<'ctx>) {
+        self.assert(&rhs);
     }
 }

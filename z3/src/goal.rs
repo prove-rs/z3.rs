@@ -3,10 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::ast;
-use crate::ast::Ast;
-use Context;
-use Goal;
+use crate::{ast, ast::Ast, Context, Goal};
 
 impl<'ctx> Clone for Goal<'ctx> {
     fn clone(&self) -> Self {
@@ -119,7 +116,7 @@ impl<'ctx> fmt::Display for Goal<'ctx> {
             return Result::Err(fmt::Error);
         }
         match unsafe { CStr::from_ptr(p) }.to_str() {
-            Ok(s) => write!(f, "{}", s),
+            Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
         }
     }

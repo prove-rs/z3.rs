@@ -3,15 +3,8 @@
 //! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
 
 #![allow(clippy::unreadable_literal)]
+#![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
-
-#[macro_use]
-extern crate log;
-
-extern crate z3_sys;
-
-#[cfg(feature = "arbitrary-size-numeral")]
-extern crate num;
 
 use std::ffi::CString;
 use z3_sys::*;
@@ -38,8 +31,8 @@ mod statistics;
 mod symbol;
 mod tactic;
 
-pub use params::{get_global_param, reset_all_global_params, set_global_param};
-pub use statistics::{StatisticsEntry, StatisticsValue};
+pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
+pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 
 /// Configuration used to initialize [logical contexts](Context).
 ///

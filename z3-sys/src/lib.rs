@@ -29,6 +29,7 @@
 
 #![allow(non_camel_case_types)]
 #![allow(clippy::unreadable_literal)]
+#![warn(clippy::doc_markdown)]
 
 mod generated;
 
@@ -3143,6 +3144,11 @@ extern "C" {
     /// Create the range regular expression over two sequences of length 1.
     pub fn Z3_mk_re_range(c: Z3_context, lo: Z3_ast, hi: Z3_ast) -> Z3_ast;
 
+    /// Create a regular expression that accepts all singleton sequences of the regular expression sort.
+    ///
+    /// Requires Z3 4.8.13 or later.
+    pub fn Z3_mk_re_allchar(c: Z3_context, regex_sort: Z3_sort) -> Z3_ast;
+
     /// Create a regular expression loop. The supplied regular expression `r` is repeated
     /// between `lo` and `hi` times. The `lo` should be below `hi` with one execution: when
     /// supplying the value `hi` as 0, the meaning is to repeat the argument `r` at least
@@ -3153,6 +3159,11 @@ extern "C" {
         lo: ::std::os::raw::c_uint,
         hi: ::std::os::raw::c_uint,
     ) -> Z3_ast;
+
+    /// Create a power regular expression.
+    ///
+    /// Requires Z3 4.8.15 or later.
+    pub fn Z3_mk_re_power(c: Z3_context, re: Z3_ast, n: ::std::os::raw::c_uint) -> Z3_ast;
 
     /// Create the intersection of the regular languages.
     ///
@@ -3167,6 +3178,11 @@ extern "C" {
 
     /// Create the complement of the regular language `re`.
     pub fn Z3_mk_re_complement(c: Z3_context, re: Z3_ast) -> Z3_ast;
+
+    /// Create the difference of regular expressions.
+    ///
+    /// Requires Z3 4.8.14 or later.
+    pub fn Z3_mk_re_diff(c: Z3_context, re1: Z3_ast, re2: Z3_ast) -> Z3_ast;
 
     /// Create an empty regular expression of sort `re`.
     ///
@@ -4090,6 +4106,8 @@ extern "C" {
     /// # Preconditions:
     ///
     /// - `Z3_get_ast_kind(c, a) == AstKind::Numeral || Z3_is_algebraic_number(c, a)`
+    ///
+    /// # See also:
     ///
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::Numeral`]
@@ -5681,6 +5699,11 @@ extern "C" {
 
     /// Retrieve the unsat core for the last [`Z3_solver_check_assumptions`]
     /// The unsat core is a subset of the assumptions `a`.
+    ///
+    /// By default, the unsat core will not be minimized. Generation of a minimized
+    /// unsat core can be enabled via the `"sat.core.minimize"` and `"smt.core.minimize"`
+    /// settings for SAT and SMT cores respectively. Generation of minimized unsat cores
+    /// will be more expensive.
     pub fn Z3_solver_get_unsat_core(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
 
     /// Return a brief justification for an "unknown" result (i.e., `Z3_L_UNDEF`) for
@@ -6535,8 +6558,17 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_optimize_assert_and_track`]
     /// - [`Z3_optimize_assert_soft`]
     pub fn Z3_optimize_assert(c: Z3_context, o: Z3_optimize, a: Z3_ast);
+
+    /// Assert tracked hard constraint to the optimization context.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_optimize_assert`]
+    /// - [`Z3_optimize_assert_soft`]
+    pub fn Z3_optimize_assert_and_track(c: Z3_context, o: Z3_optimize, a: Z3_ast, t: Z3_ast);
 
     /// Assert soft constraint to the optimization context.
     /// - `c`: - context
@@ -6548,6 +6580,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_optimize_assert`]
+    /// - [`Z3_optimize_assert_and_track`]
     pub fn Z3_optimize_assert_soft(
         c: Z3_context,
         o: Z3_optimize,
@@ -6793,56 +6826,165 @@ extern "C" {
     /// Create the RoundingMode sort.
     ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_away`] or [`Z3_mk_fpa_rna`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_even`] or [`Z3_mk_fpa_rne`]
+    /// - [`Z3_mk_fpa_round_toward_negative`] or [`Z3_mk_fpa_rtn`]
+    /// - [`Z3_mk_fpa_round_toward_positive`] or [`Z3_mk_fpa_rtp`]
+    /// - [`Z3_mk_fpa_round_toward_zero`] or [`Z3_mk_fpa_rtz`]
     pub fn Z3_mk_fpa_rounding_mode_sort(c: Z3_context) -> Z3_sort;
 
     /// Create a numeral of RoundingMode sort which represents the NearestTiesToEven rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_rne`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_away`]
+    /// - [`Z3_mk_fpa_round_toward_negative`]
+    /// - [`Z3_mk_fpa_round_toward_positive`]
+    /// - [`Z3_mk_fpa_round_toward_zero`]
     pub fn Z3_mk_fpa_round_nearest_ties_to_even(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the NearestTiesToEven rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_round_nearest_ties_to_even`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_rna`]
+    /// - [`Z3_mk_fpa_rtn`]
+    /// - [`Z3_mk_fpa_rtp`]
+    /// - [`Z3_mk_fpa_rtz`]
     pub fn Z3_mk_fpa_rne(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the NearestTiesToAway rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_rna`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
+    /// - [`Z3_mk_fpa_round_toward_negative`]
+    /// - [`Z3_mk_fpa_round_toward_positive`]
+    /// - [`Z3_mk_fpa_round_toward_zero`]
     pub fn Z3_mk_fpa_round_nearest_ties_to_away(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the NearestTiesToAway rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_round_nearest_ties_to_away`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_rne`]
+    /// - [`Z3_mk_fpa_rtn`]
+    /// - [`Z3_mk_fpa_rtp`]
+    /// - [`Z3_mk_fpa_rtz`]
     pub fn Z3_mk_fpa_rna(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the TowardPositive rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_rtp`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_away`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
+    /// - [`Z3_mk_fpa_round_toward_negative`]
+    /// - [`Z3_mk_fpa_round_toward_zero`]
     pub fn Z3_mk_fpa_round_toward_positive(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the TowardPositive rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_round_toward_positive`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_rna`]
+    /// - [`Z3_mk_fpa_rne`]
+    /// - [`Z3_mk_fpa_rtn`]
+    /// - [`Z3_mk_fpa_rtz`]
     pub fn Z3_mk_fpa_rtp(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the TowardNegative rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_rtn`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_away`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
+    /// - [`Z3_mk_fpa_round_toward_positive`]
+    /// - [`Z3_mk_fpa_round_toward_zero`]
     pub fn Z3_mk_fpa_round_toward_negative(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the TowardNegative rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_round_toward_negative`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_rna`]
+    /// - [`Z3_mk_fpa_rne`]
+    /// - [`Z3_mk_fpa_rtp`]
+    /// - [`Z3_mk_fpa_rtz`]
     pub fn Z3_mk_fpa_rtn(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the TowardZero rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_rtz`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_away`]
+    /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
+    /// - [`Z3_mk_fpa_round_toward_negative`]
+    /// - [`Z3_mk_fpa_round_toward_positive`]
     pub fn Z3_mk_fpa_round_toward_zero(c: Z3_context) -> Z3_ast;
 
     /// Create a numeral of RoundingMode sort which represents the TowardZero rounding mode.
     ///
+    /// This is the same as [`Z3_mk_fpa_round_toward_zero`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_rounding_mode_sort`]
+    /// - [`Z3_mk_fpa_rna`]
+    /// - [`Z3_mk_fpa_rne`]
+    /// - [`Z3_mk_fpa_rtn`]
+    /// - [`Z3_mk_fpa_rtp`]
     pub fn Z3_mk_fpa_rtz(c: Z3_context) -> Z3_ast;
 
     /// Create a FloatingPoint sort.
@@ -6852,6 +6994,13 @@ extern "C" {
     /// - `sbits`: number of significand bits
     ///
     /// NOTE: ebits must be larger than 1 and sbits must be larger than 2.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_half`] or [`Z3_mk_fpa_sort_16`]
+    /// - [`Z3_mk_fpa_sort_single`] or [`Z3_mk_fpa_sort_32`]
+    /// - [`Z3_mk_fpa_sort_double`] or [`Z3_mk_fpa_sort_64`]
+    /// - [`Z3_mk_fpa_sort_quadruple`] or [`Z3_mk_fpa_sort_128`]
     pub fn Z3_mk_fpa_sort(
         c: Z3_context,
         ebits: ::std::os::raw::c_uint,
@@ -6860,42 +7009,106 @@ extern "C" {
 
     /// Create the half-precision (16-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_16`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_single`]
+    /// - [`Z3_mk_fpa_sort_double`]
+    /// - [`Z3_mk_fpa_sort_quadruple`]
     pub fn Z3_mk_fpa_sort_half(c: Z3_context) -> Z3_sort;
 
     /// Create the half-precision (16-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_half`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_32`]
+    /// - [`Z3_mk_fpa_sort_64`]
+    /// - [`Z3_mk_fpa_sort_128`]
     pub fn Z3_mk_fpa_sort_16(c: Z3_context) -> Z3_sort;
 
     /// Create the single-precision (32-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_32`].
+    ///
     /// - `c`: logical context.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_half`]
+    /// - [`Z3_mk_fpa_sort_double`]
+    /// - [`Z3_mk_fpa_sort_quadruple`]
     pub fn Z3_mk_fpa_sort_single(c: Z3_context) -> Z3_sort;
 
     /// Create the single-precision (32-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_single`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_16`]
+    /// - [`Z3_mk_fpa_sort_64`]
+    /// - [`Z3_mk_fpa_sort_128`]
     pub fn Z3_mk_fpa_sort_32(c: Z3_context) -> Z3_sort;
 
     /// Create the double-precision (64-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_64`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_half`]
+    /// - [`Z3_mk_fpa_sort_single`]
+    /// - [`Z3_mk_fpa_sort_quadruple`]
     pub fn Z3_mk_fpa_sort_double(c: Z3_context) -> Z3_sort;
 
     /// Create the double-precision (64-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_double`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_16`]
+    /// - [`Z3_mk_fpa_sort_32`]
+    /// - [`Z3_mk_fpa_sort_128`]
     pub fn Z3_mk_fpa_sort_64(c: Z3_context) -> Z3_sort;
 
     /// Create the quadruple-precision (128-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_128`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_half`]
+    /// - [`Z3_mk_fpa_sort_single`]
+    /// - [`Z3_mk_fpa_sort_double`]
     pub fn Z3_mk_fpa_sort_quadruple(c: Z3_context) -> Z3_sort;
 
     /// Create the quadruple-precision (128-bit) FloatingPoint sort.
     ///
+    /// This is the same as [`Z3_mk_fpa_sort_quadruple`].
+    ///
     /// - `c`: logical context
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_sort_16`]
+    /// - [`Z3_mk_fpa_sort_32`]
+    /// - [`Z3_mk_fpa_sort_64`]
     pub fn Z3_mk_fpa_sort_128(c: Z3_context) -> Z3_sort;
 
     /// Create a floating-point NaN of sort `s`.
@@ -6906,6 +7119,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_fpa_inf`]
+    /// - [`Z3_mk_fpa_is_nan`]
     /// - [`Z3_mk_fpa_zero`]
     pub fn Z3_mk_fpa_nan(c: Z3_context, s: Z3_sort) -> Z3_ast;
 
@@ -6919,6 +7133,7 @@ extern "C" {
     ///
     /// # See also:
     ///
+    /// - [`Z3_mk_fpa_is_infinite`]
     /// - [`Z3_mk_fpa_nan`]
     /// - [`Z3_mk_fpa_zero`]
     pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
@@ -6934,6 +7149,7 @@ extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_fpa_inf`]
+    /// - [`Z3_mk_fpa_is_zero`]
     /// - [`Z3_mk_fpa_nan`]
     pub fn Z3_mk_fpa_zero(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
 
@@ -7076,12 +7292,24 @@ extern "C" {
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_is_negative`]
+    /// - [`Z3_mk_fpa_is_positive`]
+    /// - [`Z3_mk_fpa_neg`]
     pub fn Z3_mk_fpa_abs(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Floating-point negation
     ///
     /// - `c`: logical context
     /// - `t`: term of FloatingPoint sort
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_abs`]
+    /// - [`Z3_mk_fpa_is_negative`]
+    /// - [`Z3_mk_fpa_is_positive`]
     pub fn Z3_mk_fpa_neg(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Floating-point addition
@@ -7172,6 +7400,10 @@ extern "C" {
     /// - `t2`: term of FloatingPoint sort
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_max`]
     pub fn Z3_mk_fpa_min(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Maximum of floating-point numbers.
@@ -7181,6 +7413,10 @@ extern "C" {
     /// - `t2`: term of FloatingPoint sort
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_min`]
     pub fn Z3_mk_fpa_max(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point less than or equal.
@@ -7190,6 +7426,13 @@ extern "C" {
     /// - `t2`: term of FloatingPoint sort
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_eq`]
+    /// - [`Z3_mk_fpa_geq`]
+    /// - [`Z3_mk_fpa_gt`]
+    /// - [`Z3_mk_fpa_lt`]
     pub fn Z3_mk_fpa_leq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point less than.
@@ -7199,6 +7442,13 @@ extern "C" {
     /// - `t2`: term of FloatingPoint sort
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_eq`]
+    /// - [`Z3_mk_fpa_geq`]
+    /// - [`Z3_mk_fpa_gt`]
+    /// - [`Z3_mk_fpa_leq`]
     pub fn Z3_mk_fpa_lt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point greater than or equal.
@@ -7208,6 +7458,13 @@ extern "C" {
     /// - `t2`: term of FloatingPoint sort
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_eq`]
+    /// - [`Z3_mk_fpa_gt`]
+    /// - [`Z3_mk_fpa_leq`]
+    /// - [`Z3_mk_fpa_lt`]
     pub fn Z3_mk_fpa_geq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point greater than.
@@ -7217,6 +7474,13 @@ extern "C" {
     /// - `t2`: term of FloatingPoint sort
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_eq`]
+    /// - [`Z3_mk_fpa_geq`]
+    /// - [`Z3_mk_fpa_leq`]
+    /// - [`Z3_mk_fpa_lt`]
     pub fn Z3_mk_fpa_gt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Floating-point equality.
@@ -7228,6 +7492,13 @@ extern "C" {
     /// Note that this is IEEE 754 equality (as opposed to SMT-LIB =).
     ///
     /// `t1` and `t2` must have the same FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_geq`]
+    /// - [`Z3_mk_fpa_gt`]
+    /// - [`Z3_mk_fpa_leq`]
+    /// - [`Z3_mk_fpa_lt`]
     pub fn Z3_mk_fpa_eq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a normal floating-point number.
@@ -7236,6 +7507,13 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_is_infinite`]
+    /// - [`Z3_mk_fpa_is_nan`]
+    /// - [`Z3_mk_fpa_is_subnormal`]
+    /// - [`Z3_mk_fpa_is_zero`]
     pub fn Z3_mk_fpa_is_normal(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a subnormal floating-point number.
@@ -7244,6 +7522,13 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_is_infinite`]
+    /// - [`Z3_mk_fpa_is_nan`]
+    /// - [`Z3_mk_fpa_is_normal`]
+    /// - [`Z3_mk_fpa_is_zero`]
     pub fn Z3_mk_fpa_is_subnormal(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a floating-point number with zero value, i.e., +zero or -zero.
@@ -7252,6 +7537,15 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_is_infinite`]
+    /// - [`Z3_mk_fpa_is_nan`]
+    /// - [`Z3_mk_fpa_is_normal`]
+    /// - [`Z3_mk_fpa_is_subnormal`]
+    /// - [`Z3_mk_fpa_is_zero`]
+    /// - [`Z3_mk_fpa_zero`]
     pub fn Z3_mk_fpa_is_zero(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a floating-point number representing +oo or -oo.
@@ -7260,6 +7554,15 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_inf`]
+    /// - [`Z3_mk_fpa_is_infinite`]
+    /// - [`Z3_mk_fpa_is_nan`]
+    /// - [`Z3_mk_fpa_is_normal`]
+    /// - [`Z3_mk_fpa_is_subnormal`]
+    /// - [`Z3_mk_fpa_is_zero`]
     pub fn Z3_mk_fpa_is_infinite(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a NaN.
@@ -7268,6 +7571,14 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_is_infinite`]
+    /// - [`Z3_mk_fpa_is_normal`]
+    /// - [`Z3_mk_fpa_is_subnormal`]
+    /// - [`Z3_mk_fpa_is_zero`]
+    /// - [`Z3_mk_fpa_nan`]
     pub fn Z3_mk_fpa_is_nan(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a negative floating-point number.
@@ -7276,6 +7587,12 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_abs`]
+    /// - [`Z3_mk_fpa_is_positive`]
+    /// - [`Z3_mk_fpa_neg`]
     pub fn Z3_mk_fpa_is_negative(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Predicate indicating whether `t` is a positive floating-point number.
@@ -7284,6 +7601,12 @@ extern "C" {
     /// - `t`: term of FloatingPoint sort
     ///
     /// `t` must have FloatingPoint sort.
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_mk_fpa_abs`]
+    /// - [`Z3_mk_fpa_is_negative`]
+    /// - [`Z3_mk_fpa_neg`]
     pub fn Z3_mk_fpa_is_positive(c: Z3_context, t: Z3_ast) -> Z3_ast;
 
     /// Conversion of a single IEEE 754-2008 bit-vector into a floating-point number.
@@ -7410,54 +7733,105 @@ extern "C" {
     ///
     /// - `c`: logical context
     /// - `s`: FloatingPoint sort
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_get_sbits`]
     pub fn Z3_fpa_get_ebits(c: Z3_context, s: Z3_sort) -> ::std::os::raw::c_uint;
 
     /// Retrieves the number of bits reserved for the significand in a FloatingPoint sort.
     ///
     /// - `c`: logical context
     /// - `s`: FloatingPoint sort
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_get_ebits`]
     pub fn Z3_fpa_get_sbits(c: Z3_context, s: Z3_sort) -> ::std::os::raw::c_uint;
 
     /// Checks whether a given floating-point numeral is a NaN.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_inf`]
+    /// - [`Z3_fpa_is_numeral_normal`]
+    /// - [`Z3_fpa_is_numeral_subnormal`]
+    /// - [`Z3_fpa_is_numeral_zero`]
     pub fn Z3_fpa_is_numeral_nan(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is a +oo or -oo.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_nan`]
+    /// - [`Z3_fpa_is_numeral_normal`]
+    /// - [`Z3_fpa_is_numeral_subnormal`]
+    /// - [`Z3_fpa_is_numeral_zero`]
     pub fn Z3_fpa_is_numeral_inf(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is +zero or -zero.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_inf`]
+    /// - [`Z3_fpa_is_numeral_nan`]
+    /// - [`Z3_fpa_is_numeral_normal`]
+    /// - [`Z3_fpa_is_numeral_subnormal`]
     pub fn Z3_fpa_is_numeral_zero(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is normal.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_inf`]
+    /// - [`Z3_fpa_is_numeral_nan`]
+    /// - [`Z3_fpa_is_numeral_subnormal`]
+    /// - [`Z3_fpa_is_numeral_zero`]
     pub fn Z3_fpa_is_numeral_normal(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is subnormal.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_inf`]
+    /// - [`Z3_fpa_is_numeral_nan`]
+    /// - [`Z3_fpa_is_numeral_normal`]
+    /// - [`Z3_fpa_is_numeral_zero`]
     pub fn Z3_fpa_is_numeral_subnormal(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is positive.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_negative`]
     pub fn Z3_fpa_is_numeral_positive(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Checks whether a given floating-point numeral is negative.
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
+    ///
+    /// # See also:
+    ///
+    /// - [`Z3_fpa_is_numeral_positive`]
     pub fn Z3_fpa_is_numeral_negative(c: Z3_context, t: Z3_ast) -> bool;
 
     /// Retrieves the sign of a floating-point literal as a bit-vector expression.
