@@ -105,7 +105,7 @@ fn generate_binding(header: &str) {
         let target = env::var("TARGET").unwrap();
         let wasm = target.starts_with("wasm");
         if wasm {
-            // It seems that sometimes the cache mat be missing.
+            // It seems that sometimes the cache may be missing.
             let sysroot = env::var("EMSDK")
                 .map(|emsdk| format!("{}/upstream/emscripten/cache/sysroot", emsdk))
                 .or_else(|_err| {
