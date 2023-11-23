@@ -51,6 +51,13 @@ There are 3 ways for this crate to currently find Z3:
   by that version to be used. In this case, there is no override
   via the environment variable.
 
+### Finding emscripten
+
+For wasm32 targets, we may need an existed emscripten installation for a `sysroot`.
+One may specify the root of emsdk by environment variable `EMSDK`,
+or the root of emscripten by environment variable `EMSCRIPTEN_ROOT`.
+Then we'll use `$EMSDK/upstream/emscripten/cache/sysroot` or `$EMSCRIPTEN_ROOT/cache/sysroot`.
+
 ## Support and Maintenance
 
 I am developing this library largely on my own so far. I am able
