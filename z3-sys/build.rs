@@ -104,6 +104,7 @@ fn generate_binding(header: &str) {
             .allowlist_type(format!("Z3_{}", x));
         let target = env::var("TARGET").unwrap();
         let wasm = target.starts_with("wasm");
+        let emscripten = target.ends_with("emscripten");
         if wasm {
             // It seems that sometimes the cache may be missing.
             let sysroot = env::var("EMSDK")
@@ -114,7 +115,7 @@ fn generate_binding(header: &str) {
                 });
             if let Ok(sysroot) = sysroot {
                 enum_bindings = enum_bindings.clang_arg(format!("--sysroot={}", sysroot));
-            } else {
+            } else if emscripten {
                 panic!("$EMSDK and $EMSCRIPTEN_ROOT env var missing. Is emscripten installed?");
             }
         }
