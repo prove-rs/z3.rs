@@ -98,10 +98,10 @@ fn generate_binding(header: &str) {
     ] {
         let mut enum_bindings = bindgen::Builder::default()
             .header(header)
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks))
+            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
             .generate_comments(false)
-            .rustified_enum(format!("Z3_{}", x))
-            .allowlist_type(format!("Z3_{}", x));
+            .rustified_enum(format!("Z3_{x}"))
+            .allowlist_type(format!("Z3_{x}"));
         let target = env::var("TARGET").unwrap();
         let wasm = target.starts_with("wasm");
         let emscripten = target.ends_with("emscripten");
