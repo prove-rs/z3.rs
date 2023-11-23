@@ -58,6 +58,8 @@ One may specify the root of emsdk by environment variable `EMSDK`,
 or the root of emscripten by environment variable `EMSCRIPTEN_ROOT`.
 Then we'll use `$EMSDK/upstream/emscripten/cache/sysroot` or `$EMSCRIPTEN_ROOT/cache/sysroot`.
 
+For example, if you're using brew, you can assign `$HOMEBREW_CELLAR/emscripten/<emscripten version>/libexec` to `EMSCRIPTEN_ROOT`.
+
 ## Support and Maintenance
 
 I am developing this library largely on my own so far. I am able
