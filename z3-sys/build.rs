@@ -1,8 +1,21 @@
-use std::env;
+use std::{env, path::PathBuf};
 
 fn main() {
+    // Don't need to specify this for these build configurations.
+    #[cfg(any(feature = "bundled", feature = "vcpkg"))]
+    let search_paths = vec![];
+
     #[cfg(feature = "bundled")]
     build_bundled_z3();
+
+    #[cfg(not(any(feature = "bundled", feature = "vcpkg")))]
+    let search_paths = {
+        if let Ok(lib) = pkg_config::Config::new().probe("z3") {
+            lib.include_paths
+        } else {
+            vec![]
+        }
+    };
 
     #[cfg(feature = "deprecated-static-link-z3")]
     println!("cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature.");
@@ -17,7 +30,7 @@ fn main() {
 
     link_against_cxx_stdlib();
 
-    generate_binding(&header);
+    generate_binding(&header, &search_paths);
 }
 
 fn link_against_cxx_stdlib() {
@@ -82,8 +95,8 @@ fn find_header_by_env() -> String {
     header
 }
 
-fn generate_binding(header: &str) {
-    let out_path = std::path::PathBuf::from(env::var("OUT_DIR").unwrap());
+fn generate_binding(header: &str, search_paths: &[PathBuf]) {
+    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     for x in &[
         "ast_kind",
@@ -101,7 +114,8 @@ fn generate_binding(header: &str) {
             .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{x}"))
-            .allowlist_type(format!("Z3_{x}"));
+            .allowlist_type(format!("Z3_{x}"))
+            .clang_args(search_paths.iter().map(|p| format!("-I{}", p.display())));
         if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
             enum_bindings = enum_bindings.clang_arg(format!(
                 "--sysroot={}/upstream/emscripten/cache/sysroot",
