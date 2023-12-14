@@ -1653,9 +1653,9 @@ fn test_regex_union() {
     let cfg = Config::new();
     let ctx = &Context::new(&cfg);
     let solver = Solver::new(ctx);
-    let a = ast::String::new_const(ctx, "a");
-    let b = ast::String::new_const(ctx, "b");
-    let c = ast::String::new_const(ctx, "c");
+    let a = ast::String::from_str(ctx, "a").unwrap();
+    let b = ast::String::from_str(ctx, "b").unwrap();
+    let c = ast::String::from_str(ctx, "c").unwrap();
     let re = ast::Regexp::union(
         ctx,
         &[
@@ -1674,7 +1674,7 @@ fn test_regex_union2() {
     let cfg = Config::new();
     let ctx = &Context::new(&cfg);
     let solver = Solver::new(ctx);
-    let c = ast::String::new_const(ctx, "c");
+    let c = ast::String::from_str(ctx, "c").unwrap();
     let re = ast::Regexp::union(
         ctx,
         &[
