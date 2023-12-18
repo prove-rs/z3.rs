@@ -216,7 +216,7 @@ impl<'ctx> Sort<'ctx> {
     /// assert!(int_sort.array_domain().is_none());
     /// assert!(bool_sort.array_domain().is_none());
     /// ```
-    pub fn array_domain(&self) -> Option<Sort> {
+    pub fn array_domain(&self) -> Option<Sort<'ctx>> {
         if self.is_array() {
             unsafe {
                 let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx, self.z3_sort);
@@ -250,7 +250,7 @@ impl<'ctx> Sort<'ctx> {
     /// assert!(int_sort.array_range().is_none());
     /// assert!(bool_sort.array_range().is_none());
     /// ```
-    pub fn array_range(&self) -> Option<Sort> {
+    pub fn array_range(&self) -> Option<Sort<'ctx>> {
         if self.is_array() {
             unsafe {
                 let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx, self.z3_sort);
