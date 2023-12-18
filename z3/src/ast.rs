@@ -1647,6 +1647,25 @@ impl<'ctx> Dynamic<'ctx> {
         unsafe { Self::wrap(ast.get_ctx(), ast.get_z3_ast()) }
     }
 
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sort: &Sort<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort),
+            )
+        }
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, sort: &Sort<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(ctx, {
+                let pp = CString::new(prefix).unwrap();
+                let p = pp.as_ptr();
+                Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+            })
+        }
+    }
+
     pub fn sort_kind(&self) -> SortKind {
         unsafe { Z3_get_sort_kind(self.ctx.z3_ctx, Z3_get_sort(self.ctx.z3_ctx, self.z3_ast)) }
     }
