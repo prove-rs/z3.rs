@@ -6,7 +6,7 @@ use z3_sys::*;
 
 use crate::{
     ast::{Ast, Bool, Dynamic},
-    Context, Model, Optimize, SatResult, Statistics, Symbol,
+    Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
 };
 
 use num::{
@@ -196,6 +196,11 @@ impl<'ctx> Optimize<'ctx> {
             .to_str()
             .ok()
             .map(|s| s.to_string())
+    }
+
+    /// Configure the parameters for this Optimize.
+    pub fn set_params(&self, params: &Params<'ctx>) {
+        unsafe { Z3_optimize_set_params(self.ctx.z3_ctx, self.z3_opt, params.z3_params) };
     }
 
     /// Retrieve the statistics for the last [`Optimize::check()`].
