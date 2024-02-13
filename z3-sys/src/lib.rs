@@ -1525,7 +1525,7 @@ pub enum ErrorCode {
     MemoutFail = generated::Z3_error_code::Z3_MEMOUT_FAIL as u32,
     /// A file could not be accessed.
     ///
-    /// This corresponds to `Z3_FILE_ACCESS_ERRROR` in the C API.
+    /// This corresponds to `Z3_FILE_ACCESS_ERROR` in the C API.
     FileAccessError = generated::Z3_error_code::Z3_FILE_ACCESS_ERROR as u32,
     /// An error internal to Z3 occurred.
     ///
@@ -2976,7 +2976,7 @@ extern "C" {
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
-    /// This function can be use to create numerals that fit in a machine unsinged integer.
+    /// This function can be use to create numerals that fit in a machine unsigned integer.
     /// It is slightly faster than [`Z3_mk_numeral`] since it is not necessary to parse a string.
     ///
     /// # See also:
