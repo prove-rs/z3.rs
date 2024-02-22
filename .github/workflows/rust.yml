@@ -15,9 +15,9 @@ jobs:
   check-formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Check formatting
-      run: cargo fmt -- --check
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: cargo fmt -- --check
 
   build:
     strategy:
@@ -25,42 +25,42 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Z3 (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install libz3-dev
-    - name: Install Z3 (macOS)
-      if: matrix.os == 'macos-latest'
-      run: brew install z3
-    - name: Run tests
-      run: cargo test --workspace
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # build using a bundled Z3 below...
-      if: ${{ success() || failure() }}
+      - uses: actions/checkout@v4
+      - name: Install Z3 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: sudo apt-get install libz3-dev
+      - name: Install Z3 (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install z3
+      - name: Run tests
+        run: cargo test --workspace
+        # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
+        # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
+        # we figure out how to work around it. At least we have the
+        # build using a bundled Z3 below...
+        if: ${{ success() || failure() }}
 
   build_on_wasm:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: Install emscripten
-      run: |
-        cd ~
-        git clone https://github.com/emscripten-core/emsdk.git
-        cd emsdk
-        git pull
-        ./emsdk install latest
-        ./emsdk activate latest
-        source ./emsdk_env.sh
-    - name: Install wasm32-unknown-emscripten target
-      run: rustup target add wasm32-unknown-emscripten
-    - name: Build z3-sys and z3 with bundled Z3
-      run: |
-        source ~/emsdk/emsdk_env.sh
-        cargo build --target=wasm32-unknown-emscripten --features bundled
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install emscripten
+        run: |
+          cd ~
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk install latest
+          ./emsdk activate latest
+          source ./emsdk_env.sh
+      - name: Install wasm32-unknown-emscripten target
+        run: rustup target add wasm32-unknown-emscripten
+      - name: Build z3-sys and z3 with bundled Z3
+        run: |
+          source ~/emsdk/emsdk_env.sh
+          cargo build --target=wasm32-unknown-emscripten --features bundled
 
   build_with_bundled_z3:
     strategy:
@@ -98,15 +98,19 @@ jobs:
           - build: linux
             os: ubuntu-latest
             vcpkg_triplet: x64-linux
+            lib: libz3.a
           - build: macos
             os: macos-latest
             vcpkg_triplet: x64-osx
+            lib: libz3.a
           - build: windows
             os: windows-latest
             vcpkg_triplet: x64-windows-static-md
+            lib: libz3.lib
     runs-on: ${{ matrix.os }}
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
+      Z3_VERSION: 0.12.2
     steps:
       - uses: actions/checkout@v4
         with:
@@ -120,7 +124,7 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
-      - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
+      - run: echo "Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}."
       - name: vcpkg build z3
         uses: johnwason/vcpkg-action@v5
         id: vcpkg
@@ -135,12 +139,75 @@ jobs:
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
         run: cargo test --workspace --features vcpkg
+      - name: Create Release
+        continue-on-error: true
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.Z3_VERSION }}
+          release_name: ${{ env.Z3_VERSION }}
+          draft: false
+          prerelease: false
+      - name: git-get-release-action
+        id: get_release
+        uses: cardinalby/git-get-release-action@1.2.4
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        with:
+          releaseName: ${{ env.Z3_VERSION }}
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.10"
+      - name: Compress built z3.
+        shell: python
+        id: compress_z3
+        working-directory: ${{ github.workspace }}
+        run: |
+          # Collect and compress.
+          from shutil import make_archive, copyfile
+          from os import mkdir, listdir, environ
+          from pathlib import Path
+          from json import loads
+          
+          
+          def main():
+              FROM = Path(r"${{ env.VCPKG_ROOT }}/installed/${{ matrix.vcpkg_triplet }}")
+              TO = Path(r"${{ github.workspace }}/${{ matrix.vcpkg_triplet }}")
+              LIB = Path(r"${{ matrix.lib }}")
+          
+              print("`include` dir:", listdir(FROM / "include"))
+              print("`lib` dir:", listdir(FROM / "lib"))
+              mkdir(TO)
+              copyfile(FROM / "lib" / LIB, TO / LIB)
+              for header in listdir(FROM / "include"):
+                  if header.startswith("z3") and header.endswith(".h"):
+                      copyfile(FROM / "include" / header, TO / header)
+          
+              make_archive(
+                  base_name=r"${{ matrix.vcpkg_triplet }}",
+                  format="gztar",
+                  root_dir=".",
+                  base_dir=r"${{ matrix.vcpkg_triplet }}",
+                  verbose=True,
+              )
+              print("workspace:", listdir(r"${{ github.workspace }}"))
+          
+          
+          main()
+      - name: Upload files to a GitHub release
+        uses: svenstaro/upload-release-action@2.7.0
+        with:
+          file: ${{ github.workspace }}/${{ matrix.vcpkg_triplet }}.tar.gz
+          overwrite: true
+          tag: ${{ env.Z3_VERSION }}
+      
 
   run_clippy:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Z3
-      run: brew install z3
-    - name: Run clippy
-      run: cargo clippy --workspace --all-targets
+      - uses: actions/checkout@v4
+      - name: Install Z3
+        run: brew install z3
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets

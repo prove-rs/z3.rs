@@ -22,6 +22,9 @@ pkg-config = "0.3.27"
 vcpkg = { version = "0.2.15", optional = true }
 
 [features]
+# If you set neither features below,
+# we hope there is a z3 installed as a system library.
+
 bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
 vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
 

@@ -50,6 +50,7 @@ There are 3 ways for this crate to currently find Z3:
 * Enabling the `vcpkg` feature will cause the copy of `z3.h` provided
   by that version to be used. In this case, there is no override
   via the environment variable.
+  Please note that [vcpkg-rs](https://docs.rs/vcpkg-rs) uses `*-windows-static-md` on Windows platform by default.
 
 ## Support and Maintenance
 
