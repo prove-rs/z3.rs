@@ -583,10 +583,17 @@ impl<'ctx> Real<'ctx> {
     }
 
     pub fn from_real_str(ctx: &'ctx Context, num: &str, den: &str) -> Option<Real<'ctx>> {
+        let fraction_string = format!("{num:} / {den:}");
+        Self::from_str(ctx, &fraction_string)
+    }
+
+    /// The string may be of the form \[num\]*\[.\[num\]*\]\[E\[+|-\]\[num\]...+\].
+    /// Or a rational, that is, a string of the form \[num\]* / \[num\]*
+    pub fn from_str(ctx: &'ctx Context, numeral: &str) -> Option<Real<'ctx>> {
         let sort = Sort::real(ctx);
         let ast = unsafe {
-            let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx, fraction_cstring.as_ptr(), sort.z3_sort);
+            let c_numeral = CString::new(numeral).unwrap();
+            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx, c_numeral.as_ptr(), sort.z3_sort);
             if numeral_ptr.is_null() {
                 return None;
             }
