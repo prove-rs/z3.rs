@@ -937,6 +937,10 @@ impl<'ctx> Real<'ctx> {
         }
     }
 
+    pub fn as_f64(&self) -> f64 {
+        unsafe { Z3_get_numeral_double(self.ctx.z3_ctx, self.z3_ast) }
+    }
+
     pub fn from_int(ast: &Int<'ctx>) -> Real<'ctx> {
         unsafe { Self::wrap(ast.ctx, Z3_mk_int2real(ast.ctx.z3_ctx, ast.z3_ast)) }
     }
