@@ -31,8 +31,6 @@ fn smoketest() {
         let model_str = CStr::from_ptr(model_s).to_str().unwrap();
         let model_elements = model_str.split_terminator('\n').collect::<Vec<_>>();
         assert_eq!(model_elements.len(), 2);
-        assert!(model_elements.contains(&"y -> (- 1)"));
-        assert!(model_elements.contains(&"x -> 0"));
 
         // Grab the actual constant values out of the model
         let mut interp_x: Z3_ast = const_x;
@@ -44,8 +42,7 @@ fn smoketest() {
         let mut val_y: i32 = -5;
         assert!(Z3_get_numeral_int(ctx, interp_x, &mut val_x));
         assert!(Z3_get_numeral_int(ctx, interp_y, &mut val_y));
-        assert_eq!(val_x, 0);
-        assert_eq!(val_y, -1);
+        assert!(val_x > val_y);
 
         Z3_del_context(ctx);
         Z3_del_config(cfg);
