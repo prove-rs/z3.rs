@@ -38,6 +38,7 @@ There are 3 ways for this crate to currently find Z3:
   submodule within the repository.
 * Enabling the `vcpkg` feature will use `vcpkg` to build and
   install a copy of Z3 which is then used.
+  Please note that [vcpkg-rs](https://docs.rs/vcpkg-rs) uses `*-windows-static-md` on Windows platform by default.
 
 This might look like:
 
