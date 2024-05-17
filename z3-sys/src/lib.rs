@@ -1405,7 +1405,7 @@ pub enum DeclKind {
     FPA_TO_IEEE_BV = generated::Z3_decl_kind::Z3_OP_FPA_TO_IEEE_BV as u32,
     /// Implicitly) represents the internal bitvector-representation
     /// of a floating-point term (used for the lazy encoding
-    /// of non-relevant terms in theory_fpa)
+    /// of non-relevant terms in `theory_fpa`)
     FPA_BVWRAP = generated::Z3_decl_kind::Z3_OP_FPA_BVWRAP as u32,
     /// Conversion of a 3-bit bit-vector term to a
     /// floating-point rounding-mode term.
