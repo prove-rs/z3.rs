@@ -1797,3 +1797,9 @@ fn iterate_all_solutions() {
             .collect()
     );
 }
+
+#[test]
+fn get_version() {
+    println!("Z3 version: {:?}", z3::version());
+    println!("Z3 full version string: {}", z3::full_version());
+}
