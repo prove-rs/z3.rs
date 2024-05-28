@@ -158,7 +158,7 @@ fn build_bundled_z3() {
                 cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
             },
             _ => {
-                println!("cargo:warning=Unexpected PROFILE set by cargo.");
+                println!("cargo:warning=Unexpected PROFILE set by cargo");
             }
         }
     }
