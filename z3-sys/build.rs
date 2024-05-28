@@ -150,6 +150,17 @@ fn build_bundled_z3() {
         cfg.build_arg("-m");
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
+        match env::var("PROFILE").unwrap().as_str() {
+            "debug" => {
+                cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDebugDLL");
+            },
+            "release" => {
+                cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
+            },
+            _ => {
+                println!("cargo:warning=Unexpected PROFILE set by cargo.");
+            }
+        }
     }
 
     let dst = cfg.build();
