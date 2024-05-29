@@ -150,6 +150,7 @@ fn build_bundled_z3() {
         cfg.build_arg("-m");
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
+        cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
     }
 
     let dst = cfg.build();
