@@ -79,7 +79,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
-        uses: KyleMayes/install-llvm-action@v1
+        uses: KyleMayes/install-llvm-action@v2
         if: matrix.os == 'windows-latest'
         with:
           version: "11.0"
@@ -112,7 +112,7 @@ jobs:
         with:
           submodules: recursive
       - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
-        uses: KyleMayes/install-llvm-action@v1
+        uses: KyleMayes/install-llvm-action@v2
         if: matrix.os == 'windows-latest'
         with:
           version: "11.0"
@@ -122,7 +122,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
       - name: vcpkg build z3
-        uses: johnwason/vcpkg-action@v5
+        uses: johnwason/vcpkg-action@v6
         id: vcpkg
         with:
           pkgs: z3
