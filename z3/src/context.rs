@@ -17,6 +17,10 @@ impl Context {
         }
     }
 
+    pub fn get_z3_context(&self) -> Z3_context {
+        self.z3_ctx
+    }
+
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
         self.handle().interrupt();
