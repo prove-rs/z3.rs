@@ -1825,11 +1825,35 @@ impl<'ctx> Regexp<'ctx> {
         }
     }
 
+    /// Creates a regular expression that recognizes this regular expression
+    /// n number of times
+    /// Requires Z3 4.8.15 or later.
+    pub fn power(&self, n: u32) -> Self {
+        unsafe {
+            Self::wrap(self.ctx, {
+                Z3_mk_re_power(self.ctx.z3_ctx, self.z3_ast, n)
+            })
+        }
+    }
+
     /// Creates a regular expression that recognizes all sequences
     pub fn full(ctx: &'ctx Context) -> Self {
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_full(
+                    ctx.z3_ctx,
+                    Z3_mk_re_sort(ctx.z3_ctx, Z3_mk_string_sort(ctx.z3_ctx)),
+                )
+            })
+        }
+    }
+
+    /// Creates a regular expression that accepts all singleton sequences of the characters
+    /// Requires Z3 4.8.13 or later.
+    pub fn allchar(ctx: &'ctx Context) -> Self {
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_re_allchar(
                     ctx.z3_ctx,
                     Z3_mk_re_sort(ctx.z3_ctx, Z3_mk_string_sort(ctx.z3_ctx)),
                 )
@@ -1858,6 +1882,13 @@ impl<'ctx> Regexp<'ctx> {
        /// Creates a regular expression that recognizes any sequence that this regular expression
        /// doesn't
        complement(Z3_mk_re_complement, Self);
+       /// Creates a regular expression that optionally accepts this regular expression (e.g. `a?`)
+       option(Z3_mk_re_option, Self);
+    }
+    binop! {
+        /// Creates a difference regular expression
+        /// Requires Z3 4.8.14 or later.
+        diff(Z3_mk_re_diff, Self);
     }
     varop! {
        /// Concatenates regular expressions
