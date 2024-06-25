@@ -1,7 +1,7 @@
+use log::debug;
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
-use log::debug;
 
 use z3_sys::*;
 
