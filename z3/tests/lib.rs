@@ -809,7 +809,7 @@ fn test_optimize_get_unsat_core() {
 
     let a = x._eq(&Int::from_i64(&ctx, 4));
     let b = x._eq(&Int::from_i64(&ctx, 6));
-    let result = optimize.check(&[a.clone(),b.clone()]);
+    let result = optimize.check(&[a.clone(), b.clone()]);
     assert_eq!(result, SatResult::Unsat);
 
     let unsat_core = optimize.get_unsat_core();
