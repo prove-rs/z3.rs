@@ -772,6 +772,53 @@ fn test_get_unsat_core() {
 }
 
 #[test]
+fn test_optimize_get_unsat_core() {
+    let _ = env_logger::try_init();
+
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let optimize = Optimize::new(&ctx);
+
+    assert!(
+        optimize.get_unsat_core().is_empty(),
+        "no unsat core before assertions"
+    );
+
+    let x = Int::new_const(&ctx, "x");
+
+    let x_is_three = Bool::new_const(&ctx, "x-is-three");
+    optimize.assert_and_track(&x._eq(&Int::from_i64(&ctx, 3)), &x_is_three);
+
+    let x_is_five = Bool::new_const(&ctx, "x-is-five");
+    optimize.assert_and_track(&x._eq(&Int::from_i64(&ctx, 5)), &x_is_five);
+
+    assert!(
+        optimize.get_unsat_core().is_empty(),
+        "no unsat core before checking"
+    );
+
+    let result = optimize.check(&[]);
+    assert_eq!(result, SatResult::Unsat);
+
+    let unsat_core = optimize.get_unsat_core();
+    assert_eq!(unsat_core.len(), 2);
+    assert!(unsat_core.contains(&x_is_three));
+    assert!(unsat_core.contains(&x_is_five));
+
+    // try check API
+
+    let a = x._eq(&Int::from_i64(&ctx, 4));
+    let b = x._eq(&Int::from_i64(&ctx, 6));
+    let result = optimize.check(&[a.clone(), b.clone()]);
+    assert_eq!(result, SatResult::Unsat);
+
+    let unsat_core = optimize.get_unsat_core();
+    assert_eq!(unsat_core.len(), 2);
+    assert!(unsat_core.contains(&a));
+    assert!(unsat_core.contains(&b));
+}
+
+#[test]
 fn test_datatype_builder() {
     let _ = env_logger::try_init();
 
