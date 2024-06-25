@@ -1,6 +1,7 @@
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
+use log::debug;
 
 use z3_sys::*;
 
@@ -48,6 +49,26 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::minimize()`]
     pub fn assert(&self, ast: &impl Ast<'ctx>) {
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
+    }
+
+    /// Assert a constraint `a` into the solver, and track it (in the
+    /// unsat) core using the Boolean constant `p`.
+    ///
+    /// This API is an alternative to
+    /// [`Optimize::check()`]
+    /// for extracting unsat cores. Both APIs can be used in the same solver.
+    /// The unsat core will contain a combination of the Boolean variables
+    /// provided using [`Optimize::assert_and_track()`]
+    /// and the Boolean literals provided using
+    /// [`Optimize::check()`].
+    ///
+    /// # See also:
+    ///
+    /// - [`Optimize::assert()`]
+    /// - [`Optimize::assert_soft()`]
+    pub fn assert_and_track(&self, ast: &Bool<'ctx>, p: &Bool<'ctx>) {
+        debug!("assert_and_track: {:?}", ast);
+        unsafe { Z3_optimize_assert_and_track(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast, p.z3_ast) };
     }
 
     /// Assert soft constraint to the optimization context.
@@ -103,6 +124,43 @@ impl<'ctx> Optimize<'ctx> {
             SortKind::Int | SortKind::Real | SortKind::BV
         ));
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx, self.z3_opt, ast.get_z3_ast()) };
+    }
+
+    /// Return a subset of the assumptions provided to either the last
+    ///
+    /// * [`Optimize::check`] call.
+    ///
+    /// These are the assumptions Z3 used in the unsatisfiability proof.
+    /// Assumptions are available in Z3. They are used to extract unsatisfiable
+    /// cores.  They may be also used to "retract" assumptions. Note that,
+    /// assumptions are not really "soft constraints", but they can be used to
+    /// implement them.
+    ///
+    /// By default, the unsat core will not be minimized. Generation of a minimized
+    /// unsat core can be enabled via the `"sat.core.minimize"` and `"smt.core.minimize"`
+    /// settings for SAT and SMT cores respectively. Generation of minimized unsat cores
+    /// will be more expensive.
+    ///
+    /// # See also:
+    ///
+    /// - [`Optimize::check`]
+    pub fn get_unsat_core(&self) -> Vec<Bool<'ctx>> {
+        let z3_unsat_core = unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx, self.z3_opt) };
+        if z3_unsat_core.is_null() {
+            return vec![];
+        }
+
+        let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_unsat_core) };
+
+        let mut unsat_core = Vec::with_capacity(len as usize);
+
+        for i in 0..len {
+            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx, z3_unsat_core, i) };
+            let elem = unsafe { Bool::wrap(self.ctx, elem) };
+            unsat_core.push(elem);
+        }
+
+        unsat_core
     }
 
     /// Create a backtracking point.
