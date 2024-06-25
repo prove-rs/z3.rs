@@ -128,7 +128,9 @@ impl<'ctx> Optimize<'ctx> {
 
     /// Return a subset of the assumptions provided to either the last
     ///
-    /// * [`Optimize::check`] call.
+    /// * [`Optimize::check`] call, or
+    /// * sequence of [`Optimize::assert_and_track`] calls followed
+    ///   by an [`Optimize::check`] call.
     ///
     /// These are the assumptions Z3 used in the unsatisfiability proof.
     /// Assumptions are available in Z3. They are used to extract unsatisfiable
