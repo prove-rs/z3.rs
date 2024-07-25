@@ -1,7 +1,7 @@
 use z3::{
     ast,
     ast::{Array, Ast, AstKind, Bool, Dynamic, Float, Int, Real, BV},
-    Config, Context, DeclKind, FuncDecl, Sort,
+    Config, Context, DeclKind, FuncDecl, Sort, Solver, SatResult
 };
 
 #[test]
@@ -295,4 +295,53 @@ fn test_func_decl_attributes() {
     assert_eq!(binary_decl.kind(), DeclKind::UNINTERPRETED);
     assert_eq!(binary_decl.name(), "binary");
     assert_eq!(binary_decl.arity(), 2);
+}
+
+#[test]
+fn test_real_approx() {
+    let ctx = Context::new(&Config::default());
+    let x = Real::new_const(&ctx, "x");
+    let xx = &x * &x;
+    let zero = Real::from_real(&ctx, 0, 1);
+    let two = Real::from_real(&ctx, 2, 1);
+    let s = Solver::new(&ctx);
+    s.assert(&x.ge(&zero));
+    s.assert(&xx._eq(&two));
+    assert_eq!(s.check(), SatResult::Sat);
+    let m = s.get_model().unwrap();
+    let res = m.eval(&x, false).unwrap();
+    assert_eq!(res.as_real(), None); // sqrt is irrational
+    println!("f64 res: {}", res.approx_f64());
+    assert!((res.approx_f64() - 1.4142135623730950488016887242).abs() < 1e-20);
+    assert_eq!(res.approx(0), "1.");
+    assert_eq!(res.approx(1), "1.4");
+    assert_eq!(res.approx(2), "1.41");
+    assert_eq!(res.approx(3), "1.414");
+    assert_eq!(res.approx(4), "1.4142");
+    assert_eq!(res.approx(5), "1.41421");
+    assert_eq!(res.approx(6), "1.414213");
+    assert_eq!(res.approx(7), "1.4142135");
+    assert_eq!(res.approx(8), "1.41421356");
+    assert_eq!(res.approx(9), "1.414213562");
+    assert_eq!(res.approx(10), "1.4142135623");
+    assert_eq!(res.approx(11), "1.41421356237");
+    assert_eq!(res.approx(12), "1.414213562373");
+    assert_eq!(res.approx(13), "1.4142135623730");
+    assert_eq!(res.approx(14), "1.41421356237309");
+    assert_eq!(res.approx(15), "1.414213562373095");
+    assert_eq!(res.approx(16), "1.4142135623730950");
+    assert_eq!(res.approx(17), "1.41421356237309504");
+    assert_eq!(res.approx(18), "1.414213562373095048");
+    assert_eq!(res.approx(19), "1.4142135623730950488");
+    assert_eq!(res.approx(20), "1.41421356237309504880");
+    assert_eq!(res.approx(21), "1.414213562373095048801");
+    assert_eq!(res.approx(22), "1.4142135623730950488016");
+    assert_eq!(res.approx(23), "1.41421356237309504880168");
+    assert_eq!(res.approx(24), "1.414213562373095048801688");
+    assert_eq!(res.approx(25), "1.4142135623730950488016887");
+    assert_eq!(res.approx(26), "1.41421356237309504880168872");
+    assert_eq!(res.approx(27), "1.414213562373095048801688724");
+    assert_eq!(res.approx(28), "1.4142135623730950488016887242");
+    assert_eq!(res.approx_f64(), res.approx(32).parse().unwrap());
+    assert_ne!(res.approx_f64(), res.approx(16).parse().unwrap());
 }

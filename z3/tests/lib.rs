@@ -8,6 +8,10 @@ use z3::*;
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 
+mod objectives;
+mod ops;
+mod semver_tests;
+
 #[test]
 fn test_config() {
     let _ = env_logger::try_init();
