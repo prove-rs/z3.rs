@@ -312,7 +312,7 @@ fn test_real_approx() {
     let res = m.eval(&x, false).unwrap();
     assert_eq!(res.as_real(), None); // sqrt is irrational
     println!("f64 res: {}", res.approx_f64());
-    assert!((res.approx_f64() - 1.4142135623730950488016887242).abs() < 1e-20);
+    assert!((res.approx_f64() - ::std::f64::consts::SQRT_2).abs() < 1e-20);
     assert_eq!(res.approx(0), "1.");
     assert_eq!(res.approx(1), "1.4");
     assert_eq!(res.approx(2), "1.41");
