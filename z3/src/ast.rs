@@ -940,7 +940,7 @@ impl<'ctx> Real<'ctx> {
         }
         .to_str()
         .unwrap();
-        s.strip_suffix("?").unwrap_or(s).to_owned()
+        s.strip_suffix('?').unwrap_or(s).to_owned()
     }
     pub fn approx_f64(&self) -> f64 {
         self.approx(17).parse().unwrap() // 17 decimal digits needed to get full f64 precision
