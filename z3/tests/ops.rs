@@ -1,7 +1,7 @@
 use z3::{
     ast,
     ast::{Array, Ast, AstKind, Bool, Dynamic, Float, Int, Real, BV},
-    Config, Context, DeclKind, FuncDecl, Sort, Solver, SatResult
+    Config, Context, DeclKind, FuncDecl, SatResult, Solver, Sort,
 };
 
 #[test]

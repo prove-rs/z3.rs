@@ -932,8 +932,14 @@ impl<'ctx> Real<'ctx> {
 
     pub fn approx(&self, precision: usize) -> ::std::string::String {
         let s = unsafe {
-            CStr::from_ptr(Z3_get_numeral_decimal_string(self.ctx.z3_ctx, self.z3_ast, precision as _))
-        }.to_str().unwrap();
+            CStr::from_ptr(Z3_get_numeral_decimal_string(
+                self.ctx.z3_ctx,
+                self.z3_ast,
+                precision as _,
+            ))
+        }
+        .to_str()
+        .unwrap();
         s.strip_suffix("?").unwrap_or(s).to_owned()
     }
     pub fn approx_f64(&self) -> f64 {
