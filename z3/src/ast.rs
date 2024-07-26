@@ -930,6 +930,22 @@ impl<'ctx> Real<'ctx> {
         }
     }
 
+    pub fn approx(&self, precision: usize) -> ::std::string::String {
+        let s = unsafe {
+            CStr::from_ptr(Z3_get_numeral_decimal_string(
+                self.ctx.z3_ctx,
+                self.z3_ast,
+                precision as _,
+            ))
+        }
+        .to_str()
+        .unwrap();
+        s.strip_suffix('?').unwrap_or(s).to_owned()
+    }
+    pub fn approx_f64(&self) -> f64 {
+        self.approx(17).parse().unwrap() // 17 decimal digits needed to get full f64 precision
+    }
+
     pub fn from_int(ast: &Int<'ctx>) -> Real<'ctx> {
         unsafe { Self::wrap(ast.ctx, Z3_mk_int2real(ast.ctx.z3_ctx, ast.z3_ast)) }
     }
