@@ -345,3 +345,34 @@ fn test_real_approx() {
     assert_eq!(res.approx_f64(), res.approx(32).parse().unwrap());
     assert_ne!(res.approx_f64(), res.approx(16).parse().unwrap());
 }
+
+#[test]
+fn test_real_exact() {
+    let ctx = Context::new(&Config::default());
+    let x = Real::new_const(&ctx, "x");
+    let y = Real::new_const(&ctx, "y");
+    let z = Real::new_const(&ctx, "z");
+    let a = Real::new_const(&ctx, "a");
+    let xx = &x * &x;
+    let zero = Real::from_real(&ctx, 0, 1);
+    let two = Real::from_real(&ctx, 2, 1);
+    let s = Solver::new(&ctx);
+    s.assert(&x.ge(&zero));
+    s.assert(&xx._eq(&two));
+    s.assert(&y._eq(&Int::from_i64(&ctx, 5).to_real()));
+    s.assert(&z._eq(&Real::from_real(&ctx, 1, 2)));
+    s.assert(&a._eq(&Real::from_real(&ctx, 1, i32::MAX - 90)));
+    assert_eq!(s.check(), SatResult::Sat);
+    let m = s.get_model().unwrap();
+    let res_x = m.eval(&x, false).unwrap();
+    let res_y = m.eval(&y, false).unwrap();
+    let res_z = m.eval(&z, false).unwrap();
+    let res_a = m.eval(&a, false).unwrap();
+    assert_eq!(res_x.exact_f64(), None); // sqrt is irrational
+    println!("{:?}", res_y.exact_f64());
+    assert_eq!(res_y.exact_f64(), Some(5.0));
+    println!("{:?}", res_z.exact_f64());
+    assert_eq!(res_z.exact_f64(), Some(0.5));
+    println!("{:?}", res_a.exact_f64());
+    assert_eq!(res_a.exact_f64(), Some(1.0 / (i32::MAX - 90) as f64));
+}
