@@ -946,6 +946,20 @@ impl<'ctx> Real<'ctx> {
         self.approx(17).parse().unwrap() // 17 decimal digits needed to get full f64 precision
     }
 
+    pub fn exact_f64(&self) -> Option<f64> {
+        let res = unsafe { Z3_get_numeral_double(self.get_ctx().z3_ctx, self.z3_ast) };
+        if res == 0.0 {
+            let mut sacrifice_int = 0;
+            let int_res = unsafe {
+                Z3_get_numeral_int(self.get_ctx().z3_ctx, self.z3_ast, &mut sacrifice_int)
+            };
+            if !int_res || sacrifice_int != 0 {
+                return None;
+            }
+        }
+        Some(res)
+    }
+
     pub fn from_int(ast: &Int<'ctx>) -> Real<'ctx> {
         unsafe { Self::wrap(ast.ctx, Z3_mk_int2real(ast.ctx.z3_ctx, ast.z3_ast)) }
     }
