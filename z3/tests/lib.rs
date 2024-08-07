@@ -1892,3 +1892,32 @@ fn get_version() {
     println!("Z3 version: {:?}", z3::version());
     println!("Z3 full version string: {}", z3::full_version());
 }
+
+#[test]
+fn test_consequences() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+    let a = Bool::new_const(&ctx, "a");
+    let b = Bool::new_const(&ctx, "b");
+    let c = Bool::new_const(&ctx, "c");
+    let d = Bool::new_const(&ctx, "d");
+    solver.assert(&a.implies(&b));
+    solver.assert(&b.implies(&c));
+
+    let assumptions = vec![a.clone()];
+    let variables = vec![b.clone(), c.clone(), d.clone()];
+    let mut cons = solver.get_consequences(&assumptions, &variables);
+    assert!(cons.len() == 2);
+    assert!(cons.pop().unwrap().to_string() == "(=> a c)");
+    assert!(cons.pop().unwrap().to_string() == "(=> a b)");
+
+    let assumptions = vec![c.not(), d.clone()];
+    let variables = vec![a, b, c, d];
+    let mut cons = solver.get_consequences(&assumptions, &variables);
+    assert!(cons.len() == 4);
+    assert!(cons.pop().unwrap().to_string() == "(=> (not c) (not a))");
+    assert!(cons.pop().unwrap().to_string() == "(=> (not c) (not b))");
+    assert!(cons.pop().unwrap().to_string() == "(=> (not c) (not c))");
+    assert!(cons.pop().unwrap().to_string() == "(=> d d)");
+}

@@ -242,6 +242,43 @@ impl<'ctx> Solver<'ctx> {
         unsat_core
     }
 
+    /// Retrieve consequences from the solver given a set of assumptions.
+    pub fn get_consequences(
+        &self,
+        assumptions: &[ast::Bool<'ctx>],
+        variables: &[ast::Bool<'ctx>],
+    ) -> Vec<ast::Bool<'ctx>> {
+        unsafe {
+            let _assumptions = Z3_mk_ast_vector(self.ctx.z3_ctx);
+            Z3_ast_vector_inc_ref(self.ctx.z3_ctx, _assumptions);
+            assumptions.iter().for_each(|x| {
+                Z3_ast_vector_push(self.ctx.z3_ctx, _assumptions, x.z3_ast);
+            });
+
+            let _variables = Z3_mk_ast_vector(self.ctx.z3_ctx);
+            Z3_ast_vector_inc_ref(self.ctx.z3_ctx, _variables);
+            variables.iter().for_each(|x| {
+                Z3_ast_vector_push(self.ctx.z3_ctx, _variables, x.z3_ast);
+            });
+            let consequences = Z3_mk_ast_vector(self.ctx.z3_ctx);
+            Z3_ast_vector_inc_ref(self.ctx.z3_ctx, consequences);
+
+            Z3_solver_get_consequences(
+                self.ctx.z3_ctx,
+                self.z3_slv,
+                _assumptions,
+                _variables,
+                consequences,
+            );
+            let mut cons = vec![];
+            for i in 0..Z3_ast_vector_size(self.ctx.z3_ctx, consequences) {
+                let val = Z3_ast_vector_get(self.ctx.z3_ctx, consequences, i);
+                cons.push(ast::Bool::wrap(self.ctx, val));
+            }
+            cons
+        }
+    }
+
     /// Create a backtracking point.
     ///
     /// The solver contains a stack of assertions.
