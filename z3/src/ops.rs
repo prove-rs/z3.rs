@@ -214,6 +214,28 @@ macro_rules! impl_binary_op {
         );
         impl_binary_op_assign_number_raw!(
             $ty,
+            i32,
+            from_i32,
+            $ty,
+            $base_trait,
+            $assign_trait,
+            $base_fn,
+            $assign_fn,
+            $function,
+            $construct_constant
+        );
+        impl_binary_op_number_raw!(
+            &$ty,
+            i32,
+            from_i32,
+            $ty,
+            $base_trait,
+            $base_fn,
+            $function,
+            $construct_constant
+        );
+        impl_binary_op_assign_number_raw!(
+            $ty,
             i64,
             from_i64,
             $ty,
@@ -423,6 +445,26 @@ macro_rules! impl_binary_mult_op {
             &$ty,
             u64,
             from_u64,
+            $ty,
+            $base_trait,
+            $base_fn,
+            $construct_constant
+        );
+        impl_binary_mult_op_assign_number_raw!(
+            $ty,
+            i32,
+            from_i32,
+            $ty,
+            $base_trait,
+            $assign_trait,
+            $base_fn,
+            $assign_fn,
+            $construct_constant
+        );
+        impl_binary_mult_op_number_raw!(
+            &$ty,
+            i32,
+            from_i32,
             $ty,
             $base_trait,
             $base_fn,
