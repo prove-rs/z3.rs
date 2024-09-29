@@ -188,7 +188,12 @@ fn test_bool_ops() {
 }
 
 fn assert_bool_child<'c>(node: &impl Ast<'c>, idx: usize, expected: &Bool<'c>) {
-    assert_eq!(&node.nth_child(idx).unwrap().as_bool().unwrap(), expected);
+    assert!(node
+        .nth_child(idx)
+        .unwrap()
+        .as_bool()
+        .unwrap()
+        .ast_eq(expected));
 }
 
 #[test]
@@ -198,13 +203,13 @@ fn test_ast_children() {
 
     let a = Bool::new_const(&ctx, "a");
     assert_eq!(a.num_children(), 0);
-    assert_eq!(a.nth_child(0), None);
-    assert_eq!(a.children(), vec![]);
+    assert!(a.nth_child(0).is_none());
+    assert!(a.children().is_empty());
 
     let not_a = a.not();
     assert_eq!(not_a.num_children(), 1);
     assert_bool_child(&not_a, 0, &a);
-    assert_eq!(not_a.nth_child(1), None);
+    assert!(not_a.nth_child(1).is_none());
 
     let b = Bool::new_const(&ctx, "b");
     // This is specifically testing for an array of values, not an array of slices
@@ -212,11 +217,11 @@ fn test_ast_children() {
     assert_eq!(a_or_b.num_children(), 2);
     assert_bool_child(&a_or_b, 0, &a);
     assert_bool_child(&a_or_b, 1, &b);
-    assert_eq!(a_or_b.nth_child(2), None);
+    assert!(a_or_b.nth_child(2).is_none());
     let children = a_or_b.children();
     assert_eq!(children.len(), 2);
-    assert_eq!(children[0].as_bool().unwrap(), a);
-    assert_eq!(children[1].as_bool().unwrap(), b);
+    assert!(children[0].as_bool().unwrap().ast_eq(&a));
+    assert!(children[1].as_bool().unwrap().ast_eq(&b));
 
     let c = Bool::new_const(&ctx, "c");
     let a_and_b_and_c = Bool::and(&ctx, &[&a, &b, &c]);
@@ -224,11 +229,11 @@ fn test_ast_children() {
     assert_bool_child(&a_and_b_and_c, 0, &a);
     assert_bool_child(&a_and_b_and_c, 1, &b);
     assert_bool_child(&a_and_b_and_c, 2, &c);
-    assert_eq!(a_and_b_and_c.nth_child(3), None);
+    assert!(a_and_b_and_c.nth_child(3).is_none());
     let children = a_and_b_and_c.children();
-    assert_eq!(children[0].as_bool().unwrap(), a);
-    assert_eq!(children[1].as_bool().unwrap(), b);
-    assert_eq!(children[2].as_bool().unwrap(), c);
+    assert!(children[0].as_bool().unwrap().ast_eq(&a));
+    assert!(children[1].as_bool().unwrap().ast_eq(&b));
+    assert!(children[2].as_bool().unwrap().ast_eq(&c));
 }
 
 fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
@@ -302,15 +307,15 @@ fn test_real_approx() {
     let ctx = Context::new(&Config::default());
     let x = Real::new_const(&ctx, "x");
     let xx = &x * &x;
-    let zero = Real::from_real(&ctx, 0, 1);
-    let two = Real::from_real(&ctx, 2, 1);
+    let zero = Real::from_rational(&ctx, 0, 1);
+    let two = Real::from_rational(&ctx, 2, 1);
     let s = Solver::new(&ctx);
     s.assert(&x.ge(&zero));
-    s.assert(&xx._eq(&two));
+    s.assert(&xx.eq(&two));
     assert_eq!(s.check(), SatResult::Sat);
     let m = s.get_model().unwrap();
     let res = m.eval(&x, false).unwrap();
-    assert_eq!(res.as_real(), None); // sqrt is irrational
+    assert_eq!(res.as_rational(), None); // sqrt is irrational
     println!("f64 res: {}", res.approx_f64());
     assert!((res.approx_f64() - ::std::f64::consts::SQRT_2).abs() < 1e-20);
     assert_eq!(res.approx(0), "1.");

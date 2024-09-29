@@ -2,7 +2,6 @@
 
 use log::debug;
 use std::borrow::Borrow;
-use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -189,6 +188,7 @@ macro_rules! varop {
 pub trait Ast<'ctx>: fmt::Debug {
     fn get_ctx(&self) -> &'ctx Context;
     fn get_z3_ast(&self) -> Z3_ast;
+    fn ast_eq(&self, other: &dyn Ast<'ctx>) -> bool;
 
     // This would be great, but gives error E0071 "expected struct, variant or union type, found Self"
     // so I don't think we can write a generic constructor like this.
@@ -216,6 +216,14 @@ pub trait Ast<'ctx>: fmt::Debug {
     where
         Self: Sized;
 
+    #[deprecated = "Please use eq instead"]
+    fn _eq(&self, other: &Self) -> Bool<'ctx>
+    where
+        Self: Sized,
+    {
+        self.eq(other)
+    }
+
     /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
     /// representing the result.
     ///
@@ -223,16 +231,24 @@ pub trait Ast<'ctx>: fmt::Debug {
     /// `Ast`s being compared must be the same type.
     //
     // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq(&self, other: &Self) -> Bool<'ctx>
+    fn eq(&self, other: &Self) -> Bool<'ctx>
     where
         Self: Sized,
     {
-        self._safe_eq(other).unwrap()
+        self.safe_eq(other).unwrap()
+    }
+
+    #[deprecated = "Please use safe_eq instead"]
+    fn _safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>>
+    where
+        Self: Sized,
+    {
+        self.safe_eq(other)
     }
 
     /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
     /// match for the two values.
-    fn _safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>>
+    fn safe_eq(&self, other: &Self) -> Result<Bool<'ctx>, SortDiffers<'ctx>>
     where
         Self: Sized,
     {
@@ -442,6 +458,11 @@ macro_rules! impl_ast {
             fn get_z3_ast(&self) -> Z3_ast {
                 self.z3_ast
             }
+
+            fn ast_eq(&self, other: &dyn Ast<'ctx>) -> bool {
+                assert_eq!(self.ctx, other.get_ctx());
+                unsafe { Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.get_z3_ast()) }
+            }
         }
 
         impl<'ctx> From<$ast<'ctx>> for Z3_ast {
@@ -449,15 +470,6 @@ macro_rules! impl_ast {
                 ast.z3_ast
             }
         }
-
-        impl<'ctx> PartialEq for $ast<'ctx> {
-            fn eq(&self, other: &$ast<'ctx>) -> bool {
-                assert_eq!(self.ctx, other.ctx);
-                unsafe { Z3_is_eq_ast(self.ctx.z3_ctx, self.z3_ast, other.z3_ast) }
-            }
-        }
-
-        impl<'ctx> Eq for $ast<'ctx> {}
 
         impl<'ctx> Clone for $ast<'ctx> {
             fn clone(&self) -> Self {
@@ -579,10 +591,15 @@ impl<'ctx> Real<'ctx> {
     pub fn from_big_rational(ctx: &'ctx Context, value: &BigRational) -> Real<'ctx> {
         let num = value.numer();
         let den = value.denom();
-        Real::from_real_str(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
+        Real::from_rational_str(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
     }
 
+    #[deprecated = "Please use from_rational_str instead"]
     pub fn from_real_str(ctx: &'ctx Context, num: &str, den: &str) -> Option<Real<'ctx>> {
+        Self::from_rational_str(ctx, num, den)
+    }
+
+    pub fn from_rational_str(ctx: &'ctx Context, num: &str, den: &str) -> Option<Real<'ctx>> {
         let sort = Sort::real(ctx);
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
@@ -906,19 +923,21 @@ impl<'ctx> Real<'ctx> {
         }
     }
 
+    #[deprecated = "Please use from_rational instead"]
     pub fn from_real(ctx: &'ctx Context, num: i32, den: i32) -> Real<'ctx> {
-        unsafe {
-            Self::wrap(ctx, {
-                Z3_mk_real(
-                    ctx.z3_ctx,
-                    num as ::std::os::raw::c_int,
-                    den as ::std::os::raw::c_int,
-                )
-            })
-        }
+        Self::from_rational(ctx, num as i64, den as i64)
     }
 
+    pub fn from_rational(ctx: &'ctx Context, num: i64, den: i64) -> Real<'ctx> {
+        Real::from_rational_str(ctx, &num.to_string(), &den.to_string()).unwrap()
+    }
+
+    #[deprecated = "Please use as_rational instead"]
     pub fn as_real(&self) -> Option<(i64, i64)> {
+        self.as_rational()
+    }
+
+    pub fn as_rational(&self) -> Option<(i64, i64)> {
         unsafe {
             let mut num: i64 = 0;
             let mut den: i64 = 0;
