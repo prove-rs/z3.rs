@@ -10,7 +10,7 @@ env:
   CARGO_INCREMENTAL: 0
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
   RUSTFLAGS: "-D warnings"
-  EMSCRIPTEN_VERSION: "3.1.59" # Change back to `latest` once Z3 4.13.1 or later is out.
+  EMSCRIPTEN_VERSION: "latest"
 
 jobs:
   check-formatting:
