@@ -64,6 +64,12 @@ pub struct Set<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`] node representing a sequence value.
+pub struct Seq<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 /// [`Ast`] node representing a datatype or enumeration value.
 pub struct Datatype<'ctx> {
     pub(crate) ctx: &'ctx Context,
@@ -553,6 +559,8 @@ impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
 impl_from_try_into_dynamic!(Set, as_set);
+impl_ast!(Seq);
+impl_from_try_into_dynamic!(Seq, as_seq);
 impl_ast!(Regexp);
 
 impl<'ctx> Int<'ctx> {
@@ -1658,6 +1666,70 @@ impl<'ctx> Set<'ctx> {
     }
 }
 
+impl<'ctx> Seq<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, eltype: &Sort<'ctx>) -> Self {
+        let sort = Sort::seq(ctx, eltype);
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+            })
+        }
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, eltype: &Sort<'ctx>) -> Self {
+        let sort = Sort::seq(ctx, eltype);
+        unsafe {
+            Self::wrap(ctx, {
+                let pp = CString::new(prefix).unwrap();
+                let p = pp.as_ptr();
+                Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+            })
+        }
+    }
+
+    /// Retrieve from s the unit sequence positioned at position index.
+    pub fn at(&self, index: &Int<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                self.ctx,
+                Z3_mk_seq_at(self.ctx.z3_ctx, self.z3_ast, index.z3_ast),
+            )
+        }
+    }
+
+    /// Retrieve from s the element positioned at position index.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{ast, Config, Context, Solver, Sort};
+    /// # use z3::ast::{Ast, Bool, Int, Seq};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let seq = Seq::fresh_const(&ctx, "", &Sort::bool(&ctx));
+    ///
+    /// solver.assert(
+    ///     &seq.nth(&Int::from_u64(&ctx, 0))
+    ///         .simplify()
+    ///         .as_bool()
+    ///         .unwrap()
+    ///         ._eq(&Bool::from_bool(&ctx, true))
+    /// );
+    /// ```
+    pub fn nth(&self, index: &Int<'ctx>) -> Dynamic<'ctx> {
+        unsafe {
+            Dynamic::wrap(
+                self.ctx,
+                Z3_mk_seq_nth(self.ctx.z3_ctx, self.z3_ast, index.z3_ast),
+            )
+        }
+    }
+
+    pub fn length(&self) -> Int<'ctx> {
+        unsafe { Int::wrap(self.ctx, Z3_mk_seq_length(self.ctx.z3_ctx, self.z3_ast)) }
+    }
+}
+
 impl<'ctx> Dynamic<'ctx> {
     pub fn from_ast(ast: &dyn Ast<'ctx>) -> Self {
         unsafe { Self::wrap(ast.get_ctx(), ast.get_z3_ast()) }
@@ -1763,6 +1835,14 @@ impl<'ctx> Dynamic<'ctx> {
                 }
                 _ => None,
             }
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `Seq`.
+    pub fn as_seq(&self) -> Option<Seq<'ctx>> {
+        match self.sort_kind() {
+            SortKind::Seq => Some(unsafe { Seq::wrap(self.ctx, self.z3_ast) }),
+            _ => None,
         }
     }
 
