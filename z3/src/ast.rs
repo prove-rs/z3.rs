@@ -1517,6 +1517,23 @@ impl<'ctx> Array<'ctx> {
         }
     }
 
+    /// n-ary Array read. `idxs` are the indices of the array that gets read.
+    /// This is useful for applying lambdas.
+    pub fn select_n(&self, idxs: &[&dyn Ast]) -> Dynamic<'ctx> {
+        let idxs: Vec<_> = idxs.iter().map(|idx| idx.get_z3_ast()).collect();
+
+        unsafe {
+            Dynamic::wrap(self.ctx, {
+                Z3_mk_select_n(
+                    self.ctx.z3_ctx,
+                    self.z3_ast,
+                    idxs.len().try_into().unwrap(),
+                    idxs.as_ptr() as *const Z3_ast,
+                )
+            })
+        }
+    }
+
     /// Update the value at a given index in the array.
     ///
     /// Note that the `index` _must be_ of the array's `domain` sort,
@@ -2037,6 +2054,65 @@ pub fn exists_const<'ctx>(
                 body.get_z3_ast(),
             )
         })
+    }
+}
+
+/// Create a lambda expression.
+///
+/// - `num_decls`: Number of variables to be bound.
+/// - `sorts`: Bound variable sorts.
+/// - `decl_names`: Contains the names that the quantified formula uses for the bound variables.
+/// - `body`: Expression body that contains bound variables of the same sorts as the sorts listed in the array sorts.
+///
+/// # Examples
+/// ```
+/// # use z3::{
+/// #     ast::{lambda_const, Ast as _, Int, Dynamic},
+/// #     Config, Context, Solver, SatResult,
+/// # };
+/// #
+/// # let cfg = Config::new();
+/// # let ctx = Context::new(&cfg);
+/// # let solver = Solver::new(&ctx);
+/// #
+/// let input = Int::fresh_const(&ctx, "");
+/// let lambda = lambda_const(
+///     &ctx,
+///     &[&input],
+///     &Dynamic::from_ast(&Int::add(&ctx, &[&input, &Int::from_i64(&ctx, 2)])),
+/// );
+///
+/// solver.assert(
+///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(&ctx, 3))
+/// );
+///
+/// assert_eq!(solver.check(), SatResult::Sat);
+///
+/// solver.assert(
+///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(&ctx, 2))
+/// );
+///
+/// assert_eq!(solver.check(), SatResult::Unsat);
+/// ```
+pub fn lambda_const<'ctx>(
+    ctx: &'ctx Context,
+    bounds: &[&dyn Ast<'ctx>],
+    body: &Dynamic<'ctx>,
+) -> Array<'ctx> {
+    let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+
+    unsafe {
+        Ast::wrap(
+            ctx,
+            Z3_mk_lambda_const(
+                ctx.z3_ctx,
+                bounds.len().try_into().unwrap(),
+                bounds.as_ptr() as *const Z3_app,
+                body.get_z3_ast(),
+            ),
+        )
     }
 }
 
