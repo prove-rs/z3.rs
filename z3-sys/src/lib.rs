@@ -3100,6 +3100,9 @@ unsafe extern "C" {
     /// The function is under-specified if `offset` is negative or larger than the length of `s`.
     pub fn Z3_mk_seq_index(c: Z3_context, s: Z3_ast, substr: Z3_ast, offset: Z3_ast) -> Z3_ast;
 
+    /// Create a fold of the function `f` over the sequence `s` with accumulator `a`.
+    pub fn Z3_mk_seq_foldl(c: Z3_context, f: Z3_ast, a: Z3_ast, s: Z3_ast) -> Z3_ast;
+
     /// Convert string to integer.
     pub fn Z3_mk_str_to_int(c: Z3_context, s: Z3_ast) -> Z3_ast;
 
