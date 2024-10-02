@@ -1687,7 +1687,8 @@ impl<'ctx> Seq<'ctx> {
         }
     }
 
-    /// Retrieve from s the unit sequence positioned at position index.
+    /// Retrieve the unit sequence positioned at position `index`.
+    /// Use [`Seq::nth`] to get just the element.
     pub fn at(&self, index: &Int<'ctx>) -> Self {
         unsafe {
             Self::wrap(
@@ -1697,7 +1698,7 @@ impl<'ctx> Seq<'ctx> {
         }
     }
 
-    /// Retrieve from s the element positioned at position index.
+    /// Retrieve the element positioned at position `index`.
     ///
     /// # Examples
     /// ```
