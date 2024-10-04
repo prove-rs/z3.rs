@@ -70,6 +70,10 @@ impl<'ctx> Sort<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx, elt.z3_sort)) }
     }
 
+    pub fn seq(ctx: &'ctx Context, elt: &Sort<'ctx>) -> Sort<'ctx> {
+        unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx, elt.z3_sort)) }
+    }
+
     /// Create an enumeration sort.
     ///
     /// Creates a Z3 enumeration sort with the given `name`.
