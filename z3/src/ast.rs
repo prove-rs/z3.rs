@@ -1177,6 +1177,11 @@ impl<'ctx> String<'ctx> {
         concat(Z3_mk_seq_concat, String<'ctx>);
     }
 
+    unop! {
+        /// Gets the length of `Self`.
+        length(Z3_mk_seq_length, Int<'ctx>);
+    }
+
     binop! {
         /// Checks whether `Self` contains a substring
         contains(Z3_mk_seq_contains, Bool<'ctx>);
