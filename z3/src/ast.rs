@@ -1161,6 +1161,34 @@ impl<'ctx> String<'ctx> {
         }
     }
 
+    /// Retrieve the substring of length 1 positioned at `index`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver};
+    /// # use z3::ast::{Ast as _, Int};
+    /// #
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// #
+    /// let s = z3::ast::String::fresh_const(&ctx, "");
+    ///
+    /// solver.assert(
+    ///     &s.at(&Int::from_u64(&ctx, 0))
+    ///         ._eq(&z3::ast::String::from_str(&ctx, "a").unwrap())
+    /// );
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
+    pub fn at(&self, index: &Int<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                self.ctx,
+                Z3_mk_seq_at(self.ctx.z3_ctx, self.z3_ast, index.z3_ast),
+            )
+        }
+    }
+
     /// Checks if this string matches a `z3::ast::Regexp`
     pub fn regex_matches(&self, regex: &Regexp) -> Bool<'ctx> {
         assert!(self.ctx == regex.ctx);
