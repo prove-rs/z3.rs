@@ -760,6 +760,48 @@ impl<'ctx> Bool<'ctx> {
     }
 }
 
+pub fn atmost<'a, 'ctx, I: IntoIterator<Item = &'a Bool<'ctx>>>(
+    ctx: &'ctx Context,
+    args: I,
+    k: u32,
+) -> Bool<'ctx>
+where
+    'ctx: 'a,
+{
+    let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
+    _atmost(ctx, args.as_ref(), k)
+}
+
+fn _atmost<'ctx>(ctx: &'ctx Context, args: &[Z3_ast], k: u32) -> Bool<'ctx> {
+    unsafe {
+        Bool::wrap(
+            ctx,
+            Z3_mk_atmost(ctx.z3_ctx, args.len().try_into().unwrap(), args.as_ptr(), k),
+        )
+    }
+}
+
+pub fn atleast<'a, 'ctx, I: IntoIterator<Item = &'a Bool<'ctx>>>(
+    ctx: &'ctx Context,
+    args: I,
+    k: u32,
+) -> Bool<'ctx>
+where
+    'ctx: 'a,
+{
+    let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
+    _atleast(ctx, args.as_ref(), k)
+}
+
+fn _atleast<'ctx>(ctx: &'ctx Context, args: &[Z3_ast], k: u32) -> Bool<'ctx> {
+    unsafe {
+        Bool::wrap(
+            ctx,
+            Z3_mk_atleast(ctx.z3_ctx, args.len().try_into().unwrap(), args.as_ptr(), k),
+        )
+    }
+}
+
 impl<'ctx> Int<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Int<'ctx> {
         let sort = Sort::int(ctx);
