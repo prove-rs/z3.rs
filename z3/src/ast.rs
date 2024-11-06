@@ -1270,7 +1270,7 @@ impl<'ctx> String<'ctx> {
     pub fn substr(&self, offset: &Int<'ctx>, length: &Int<'ctx>) -> Self {
         unsafe {
             Self::wrap(
-                &self.ctx,
+                self.ctx,
                 Z3_mk_seq_extract(self.ctx.z3_ctx, self.z3_ast, offset.z3_ast, length.z3_ast),
             )
         }
