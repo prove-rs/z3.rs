@@ -1231,6 +1231,51 @@ impl<'ctx> String<'ctx> {
         }
     }
 
+    /// Retrieve the substring of length `length` starting at `offset`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver, SatResult};
+    /// # use z3::ast::{Ast as _, Int, String};
+    /// #
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// #
+    /// let s = String::from_str(&ctx, "abc").unwrap();
+    /// let sub = String::fresh_const(&ctx, "");
+    ///
+    /// solver.assert(
+    ///     &sub._eq(
+    ///         &s.substr(
+    ///             &Int::from_u64(&ctx, 1),
+    ///             &Int::from_u64(&ctx, 2),
+    ///         )
+    ///     )
+    /// );
+    ///
+    /// assert_eq!(solver.check(), SatResult::Sat);
+    /// assert_eq!(
+    ///     solver
+    ///         .get_model()
+    ///         .unwrap()
+    ///         .eval(&sub, true)
+    ///         .unwrap()
+    ///         .as_string()
+    ///         .unwrap()
+    ///         .as_str(),
+    ///     "bc",
+    /// );
+    /// ```
+    pub fn substr(&self, offset: &Int<'ctx>, length: &Int<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                self.ctx,
+                Z3_mk_seq_extract(self.ctx.z3_ctx, self.z3_ast, offset.z3_ast, length.z3_ast),
+            )
+        }
+    }
+
     /// Checks if this string matches a `z3::ast::Regexp`
     pub fn regex_matches(&self, regex: &Regexp) -> Bool<'ctx> {
         assert!(self.ctx == regex.ctx);
