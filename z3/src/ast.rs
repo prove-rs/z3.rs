@@ -1878,6 +1878,7 @@ impl<'ctx> Seq<'ctx> {
     }
 
     varop! {
+        /// Concatenate sequences.
         concat(Z3_mk_seq_concat, Self);
     }
 }
