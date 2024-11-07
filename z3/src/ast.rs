@@ -1138,6 +1138,16 @@ impl<'ctx> Float<'ctx> {
         unsafe { BV::wrap(self.ctx, Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx, self.z3_ast)) }
     }
 
+    // Convert from IEEE-754 bit-vector
+    pub fn from_ieee_bv(bv: &BV<'ctx>, s: &Sort<'ctx>) -> Float<'ctx> {
+        unsafe {
+            Self::wrap(
+                bv.ctx,
+                Z3_mk_fpa_to_fp_bv(bv.ctx.z3_ctx, bv.z3_ast, s.z3_sort),
+            )
+        }
+    }
+
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
