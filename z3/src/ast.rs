@@ -1829,6 +1829,11 @@ impl<'ctx> Seq<'ctx> {
         }
     }
 
+    /// Create a unit sequence of `a`.
+    pub fn unit<A: Ast<'ctx>>(ctx: &'ctx Context, a: &A) -> Self {
+        unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx, a.get_z3_ast())) }
+    }
+
     /// Retrieve the unit sequence positioned at position `index`.
     /// Use [`Seq::nth`] to get just the element.
     pub fn at(&self, index: &Int<'ctx>) -> Self {
@@ -1870,6 +1875,10 @@ impl<'ctx> Seq<'ctx> {
 
     pub fn length(&self) -> Int<'ctx> {
         unsafe { Int::wrap(self.ctx, Z3_mk_seq_length(self.ctx.z3_ctx, self.z3_ast)) }
+    }
+
+    varop! {
+        concat(Z3_mk_seq_concat, Self);
     }
 }
 
