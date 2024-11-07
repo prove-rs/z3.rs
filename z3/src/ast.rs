@@ -1132,6 +1132,11 @@ impl<'ctx> Float<'ctx> {
         Self::round_towards_zero(self.ctx).div(self, other)
     }
 
+    // Convert to IEEE-754 bit-vector
+    pub fn to_ieee_bv(&self) -> BV<'ctx> {
+        unsafe { BV::wrap(self.ctx, Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx, self.z3_ast)) }
+    }
+
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
