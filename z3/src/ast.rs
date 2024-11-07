@@ -1134,12 +1134,7 @@ impl<'ctx> Float<'ctx> {
 
     // Convert to IEEE-754 bit-vector
     pub fn to_ieee_bv(&self) -> BV<'ctx> {
-        unsafe {
-            BV::wrap(
-                self.ctx,
-                Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx, self.z3_ast),
-            )
-        }
+        unsafe { BV::wrap(self.ctx, Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx, self.z3_ast)) }
     }
 
     unop! {
