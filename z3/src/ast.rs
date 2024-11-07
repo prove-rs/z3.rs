@@ -1148,6 +1148,29 @@ impl<'ctx> Float<'ctx> {
         }
     }
 
+    // Convert from IEEE-754 bit-vector
+    pub fn from_ieee_bv32(bv: &BV<'ctx>) -> Float<'ctx> {
+        let sort = Sort::float32(bv.ctx);
+        unsafe {
+            Self::wrap(
+                bv.ctx,
+                Z3_mk_fpa_to_fp_bv(bv.ctx.z3_ctx, bv.z3_ast, sort.z3_sort),
+            )
+        }
+    }
+
+    // Convert from IEEE-754 bit-vector
+    pub fn from_ieee_bv64(bv: &BV<'ctx>) -> Float<'ctx> {
+        let sort = Sort::double(bv.ctx);
+        unsafe {
+            Self::wrap(
+                bv.ctx,
+                Z3_mk_fpa_to_fp_bv(bv.ctx.z3_ctx, bv.z3_ast, sort.z3_sort),
+            )
+        }
+    }
+
+
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
