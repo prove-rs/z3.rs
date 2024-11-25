@@ -130,7 +130,7 @@ impl<'ctx> Model<'ctx> {
         }
     }
 
-    pub fn iter(&'ctx self) -> ModelIter<'ctx> {
+    pub fn iter<'a>(&'a self) -> ModelIter<'a, 'ctx> {
         self.into_iter()
     }
 }
@@ -162,15 +162,15 @@ impl<'ctx> Drop for Model<'ctx> {
 
 #[derive(Debug)]
 /// <https://z3prover.github.io/api/html/classz3py_1_1_model_ref.html#a7890b7c9bc70cf2a26a343c22d2c8367>
-pub struct ModelIter<'ctx> {
-    model: &'ctx Model<'ctx>,
+pub struct ModelIter<'a, 'ctx> {
+    model: &'a Model<'ctx>,
     idx: u32,
     len: u32,
 }
 
-impl<'ctx> IntoIterator for &'ctx Model<'ctx> {
+impl<'a, 'ctx> IntoIterator for &'a Model<'ctx> {
     type Item = FuncDecl<'ctx>;
-    type IntoIter = ModelIter<'ctx>;
+    type IntoIter = ModelIter<'a, 'ctx>;
 
     fn into_iter(self) -> Self::IntoIter {
         ModelIter {
@@ -181,7 +181,7 @@ impl<'ctx> IntoIterator for &'ctx Model<'ctx> {
     }
 }
 
-impl<'ctx> Iterator for ModelIter<'ctx> {
+impl<'a, 'ctx> Iterator for ModelIter<'a, 'ctx> {
     type Item = FuncDecl<'ctx>;
 
     fn next(&mut self) -> Option<Self::Item> {
