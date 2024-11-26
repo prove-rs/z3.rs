@@ -1973,3 +1973,32 @@ fn test_atleast() {
     assert!(matches!(solver.check(), SatResult::Unsat));
     solver.pop(1);
 }
+
+#[test]
+fn test_model_iter() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::new_const(&ctx, "a");
+    let two = ast::Int::from_u64(&ctx, 2);
+    solver.assert(&a._eq(&two));
+    solver.check();
+
+    let model = solver.get_model().unwrap();
+
+    // consume a model and return some asts constructed from it
+    // this didn't compile before pr#324
+    fn consume_model(model: Model) -> Vec<ast::Dynamic> {
+        let mut asts = vec![];
+        for func in &model {
+            asts.push(func.apply(&[]));
+        }
+        asts
+    }
+
+    assert_eq!(
+        consume_model(model),
+        vec![ast::Dynamic::new_const(&ctx, "a", &Sort::int(&ctx))]
+    );
+}
