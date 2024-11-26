@@ -2263,6 +2263,94 @@ pub fn exists_const<'ctx>(
     }
 }
 
+/// Create a quantifier with additional attributes.
+///
+/// - `ctx`: logical context.
+/// - `is_forall`: flag to indicate if this is a universal or existential quantifier.
+/// - `quantifier_id`: identifier to identify quantifier
+/// - `skolem_id`: identifier to identify skolem constants introduced by quantifier.
+/// - `weight`: quantifiers are associated with weights indicating the importance of using the quantifier during instantiation. By default, pass the weight 0.
+/// - `bounds`: list of variables that the quantifier ranges over
+/// - `patterns`: if non-empty, explicit patterns to use for the quantifier.
+/// - `no_patterns`: subexpressions to be excluded from inferred patterns.
+/// - `body`: the body of the quantifier.
+///
+/// # Examples
+/// ```
+/// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
+/// # use z3::ast::Ast;
+/// # use std::convert::TryInto;
+/// # let cfg = Config::new();
+/// # let ctx = Context::new(&cfg);
+/// # let solver = Solver::new(&ctx);
+/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+///
+/// let x = ast::Int::new_const(&ctx, "x");
+/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let forall: ast::Bool = ast::quantifier_const(
+///     &ctx,
+///     true,
+///     0,
+///     "def_f",
+///     "",
+///     &[&x],
+///     &[&f_x_pattern],
+///     &[],
+///     &x._eq(&f_x)
+/// ).try_into().unwrap();
+/// solver.assert(&forall);
+///
+/// assert_eq!(solver.check(), SatResult::Sat);
+/// let model = solver.get_model().unwrap();;
+///
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
+/// ```
+pub fn quantifier_const<'ctx>(
+    ctx: &'ctx Context,
+    is_forall: bool,
+    weight: u32,
+    quantifier_id: impl Into<Symbol>,
+    skolem_id: impl Into<Symbol>,
+    bounds: &[&dyn Ast<'ctx>],
+    patterns: &[&Pattern<'ctx>],
+    no_patterns: &[&dyn Ast<'ctx>],
+    body: &Bool<'ctx>,
+) -> Bool<'ctx> {
+    assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
+    assert!(patterns.iter().all(|p| p.ctx == ctx));
+    assert!(no_patterns.iter().all(|p| p.get_ctx() == ctx));
+    assert_eq!(ctx, body.get_ctx());
+
+    if bounds.is_empty() {
+        return body.clone();
+    }
+
+    let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+    let patterns: Vec<_> = patterns.iter().map(|p| p.z3_pattern).collect();
+    let no_patterns: Vec<_> = no_patterns.iter().map(|a| a.get_z3_ast()).collect();
+
+    unsafe {
+        Ast::wrap(ctx, {
+            Z3_mk_quantifier_const_ex(
+                ctx.z3_ctx,
+                is_forall,
+                weight,
+                quantifier_id.into().as_z3_symbol(ctx),
+                skolem_id.into().as_z3_symbol(ctx),
+                bounds.len().try_into().unwrap(),
+                bounds.as_ptr() as *const Z3_app,
+                patterns.len().try_into().unwrap(),
+                patterns.as_ptr() as *const Z3_pattern,
+                no_patterns.len().try_into().unwrap(),
+                no_patterns.as_ptr() as *const Z3_ast,
+                body.get_z3_ast(),
+            )
+        })
+    }
+}
+
 /// Create a lambda expression.
 ///
 /// - `num_decls`: Number of variables to be bound.
