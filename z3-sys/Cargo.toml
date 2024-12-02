@@ -17,6 +17,7 @@ repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
 bindgen = { version = "0.70", default-features = false, features = ["runtime"] }
+cc = "~1.1"
 cmake = { version = "0.1.49", optional = true }
 pkg-config = "0.3.27"
 vcpkg = { version = "0.2.15", optional = true }
