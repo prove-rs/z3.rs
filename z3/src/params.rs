@@ -99,7 +99,7 @@ pub fn reset_all_global_params() {
     unsafe { Z3_global_param_reset_all() };
 }
 
-impl<'ctx> fmt::Display for Params<'ctx> {
+impl fmt::Display for Params<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_params_to_string(self.ctx.z3_ctx, self.z3_params) };
         if p.is_null() {
@@ -112,13 +112,13 @@ impl<'ctx> fmt::Display for Params<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Params<'ctx> {
+impl fmt::Debug for Params<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Params<'ctx> {
+impl Drop for Params<'_> {
     fn drop(&mut self) {
         unsafe { Z3_params_dec_ref(self.ctx.z3_ctx, self.z3_params) };
     }

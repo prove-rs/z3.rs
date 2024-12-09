@@ -31,7 +31,7 @@ impl<'ctx> ApplyResult<'ctx> {
     }
 }
 
-impl<'ctx> Drop for ApplyResult<'ctx> {
+impl Drop for ApplyResult<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_apply_result_dec_ref(self.ctx.z3_ctx, self.z3_apply_result);
@@ -239,7 +239,7 @@ impl<'ctx> Tactic<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for Tactic<'ctx> {
+impl fmt::Display for Tactic<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_tactic_get_help(self.ctx.z3_ctx, self.z3_tactic) };
         if p.is_null() {
@@ -252,13 +252,13 @@ impl<'ctx> fmt::Display for Tactic<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Tactic<'ctx> {
+impl fmt::Debug for Tactic<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Tactic<'ctx> {
+impl Drop for Tactic<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_tactic_dec_ref(self.ctx.z3_ctx, self.z3_tactic);

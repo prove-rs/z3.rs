@@ -167,25 +167,25 @@ impl<'ctx> Probe<'ctx> {
     }
 }
 
-impl<'ctx> Clone for Probe<'ctx> {
+impl Clone for Probe<'_> {
     fn clone(&self) -> Self {
         unsafe { Self::wrap(self.ctx, self.z3_probe) }
     }
 }
 
-impl<'ctx> fmt::Display for Probe<'ctx> {
+impl fmt::Display for Probe<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<z3.probe>")
     }
 }
 
-impl<'ctx> fmt::Debug for Probe<'ctx> {
+impl fmt::Debug for Probe<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Probe<'ctx> {
+impl Drop for Probe<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_probe_dec_ref(self.ctx.z3_ctx, self.z3_probe);

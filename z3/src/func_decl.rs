@@ -99,7 +99,7 @@ impl<'ctx> FuncDecl<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for FuncDecl<'ctx> {
+impl fmt::Display for FuncDecl<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx, self.z3_func_decl) };
         if p.is_null() {
@@ -112,13 +112,13 @@ impl<'ctx> fmt::Display for FuncDecl<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for FuncDecl<'ctx> {
+impl fmt::Debug for FuncDecl<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for FuncDecl<'ctx> {
+impl Drop for FuncDecl<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(

@@ -46,7 +46,7 @@ impl<'ctx> Pattern<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Pattern<'ctx> {
+impl fmt::Debug for Pattern<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_pattern_to_string(self.ctx.z3_ctx, self.z3_pattern) };
         if p.is_null() {
@@ -59,13 +59,13 @@ impl<'ctx> fmt::Debug for Pattern<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for Pattern<'ctx> {
+impl fmt::Display for Pattern<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Debug>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Pattern<'ctx> {
+impl Drop for Pattern<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(self.ctx.z3_ctx, self.z3_pattern as Z3_ast);

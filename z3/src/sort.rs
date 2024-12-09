@@ -274,13 +274,13 @@ impl<'ctx> Sort<'ctx> {
     }
 }
 
-impl<'ctx> Clone for Sort<'ctx> {
+impl Clone for Sort<'_> {
     fn clone(&self) -> Self {
         unsafe { Self::wrap(self.ctx, self.z3_sort) }
     }
 }
 
-impl<'ctx> fmt::Display for Sort<'ctx> {
+impl fmt::Display for Sort<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_sort_to_string(self.ctx.z3_ctx, self.z3_sort) };
         if p.is_null() {
@@ -293,7 +293,7 @@ impl<'ctx> fmt::Display for Sort<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Sort<'ctx> {
+impl fmt::Debug for Sort<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
@@ -305,9 +305,9 @@ impl<'ctx> PartialEq<Sort<'ctx>> for Sort<'ctx> {
     }
 }
 
-impl<'ctx> Eq for Sort<'ctx> {}
+impl Eq for Sort<'_> {}
 
-impl<'ctx> Drop for Sort<'ctx> {
+impl Drop for Sort<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(
@@ -332,7 +332,7 @@ impl<'ctx> SortDiffers<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for SortDiffers<'ctx> {
+impl fmt::Display for SortDiffers<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(
             f,

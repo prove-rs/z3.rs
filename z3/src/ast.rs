@@ -2317,6 +2317,7 @@ pub fn exists_const<'ctx>(
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
+#[allow(clippy::too_many_arguments)]
 pub fn quantifier_const<'ctx>(
     ctx: &'ctx Context,
     is_forall: bool,
