@@ -64,6 +64,12 @@ pub struct Set<'ctx> {
     pub(crate) z3_ast: Z3_ast,
 }
 
+/// [`Ast`] node representing a sequence value.
+pub struct Seq<'ctx> {
+    pub(crate) ctx: &'ctx Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 /// [`Ast`] node representing a datatype or enumeration value.
 pub struct Datatype<'ctx> {
     pub(crate) ctx: &'ctx Context,
@@ -553,6 +559,8 @@ impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
 impl_from_try_into_dynamic!(Set, as_set);
+impl_ast!(Seq);
+impl_from_try_into_dynamic!(Seq, as_seq);
 impl_ast!(Regexp);
 
 impl<'ctx> Int<'ctx> {
@@ -749,6 +757,48 @@ impl<'ctx> Bool<'ctx> {
                 )
             })
         }
+    }
+}
+
+pub fn atmost<'a, 'ctx, I: IntoIterator<Item = &'a Bool<'ctx>>>(
+    ctx: &'ctx Context,
+    args: I,
+    k: u32,
+) -> Bool<'ctx>
+where
+    'ctx: 'a,
+{
+    let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
+    _atmost(ctx, args.as_ref(), k)
+}
+
+fn _atmost<'ctx>(ctx: &'ctx Context, args: &[Z3_ast], k: u32) -> Bool<'ctx> {
+    unsafe {
+        Bool::wrap(
+            ctx,
+            Z3_mk_atmost(ctx.z3_ctx, args.len().try_into().unwrap(), args.as_ptr(), k),
+        )
+    }
+}
+
+pub fn atleast<'a, 'ctx, I: IntoIterator<Item = &'a Bool<'ctx>>>(
+    ctx: &'ctx Context,
+    args: I,
+    k: u32,
+) -> Bool<'ctx>
+where
+    'ctx: 'a,
+{
+    let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
+    _atleast(ctx, args.as_ref(), k)
+}
+
+fn _atleast<'ctx>(ctx: &'ctx Context, args: &[Z3_ast], k: u32) -> Bool<'ctx> {
+    unsafe {
+        Bool::wrap(
+            ctx,
+            Z3_mk_atleast(ctx.z3_ctx, args.len().try_into().unwrap(), args.as_ptr(), k),
+        )
     }
 }
 
@@ -1082,6 +1132,11 @@ impl<'ctx> Float<'ctx> {
         Self::round_towards_zero(self.ctx).div(self, other)
     }
 
+    // Convert to IEEE-754 bit-vector
+    pub fn to_ieee_bv(&self) -> BV<'ctx> {
+        unsafe { BV::wrap(self.ctx, Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx, self.z3_ast)) }
+    }
+
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
@@ -1153,6 +1208,79 @@ impl<'ctx> String<'ctx> {
         }
     }
 
+    /// Retrieve the substring of length 1 positioned at `index`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver};
+    /// # use z3::ast::{Ast as _, Int};
+    /// #
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// #
+    /// let s = z3::ast::String::fresh_const(&ctx, "");
+    ///
+    /// solver.assert(
+    ///     &s.at(&Int::from_u64(&ctx, 0))
+    ///         ._eq(&z3::ast::String::from_str(&ctx, "a").unwrap())
+    /// );
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
+    pub fn at(&self, index: &Int<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                self.ctx,
+                Z3_mk_seq_at(self.ctx.z3_ctx, self.z3_ast, index.z3_ast),
+            )
+        }
+    }
+
+    /// Retrieve the substring of length `length` starting at `offset`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver, SatResult};
+    /// # use z3::ast::{Ast as _, Int, String};
+    /// #
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// #
+    /// let s = String::from_str(&ctx, "abc").unwrap();
+    /// let sub = String::fresh_const(&ctx, "");
+    ///
+    /// solver.assert(
+    ///     &sub._eq(
+    ///         &s.substr(
+    ///             &Int::from_u64(&ctx, 1),
+    ///             &Int::from_u64(&ctx, 2),
+    ///         )
+    ///     )
+    /// );
+    ///
+    /// assert_eq!(solver.check(), SatResult::Sat);
+    /// assert_eq!(
+    ///     solver
+    ///         .get_model()
+    ///         .unwrap()
+    ///         .eval(&sub, true)
+    ///         .unwrap()
+    ///         .as_string()
+    ///         .unwrap()
+    ///         .as_str(),
+    ///     "bc",
+    /// );
+    /// ```
+    pub fn substr(&self, offset: &Int<'ctx>, length: &Int<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                self.ctx,
+                Z3_mk_seq_extract(self.ctx.z3_ctx, self.z3_ast, offset.z3_ast, length.z3_ast),
+            )
+        }
+    }
+
     /// Checks if this string matches a `z3::ast::Regexp`
     pub fn regex_matches(&self, regex: &Regexp) -> Bool<'ctx> {
         assert!(self.ctx == regex.ctx);
@@ -1167,6 +1295,11 @@ impl<'ctx> String<'ctx> {
     varop! {
         /// Appends the argument strings to `Self`
         concat(Z3_mk_seq_concat, String<'ctx>);
+    }
+
+    unop! {
+        /// Gets the length of `Self`.
+        length(Z3_mk_seq_length, Int<'ctx>);
     }
 
     binop! {
@@ -1517,6 +1650,23 @@ impl<'ctx> Array<'ctx> {
         }
     }
 
+    /// n-ary Array read. `idxs` are the indices of the array that gets read.
+    /// This is useful for applying lambdas.
+    pub fn select_n(&self, idxs: &[&dyn Ast]) -> Dynamic<'ctx> {
+        let idxs: Vec<_> = idxs.iter().map(|idx| idx.get_z3_ast()).collect();
+
+        unsafe {
+            Dynamic::wrap(self.ctx, {
+                Z3_mk_select_n(
+                    self.ctx.z3_ctx,
+                    self.z3_ast,
+                    idxs.len().try_into().unwrap(),
+                    idxs.as_ptr() as *const Z3_ast,
+                )
+            })
+        }
+    }
+
     /// Update the value at a given index in the array.
     ///
     /// Note that the `index` _must be_ of the array's `domain` sort,
@@ -1658,6 +1808,81 @@ impl<'ctx> Set<'ctx> {
     }
 }
 
+impl<'ctx> Seq<'ctx> {
+    pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, eltype: &Sort<'ctx>) -> Self {
+        let sort = Sort::seq(ctx, eltype);
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_const(ctx.z3_ctx, name.into().as_z3_symbol(ctx), sort.z3_sort)
+            })
+        }
+    }
+
+    pub fn fresh_const(ctx: &'ctx Context, prefix: &str, eltype: &Sort<'ctx>) -> Self {
+        let sort = Sort::seq(ctx, eltype);
+        unsafe {
+            Self::wrap(ctx, {
+                let pp = CString::new(prefix).unwrap();
+                let p = pp.as_ptr();
+                Z3_mk_fresh_const(ctx.z3_ctx, p, sort.z3_sort)
+            })
+        }
+    }
+
+    /// Create a unit sequence of `a`.
+    pub fn unit<A: Ast<'ctx>>(ctx: &'ctx Context, a: &A) -> Self {
+        unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx, a.get_z3_ast())) }
+    }
+
+    /// Retrieve the unit sequence positioned at position `index`.
+    /// Use [`Seq::nth`] to get just the element.
+    pub fn at(&self, index: &Int<'ctx>) -> Self {
+        unsafe {
+            Self::wrap(
+                self.ctx,
+                Z3_mk_seq_at(self.ctx.z3_ctx, self.z3_ast, index.z3_ast),
+            )
+        }
+    }
+
+    /// Retrieve the element positioned at position `index`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{ast, Config, Context, Solver, Sort};
+    /// # use z3::ast::{Ast, Bool, Int, Seq};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// let seq = Seq::fresh_const(&ctx, "", &Sort::bool(&ctx));
+    ///
+    /// solver.assert(
+    ///     &seq.nth(&Int::from_u64(&ctx, 0))
+    ///         .simplify()
+    ///         .as_bool()
+    ///         .unwrap()
+    ///         ._eq(&Bool::from_bool(&ctx, true))
+    /// );
+    /// ```
+    pub fn nth(&self, index: &Int<'ctx>) -> Dynamic<'ctx> {
+        unsafe {
+            Dynamic::wrap(
+                self.ctx,
+                Z3_mk_seq_nth(self.ctx.z3_ctx, self.z3_ast, index.z3_ast),
+            )
+        }
+    }
+
+    pub fn length(&self) -> Int<'ctx> {
+        unsafe { Int::wrap(self.ctx, Z3_mk_seq_length(self.ctx.z3_ctx, self.z3_ast)) }
+    }
+
+    varop! {
+        /// Concatenate sequences.
+        concat(Z3_mk_seq_concat, Self);
+    }
+}
+
 impl<'ctx> Dynamic<'ctx> {
     pub fn from_ast(ast: &dyn Ast<'ctx>) -> Self {
         unsafe { Self::wrap(ast.get_ctx(), ast.get_z3_ast()) }
@@ -1763,6 +1988,14 @@ impl<'ctx> Dynamic<'ctx> {
                 }
                 _ => None,
             }
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `Seq`.
+    pub fn as_seq(&self) -> Option<Seq<'ctx>> {
+        match self.sort_kind() {
+            SortKind::Seq => Some(unsafe { Seq::wrap(self.ctx, self.z3_ast) }),
+            _ => None,
         }
     }
 
@@ -2037,6 +2270,153 @@ pub fn exists_const<'ctx>(
                 body.get_z3_ast(),
             )
         })
+    }
+}
+
+/// Create a quantifier with additional attributes.
+///
+/// - `ctx`: logical context.
+/// - `is_forall`: flag to indicate if this is a universal or existential quantifier.
+/// - `quantifier_id`: identifier to identify quantifier
+/// - `skolem_id`: identifier to identify skolem constants introduced by quantifier.
+/// - `weight`: quantifiers are associated with weights indicating the importance of using the quantifier during instantiation. By default, pass the weight 0.
+/// - `bounds`: list of variables that the quantifier ranges over
+/// - `patterns`: if non-empty, explicit patterns to use for the quantifier.
+/// - `no_patterns`: subexpressions to be excluded from inferred patterns.
+/// - `body`: the body of the quantifier.
+///
+/// # Examples
+/// ```
+/// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
+/// # use z3::ast::Ast;
+/// # use std::convert::TryInto;
+/// # let cfg = Config::new();
+/// # let ctx = Context::new(&cfg);
+/// # let solver = Solver::new(&ctx);
+/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+///
+/// let x = ast::Int::new_const(&ctx, "x");
+/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let forall: ast::Bool = ast::quantifier_const(
+///     &ctx,
+///     true,
+///     0,
+///     "def_f",
+///     "",
+///     &[&x],
+///     &[&f_x_pattern],
+///     &[],
+///     &x._eq(&f_x)
+/// ).try_into().unwrap();
+/// solver.assert(&forall);
+///
+/// assert_eq!(solver.check(), SatResult::Sat);
+/// let model = solver.get_model().unwrap();;
+///
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
+/// ```
+pub fn quantifier_const<'ctx>(
+    ctx: &'ctx Context,
+    is_forall: bool,
+    weight: u32,
+    quantifier_id: impl Into<Symbol>,
+    skolem_id: impl Into<Symbol>,
+    bounds: &[&dyn Ast<'ctx>],
+    patterns: &[&Pattern<'ctx>],
+    no_patterns: &[&dyn Ast<'ctx>],
+    body: &Bool<'ctx>,
+) -> Bool<'ctx> {
+    assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
+    assert!(patterns.iter().all(|p| p.ctx == ctx));
+    assert!(no_patterns.iter().all(|p| p.get_ctx() == ctx));
+    assert_eq!(ctx, body.get_ctx());
+
+    if bounds.is_empty() {
+        return body.clone();
+    }
+
+    let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+    let patterns: Vec<_> = patterns.iter().map(|p| p.z3_pattern).collect();
+    let no_patterns: Vec<_> = no_patterns.iter().map(|a| a.get_z3_ast()).collect();
+
+    unsafe {
+        Ast::wrap(ctx, {
+            Z3_mk_quantifier_const_ex(
+                ctx.z3_ctx,
+                is_forall,
+                weight,
+                quantifier_id.into().as_z3_symbol(ctx),
+                skolem_id.into().as_z3_symbol(ctx),
+                bounds.len().try_into().unwrap(),
+                bounds.as_ptr() as *const Z3_app,
+                patterns.len().try_into().unwrap(),
+                patterns.as_ptr() as *const Z3_pattern,
+                no_patterns.len().try_into().unwrap(),
+                no_patterns.as_ptr() as *const Z3_ast,
+                body.get_z3_ast(),
+            )
+        })
+    }
+}
+
+/// Create a lambda expression.
+///
+/// - `num_decls`: Number of variables to be bound.
+/// - `sorts`: Bound variable sorts.
+/// - `decl_names`: Contains the names that the quantified formula uses for the bound variables.
+/// - `body`: Expression body that contains bound variables of the same sorts as the sorts listed in the array sorts.
+///
+/// # Examples
+/// ```
+/// # use z3::{
+/// #     ast::{lambda_const, Ast as _, Int, Dynamic},
+/// #     Config, Context, Solver, SatResult,
+/// # };
+/// #
+/// # let cfg = Config::new();
+/// # let ctx = Context::new(&cfg);
+/// # let solver = Solver::new(&ctx);
+/// #
+/// let input = Int::fresh_const(&ctx, "");
+/// let lambda = lambda_const(
+///     &ctx,
+///     &[&input],
+///     &Dynamic::from_ast(&Int::add(&ctx, &[&input, &Int::from_i64(&ctx, 2)])),
+/// );
+///
+/// solver.assert(
+///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(&ctx, 3))
+/// );
+///
+/// assert_eq!(solver.check(), SatResult::Sat);
+///
+/// solver.assert(
+///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(&ctx, 2))
+/// );
+///
+/// assert_eq!(solver.check(), SatResult::Unsat);
+/// ```
+pub fn lambda_const<'ctx>(
+    ctx: &'ctx Context,
+    bounds: &[&dyn Ast<'ctx>],
+    body: &Dynamic<'ctx>,
+) -> Array<'ctx> {
+    let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
+
+    unsafe {
+        Ast::wrap(
+            ctx,
+            Z3_mk_lambda_const(
+                ctx.z3_ctx,
+                bounds.len().try_into().unwrap(),
+                bounds.as_ptr() as *const Z3_app,
+                body.get_z3_ast(),
+            ),
+        )
     }
 }
 

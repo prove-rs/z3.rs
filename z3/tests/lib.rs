@@ -2,7 +2,7 @@ use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{Array, Ast, Bool, Int, BV};
+use z3::ast::{atleast, atmost, Array, Ast, Bool, Int, BV};
 use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};
@@ -1920,4 +1920,85 @@ fn test_consequences() {
     assert!(cons.pop().unwrap().to_string() == "(=> (not c) (not b))");
     assert!(cons.pop().unwrap().to_string() == "(=> (not c) (not c))");
     assert!(cons.pop().unwrap().to_string() == "(=> d d)");
+}
+
+#[test]
+fn test_atmost() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let a = Bool::new_const(ctx, "a");
+    let b = Bool::new_const(ctx, "b");
+    let c = Bool::new_const(ctx, "c");
+    let d = Bool::new_const(ctx, "d");
+    solver.assert(&a.implies(&b));
+    solver.assert(&b.implies(&c));
+
+    solver.push();
+    let am = atmost(ctx, [&a, &b, &c, &d], 2);
+    solver.assert(&am);
+    assert!(matches!(solver.check(), SatResult::Sat));
+    solver.pop(1);
+
+    solver.push();
+    solver.assert(&a);
+    let am = atmost(ctx, [&a, &b, &c, &d], 0);
+    solver.assert(&am);
+    assert!(matches!(solver.check(), SatResult::Unsat));
+    solver.pop(1);
+}
+
+#[test]
+fn test_atleast() {
+    let cfg = Config::new();
+    let ctx = &Context::new(&cfg);
+    let solver = Solver::new(ctx);
+    let a = Bool::new_const(ctx, "a");
+    let b = Bool::new_const(ctx, "b");
+    let c = Bool::new_const(ctx, "c");
+    let d = Bool::new_const(ctx, "d");
+    solver.assert(&a.implies(&b));
+    solver.assert(&b.implies(&c));
+
+    solver.push();
+    let am = atleast(ctx, [&a, &b, &c, &d], 4);
+    solver.assert(&am);
+    assert!(matches!(solver.check(), SatResult::Sat));
+    solver.pop(1);
+
+    solver.push();
+    solver.assert(&a.not());
+    let am = atleast(ctx, [&a, &b, &c, &d], 4);
+    solver.assert(&am);
+    assert!(matches!(solver.check(), SatResult::Unsat));
+    solver.pop(1);
+}
+
+#[test]
+fn test_model_iter() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::new_const(&ctx, "a");
+    let two = ast::Int::from_u64(&ctx, 2);
+    solver.assert(&a._eq(&two));
+    solver.check();
+
+    let model = solver.get_model().unwrap();
+
+    // consume a model and return some asts constructed from it
+    // this didn't compile before pr#324
+    fn consume_model(model: Model) -> Vec<ast::Dynamic> {
+        let mut asts = vec![];
+        for func in &model {
+            asts.push(func.apply(&[]));
+        }
+        asts
+    }
+
+    assert_eq!(
+        consume_model(model),
+        vec![ast::Dynamic::new_const(&ctx, "a", &Sort::int(&ctx))]
+    );
 }
