@@ -94,7 +94,7 @@ impl<'ctx> RecFuncDecl<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for RecFuncDecl<'ctx> {
+impl fmt::Display for RecFuncDecl<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx, self.z3_func_decl) };
         if p.is_null() {
@@ -107,13 +107,13 @@ impl<'ctx> fmt::Display for RecFuncDecl<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for RecFuncDecl<'ctx> {
+impl fmt::Debug for RecFuncDecl<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for RecFuncDecl<'ctx> {
+impl Drop for RecFuncDecl<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(

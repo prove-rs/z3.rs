@@ -59,7 +59,7 @@ impl Context {
     }
 }
 
-impl<'ctx> ContextHandle<'ctx> {
+impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
         unsafe {
@@ -68,8 +68,8 @@ impl<'ctx> ContextHandle<'ctx> {
     }
 }
 
-unsafe impl<'ctx> Sync for ContextHandle<'ctx> {}
-unsafe impl<'ctx> Send for ContextHandle<'ctx> {}
+unsafe impl Sync for ContextHandle<'_> {}
+unsafe impl Send for ContextHandle<'_> {}
 
 impl Drop for Context {
     fn drop(&mut self) {

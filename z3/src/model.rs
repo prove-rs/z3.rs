@@ -135,7 +135,7 @@ impl<'ctx> Model<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for Model<'ctx> {
+impl fmt::Display for Model<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_model_to_string(self.ctx.z3_ctx, self.z3_mdl) };
         if p.is_null() {
@@ -148,13 +148,13 @@ impl<'ctx> fmt::Display for Model<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Model<'ctx> {
+impl fmt::Debug for Model<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Model<'ctx> {
+impl Drop for Model<'_> {
     fn drop(&mut self) {
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx, self.z3_mdl) };
     }
@@ -181,7 +181,7 @@ impl<'a, 'ctx> IntoIterator for &'a Model<'ctx> {
     }
 }
 
-impl<'a, 'ctx> Iterator for ModelIter<'a, 'ctx> {
+impl<'ctx> Iterator for ModelIter<'_, 'ctx> {
     type Item = FuncDecl<'ctx>;
 
     fn next(&mut self) -> Option<Self::Item> {

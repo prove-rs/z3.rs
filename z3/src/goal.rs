@@ -5,7 +5,7 @@ use z3_sys::*;
 
 use crate::{ast, ast::Ast, Context, Goal};
 
-impl<'ctx> Clone for Goal<'ctx> {
+impl Clone for Goal<'_> {
     fn clone(&self) -> Self {
         Self {
             ctx: self.ctx,
@@ -109,7 +109,7 @@ impl<'ctx> Goal<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for Goal<'ctx> {
+impl fmt::Display for Goal<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_goal_to_string(self.ctx.z3_ctx, self.z3_goal) };
         if p.is_null() {
@@ -122,13 +122,13 @@ impl<'ctx> fmt::Display for Goal<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Goal<'ctx> {
+impl fmt::Debug for Goal<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Goal<'ctx> {
+impl Drop for Goal<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_goal_dec_ref(self.ctx.z3_ctx, self.z3_goal);

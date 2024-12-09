@@ -274,7 +274,7 @@ impl<'ctx> Optimize<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for Optimize<'ctx> {
+impl fmt::Display for Optimize<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_optimize_to_string(self.ctx.z3_ctx, self.z3_opt) };
         if p.is_null() {
@@ -287,13 +287,13 @@ impl<'ctx> fmt::Display for Optimize<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Optimize<'ctx> {
+impl fmt::Debug for Optimize<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Optimize<'ctx> {
+impl Drop for Optimize<'_> {
     fn drop(&mut self) {
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx, self.z3_opt) };
     }

@@ -400,7 +400,7 @@ impl<'ctx> Solver<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for Solver<'ctx> {
+impl fmt::Display for Solver<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_solver_to_string(self.ctx.z3_ctx, self.z3_slv) };
         if p.is_null() {
@@ -413,13 +413,13 @@ impl<'ctx> fmt::Display for Solver<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Solver<'ctx> {
+impl fmt::Debug for Solver<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Solver<'ctx> {
+impl Drop for Solver<'_> {
     fn drop(&mut self) {
         unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx, self.z3_slv) };
     }

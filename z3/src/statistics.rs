@@ -79,19 +79,19 @@ impl<'ctx> Statistics<'ctx> {
     }
 }
 
-impl<'ctx> Clone for Statistics<'ctx> {
+impl Clone for Statistics<'_> {
     fn clone(&self) -> Self {
         unsafe { Self::wrap(self.ctx, self.z3_stats) }
     }
 }
 
-impl<'ctx> fmt::Display for Statistics<'ctx> {
+impl fmt::Display for Statistics<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "<z3.stats>")
     }
 }
 
-impl<'ctx> fmt::Debug for Statistics<'ctx> {
+impl fmt::Debug for Statistics<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let mut s = f.debug_struct("Statistics");
         for e in self.entries() {
@@ -104,7 +104,7 @@ impl<'ctx> fmt::Debug for Statistics<'ctx> {
     }
 }
 
-impl<'ctx> Drop for Statistics<'ctx> {
+impl Drop for Statistics<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_stats_dec_ref(self.ctx.z3_ctx, self.z3_stats);

@@ -68,7 +68,7 @@ impl<'ctx> FuncInterp<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for FuncInterp<'ctx> {
+impl fmt::Display for FuncInterp<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "[")?;
         self.get_entries().into_iter().try_for_each(|e| {
@@ -95,13 +95,13 @@ impl<'ctx> fmt::Display for FuncInterp<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for FuncInterp<'ctx> {
+impl fmt::Debug for FuncInterp<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for FuncInterp<'ctx> {
+impl Drop for FuncInterp<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_interp_dec_ref(self.ctx.z3_ctx, self.z3_func_interp);

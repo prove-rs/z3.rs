@@ -41,7 +41,7 @@ impl<'ctx> FuncEntry<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Display for FuncEntry<'ctx> {
+impl fmt::Display for FuncEntry<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(f, "[")?;
         self.get_args()
@@ -52,13 +52,13 @@ impl<'ctx> fmt::Display for FuncEntry<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for FuncEntry<'ctx> {
+impl fmt::Debug for FuncEntry<'_> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for FuncEntry<'ctx> {
+impl Drop for FuncEntry<'_> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_entry_dec_ref(self.ctx.z3_ctx, self.z3_func_entry);
