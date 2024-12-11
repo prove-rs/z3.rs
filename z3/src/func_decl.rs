@@ -76,6 +76,26 @@ impl<'ctx> FuncDecl<'ctx> {
         }
     }
 
+    /// Create a constant (if `args` has length 0) or function application (otherwise).
+    ///
+    /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
+    pub fn apply_dynamic(&self, args: &[&ast::Dynamic<'ctx>]) -> ast::Dynamic<'ctx> {
+        assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
+
+        let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
+
+        unsafe {
+            ast::Dynamic::wrap(self.ctx, {
+                Z3_mk_app(
+                    self.ctx.z3_ctx,
+                    self.z3_func_decl,
+                    args.len().try_into().unwrap(),
+                    args.as_ptr(),
+                )
+            })
+        }
+    }
+
     /// Return the `DeclKind` of this `FuncDecl`.
     pub fn kind(&self) -> DeclKind {
         unsafe { Z3_get_decl_kind(self.ctx.z3_ctx, self.z3_func_decl) }
