@@ -1346,6 +1346,34 @@ impl<'ctx> BV<'ctx> {
         Some(unsafe { Self::wrap(ctx, ast) })
     }
 
+    pub fn from_bit_vec(ctx: &'ctx Context, bit_vec: Vec<bool>) -> Option<BV<'ctx>> {
+        let ast = unsafe {
+            let size = bit_vec.len() as u32;
+            let bits = bit_vec.as_ptr();
+
+            let numeral_ptr = Z3_mk_bv_numeral(ctx.z3_ctx, size, bits);
+            if numeral_ptr.is_null() {
+                return None;
+            }
+
+            numeral_ptr
+        };
+        Some(unsafe { Self::wrap(ctx, ast) })
+    }
+
+    pub fn from_byte_vec(ctx: &'ctx Context, byte_vec: Vec<u8>) -> Option<BV<'ctx>> {
+        let mut bit_vec = Vec::with_capacity(byte_vec.len() * 8);
+        for item in byte_vec {
+            for offset in 0..8 {
+                let mask = 1 << offset;
+                let bit = item & mask != 0;
+                bit_vec.push(bit);
+            }
+        }
+
+        Self::from_bit_vec(ctx, bit_vec)
+    }
+
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         unsafe {
