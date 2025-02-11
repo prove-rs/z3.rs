@@ -146,7 +146,9 @@ fn test_float32_ops() {
 
     // Normal
     solver.check_assumptions(&[Float::from_f32(&ctx, 1f32).is_normal()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, f32::MIN_POSITIVE / 2.0).is_normal().not()]);
+    solver.check_assumptions(&[Float::from_f32(&ctx, f32::MIN_POSITIVE / 2.0)
+        .is_normal()
+        .not()]);
 
     // Subnormal
     solver.check_assumptions(&[Float::from_f32(&ctx, f32::MIN_POSITIVE / 2.0).is_subnormal()]);
@@ -183,7 +185,9 @@ fn test_double_ops() {
 
     // Normal
     solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_normal()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0).is_normal().not()]);
+    solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0)
+        .is_normal()
+        .not()]);
 
     // Subnormal
     solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0).is_subnormal()]);
