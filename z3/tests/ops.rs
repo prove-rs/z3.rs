@@ -179,27 +179,60 @@ fn test_double_ops() {
     let solver = Solver::new(&ctx);
 
     // Infinite
-    solver.check_assumptions(&[Float::from_f64(&ctx, f64::INFINITY).is_infinite()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, f64::NEG_INFINITY).is_infinite()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, 0f64).is_infinite().not()]);
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, f64::INFINITY).is_infinite()]),
+        SatResult::Sat
+    );
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, f64::NEG_INFINITY).is_infinite()]),
+        SatResult::Sat
+    );
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, 0f64).is_infinite().not()]),
+        SatResult::Sat
+    );
 
     // Normal
-    solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_normal()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0)
-        .is_normal()
-        .not()]);
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_normal()]),
+        SatResult::Sat
+    );
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0)
+            .is_normal()
+            .not()]),
+        SatResult::Sat
+    );
 
     // Subnormal
-    solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0).is_subnormal()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_subnormal().not()]);
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0).is_subnormal()]),
+        SatResult::Sat
+    );
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_subnormal().not()]),
+        SatResult::Sat
+    );
 
     // Zero
-    solver.check_assumptions(&[Float::from_f64(&ctx, 0f64).is_zero()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_zero().not()]);
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, 0f64).is_zero()]),
+        SatResult::Sat
+    );
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_zero().not()]),
+        SatResult::Sat
+    );
 
     // NaN
-    solver.check_assumptions(&[Float::from_f64(&ctx, f64::NAN).is_nan()]);
-    solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_nan().not()]);
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, f64::NAN).is_nan()]),
+        SatResult::Sat
+    );
+    assert_eq!(
+        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_nan().not()]),
+        SatResult::Sat
+    );
 }
 
 #[test]
