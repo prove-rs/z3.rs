@@ -84,7 +84,14 @@ impl<'ctx> Tactic<'ctx> {
     /// - [`Tactic::list_all()`]
     pub fn new(ctx: &'ctx Context, name: &str) -> Tactic<'ctx> {
         let tactic_name = CString::new(name).unwrap();
-        unsafe { Self::wrap(ctx, Z3_mk_tactic(ctx.z3_ctx, tactic_name.as_ptr())) }
+	
+        unsafe {
+	    let tactic = Z3_mk_tactic(ctx.z3_ctx, tactic_name.as_ptr());
+	    if tactic.is_null() {
+		panic!("{} is an invalid tactic",name);
+	    } else {
+		Self::wrap(ctx, tactic)}
+	}
     }
 
     /// Return a tactic that just return the given goal.
