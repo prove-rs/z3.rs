@@ -68,9 +68,8 @@ pub struct Config {
 /// - [`Config`]
 /// - [`Context::new()`]
 #[derive(PartialEq, Eq, Debug)]
-#[repr(transparent)]
 pub struct Context {
-    z3_ctx: Z3_context,
+    pub z3_ctx: Z3_context,
 }
 
 /// Handle that can be used to interrupt a computation from another thread.
