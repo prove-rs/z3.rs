@@ -1567,38 +1567,38 @@ pub type Z3_push_eh = ::std::option::Option<
 >;
 pub type Z3_pop_eh = ::std::option::Option<
     unsafe extern "C" fn(
-        cyx: *mut ::std::ffi::c_void,
-        cd: Z3_solver_callback,
+        ctx: *mut ::std::ffi::c_void,
+        cb: Z3_solver_callback,
         num_scopes: ::std::ffi::c_uint,
     ),
 >;
 pub type Z3_fresh_eh = ::std::option::Option<
     unsafe extern "C" fn(
-        cyx: *mut ::std::ffi::c_void,
+        ctx: *mut ::std::ffi::c_void,
         new_context: Z3_context,
     ) -> *mut ::std::ffi::c_void,
 >;
 pub type Z3_fixed_eh = ::std::option::Option<
     unsafe extern "C" fn(
-        cyx: *mut ::std::ffi::c_void,
-        cd: Z3_solver_callback,
+        ctx: *mut ::std::ffi::c_void,
+        cb: Z3_solver_callback,
         t: Z3_ast,
         value: Z3_ast,
     ),
 >;
 pub type Z3_eq_eh = ::std::option::Option<
     unsafe extern "C" fn(
-        cyx: *mut ::std::ffi::c_void,
-        cd: Z3_solver_callback,
+        ctx: *mut ::std::ffi::c_void,
+        cb: Z3_solver_callback,
         s: Z3_ast,
         t: Z3_ast,
     ),
 >;
 pub type Z3_final_eh = ::std::option::Option<
-    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cd: Z3_solver_callback),
+    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cb: Z3_solver_callback),
 >;
 pub type Z3_created_eh = ::std::option::Option<
-    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cd: Z3_solver_callback, t: Z3_ast),
+    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cb: Z3_solver_callback, t: Z3_ast),
 >;
 pub type Z3_decide_eh = ::std::option::Option<
     unsafe extern "C" fn(
@@ -8153,7 +8153,7 @@ extern "C" {
     /// register a callback when a new expression with a registered function is
     /// used by the solver The registered function appears at the top level and
     /// is created using [Z3_solver_propagate_declare]. 
-    pub fn Z3_solver_propagete_created(
+    pub fn Z3_solver_propagate_created(
         c: Z3_context,
         s: Z3_solver,
         created_eh: Z3_created_eh
@@ -8180,13 +8180,13 @@ extern "C" {
     pub fn Z3_solver_propagate_declare(
         c: Z3_context,
         name: Z3_symbol,
-        n: ::std::ffi::c_uint,
+        n: ::std::os::raw::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort
     ) -> Z3_func_decl;
 
     /// register a callback on expression dis-equalities. 
-    pub fn Z3_solver_propaget_diseq(
+    pub fn Z3_solver_propagate_diseq(
         c: Z3_context,
         s: Z3_solver,
         eq_eh: Z3_eq_eh
