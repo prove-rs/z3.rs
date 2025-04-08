@@ -2,7 +2,7 @@
 
 // I am following quite closly this: https://z3prover.github.io/api/html/classz3_1_1user__propagator__base.html
 
-use std::{convert::TryInto, fmt::Debug, pin::Pin, ptr::NonNull, rc::Rc, usize};
+use std::{convert::TryInto, fmt::Debug, pin::Pin, ptr::NonNull, usize};
 
 use crate::{
     ast::{self, Ast, Dynamic},
@@ -11,23 +11,51 @@ use crate::{
 use log::debug;
 use z3_sys::*;
 
-#[allow(unused_variables)] // default implementation is a no-op, but variable names are usefull for documentation
+/// Interface to build a custom [User
+/// Propagator](https://microsoft.github.io/z3guide/programming/Example%20Programs/User%20Propagator/)
+///
+/// All function fowllow their C++ counterparts in the
+/// [`user_propagator_base`](https://z3prover.github.io/api/html/classz3_1_1user__propagator__base.html).
+/// Callbacks can be made though the `upw` paramter. Those callbacks my panic if
+/// called from a wrong place.
+///
+/// By default all function are implemented and do nothing
+#[allow(unused_variables)]
 pub trait UserPropagator<'ctx>: Debug {
-    fn push(&self, upw: &UPHandle<'ctx>) {}
-    fn pop(&self, upw: &UPHandle<'ctx>, num_scopes: u32) {}
-    fn fixed(&self, upw: &UPHandle<'ctx>, id: &Dynamic<'ctx>, e: &Dynamic<'ctx>) {}
-    fn eq(&self, upw: &UPHandle<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
-    fn neq(&self, upw: &UPHandle<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
+    /// Called when z3 case splits
+    fn push(&self, upw: &UPHandle<'ctx, '_>) {}
+    /// Called when z3 backtracks `num_scopes` times
+    fn pop(&self, upw: &UPHandle<'ctx, '_>, num_scopes: u32) {}
+    /// Called when `id` is fixed to value `e`
+    fn fixed(&self, upw: &UPHandle<'ctx, '_>, id: &Dynamic<'ctx>, e: &Dynamic<'ctx>) {}
+    /// Called when `x` and `y` are equated.
+    ///
+    /// This can be somewhat unreliable as z3 may call this less time than you'd
+    /// expect.
+    ///
+    /// See:
+    /// https://microsoft.github.io/z3guide/programming/Example%20Programs/User%20Propagator/#equality-callbacks
+    fn eq(&self, upw: &UPHandle<'ctx, '_>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
+    /// Same as [eq] be on negated equalities
+    fn neq(&self, upw: &UPHandle<'ctx, '_>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
 
     /// During the final check stage, all propagations have been processed. This
     /// is an opportunity for the user-propagator to delay some analysis that
     /// could be expensive to perform incrementally. It is also an opportunity
     /// for the propagator to implement branch and bound optimization.
-    fn final_(&self, upw: &UPHandle<'ctx>) {}
-    fn created(&self, upw: &UPHandle<'ctx>, e: &Dynamic<'ctx>) {}
-    fn decide(&self, upw: &UPHandle<'ctx>, val: &Dynamic<'ctx>, bit: u32, is_pos: bool) {}
+    fn final_(&self, upw: &UPHandle<'ctx, '_>) {}
+    /// `e` was created using one of the function declared with
+    /// [declare_up_function].
+    ///
+    /// Remeber to register those expressions! (using [UPHandle::add] or
+    /// [UPSolver::add] depending on the calling location)
+    ///
+    /// **NB**: there is no way to declare a function for specific
+    /// [UserPropagator].
+    fn created(&self, upw: &UPHandle<'ctx, '_>, e: &Dynamic<'ctx>) {}
+    fn decide(&self, upw: &UPHandle<'ctx, '_>, val: &Dynamic<'ctx>, bit: u32, is_pos: bool) {}
 
-    // /// `self` is responsible for garbage collecting the sub-solver
+    // TODO: figure out how to make fresh work
     // fn fresh<'a>(
     //     upw: &'a UserPropagatorWrapper<'ctx>,
     //     ctx: &'a Context,
@@ -36,6 +64,7 @@ pub trait UserPropagator<'ctx>: Debug {
     // }
 }
 
+/// see [`user_propagator_base::scoped_cb`](https://z3prover.github.io/api/html/z3_09_09_8h_source.html#l04310)
 #[derive(Debug)]
 struct CallBackTracker {
     /// can be null
@@ -68,12 +97,12 @@ impl CallBackTracker {
 }
 
 #[derive(Debug)]
-pub struct UPSolver<'ctx> {
+pub struct UPSolver<'ctx, 'a> {
     solver: Solver<'ctx>,
-    handles: Vec<Pin<Box<UPHandle<'ctx>>>>,
+    handles: Vec<Pin<Box<UPHandle<'ctx, 'a>>>>,
 }
 
-impl<'ctx> std::ops::Deref for UPSolver<'ctx> {
+impl<'ctx, 'a> std::ops::Deref for UPSolver<'ctx, 'a> {
     type Target = Solver<'ctx>;
 
     fn deref(&self) -> &Self::Target {
@@ -81,7 +110,7 @@ impl<'ctx> std::ops::Deref for UPSolver<'ctx> {
     }
 }
 
-impl<'ctx> UPSolver<'ctx> {
+impl<'ctx, 'a> UPSolver<'ctx, 'a> {
     pub fn new(solver: Solver<'ctx>) -> Self {
         Self {
             solver,
@@ -99,7 +128,7 @@ impl<'ctx> UPSolver<'ctx> {
         unsafe { Z3_solver_propagate_register(z3_ctx, z3_slv, expr.get_z3_ast()) }
     }
 
-    pub fn register_up<U: UserPropagator<'ctx> + 'ctx>(&mut self, up: U) -> usize {
+    pub fn register_up<U: UserPropagator<'ctx>>(&mut self, up: &'a U) -> usize {
         let up_handle = UPHandle::new(up, self.solver());
         let i = self.handles.len();
         self.handles.push(up_handle);
@@ -115,19 +144,28 @@ impl<'ctx> UPSolver<'ctx> {
     }
 }
 
-impl<'ctx> UPSolver<'ctx> {}
-
+/// This is the handle passed around to z3.
+///
+/// It abstracts away the boiler plate state tracking that must be made. This is basically [`user_propagator_base`](https://z3prover.github.io/api/html/classz3_1_1user__propagator__base.html).
+///
+/// A few intersting points:
+/// - `'ctx` is the liftime of the [Context], `'a` is the lifetime of the [UserPropagator]
+/// - it registers **all** callbacks (by default they are no-ops)
+/// - it can only be created through a [UPSolver] (because of liftime constrains)
+/// - all callbacks to z3 are to be made through it you implementation of [UserPropagator]
 #[derive(Debug)]
-pub struct UPHandle<'s> {
-    inner: Box<dyn UserPropagator<'s> + 's>,
-    ctx: &'s Context,
+pub struct UPHandle<'ctx, 'a> {
+    /// using dynamic dyspach because I need to store the handles in [UPSolver]
+    inner: &'a dyn UserPropagator<'ctx>,
+    ctx: &'ctx Context,
     cb: CallBackTracker,
 }
 
-impl<'s> UPHandle<'s> {
-    fn new(up: impl UserPropagator<'s> + 's, solver: &Solver<'s>) -> Pin<Box<Self>> {
+impl<'ctx, 'a> UPHandle<'ctx, 'a> {
+    /// Builds a new [UPHandle]
+    pub(crate) fn new(up: &'a impl UserPropagator<'ctx>, solver: &Solver<'ctx>) -> Pin<Box<Self>> {
         let upw = Box::pin(Self {
-            inner: Box::new(up),
+            inner: up,
             ctx: solver.get_context(),
             // subcontexts: vec![],
             cb: Default::default(),
@@ -136,7 +174,7 @@ impl<'s> UPHandle<'s> {
         upw
     }
 
-    fn init_z3(&self, solver: &Solver<'s>) {
+    fn init_z3(&self, solver: &Solver<'ctx>) {
         let z3_slv = solver.z3_slv;
         unsafe {
             debug!("Z3_solver_propagate_init");
@@ -149,7 +187,7 @@ impl<'s> UPHandle<'s> {
                 Some(Self::fresh_eh),
             );
         }
-        // we register all callbacks. They do nothing by default
+        // we register all callbacks
         unsafe {
             // fixed
             debug!("Z3_solver_propagate_fixed");
@@ -202,24 +240,12 @@ impl<'s> UPHandle<'s> {
         });
     }
 
+    // TODO: figure out how to make this work
     #[allow(unused_variables)]
     extern "C" fn fresh_eh(
         ctx: *mut ::std::ffi::c_void,
         new_context: Z3_context,
     ) -> *mut ::std::ffi::c_void {
-        // debug!("fresh_eh");
-        // let mself = unsafe { Self::mut_from_user_context(ctx) }; // `ctx` should be a pointer to us
-        // Vec::push(
-        //     &mut mself.subcontexts,
-        //     Context {
-        //         z3_ctx: new_context,
-        //     },
-        // );
-        // let sub_ctx = mself.subcontexts.last().unwrap();
-        // let sub_up = U::fresh(mself, sub_ctx)
-        //     .map(|up| up.get_user_context())
-        //     .unwrap_or(::std::ptr::null_mut());
-        // sub_up
         ::std::ptr::null_mut()
     }
 
@@ -272,7 +298,6 @@ impl<'s> UPHandle<'s> {
         unsafe { Self::mut_from_user_context(ctx) }.scoped_do(cb, |upw| {
             upw.inner().created(upw, &upw.mk_dynamic(e));
         });
-        debug!("exit created")
     }
 
     extern "C" fn decide_eh(
@@ -293,9 +318,12 @@ impl<'s> UPHandle<'s> {
         self.context().z3_ctx
     }
 
+    /// Wraps code to keep track of the current [Z3_solver_callback].
+    ///
+    /// Ideally the user calls the z3 functions from within `f`.
     fn scoped_do<F, V>(&mut self, cb: Z3_solver_callback, f: F) -> V
     where
-        F: for<'a> FnOnce(&'a mut Self) -> V,
+        F: for<'b> FnOnce(&'b mut Self) -> V,
     {
         self.cb.incr(cb);
         let ret = f(self);
@@ -303,14 +331,12 @@ impl<'s> UPHandle<'s> {
         ret
     }
 
-    fn mk_dynamic(&self, z3_ast: Z3_ast) -> Dynamic<'s> {
+    fn mk_dynamic(&self, z3_ast: Z3_ast) -> Dynamic<'ctx> {
         unsafe { Dynamic::wrap(self.context(), z3_ast) }
     }
 
-    fn get_user_context(&self) -> *mut ::std::ffi::c_void {
-        self as *const _ as *mut ::std::ffi::c_void
-    }
-
+    /// dump `ptr` as hex assuming it has the layout of a [Self]. Usefull for debugging
+    #[allow(dead_code)]
     unsafe fn dump_self(ptr: *mut Self) {
         dbg!(ptr);
         let l = std::alloc::Layout::new::<Self>();
@@ -324,7 +350,15 @@ impl<'s> UPHandle<'s> {
         println!("  done")
     }
 
-    unsafe fn mut_from_user_context<'a>(ptr: *mut ::std::ffi::c_void) -> &'a mut Self {
+    /// Turns `self` into a `void*` for FFI
+    fn get_user_context(&self) -> *mut ::std::ffi::c_void {
+        self as *const _ as *mut ::std::ffi::c_void
+    }
+
+    /// Turns a `void*` into a `&mut Self`.
+    ///
+    /// This is highly unsafe! It panics if the pointer is `null`, no other checks are made!
+    unsafe fn mut_from_user_context<'b>(ptr: *mut ::std::ffi::c_void) -> &'b mut Self {
         (ptr as *mut Self).as_mut().unwrap()
     }
 
@@ -339,12 +373,12 @@ impl<'s> UPHandle<'s> {
 
     // public API
 
-    pub fn context(&self) -> &'s Context {
+    pub fn context(&self) -> &'ctx Context {
         &self.ctx
     }
 
-    fn inner(&self) -> &dyn UserPropagator<'s> {
-        self.inner.as_ref()
+    fn inner(&self) -> &'a dyn UserPropagator<'ctx> {
+        self.inner
     }
 
     /// Sets the next (registered) expression to split on. The function returns
@@ -357,7 +391,7 @@ impl<'s> UPHandle<'s> {
     /// panics if not called from a callback
     ///
     /// see [Z3_solver_next_split]
-    pub fn next_split(&self, expr: &ast::Bool<'s>, idx: u32, phase: Option<bool>) -> bool {
+    pub fn next_split(&self, expr: &ast::Bool<'ctx>, idx: u32, phase: Option<bool>) -> bool {
         let cb = self.get_cb().expect("you're not in a callback!");
         let phase = match phase {
             Some(true) => Z3_L_TRUE,
@@ -381,7 +415,7 @@ impl<'s> UPHandle<'s> {
     /// equalities that have been registered during a callback.
     ///
     /// see [Z3_solver_propagate_register_cb] and [Z3_solver_propagate_register]
-    pub fn add(&self, expr: &impl Ast<'s>) {
+    pub fn add(&self, expr: &impl Ast<'ctx>) {
         let cb = self
             .get_cb()
             .expect("you're not in a callback! Maybe you mean `UPSolver::add`");
@@ -418,17 +452,17 @@ impl<'s> UPHandle<'s> {
     /// length.
     ///
     /// see [Z3_solver_propagate_consequence]
-    pub fn propagate<'a, I, J, A>(
-        &'a self,
+    pub fn propagate<'b, I, J, A>(
+        &'b self,
         fixed: I,
         lhs: J,
         rhs: J,
-        conseq: &'a ast::Bool<'s>,
+        conseq: &'b ast::Bool<'ctx>,
     ) -> bool
     where
-        I: IntoIterator<Item = &'a ast::Bool<'s>>,
-        J: IntoIterator<Item = &'a A>,
-        A: Ast<'s> + 'a,
+        I: IntoIterator<Item = &'b ast::Bool<'ctx>>,
+        J: IntoIterator<Item = &'b A>,
+        A: Ast<'ctx> + 'b,
     {
         /* using generics because I need to map on the arguments anyway and it will turn
         the other functions defined from `propagate` into the same things as the C++
@@ -469,8 +503,8 @@ impl<'s> UPHandle<'s> {
     /// Equivalent to [`self.propagate(fixed, [] , [], FALSE)`](Self::propagate)
     ///
     /// panics if not called from a callback.
-    pub fn conflict_on(&self, fixed: &[&ast::Bool<'s>]) -> bool {
-        self.propagate::<_, _, ast::Bool<'s>>(
+    pub fn conflict_on(&self, fixed: &[&ast::Bool<'ctx>]) -> bool {
+        self.propagate::<_, _, ast::Bool<'ctx>>(
             fixed.iter().copied(),
             [],
             [],
@@ -486,9 +520,9 @@ impl<'s> UPHandle<'s> {
     /// length.
     pub fn conflict(
         &self,
-        fixed: &[&ast::Bool<'s>],
-        lhs: &[&ast::Dynamic<'s>],
-        rhs: &[&ast::Dynamic<'s>],
+        fixed: &[&ast::Bool<'ctx>],
+        lhs: &[&ast::Dynamic<'ctx>],
+        rhs: &[&ast::Dynamic<'ctx>],
     ) -> bool {
         self.propagate(
             fixed.iter().copied(),
@@ -503,18 +537,18 @@ impl<'s> UPHandle<'s> {
     /// Equivalent to [`self.propagate(fixed, [], [], conseq)`](Self::propagate)
     ///
     /// panics if not called from a callback.
-    pub fn propagate_one(&self, fixed: &[&ast::Bool<'s>], conseq: &ast::Bool<'s>) -> bool {
+    pub fn propagate_one(&self, fixed: &[&ast::Bool<'ctx>], conseq: &ast::Bool<'ctx>) -> bool {
         self.propagate::<_, _, ast::Bool>(fixed.iter().copied(), [], [], conseq)
     }
 }
 
 /// Declare a function to be propagated to all the [UserPropagator]s
-pub fn declare_up_function<'s, S: Into<Symbol>>(
-    ctx: &'s Context,
+pub fn declare_up_function<'ctx, S: Into<Symbol>>(
+    ctx: &'ctx Context,
     name: S,
-    domain: &[&Sort<'s>],
-    range: &Sort<'s>,
-) -> FuncDecl<'s> {
+    domain: &[&Sort<'ctx>],
+    range: &Sort<'ctx>,
+) -> FuncDecl<'ctx> {
     assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
     assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
 
@@ -538,10 +572,8 @@ pub fn declare_up_function<'s, S: Into<Symbol>>(
 mod test {
     use std::convert::TryInto;
 
-    use log::debug;
-
     use crate::{
-        ast::{self, Ast, Bool, Dynamic},
+        ast::{self, Ast, Dynamic},
         user_propagator::{declare_up_function, UPHandle, UPSolver, UserPropagator},
         Config, Context, FuncDecl, SatResult, Solver, Sort,
     };
@@ -578,7 +610,7 @@ mod test {
         }
 
         impl<'ctx> UserPropagator<'ctx> for UP<'ctx> {
-            fn eq(&self, upw: &UPHandle<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
+            fn eq(&self, upw: &UPHandle<'ctx, '_>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
                 println!("eq: {x} = {y}");
                 for e in [x, y] {
                     let Some(nt) = self.gen_nt(e) else {
@@ -588,7 +620,7 @@ mod test {
                 }
             }
 
-            fn neq(&self, upw: &UPHandle<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
+            fn neq(&self, upw: &UPHandle<'ctx, '_>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
                 println!("neq: {x} != {y}");
                 for e in [x, y] {
                     let Some(nt) = self.gen_nt(e) else {
@@ -598,35 +630,45 @@ mod test {
                 }
             }
 
-            fn created(&self, _: &UPHandle<'ctx>, e: &ast::Dynamic<'ctx>) {
+            fn created(&self, _: &UPHandle<'ctx, '_>, e: &ast::Dynamic<'ctx>) {
                 println!("created: {e}")
             }
 
-            fn pop(&self, _: &UPHandle<'ctx>, num_scopes: u32) {
+            fn pop(&self, _: &UPHandle<'ctx, '_>, num_scopes: u32) {
                 println!("pop: {num_scopes:}")
             }
 
-            fn push(&self, _: &UPHandle<'ctx>) {
+            fn push(&self, _: &UPHandle<'ctx, '_>) {
                 println!("push")
             }
 
-            fn decide(&self, _: &UPHandle<'ctx>, val: &ast::Dynamic<'ctx>, bit: u32, is_pos: bool) {
+            fn decide(
+                &self,
+                _: &UPHandle<'ctx, '_>,
+                val: &ast::Dynamic<'ctx>,
+                bit: u32,
+                is_pos: bool,
+            ) {
                 println!("decide: {val}, {bit:} {is_pos}")
             }
 
-            fn fixed(&self, _: &UPHandle<'ctx>, id: &ast::Dynamic<'ctx>, e: &ast::Dynamic<'ctx>) {
+            fn fixed(
+                &self,
+                _: &UPHandle<'ctx, '_>,
+                id: &ast::Dynamic<'ctx>,
+                e: &ast::Dynamic<'ctx>,
+            ) {
                 println!("fixed: {id} {e}")
             }
 
-            fn final_(&self, _: &UPHandle<'ctx>) {
+            fn final_(&self, _: &UPHandle<'ctx, '_>) {
                 println!("final")
             }
         }
 
-        // let u = UPHandle::new(UP { f: &f }, s);
-        // let s = u.solver();
         let mut s = UPSolver::new(s);
-        s.register_up(UP { f: &f });
+        let up = UP { f: &f };
+        s.register_up(&up);
         s.assert(
             &f.apply(&[&f.apply(&[&f.apply(&[&f.apply(&[&x])])])])
                 ._eq(&f.apply(&[&x]))

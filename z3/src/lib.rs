@@ -7,7 +7,6 @@
 #![deny(missing_debug_implementations)]
 
 use std::ffi::CString;
-use user_propagator::UPHandle;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
@@ -31,8 +30,8 @@ mod sort;
 mod statistics;
 mod symbol;
 mod tactic;
-mod version;
 pub mod user_propagator;
+mod version;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
