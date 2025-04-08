@@ -1611,7 +1611,7 @@ pub type Z3_decide_eh = ::std::option::Option<
 >;
 pub type Z3_on_clause_eh = ::std::option::Option<
     unsafe extern "C" fn(
-        cyx: *mut ::std::ffi::c_void,
+        ctx: *mut ::std::ffi::c_void,
         proof_hint: Z3_ast,
         n: ::std::ffi::c_uint,
         deps: *const ::std::ffi::c_uint,
