@@ -8130,7 +8130,7 @@ extern "C" {
     /// - `c`: context
     /// - `solver_cb`: solver callback
     /// - `num_ids`: number of fixed terms used as premise to propagation
-    /// - `ids`: array of length num_ids containing terms that are fixed in the current scope
+    /// - `ids`: array of length `num_ids` containing terms that are fixed in the current scope
     /// - `num_eqs`: number of equalities used as premise to propagation
     /// - `lhs`: left side of equalities
     /// - `rhs`: right side of equalities
@@ -8152,22 +8152,22 @@ extern "C" {
 
     /// register a callback when a new expression with a registered function is
     /// used by the solver The registered function appears at the top level and
-    /// is created using [Z3_solver_propagate_declare].
+    /// is created using [`Z3_solver_propagate_declare`].
     pub fn Z3_solver_propagate_created(c: Z3_context, s: Z3_solver, created_eh: Z3_created_eh);
 
     /// register a callback when the solver decides to split on a registered
     /// expression. The callback may change the arguments by providing other
-    /// values by calling [Z3_solver_next_split].
+    /// values by calling [`Z3_solver_next_split`].
     pub fn Z3_solver_propagate_decide(c: Z3_context, s: Z3_solver, decide_eh: Z3_decide_eh);
 
     /// Create uninterpreted function declaration for the user propagator. When
     /// expressions using the function are created by the solver invoke a
-    /// callback to [Z3_solver_propagate_created] with arguments
+    /// callback to [`Z3_solver_propagate_created`] with arguments
     ///
     /// 1. context and callback solve
-    /// 2. declared_expr: expression using function that was used as the
+    /// 2. `declared_expr`: expression using function that was used as the
     ///    top-level symbol
-    /// 3. declared_id: a unique identifier (unique within the current scope) to
+    /// 3. `declared_id`: a unique identifier (unique within the current scope) to
     ///    track the expression.
     pub fn Z3_solver_propagate_declare(
         c: Z3_context,
@@ -8188,10 +8188,10 @@ extern "C" {
     /// final check is invoked when all decision variables have been assigned by
     /// the solver.
     ///
-    /// The final_eh callback takes as argument the original user_context that
-    /// was used when calling [Z3_solver_propagate_init], and it takes a callback
-    /// context with the opaque type [Z3_solver_callback]. The callback context is
-    /// passed as argument to invoke the [Z3_solver_propagate_consequence]
+    /// The `final_eh` callback takes as argument the origina`user_context`xt that
+    /// was used when calling [`Z3_solver_propagate_init`], and it takes a callback
+    /// context with the opaque type [`Z3_solver_callback`]. The callback context is
+    /// passed as argument to invoke the [`Z3_solver_propagate_consequence`]
     /// function. The callback context can only be accessed (for propagation and
     /// for dynamically registering expressions) within a callback. If the
     /// callback context gets used for propagation or conflicts, those
@@ -8214,7 +8214,7 @@ extern "C" {
     /// - `push_eh`: a callback invoked when scopes are pushed
     /// - `pop_eh`: a callback invoked when scopes are popped
     /// - `fresh_eh`: a solver may spawn new solvers internally. This callback
-    ///   is used to produce a fresh user_context to be associated with fresh
+    ///   is used to produce a fresh `user_context` to be associated with fresh
     ///   solvers.
     pub fn Z3_solver_propagate_init(
         c: Z3_context,
@@ -8231,7 +8231,7 @@ extern "C" {
 
     /// register an expression to propagate on with the solver. Only expressions
     /// of type Bool and type Bit-Vector can be registered for propagation.
-    /// Unlike [Z3_solver_propagate_register], this function takes a solver
+    /// Unlike [`Z3_solver_propagate_register`], this function takes a solver
     /// callback context as argument. It can be invoked during a callback to
     /// register new expressions.
     pub fn Z3_solver_propagate_register_cb(c: Z3_context, cb: Z3_solver_callback, e: Z3_ast);

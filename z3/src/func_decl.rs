@@ -37,9 +37,9 @@ impl<'ctx> FuncDecl<'ctx> {
         }
     }
 
-    /// [Self::new] but register it for the [UserPropagator]s
+    /// [`Self::new`] but register it for the [`UserPropagator`]s
     ///
-    /// see [user_propagator]
+    /// see [`user_propagator`]
     ///
     /// [user_propagator]: super::user_propagator
     /// [UserPropagator]: super::user_propagator::UserPropagator
