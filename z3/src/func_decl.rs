@@ -37,6 +37,37 @@ impl<'ctx> FuncDecl<'ctx> {
         }
     }
 
+    /// [Self::new] but register it for the [UserPropagator]s
+    ///
+    /// see [user_propagator]
+    ///
+    /// [user_propagator]: super::user_propagator
+    /// [UserPropagator]: super::user_propagator::UserPropagator
+    pub fn new_up<S: Into<Symbol>>(
+        ctx: &'ctx Context,
+        name: S,
+        domain: &[&Sort<'ctx>],
+        range: &Sort<'ctx>,
+    ) -> Self {
+        assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
+        assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
+
+        let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
+
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_solver_propagate_declare(
+                    ctx.z3_ctx,
+                    name.into().as_z3_symbol(ctx),
+                    domain.len().try_into().unwrap(),
+                    domain.as_ptr(),
+                    range.z3_sort,
+                ),
+            )
+        }
+    }
+
     /// Return the number of arguments of a function declaration.
     ///
     /// If the function declaration is a constant, then the arity is `0`.

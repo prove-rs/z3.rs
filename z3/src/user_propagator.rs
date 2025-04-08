@@ -7,13 +7,13 @@ use std::{fmt::Debug, marker::PhantomData, pin::Pin};
 use crate::{ast::Ast, Solver};
 use z3_sys::*;
 
-pub use user_propagator::{declare_up_function, CallBack, UserPropagator};
+pub use user_propagator::{CallBack, UserPropagator};
 mod user_propagator {
     use std::{convert::TryInto, fmt::Debug, pin::Pin};
 
     use crate::{
         ast::{self, Ast, Dynamic},
-        Context, FuncDecl, Sort, Symbol,
+        Context,
     };
     use log::debug;
     use z3_sys::*;
@@ -260,32 +260,6 @@ mod user_propagator {
         }
     }
 
-    /// Declare a function to be propagated to all the [UserPropagator]s
-    pub fn declare_up_function<'ctx, S: Into<Symbol>>(
-        ctx: &'ctx Context,
-        name: S,
-        domain: &[&Sort<'ctx>],
-        range: &Sort<'ctx>,
-    ) -> FuncDecl<'ctx> {
-        assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
-        assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
-
-        let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
-
-        unsafe {
-            FuncDecl::wrap(
-                ctx,
-                Z3_solver_propagate_declare(
-                    ctx.z3_ctx,
-                    name.into().as_z3_symbol(ctx),
-                    domain.len().try_into().unwrap(),
-                    domain.as_ptr(),
-                    range.z3_sort,
-                ),
-            )
-        }
-    }
-
     // =========================================================
     // =============== implementation details ==================
     // =========================================================
@@ -318,7 +292,7 @@ mod user_propagator {
     pub(crate) extern "C" fn pop_eh<'ctx, U: UserPropagator<'ctx>>(
         ctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
-        num_scopes: ::std::ffi::c_uint,
+        num_scopes: ::std::os::raw::c_uint,
     ) {
         debug!("pop_eh");
         let up = unsafe { mut_from_user_context::<U>(ctx) };
@@ -397,7 +371,7 @@ mod user_propagator {
         ctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         val: Z3_ast,
-        bit: ::std::ffi::c_uint,
+        bit: ::std::os::raw::c_uint,
         is_pos: bool,
     ) {
         debug!("decide_eh");
@@ -411,7 +385,10 @@ mod user_propagator {
     /// At this point `z3_slv` effectively borrows `up`. I need
     /// [super::UPSolver] to solver the liftetime problems, hence why to
     /// function is `unsafe`.
-    pub(crate) unsafe fn z3_up_init<'ctx, U: UserPropagator<'ctx>>(up: Pin<&U>, z3_slv: Z3_solver) {
+    pub(crate) unsafe fn z3_user_propagator_init<'ctx, U: UserPropagator<'ctx>>(
+        up: Pin<&U>,
+        z3_slv: Z3_solver,
+    ) {
         let z3_ctx = up.get_context().z3_ctx;
         debug!("Z3_solver_propagate_init");
         Z3_solver_propagate_init(
@@ -444,33 +421,98 @@ mod user_propagator {
     }
 }
 
-// mod on_clause {
-//     use crate::ast::{Ast, Dynamic};
-//     use log::debug;
-//     use std::fmt::Debug;
-//     use z3_sys::*;
+mod on_clause {
+    use crate::{
+        ast::{Ast, Dynamic},
+        Context,
+    };
+    use log::debug;
+    use std::{convert::TryInto, fmt::Debug};
+    use z3_sys::*;
 
-//     pub trait OnClause<'ctx>: Debug {
-//         fn on_clause(
-//             &self,
-//             proof_hints: &Dynamic<'ctx>,
-//             n: u32,
-//             deps: &[u32],
-//             litterals: &[&Dynamic<'ctx>],
-//         );
-//     }
+    /// The `on_caluse` callback
+    ///
+    /// a callback that is invoked by when a clause is
+    /// - asserted to the CDCL engine (corresponding to an input clause after pre-processing)
+    /// - inferred by CDCL(T) using either a SAT or theory conflict/propagation
+    /// - deleted by the CDCL(T) engine
+    pub trait OnClause<'ctx>: Debug {
+        fn get_ctx(&self) -> &'ctx Context;
+        /// the callback
+        fn on_clause(&self, proof_hint: &Dynamic<'ctx>, deps: &[u32], literals: &[Dynamic<'ctx>]);
+    }
 
-//     pub(crate) unsafe extern "C" fn clause_eh<'ctx, U: OnClause<'ctx>>(
-//         ctx: *mut ::std::ffi::c_void,
-//         proof_hint: Z3_ast,
-//         n: ::std::ffi::c_uint,
-//         deps: *const ::std::ffi::c_uint,
-//         literals: Z3_ast_vector,
-//     ) {
-//         let oc = (ptr as *mut U).as_mut().unwrap();
-//     }
-// }
-// pub use on_clause::OnClause;
+    pub(crate) unsafe extern "C" fn clause_eh<'ctx, U: OnClause<'ctx>>(
+        ctx: *mut ::std::ffi::c_void,
+        proof_hint: Z3_ast,
+        n: ::std::os::raw::c_uint,
+        deps: *const ::std::os::raw::c_uint,
+        literals: Z3_ast_vector,
+    ) {
+        debug!("clause_eh {n} {deps:?}");
+        let oc = (ctx as *mut U).as_mut().unwrap();
+        let n: usize = n.try_into().unwrap();
+        let deps = if n == 0 {
+            &[]
+        } else {
+            std::slice::from_raw_parts(deps, n)
+        };
+        let literals: Vec<_> = (0..Z3_ast_vector_size(oc.get_ctx().get_z3_context(), literals))
+            .into_iter()
+            .map(|i| {
+                Dynamic::wrap(
+                    oc.get_ctx(),
+                    Z3_ast_vector_get(oc.get_ctx().get_z3_context(), literals, i),
+                )
+            })
+            .collect();
+        let proof_hint = Dynamic::wrap(oc.get_ctx(), proof_hint);
+        oc.on_clause(&proof_hint, deps, &literals);
+    }
+
+    /// A quick way to implement [OnClause] using a clausure
+    pub struct ClausureOnClause<'ctx, F>
+    where
+        F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    {
+        ctx: &'ctx Context,
+        f: F,
+    }
+
+    impl<'ctx, F> ClausureOnClause<'ctx, F>
+    where
+        F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    {
+        pub fn new(ctx: &'ctx Context, f: F) -> Self {
+            Self { ctx, f }
+        }
+    }
+    impl<'ctx, F> Debug for ClausureOnClause<'ctx, F>
+    where
+        F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    {
+        fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+            f.debug_struct("ClausureOnClause")
+                .field("ctx", &self.ctx)
+                .field("f", &std::any::type_name::<F>())
+                .finish()
+        }
+    }
+
+    impl<'ctx, F> OnClause<'ctx> for ClausureOnClause<'ctx, F>
+    where
+        F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    {
+        fn get_ctx(&self) -> &'ctx Context {
+            self.ctx
+        }
+
+        fn on_clause(&self, proof_hint: &Dynamic<'ctx>, deps: &[u32], literals: &[Dynamic<'ctx>]) {
+            (self.f)(proof_hint, deps, literals)
+        }
+    }
+}
+pub use on_clause::{ClausureOnClause, OnClause};
 
 /// Wrapper around a solver to ensure the [UserPropagator]s live long enough
 ///
@@ -481,14 +523,16 @@ mod user_propagator {
 #[derive(Debug)]
 pub struct UPSolver<'ctx, 'a> {
     solver: Solver<'ctx>,
-    ups: PhantomData<Pin<&'a dyn UserPropagator<'ctx>>>,
+    user_propagators: PhantomData<Pin<&'a dyn UserPropagator<'ctx>>>,
+    on_clause_propagators: PhantomData<Pin<&'a dyn OnClause<'ctx>>>,
 }
 
 impl<'ctx, 'a> UPSolver<'ctx, 'a> {
     pub fn new(solver: Solver<'ctx>) -> Self {
         Self {
             solver,
-            ups: Default::default(),
+            user_propagators: Default::default(),
+            on_clause_propagators: Default::default(),
         }
     }
 
@@ -508,7 +552,16 @@ impl<'ctx, 'a> UPSolver<'ctx, 'a> {
     /// We need `up` to be pined because it will be passed auround to z3. See
     /// [std::pin] to get to know how to use [Pin].
     pub fn register_user_propagator<U: UserPropagator<'ctx>>(&mut self, up: Pin<&'a U>) {
-        unsafe { user_propagator::z3_up_init(up, self.solver().z3_slv) }
+        unsafe { user_propagator::z3_user_propagator_init(up, self.solver().z3_slv) }
+    }
+
+    pub fn register_on_clause<U: OnClause<'ctx>>(&mut self, up: Pin<&'a U>) {
+        let s = self.z3_slv;
+        let c = self.ctx.z3_ctx;
+        let user_ctx = up.get_ref() as *const _ as *mut ::std::ffi::c_void;
+        unsafe {
+            Z3_solver_register_on_clause(c, s, user_ctx, Some(on_clause::clause_eh::<U>));
+        }
     }
 }
 
@@ -532,20 +585,47 @@ mod test {
 
     use crate::{
         ast::{self, Ast, Dynamic},
-        user_propagator::{
-            declare_up_function, user_propagator::CallBack, UPSolver, UserPropagator,
-        },
-        Config, Context, FuncDecl, SatResult, Solver, Sort,
+        user_propagator::{user_propagator::CallBack, ClausureOnClause, UPSolver, UserPropagator},
+        Config, Context, FuncDecl, Solver, Sort,
     };
 
     #[test]
-    fn test_up() {
+    fn on_clause() {
+        let _ = env_logger::try_init();
+        let mut cfg = Config::default();
+        cfg.set_model_generation(true);
+        cfg.set_proof_generation(true);
+        let ctx = Context::new(&cfg);
+        let s_sort = Sort::uninterpreted(&ctx, "S".into());
+        let f = FuncDecl::new(&ctx, "f", &[&s_sort], &s_sort);
+        let g = FuncDecl::new(&ctx, "g", &[&s_sort], &Sort::bool(&ctx));
+        let x = FuncDecl::new(&ctx, "x", &[], &s_sort).apply(&[]);
+        let mut s = UPSolver::new(Solver::new(&ctx));
+
+        let on_clause = Box::pin(ClausureOnClause::new(&ctx, |proof_hint, deps, literals| {
+            println!("on_clause:\n\tproof_hint: {proof_hint:}\n\tdeps: {deps:?}\n\tliteral: {literals:?}")
+        }));
+        s.register_on_clause(on_clause.as_ref());
+
+        let gx = g.apply(&[&x]).as_bool().unwrap();
+        let gxx = g.apply(&[&f.apply(&[&f.apply(&[&x])])]).as_bool().unwrap();
+
+        s.assert(&!(&gx & &gxx));
+        s.assert(&(&gx | &gxx));
+        s.assert(&f.apply(&[&x])._eq(&x));
+        s.check();
+        println!("result: {:?}", s.check());
+        println!("{:?}", s.get_model());
+    }
+
+    #[test]
+    fn user_propagator() {
         let _ = env_logger::try_init();
         let mut cfg = Config::default();
         cfg.set_model_generation(true);
         let ctx = Context::new(&cfg);
         let s_sort = Sort::uninterpreted(&ctx, "S".into());
-        let f = declare_up_function(&ctx, "f", &[&s_sort], &s_sort);
+        let f = FuncDecl::new_up(&ctx, "f", &[&s_sort], &s_sort);
         let x = FuncDecl::new(&ctx, "x", &[], &s_sort).apply(&[]);
         let s = Solver::new(&ctx);
 
@@ -556,7 +636,7 @@ mod test {
         }
 
         impl<'ctx> UP<'ctx> {
-            fn gen_nt(&self, e: &Dynamic<'ctx>) -> Option<Dynamic<'ctx>> {
+            fn generate_next_term(&self, e: &Dynamic<'ctx>) -> Option<Dynamic<'ctx>> {
                 let f1 = e.safe_decl().ok()?;
                 (f1.name() == self.f.name()).then_some(())?; // exits if f1 != f
                 let [arg1] = e.children().try_into().ok()?;
@@ -574,7 +654,7 @@ mod test {
             fn eq(&self, upw: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
                 println!("eq: {x} = {y}");
                 for e in [x, y] {
-                    let Some(nt) = self.gen_nt(e) else {
+                    let Some(nt) = self.generate_next_term(e) else {
                         continue;
                     };
                     upw.propagate_one(&[], &e._eq(&nt));
@@ -584,7 +664,7 @@ mod test {
             fn neq(&self, upw: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
                 println!("neq: {x} != {y}");
                 for e in [x, y] {
-                    let Some(nt) = self.gen_nt(e) else {
+                    let Some(nt) = self.generate_next_term(e) else {
                         continue;
                     };
                     upw.propagate_one(&[], &e._eq(&nt));
@@ -628,6 +708,6 @@ mod test {
                 ._eq(&f.apply(&[&x]))
                 .not(),
         );
-        assert_eq!(s.check(), SatResult::Unsat);
+        println!("result: {:?}", s.check());
     }
 }

@@ -1569,7 +1569,7 @@ pub type Z3_pop_eh = ::std::option::Option<
     unsafe extern "C" fn(
         ctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
-        num_scopes: ::std::ffi::c_uint,
+        num_scopes: ::std::os::raw::c_uint,
     ),
 >;
 pub type Z3_fresh_eh = ::std::option::Option<
@@ -1605,7 +1605,7 @@ pub type Z3_decide_eh = ::std::option::Option<
         cyx: *mut ::std::ffi::c_void,
         cd: Z3_solver_callback,
         t: Z3_ast,
-        idx: ::std::ffi::c_uint,
+        idx: ::std::os::raw::c_uint,
         phase: bool,
     ),
 >;
@@ -1613,8 +1613,8 @@ pub type Z3_on_clause_eh = ::std::option::Option<
     unsafe extern "C" fn(
         ctx: *mut ::std::ffi::c_void,
         proof_hint: Z3_ast,
-        n: ::std::ffi::c_uint,
-        deps: *const ::std::ffi::c_uint,
+        n: ::std::os::raw::c_uint,
+        deps: *const ::std::os::raw::c_uint,
         literals: Z3_ast_vector,
     ),
 >;
