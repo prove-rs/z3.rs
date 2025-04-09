@@ -8,7 +8,7 @@ use crate::{
     Context, Solver,
 };
 use log::debug;
-use std::{convert::TryInto, fmt::Debug, marker::PhantomData, pin::Pin};
+use std::{convert::TryInto, fmt::Debug, pin::Pin};
 use z3_sys::*;
 
 /// Interface to build a custom [User
@@ -25,13 +25,13 @@ pub trait UserPropagator<'ctx>: Debug {
     fn get_context(&self) -> &'ctx Context;
 
     /// Called when z3 case splits
-    fn push(&self, cb: &CallBack<'ctx>) {}
+    fn push(&mut self, cb: &CallBack<'ctx>) {}
 
     /// Called when z3 backtracks `num_scopes` times
-    fn pop(&self, cb: &CallBack<'ctx>, num_scopes: u32) {}
+    fn pop(&mut self, cb: &CallBack<'ctx>, num_scopes: u32) {}
 
     /// Called when `id` is fixed to value `e`
-    fn fixed(&self, cb: &CallBack<'ctx>, id: &Dynamic<'ctx>, e: &Dynamic<'ctx>) {}
+    fn fixed(&mut self, cb: &CallBack<'ctx>, id: &Dynamic<'ctx>, e: &Dynamic<'ctx>) {}
 
     /// Called when `x` and `y` are equated.
     ///
@@ -40,16 +40,16 @@ pub trait UserPropagator<'ctx>: Debug {
     ///
     /// See:
     /// <https://microsoft.github.io/z3guide/programming/Example%20Programs/User%20Propagator/#equality-callbacks>
-    fn eq(&self, cb: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
+    fn eq(&mut self, cb: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
 
     /// Same as [eq] be on negated equalities
-    fn neq(&self, cb: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
+    fn neq(&mut self, cb: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {}
 
     /// During the final check stage, all propagations have been processed. This
     /// is an opportunity for the user-propagator to delay some analysis that
     /// could be expensive to perform incrementally. It is also an opportunity
     /// for the propagator to implement branch and bound optimization.
-    fn final_(&self, cb: &CallBack<'ctx>) {}
+    fn final_(&mut self, cb: &CallBack<'ctx>) {}
 
     /// `e` was created using one of the function declared with
     /// [`declare_up_function`].
@@ -61,9 +61,9 @@ pub trait UserPropagator<'ctx>: Debug {
     /// [`UserPropagator`].
     ///
     /// [UPSolver::add]: super::UPSolver::add
-    fn created(&self, cb: &CallBack<'ctx>, e: &Dynamic<'ctx>) {}
+    fn created(&mut self, cb: &CallBack<'ctx>, e: &Dynamic<'ctx>) {}
 
-    fn decide(&self, cb: &CallBack<'ctx>, val: &Dynamic<'ctx>, bit: u32, is_pos: bool) {}
+    fn decide(&mut self, cb: &CallBack<'ctx>, val: &Dynamic<'ctx>, bit: u32, is_pos: bool) {}
 
     // TODO: figure out how to make fresh work
     // fn fresh<'a>(
@@ -262,13 +262,13 @@ impl<'ctx> CallBack<'ctx> {
 pub trait OnClause<'ctx>: Debug {
     fn get_ctx(&self) -> &'ctx Context;
     /// the callback
-    fn on_clause(&self, proof_hint: &Dynamic<'ctx>, deps: &[u32], literals: &[Dynamic<'ctx>]);
+    fn on_clause(&mut self, proof_hint: &Dynamic<'ctx>, deps: &[u32], literals: &[Dynamic<'ctx>]);
 }
 
 /// A quick way to implement [`OnClause`] using a clausure
-pub struct ClausureOnClause<'ctx, F>
+struct ClausureOnClause<'ctx, F>
 where
-    F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    F: FnMut(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
 {
     ctx: &'ctx Context,
     f: F,
@@ -276,7 +276,7 @@ where
 
 impl<'ctx, F> ClausureOnClause<'ctx, F>
 where
-    F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    F: FnMut(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
 {
     pub fn new(ctx: &'ctx Context, f: F) -> Self {
         Self { ctx, f }
@@ -284,7 +284,7 @@ where
 }
 impl<'ctx, F> Debug for ClausureOnClause<'ctx, F>
 where
-    F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    F: FnMut(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.debug_struct("ClausureOnClause")
@@ -296,13 +296,13 @@ where
 
 impl<'ctx, F> OnClause<'ctx> for ClausureOnClause<'ctx, F>
 where
-    F: Fn(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
+    F: FnMut(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]),
 {
     fn get_ctx(&self) -> &'ctx Context {
         self.ctx
     }
 
-    fn on_clause(&self, proof_hint: &Dynamic<'ctx>, deps: &[u32], literals: &[Dynamic<'ctx>]) {
+    fn on_clause(&mut self, proof_hint: &Dynamic<'ctx>, deps: &[u32], literals: &[Dynamic<'ctx>]) {
         (self.f)(proof_hint, deps, literals)
     }
 }
@@ -316,8 +316,8 @@ where
 #[derive(Debug)]
 pub struct UPSolver<'ctx, 'a> {
     solver: Solver<'ctx>,
-    user_propagators: PhantomData<Pin<&'a dyn UserPropagator<'ctx>>>,
-    on_clause_propagators: PhantomData<Pin<&'a dyn OnClause<'ctx>>>,
+    user_propagators: Vec<Pin<Box<dyn UserPropagator<'ctx> + 'a>>>,
+    on_clause_propagators: Vec<Pin<Box<dyn OnClause<'ctx> + 'a>>>,
 }
 
 impl<'ctx, 'a> UPSolver<'ctx, 'a> {
@@ -341,20 +341,31 @@ impl<'ctx, 'a> UPSolver<'ctx, 'a> {
     }
 
     /// Registers a [`UserPropagator`] to [`Self::solver`]
-    ///
-    /// We need `up` to be pined because it will be passed auround to z3. See
-    /// [`std::pin`] to get to know how to use [Pin].
-    pub fn register_user_propagator<U: UserPropagator<'ctx>>(&mut self, up: Pin<&'a U>) {
-        unsafe { z3_user_propagator_init(up, self.solver().z3_slv) }
+    pub fn register_user_propagator<U: UserPropagator<'ctx> + 'a>(&mut self, up: U) {
+        let pin = Box::pin(up);
+        unsafe { z3_user_propagator_init(pin.as_ref(), self.solver().z3_slv) }
+        self.user_propagators.push(pin);
     }
 
-    pub fn register_on_clause<U: OnClause<'ctx>>(&mut self, up: Pin<&'a U>) {
+    pub fn register_on_clause<U: OnClause<'ctx> + 'a>(&mut self, up: U) {
+        let pin = Box::pin(up);
         let s = self.z3_slv;
         let c = self.ctx.z3_ctx;
-        let user_ctx = up.get_ref() as *const _ as *mut ::std::ffi::c_void;
+        let user_ctx = pin.as_ref().get_ref() as *const _ as *mut ::std::ffi::c_void;
         unsafe {
             Z3_solver_register_on_clause(c, s, user_ctx, Some(callbacks::clause_eh::<U>));
         }
+        self.on_clause_propagators.push(pin);
+    }
+
+    pub fn quick_register_on_clause<F>(&mut self, f: F)
+    where
+        F: FnMut(&Dynamic<'ctx>, &[u32], &[Dynamic<'ctx>]) + 'a,
+        'ctx: 'a,
+    {
+        let ctx: &'ctx Context = self.solver().get_context();
+        // let up: ClausureOnClause<'ctx, F> = ;
+        self.register_on_clause(ClausureOnClause::new(ctx, f));
     }
 }
 
@@ -570,7 +581,7 @@ mod test {
 
     use crate::{
         ast::{self, Ast, Dynamic},
-        user_propagator::{CallBack, ClausureOnClause, UPSolver, UserPropagator},
+        user_propagator::{CallBack, UPSolver, UserPropagator},
         Config, Context, FuncDecl, Solver, Sort,
     };
 
@@ -585,22 +596,27 @@ mod test {
         let f = FuncDecl::new(&ctx, "f", &[&s_sort], &s_sort);
         let g = FuncDecl::new(&ctx, "g", &[&s_sort], &Sort::bool(&ctx));
         let x = FuncDecl::new(&ctx, "x", &[], &s_sort).apply(&[]);
-        let mut s = UPSolver::new(Solver::new(&ctx));
 
-        let on_clause = Box::pin(ClausureOnClause::new(&ctx, |proof_hint, deps, literals| {
-            println!("on_clause:\n\tproof_hint: {proof_hint:}\n\tdeps: {deps:?}\n\tliteral: {literals:?}")
-        }));
-        s.register_on_clause(on_clause.as_ref());
+        let mut y: String = "I am a non-static lifetime check".to_owned();
+        {
+            let mut s = UPSolver::new(Solver::new(&ctx));
 
-        let gx = g.apply(&[&x]).as_bool().unwrap();
-        let gxx = g.apply(&[&f.apply(&[&f.apply(&[&x])])]).as_bool().unwrap();
+            s.quick_register_on_clause(|proof_hint, deps, literals| {
+                println!("on_clause:\n\tproof_hint: {proof_hint:}\n\tdeps: {deps:?}\n\tliteral: {literals:?}");
+                y = "check successfull".to_owned();
+            });
 
-        s.assert(&!(&gx & &gxx));
-        s.assert(&(&gx | &gxx));
-        s.assert(&f.apply(&[&x])._eq(&x));
-        s.check();
-        println!("result: {:?}", s.check());
-        println!("{:?}", s.get_model());
+            let gx = g.apply(&[&x]).as_bool().unwrap();
+            let gxx = g.apply(&[&f.apply(&[&f.apply(&[&x])])]).as_bool().unwrap();
+
+            s.assert(&!(&gx & &gxx));
+            s.assert(&(&gx | &gxx));
+            s.assert(&f.apply(&[&x])._eq(&x));
+            s.check();
+            println!("result: {:?}", s.check());
+            println!("{:?}", s.get_model());
+        }
+        assert_eq!(&y, "check successfull")
     }
 
     #[test]
@@ -637,7 +653,7 @@ mod test {
         }
 
         impl<'ctx> UserPropagator<'ctx> for UP<'ctx> {
-            fn eq(&self, upw: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
+            fn eq(&mut self, upw: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
                 println!("eq: {x} = {y}");
                 for e in [x, y] {
                     let Some(nt) = self.generate_next_term(e) else {
@@ -647,7 +663,7 @@ mod test {
                 }
             }
 
-            fn neq(&self, upw: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
+            fn neq(&mut self, upw: &CallBack<'ctx>, x: &Dynamic<'ctx>, y: &Dynamic<'ctx>) {
                 println!("neq: {x} != {y}");
                 for e in [x, y] {
                     let Some(nt) = self.generate_next_term(e) else {
@@ -657,27 +673,38 @@ mod test {
                 }
             }
 
-            fn created(&self, _: &CallBack<'ctx>, e: &ast::Dynamic<'ctx>) {
+            fn created(&mut self, _: &CallBack<'ctx>, e: &ast::Dynamic<'ctx>) {
                 println!("created: {e}")
             }
 
-            fn pop(&self, _: &CallBack<'ctx>, num_scopes: u32) {
+            fn pop(&mut self, _: &CallBack<'ctx>, num_scopes: u32) {
                 println!("pop: {num_scopes:}")
             }
 
-            fn push(&self, _: &CallBack<'ctx>) {
+            fn push(&mut self, _: &CallBack<'ctx>) {
                 println!("push")
             }
 
-            fn decide(&self, _: &CallBack<'ctx>, val: &ast::Dynamic<'ctx>, bit: u32, is_pos: bool) {
+            fn decide(
+                &mut self,
+                _: &CallBack<'ctx>,
+                val: &ast::Dynamic<'ctx>,
+                bit: u32,
+                is_pos: bool,
+            ) {
                 println!("decide: {val}, {bit:} {is_pos}")
             }
 
-            fn fixed(&self, _: &CallBack<'ctx>, id: &ast::Dynamic<'ctx>, e: &ast::Dynamic<'ctx>) {
+            fn fixed(
+                &mut self,
+                _: &CallBack<'ctx>,
+                id: &ast::Dynamic<'ctx>,
+                e: &ast::Dynamic<'ctx>,
+            ) {
                 println!("fixed: {id} {e}")
             }
 
-            fn final_(&self, _: &CallBack<'ctx>) {
+            fn final_(&mut self, _: &CallBack<'ctx>) {
                 println!("final")
             }
 
@@ -687,8 +714,8 @@ mod test {
         }
 
         let mut s = UPSolver::new(s);
-        let up = Box::pin(UP { f: &f, ctx: &ctx });
-        s.register_user_propagator(up.as_ref());
+        // let up = Box::pin(UP { f: &f, ctx: &ctx });
+        s.register_user_propagator(UP { f: &f, ctx: &ctx });
         s.assert(
             &f.apply(&[&f.apply(&[&f.apply(&[&f.apply(&[&x])])])])
                 ._eq(&f.apply(&[&x]))
