@@ -1140,6 +1140,11 @@ impl<'ctx> Float<'ctx> {
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
+        is_infinite(Z3_mk_fpa_is_infinite, Bool<'ctx>);
+        is_normal(Z3_mk_fpa_is_normal, Bool<'ctx>);
+        is_subnormal(Z3_mk_fpa_is_subnormal, Bool<'ctx>);
+        is_zero(Z3_mk_fpa_is_zero, Bool<'ctx>);
+        is_nan(Z3_mk_fpa_is_nan, Bool<'ctx>);
     }
     binop! {
         lt(Z3_mk_fpa_lt, Bool<'ctx>);
