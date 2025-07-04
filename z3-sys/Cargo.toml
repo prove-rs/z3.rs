@@ -21,12 +21,16 @@ bindgen = { version = "0.70", default-features = false, features = ["runtime"] }
 # breaks the z3 build. See https://github.com/prove-rs/z3.rs/issues/328
 cc = "~1.1"
 cmake = { version = "0.1.54", optional = true }
+zip-extract = { version = "0.4.0", optional = true }
 pkg-config = "0.3.32"
+reqwest = { version = "0.12.22", default-features = false, features = ["blocking", "default-tls"], optional = true }
+serde_json = { version = "1.0.140", optional = true }
 vcpkg = { version = "0.2.15", optional = true }
 
 [features]
 bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
 vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
+gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip-extract"] # Obtain Z3 lib from GitHub release.
 
 # Legacy feature for short term compatibility
 static-link-z3 = ["bundled", "deprecated-static-link-z3"]

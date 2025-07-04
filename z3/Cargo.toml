@@ -18,6 +18,7 @@ edition = "2018"
 default = []
 bundled = ["z3-sys/bundled"]
 vcpkg = ["z3-sys/vcpkg"]
+gh-release = ["z3-sys/gh-release"]
 
 # This is a legacy feature here for short term compatibility.
 static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]

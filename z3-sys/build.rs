@@ -1,14 +1,34 @@
 use std::{env, path::PathBuf};
 
+macro_rules! assert_one_of_features {
+    ($($feature:literal),*) => {
+        let mut active_count = 0;
+        $(
+            if cfg!(feature = $feature) {
+                active_count += 1;
+            }
+        )*
+        if active_count > 1 {
+            panic!("Only one of the features [{}] can be active at a time", stringify!($($feature),*));
+        }
+    };
+}
+
 fn main() {
+    // Check that only one of the mutually exclusive features is active
+    assert_one_of_features!("bundled", "vcpkg", "gh-release");
+
     // Don't need to specify this for these build configurations.
-    #[cfg(any(feature = "bundled", feature = "vcpkg"))]
+    #[cfg(any(feature = "bundled", feature = "vcpkg", feature = "gh-release"))]
     let search_paths = vec![];
 
     #[cfg(feature = "bundled")]
     build_bundled_z3();
 
-    #[cfg(not(any(feature = "bundled", feature = "vcpkg")))]
+    #[cfg(feature = "gh-release")]
+    let header = install_from_gh_release();
+
+    #[cfg(not(any(feature = "bundled", feature = "vcpkg", feature = "gh-release")))]
     let search_paths = {
         if let Ok(lib) = pkg_config::Config::new().probe("z3") {
             lib.include_paths
@@ -22,7 +42,7 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
 
-    #[cfg(not(feature = "vcpkg"))]
+    #[cfg(not(any(feature = "vcpkg", feature = "gh-release")))]
     let header = find_header_by_env();
 
     #[cfg(feature = "vcpkg")]
@@ -62,6 +82,132 @@ fn link_against_cxx_stdlib() {
     }
 }
 
+#[cfg(feature = "gh-release")]
+mod gh_release {
+    use reqwest::blocking::{Client, ClientBuilder};
+
+    use super::*;
+
+    pub(super) fn install_from_gh_release() -> String {
+        let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
+        let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
+        let (header, lib) = retrieve_gh_release_z3(&target_os, &target_arch);
+        println!(
+            "cargo:rustc-link-search=native={}",
+            lib.parent().unwrap().display()
+        );
+        if cfg!(target_os = "windows") {
+            println!("cargo:rustc-link-lib=static=libz3");
+        } else {
+            println!("cargo:rustc-link-lib=static=z3");
+        }
+        header.to_string_lossy().to_string()
+    }
+
+    fn retrieve_gh_release_z3(target_os: &str, target_arch: &str) -> (PathBuf, PathBuf) {
+        let arch = match target_arch {
+            "aarch64" => "arm64",
+            "x86_64" => "x64",
+            arch => {
+                panic!("Unsupported architecture: {}", arch);
+            }
+        };
+        let os = match target_os {
+            "windows" => "win",
+            "linux" => "glibc-2.39x",
+            "macos" => "osx-13.7.6",
+            os => {
+                panic!("Unsupported OS: {}", os);
+            }
+        };
+        println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
+        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("4.15.2".to_string());
+
+        let client = ClientBuilder::new().user_agent("z3-sys").build().unwrap();
+
+        let url = get_release_asset_url(&client, &z3_version, &os, &arch);
+        let Some(z3_dir) = download_unzip(&client, url) else {
+            panic!(
+                "Could not get release asset for z3-{} with os={} and arch={}",
+                z3_version, os, arch
+            );
+        };
+
+        let header = z3_dir.join("include/z3.h");
+        let lib = if cfg!(target_os = "windows") {
+            z3_dir.join("bin/libz3.lib")
+        } else {
+            z3_dir.join("bin/libz3.a")
+        };
+
+        assert!(
+            header.exists(),
+            "could not find z3.h in downloaded archive at {}",
+            z3_dir.display()
+        );
+        assert!(
+            lib.exists(),
+            "could not find static libz3 in downloaded archive at {}",
+            z3_dir.display()
+        );
+
+        (header, lib)
+    }
+
+    fn download_unzip(client: &Client, url: String) -> Option<PathBuf> {
+        let response = client.get(url).send().ok()?;
+        assert_eq!(response.status(), 200);
+        let ziplib = response.bytes().ok()?;
+
+        println!("Downloaded {}MB", ziplib.len() as f64 / 1024.0 / 1024.0);
+
+        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
+        let z3_dir = out_dir.join("z3");
+        zip_extract::extract(std::io::Cursor::new(ziplib), &z3_dir, true).unwrap();
+
+        Some(z3_dir)
+    }
+
+    fn get_release_asset_url(
+        client: &Client,
+        z3_version: &str,
+        target_os: &str,
+        target_arch: &str,
+    ) -> String {
+        let release_url =
+            format!("https://api.github.com/repos/Z3Prover/z3/releases/tags/z3-{z3_version}");
+        let Ok(response) = client.get(release_url).send() else {
+            panic!("Could not find release for z3-{}", z3_version);
+        };
+
+        assert_eq!(response.status(), 200);
+
+        let release_json: serde_json::Value =
+            serde_json::from_str(&response.text().unwrap()).unwrap();
+
+        let assets = release_json.get("assets").unwrap().as_array().unwrap();
+
+        let Some(asset) = assets.iter().find(|a| {
+            let name = a.get("name").unwrap().as_str().unwrap();
+            name.contains(target_os) && name.contains(target_arch) && name.ends_with(".zip")
+        }) else {
+            panic!(
+                "Could not find asset for z3-{} with os={} and arch={}",
+                z3_version, target_os, target_arch
+            );
+        };
+
+        asset
+            .get("browser_download_url")
+            .unwrap()
+            .as_str()
+            .unwrap()
+            .to_owned()
+    }
+}
+#[cfg(feature = "gh-release")]
+use gh_release::install_from_gh_release;
+
 #[cfg(feature = "vcpkg")]
 fn find_library_header_by_vcpkg() -> String {
     let lib = vcpkg::Config::new()
@@ -80,7 +226,7 @@ fn find_library_header_by_vcpkg() -> String {
     panic!("z3.h is not found in include path of installed z3.");
 }
 
-#[cfg(not(feature = "vcpkg"))]
+#[cfg(not(any(feature = "vcpkg", feature = "gh-release")))]
 fn find_header_by_env() -> String {
     const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
@@ -111,11 +257,12 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
     ] {
         let mut enum_bindings = bindgen::Builder::default()
             .header(header)
-            .parse_callbacks(Box::new(bindgen::CargoCallbacks::new()))
             .generate_comments(false)
             .rustified_enum(format!("Z3_{x}"))
             .allowlist_type(format!("Z3_{x}"))
             .clang_args(search_paths.iter().map(|p| format!("-I{}", p.display())));
+        #[cfg(not(feature = "gh-release"))]
+        enum_bindings.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
         if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
             enum_bindings = enum_bindings.clang_arg(format!(
                 "--sysroot={}/upstream/emscripten/cache/sysroot",
