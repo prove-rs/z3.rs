@@ -38,6 +38,10 @@ There are 3 ways for this crate to currently find Z3:
   submodule within the repository.
 * Enabling the `vcpkg` feature will use `vcpkg` to build and
   install a copy of Z3 which is then used.
+* Enabling the `gh-release` feature will download a pre-compiled
+  copy of Z3 from the GitHub release page for the current platform,
+  if available. You may specify the version of Z3 to download via the
+  `Z3_SYS_Z3_VERSION` environment variable.
 
 This might look like:
 

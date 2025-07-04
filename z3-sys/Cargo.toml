@@ -30,7 +30,7 @@ vcpkg = { version = "0.2.15", optional = true }
 [features]
 bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
 vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
-gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip-extract"] # Obtain Z3 lib from GitHub release.
+gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip-extract"] # Download pre-compiled Z3 lib from GitHub release for supported platforms.
 
 # Legacy feature for short term compatibility
 static-link-z3 = ["bundled", "deprecated-static-link-z3"]

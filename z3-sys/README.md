@@ -28,7 +28,7 @@ z3-sys = "0.8"
 
 **Note:** This library has a dependency on Z3.
 
-There are 3 ways for this crate to currently find Z3:
+There are 4 ways for this crate to currently find Z3:
 
 * By default, it will look for a system-installed copy of Z3.
   On Linux, this would be via the package manager. On macOS, this
@@ -38,6 +38,10 @@ There are 3 ways for this crate to currently find Z3:
   submodule within the repository.
 * Enabling the `vcpkg` feature will use `vcpkg` to build and
   install a copy of Z3 which is then used.
+* Enabling the `gh-release` feature will download a pre-compiled
+  copy of Z3 from the GitHub release page for the current platform,
+  if available. You may specify the version of Z3 to download via the
+  `Z3_SYS_Z3_VERSION` environment variable.
 
 **Note:** This crate requires a `z3.h` during build time.
 
@@ -47,9 +51,9 @@ There are 3 ways for this crate to currently find Z3:
 * Enabling the`bundled` feature will cause the bundled copy of `z3.h`
   to be used. The `Z3_SYS_Z3_HEADER` environment variable can also
   be used to customize this.
-* Enabling the `vcpkg` feature will cause the copy of `z3.h` provided
-  by that version to be used. In this case, there is no override
-  via the environment variable.
+* Enabling the `vcpkg` or `gh-release` feature will cause the copy of
+  `z3.h` provided by that version to be used. In this case, there is
+  no override via the environment variable.
 
 ## Support and Maintenance
 
