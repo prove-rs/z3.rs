@@ -114,8 +114,8 @@ mod gh_release {
         };
         let os = match target_os {
             "windows" => "win",
-            "linux" => "glibc-2.39x",
-            "macos" => "osx-13.7.6",
+            "linux" => "glibc",
+            "macos" => "osx",
             os => {
                 panic!("Unsupported OS: {}", os);
             }
@@ -189,7 +189,10 @@ mod gh_release {
 
         let Some(asset) = assets.iter().find(|a| {
             let name = a.get("name").unwrap().as_str().unwrap();
-            name.contains(target_os) && name.contains(target_arch) && name.ends_with(".zip")
+            name.contains(target_os)
+                && name.contains(target_arch)
+                && name.ends_with(".zip")
+                && name.starts_with("z3-")
         }) else {
             panic!(
                 "Could not find asset for z3-{} with os={} and arch={}",
@@ -255,14 +258,17 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
         "sort_kind",
         "symbol_kind",
     ] {
+        #[allow(unused_mut)]
         let mut enum_bindings = bindgen::Builder::default()
             .header(header)
             .generate_comments(false)
             .rustified_enum(format!("Z3_{x}"))
             .allowlist_type(format!("Z3_{x}"))
             .clang_args(search_paths.iter().map(|p| format!("-I{}", p.display())));
+        // Deactivate bindgen cargo-rerun-if generation for gh-release (unnecessary)
         #[cfg(not(feature = "gh-release"))]
-        enum_bindings.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
+        let mut enum_bindings =
+            enum_bindings.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
         if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
             enum_bindings = enum_bindings.clang_arg(format!(
                 "--sysroot={}/upstream/emscripten/cache/sysroot",

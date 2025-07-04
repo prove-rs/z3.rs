@@ -145,3 +145,20 @@ jobs:
       run: brew install z3
     - name: Run clippy
       run: cargo clippy --workspace --all-targets
+
+  build_with_gh_release_z3:
+    strategy:
+      matrix:
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+          - build: macos
+            os: macos-latest
+          - build: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test `z3-sys` and `z3` with gh-release linked Z3
+        run: cargo test --workspace --features gh-release
