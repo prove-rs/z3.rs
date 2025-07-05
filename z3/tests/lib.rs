@@ -71,8 +71,8 @@ fn test_solving_for_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
     let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(xv > yv);
     assert!(yv % 7 == 2);
     assert!(xv + 2 > 7);
@@ -101,8 +101,8 @@ fn test_solving_for_model_cloned() {
     let model = cloned.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
     let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(xv > yv);
     assert!(yv % 7 == 2);
     assert!(xv + 2 > 7);
@@ -336,8 +336,8 @@ fn test_pb_ops_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
     let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!((xv && !yv) || (!xv && yv));
 
     solver.pop(1);
@@ -347,8 +347,8 @@ fn test_pb_ops_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
     let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(xv && yv);
 
     solver.pop(1);
@@ -357,8 +357,8 @@ fn test_pb_ops_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
     let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(!xv && !yv);
 }
 

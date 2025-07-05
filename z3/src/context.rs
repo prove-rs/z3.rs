@@ -10,7 +10,7 @@ impl Context {
         Context {
             z3_ctx: unsafe {
                 let p = Z3_mk_context_rc(cfg.z3_cfg);
-                debug!("new context {:p}", p);
+                debug!("new context {p:p}");
                 Z3_set_error_handler(p, None);
                 p
             },
