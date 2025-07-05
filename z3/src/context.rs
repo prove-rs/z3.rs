@@ -32,7 +32,7 @@ impl Context {
     ///
     /// - [`ContextHandle`]
     /// - [`ContextHandle::interrupt()`]
-    pub fn handle(&self) -> ContextHandle {
+    pub fn handle(&self) -> ContextHandle<'_> {
         ContextHandle { ctx: self }
     }
 
