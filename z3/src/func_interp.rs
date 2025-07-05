@@ -40,7 +40,7 @@ impl<'ctx> FuncInterp<'ctx> {
     }
 
     /// Returns the entries of the function interpretation.
-    pub fn get_entries(&self) -> Vec<FuncEntry> {
+    pub fn get_entries(&self) -> Vec<FuncEntry<'_>> {
         (0..self.get_num_entries())
             .map(|i| unsafe {
                 FuncEntry::wrap(
