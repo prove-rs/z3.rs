@@ -1,52 +1,47 @@
 use std::{env, path::PathBuf};
 
 macro_rules! assert_one_of_features {
-    ($($feature:literal),*) => {
+    ($($feature:literal),*) => {{
         let mut active_count = 0;
+        let mut active_feature = None;
         $(
             if cfg!(feature = $feature) {
                 active_count += 1;
+                active_feature = Some($feature);
             }
         )*
         if active_count > 1 {
             panic!("Only one of the features [{}] can be active at a time", stringify!($($feature),*));
         }
-    };
+        active_feature
+    }};
 }
 
 fn main() {
     // Check that only one of the mutually exclusive features is active
-    assert_one_of_features!("bundled", "vcpkg", "gh-release");
+    let active_feature = assert_one_of_features!("bundled", "vcpkg", "gh-release");
 
-    // Don't need to specify this for these build configurations.
-    #[cfg(any(feature = "bundled", feature = "vcpkg", feature = "gh-release"))]
-    let search_paths = vec![];
+    println!("cargo:rerun-if-changed=build.rs");
 
-    #[cfg(feature = "bundled")]
-    build_bundled_z3();
-
-    #[cfg(feature = "gh-release")]
-    let header = install_from_gh_release();
-
-    #[cfg(not(any(feature = "bundled", feature = "vcpkg", feature = "gh-release")))]
-    let search_paths = {
-        if let Ok(lib) = pkg_config::Config::new().probe("z3") {
-            lib.include_paths
-        } else {
-            vec![]
+    let (header, search_paths) = match active_feature {
+        Some("bundled") => {
+            build_bundled_z3();
+            (find_header_by_env(), vec![])
+        }
+        Some("gh-release") => (install_from_gh_release(), vec![]),
+        Some("vcpkg") => (find_library_header_by_vcpkg(), vec![]),
+        _ => {
+            let search_paths = if let Ok(lib) = pkg_config::Config::new().probe("z3") {
+                lib.include_paths
+            } else {
+                vec![]
+            };
+            (find_header_by_env(), search_paths)
         }
     };
 
     #[cfg(feature = "deprecated-static-link-z3")]
     println!("cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature.");
-
-    println!("cargo:rerun-if-changed=build.rs");
-
-    #[cfg(not(any(feature = "vcpkg", feature = "gh-release")))]
-    let header = find_header_by_env();
-
-    #[cfg(feature = "vcpkg")]
-    let header = find_library_header_by_vcpkg();
 
     link_against_cxx_stdlib();
 
@@ -211,6 +206,11 @@ mod gh_release {
 #[cfg(feature = "gh-release")]
 use gh_release::install_from_gh_release;
 
+#[cfg(not(feature = "gh-release"))]
+fn install_from_gh_release() -> String {
+    unreachable!()
+}
+
 #[cfg(feature = "vcpkg")]
 fn find_library_header_by_vcpkg() -> String {
     let lib = vcpkg::Config::new()
@@ -229,7 +229,11 @@ fn find_library_header_by_vcpkg() -> String {
     panic!("z3.h is not found in include path of installed z3.");
 }
 
-#[cfg(not(any(feature = "vcpkg", feature = "gh-release")))]
+#[cfg(not(feature = "vcpkg"))]
+fn find_library_header_by_vcpkg() -> String {
+    unreachable!()
+}
+
 fn find_header_by_env() -> String {
     const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
@@ -335,4 +339,8 @@ fn build_bundled_z3() {
     } else {
         println!("cargo:rustc-link-lib=static=z3");
     }
+}
+#[cfg(not(feature = "bundled"))]
+fn build_bundled_z3() {
+    unreachable!()
 }
