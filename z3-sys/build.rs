@@ -79,6 +79,8 @@ fn link_against_cxx_stdlib() {
 
 #[cfg(feature = "gh-release")]
 mod gh_release {
+    use std::path::Path;
+
     use reqwest::blocking::{Client, ClientBuilder};
 
     use super::*;
@@ -117,16 +119,22 @@ mod gh_release {
         };
         println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
         let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("4.15.2".to_string());
+        let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{}", z3_version));
 
-        let client = ClientBuilder::new().user_agent("z3-sys").build().unwrap();
+        if !z3_dir.exists() {
+            let client = ClientBuilder::new().user_agent("z3-sys").build().unwrap();
 
-        let url = get_release_asset_url(&client, &z3_version, &os, &arch);
-        let Some(z3_dir) = download_unzip(&client, url) else {
-            panic!(
-                "Could not get release asset for z3-{} with os={} and arch={}",
-                z3_version, os, arch
-            );
-        };
+            let url = get_release_asset_url(&client, &z3_version, &os, &arch);
+            if let Err(err) = download_unzip(&client, url, &z3_dir) {
+                println!("error: {}", err);
+                panic!(
+                    "Could not get release asset for z3-{} with os={} and arch={}",
+                    z3_version, os, arch
+                );
+            };
+        } else {
+            println!("Found cached z3 at {}", z3_dir.display());
+        }
 
         let header = z3_dir.join("include/z3.h");
         let lib = if cfg!(target_os = "windows") {
@@ -149,18 +157,16 @@ mod gh_release {
         (header, lib)
     }
 
-    fn download_unzip(client: &Client, url: String) -> Option<PathBuf> {
-        let response = client.get(url).send().ok()?;
+    fn download_unzip(client: &Client, url: String, dir: &Path) -> reqwest::Result<()> {
+        let response = client.get(url).send()?;
         assert_eq!(response.status(), 200);
-        let ziplib = response.bytes().ok()?;
+        let ziplib = response.bytes()?;
 
-        println!("Downloaded {}MB", ziplib.len() as f64 / 1024.0 / 1024.0);
+        println!("Downloaded {:0.2}MB", ziplib.len() as f64 / 1024.0 / 1024.0);
 
-        let out_dir = PathBuf::from(env::var("OUT_DIR").unwrap());
-        let z3_dir = out_dir.join("z3");
-        zip_extract::extract(std::io::Cursor::new(ziplib), &z3_dir, true).unwrap();
+        zip_extract::extract(std::io::Cursor::new(ziplib), &dir, true).unwrap();
 
-        Some(z3_dir)
+        Ok(())
     }
 
     fn get_release_asset_url(
