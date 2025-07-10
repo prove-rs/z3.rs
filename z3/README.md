@@ -17,11 +17,10 @@ The API is fully documented with examples:
 
 This crate works with Cargo and is on
 [crates.io](https://crates.io/crates/z3).
-Add it to your `Cargo.toml` like so:
+Add it to your project with `cargo add`:
 
-```toml
-[dependencies]
-z3 = "0.12"
+```bash 
+$ cargo add z3
 ```
 
 ### Finding Z3 Libraries
@@ -43,14 +42,14 @@ This might look like:
 
 ```toml
 [dependencies]
-z3 = {version="0.12", features = ["bundled"]}
+z3 = {version="0", features = ["bundled"]}
 ```
 
 or:
 
 ```toml
 [dependencies]
-z3 = {version="0.12", features = ["vcpkg"]}
+z3 = {version="0", features = ["vcpkg"]}
 ```
 
 ## Support and Maintenance
