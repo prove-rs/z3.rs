@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.0...z3-sys-v0.9.1) - 2025-07-10
+
+### Added
+
+- add gh-release feature to get z3 from released libraries
+
+### Other
+
+- add note to z3-sys about gh-release rate-limit throttling
+- Attempt to use an authenticated request to get around github's throttling of access to artifacts
+
 ## [0.9.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.8.1...z3-sys-v0.9.0) - 2025-07-10
 
 ### Other
