@@ -35,11 +35,6 @@ jobs:
       run: brew install z3
     - name: Run tests
       run: cargo test --workspace
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # build using a bundled Z3 below...
-      if: ${{ success() || failure() }}
 
   build_on_wasm:
     runs-on: ubuntu-latest
