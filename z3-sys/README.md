@@ -17,11 +17,10 @@ The API is fully documented with examples:
 
 This crate works with Cargo and is on
 [crates.io](https://crates.io/crates/z3-sys).
-Add it to your `Cargo.toml` like so:
+Add it to your project with `cargo add`:
 
-```toml
-[dependencies]
-z3-sys = "0.8"
+```bash 
+$ cargo add z3-sys
 ```
 
 ### Finding Z3 Libraries
