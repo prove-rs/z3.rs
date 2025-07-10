@@ -39,8 +39,18 @@ There are 4 ways for this crate to currently find Z3:
   install a copy of Z3 which is then used.
 * Enabling the `gh-release` feature will download a pre-compiled
   copy of Z3 from the GitHub release page for the current platform,
-  if available. You may specify the version of Z3 to download via the
+  if available.
+  * You may specify the version of Z3 to download via the
   `Z3_SYS_Z3_VERSION` environment variable.
+  * *Note: Github throttles unauthenticated requests from the
+    same IP fairly aggressively.* If you are using the `gh-release` feature
+    inside a CI pipeline (or if you `cargo clean` and rebuild a _lot_),
+    you will likely experience random `403` responses downloading the
+    `z3` build artifacts. To mitigate this, generate a read-only Personal
+    Access Token (https://github.com/settings/personal-access-tokens) and
+    provide it to the `READ_ONLY_GITHUB_TOKEN` environment variable. The
+    `build.rs` step will automatically use this token (if present) to prevent
+    throttling.
 
 **Note:** This crate requires a `z3.h` during build time.
 
