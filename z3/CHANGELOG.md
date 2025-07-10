@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.12.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.12.1...z3-v0.12.2) - 2025-07-10
+## [0.13.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.12.1...z3-v0.13.0) - 2025-07-10
 
 ### Added
 
