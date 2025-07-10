@@ -81,9 +81,9 @@ fn link_against_cxx_stdlib() {
 mod gh_release {
     use std::path::Path;
 
-    use reqwest::blocking::{Client, ClientBuilder};
-
     use super::*;
+    use reqwest::blocking::{Client, ClientBuilder};
+    use reqwest::header::{HeaderMap, AUTHORIZATION};
 
     pub(super) fn install_from_gh_release() -> String {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
@@ -119,14 +119,14 @@ mod gh_release {
         };
         println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
         let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("4.15.2".to_string());
-        let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{}", z3_version));
+        let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{z3_version}"));
 
         if !z3_dir.exists() {
-            let client = ClientBuilder::new().user_agent("z3-sys").build().unwrap();
+            let client = get_github_client();
 
-            let url = get_release_asset_url(&client, &z3_version, &os, &arch);
+            let url = get_release_asset_url(&client, &z3_version, os, arch);
             if let Err(err) = download_unzip(&client, url, &z3_dir) {
-                println!("error: {}", err);
+                println!("error: {err}");
                 panic!(
                     "Could not get release asset for z3-{} with os={} and arch={}",
                     z3_version, os, arch
@@ -164,7 +164,7 @@ mod gh_release {
 
         println!("Downloaded {:0.2}MB", ziplib.len() as f64 / 1024.0 / 1024.0);
 
-        zip_extract::extract(std::io::Cursor::new(ziplib), &dir, true).unwrap();
+        zip_extract::extract(std::io::Cursor::new(ziplib), dir, true).unwrap();
 
         Ok(())
     }
@@ -207,6 +207,15 @@ mod gh_release {
             .as_str()
             .unwrap()
             .to_owned()
+    }
+
+    fn get_github_client() -> Client {
+        let client = ClientBuilder::new().user_agent("z3-sys");
+        let mut headers = HeaderMap::new();
+        if let Ok(val) = env::var("READ_ONLY_GITHUB_TOKEN") {
+            headers.insert(AUTHORIZATION, format!("Bearer {val}").parse().unwrap());
+        }
+        client.default_headers(headers).build().unwrap()
     }
 }
 #[cfg(feature = "gh-release")]
