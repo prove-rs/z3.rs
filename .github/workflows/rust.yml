@@ -158,4 +158,4 @@ jobs:
       - name: Test `z3-sys` and `z3` with gh-release linked Z3
         run: cargo test --workspace --features gh-release
         env:
-          READ_ONLY_GITHUB_TOKEN: {{secrets.PUBLIC_REPO_TOKEN}}
+          READ_ONLY_GITHUB_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}
