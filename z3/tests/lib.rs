@@ -2002,3 +2002,46 @@ fn test_model_iter() {
         vec![ast::Dynamic::new_const(&ctx, "a", &Sort::int(&ctx))]
     );
 }
+
+#[test]
+fn test_bitvector_from_bit_vec() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    // 0b01010101
+    let bit_vec = vec![true, false, true, false, true, false, true, false];
+
+    let a = ast::BV::new_const(&ctx, "a", 8);
+    let b = ast::BV::from_bit_vec(&ctx, bit_vec).unwrap();
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&a._eq(&b));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let model = solver.get_model().unwrap();
+    let av = model.eval(&a, true).unwrap().to_string();
+    assert_eq!(av, "#x55".to_string());
+}
+
+#[test]
+fn test_bitvector_from_byte_vec() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    // 0x55AA
+    // 85 = 0x55 = 01010101
+    // 170 = 0xAA = 10101010
+    // The array should be ordered like this (at least that is how it works in rust internally)
+    let byte_vec = vec![170, 85];
+
+    let a = ast::BV::new_const(&ctx, "a", 16);
+    let b = ast::BV::from_byte_vec(&ctx, byte_vec).unwrap();
+
+    let solver = Solver::new(&ctx);
+    solver.assert(&a._eq(&b));
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    let model = solver.get_model().unwrap();
+    let av = model.eval(&a, true).unwrap().to_string();
+    assert_eq!(av, "#x55aa".to_string());
+}
