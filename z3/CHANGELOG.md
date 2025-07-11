@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.0...z3-v0.13.1) - 2025-07-10
+
+### Added
+
+- add gh-release feature to get z3 from released libraries ([#352](https://github.com/prove-rs/z3.rs/pull/352))
+
 ## [0.13.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.12.1...z3-v0.13.0) - 2025-07-10
 
 ### Added
