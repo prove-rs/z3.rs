@@ -323,7 +323,7 @@ fn build_bundled_z3() {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
-    } else if cfg!(target_arch = "wasm32-unknown-emscripten") {
+    } else if cfg!(target_arch = "wasm32") || cfg!(target_arch = "wasm64") {
         cfg.cxxflag("-fexceptions");
     }
 
