@@ -292,7 +292,7 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
             enum_bindings = enum_bindings.clang_arg(format!(
                 "--sysroot={}/upstream/emscripten/cache/sysroot",
                 env::var("EMSDK").expect("$EMSDK env var missing. Is emscripten installed?")
-            )).clang_arg("-fexceptions");
+            ));
         }
         enum_bindings
             .generate()
@@ -323,6 +323,8 @@ fn build_bundled_z3() {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
+    }else if cfg!(target_arch = "wasm32-unknown-emscripten"){
+        cfg.cxxflag("-fexceptions")
     }
 
     let dst = cfg.build();
