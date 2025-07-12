@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.2](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.1...z3-sys-v0.9.2) - 2025-07-12
+
+### Fixed
+
+- fix bundled compilation on wasm with cc >= 1.2 ([#360](https://github.com/prove-rs/z3.rs/pull/360))
+
 ## [0.9.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.0...z3-sys-v0.9.1) - 2025-07-10
 
 ### Added
