@@ -312,7 +312,8 @@ fn build_bundled_z3() {
         // Don't build the Z3 repl.
         .define("Z3_BUILD_EXECUTABLE", "false")
         // Don't build the tests.
-        .define("Z3_BUILD_TEST_EXECUTABLES", "false");
+        .define("Z3_BUILD_TEST_EXECUTABLES", "false")
+        .build_arg("-fexceptions").define("IS_THIS_THING_WORKING", "true");
 
     if cfg!(target_os = "windows") {
         // The compiler option -MP and the msbuild option -m
@@ -323,9 +324,6 @@ fn build_bundled_z3() {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
-    } else if cfg!(target_arch = "wasm32") || cfg!(target_arch = "wasm64") {
-        cfg.build_arg("-fexceptions");
-        cfg.define("IS_THIS_THING_WORKING", "true");
     }
 
     let dst = cfg.build();
