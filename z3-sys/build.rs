@@ -325,6 +325,7 @@ fn build_bundled_z3() {
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
     } else if cfg!(target_arch = "wasm32") || cfg!(target_arch = "wasm64") {
         cfg.build_arg("-fexceptions");
+        cfg.define("IS_THIS_THING_WORKING", "true");
     }
 
     let dst = cfg.build();
