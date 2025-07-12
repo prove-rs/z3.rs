@@ -323,7 +323,7 @@ fn build_bundled_z3() {
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
     } else {
-        cfg.no_default_flags(true).cxxflag("-fexceptions");
+        cfg.cxxflag("-fexceptions");
     }
 
     let dst = cfg.build();
