@@ -323,8 +323,8 @@ fn build_bundled_z3() {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
-    }else if cfg!(target_arch = "wasm32-unknown-emscripten"){
-        cfg.cxxflag("-fexceptions")
+    } else if cfg!(target_arch = "wasm32-unknown-emscripten") {
+        cfg.cxxflag("-fexceptions");
     }
 
     let dst = cfg.build();
