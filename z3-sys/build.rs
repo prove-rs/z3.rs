@@ -313,7 +313,7 @@ fn build_bundled_z3() {
         .define("Z3_BUILD_EXECUTABLE", "false")
         // Don't build the tests.
         .define("Z3_BUILD_TEST_EXECUTABLES", "false")
-        .build_arg("-fexceptions").define("IS_THIS_THING_WORKING", "true");
+        .cxxflag("-fexceptions").define("IS_THIS_THING_WORKING", "true");
 
     if cfg!(target_os = "windows") {
         // The compiler option -MP and the msbuild option -m
