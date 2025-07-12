@@ -322,8 +322,10 @@ fn build_bundled_z3() {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
-    } else {
-        cfg.cxxflag("-fexceptions");
+    } else if env::var("TARGET").unwrap().starts_with("wasm") {
+        // for wasm targets, ensure we allow exceptions
+        // because z3 has some exceptions
+        cfg.no_default_flags(true).cxxflag("-fexceptions");
     }
 
     let dst = cfg.build();
