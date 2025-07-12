@@ -306,16 +306,13 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
 #[cfg(feature = "bundled")]
 fn build_bundled_z3() {
     let mut cfg = cmake::Config::new("z3");
-    cfg.no_default_flags(true)
-        // Don't build `libz3.so`, build `libz3.a` instead.
-        .define("Z3_BUILD_LIBZ3_SHARED", "false")
+    // Don't build `libz3.so`, build `libz3.a` instead.
+    cfg.define("Z3_BUILD_LIBZ3_SHARED", "false")
         // Don't build the Z3 repl.
         .define("Z3_BUILD_EXECUTABLE", "false")
         // Don't build the tests.
-        .define("Z3_BUILD_TEST_EXECUTABLES", "false")
-        .cxxflag("-fexceptions");
-        
-        
+        .define("Z3_BUILD_TEST_EXECUTABLES", "false");
+
     if cfg!(target_os = "windows") {
         // The compiler option -MP and the msbuild option -m
         // can sometimes make builds slower but is measurably
@@ -325,6 +322,8 @@ fn build_bundled_z3() {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
+    } else if cfg!(target_family = "wasm") {
+        cfg.no_default_flags(true).cxxflag("-fexceptions");
     }
 
     let dst = cfg.build();
