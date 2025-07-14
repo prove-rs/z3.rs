@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.3](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.2...z3-sys-v0.9.3) - 2025-07-14
+
+### Fixed
+
+- narrow build flag impact of wasm fix ([#362](https://github.com/prove-rs/z3.rs/pull/362)) (by @toolCHAINZ) - #362
+
+### Other
+
+- github action updates and caching ([#368](https://github.com/prove-rs/z3.rs/pull/368)) (by @toolCHAINZ) - #368
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.9.2](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.1...z3-sys-v0.9.2) - 2025-07-12
 
 ### Fixed
