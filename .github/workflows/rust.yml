@@ -118,7 +118,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
       - name: vcpkg build z3
-        uses: johnwason/vcpkg-action@v6
+        uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
           pkgs: z3
