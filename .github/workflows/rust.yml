@@ -165,11 +165,6 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
-      - name: Cache target directory
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-gh-release-${{ hashFiles('**/Cargo.toml', '**/build.rs') }}
       - name: Test `z3-sys` and `z3` with gh-release linked Z3
         run: cargo test --workspace --features gh-release
         env:
