@@ -88,13 +88,13 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
-      - name: Cache target directory
-        uses: actions/cache@v4
-        with:
-          path: target
-          key: ${{ runner.os }}-bundled-${{ hashFiles('**/Cargo.toml', '**/build.rs', 'z3-sys/z3/RELEASE_NOTES.md') }}
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Test `z3-sys` and `z3` with bundled linked Z3
         run: cargo test --workspace --features bundled
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
 
   build_with_vcpkg_installed_z3:
     strategy:
