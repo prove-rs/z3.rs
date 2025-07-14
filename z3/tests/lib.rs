@@ -297,7 +297,7 @@ fn test_solver_translate() {
 }
 
 #[test]
-fn test_solver_lifetimes() {
+fn test_translate_lifetimes() {
     let cfg = Config::new();
     let ctx1 = Context::new(&cfg);
     let bv1;
