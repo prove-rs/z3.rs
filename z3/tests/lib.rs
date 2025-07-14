@@ -297,6 +297,20 @@ fn test_solver_translate() {
 }
 
 #[test]
+fn test_solver_lifetimes() {
+    let cfg = Config::new();
+    let ctx1 = Context::new(&cfg);
+    let bv1;
+    {
+        let ctx2 = Context::new(&cfg);
+        let bv2 = BV::from_u64(&ctx2, 0, 8);
+        bv1 = bv2.translate(&ctx1);
+    }
+    // The actual test here is that this test even compiles.
+    assert_eq!(bv1.as_u64(), Some(0));
+}
+
+#[test]
 fn test_model_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
