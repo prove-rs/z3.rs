@@ -61,7 +61,7 @@ jobs:
     - name: Build z3-sys and z3 with bundled Z3
       run: |
         source ~/emsdk/emsdk_env.sh
-        cargo build --target=wasm32-unknown-emscripten --features bundled
+        cargo build --target=wasm32-unknown-emscripten --features bundled -vv
 
   build_with_bundled_z3:
     strategy:
