@@ -409,17 +409,6 @@ pub trait Ast<'ctx>: fmt::Debug {
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
         }
     }
-
-    fn translate<'src_ctx>(&'src_ctx self, dest: &'ctx Context) -> Self
-    where
-        Self: Sized,
-    {
-        unsafe {
-            Self::wrap(dest, {
-                Z3_translate(self.get_ctx().z3_ctx, self.get_z3_ast(), dest.z3_ctx)
-            })
-        }
-    }
 }
 
 macro_rules! impl_ast {
@@ -447,6 +436,16 @@ macro_rules! impl_ast {
 
             fn get_z3_ast(&self) -> Z3_ast {
                 self.z3_ast
+            }
+        }
+
+        impl<'ctx> $ast<'ctx> {
+            pub fn translate<'dst_ctx>(&self, dest: &'dst_ctx Context) -> $ast<'dst_ctx> {
+                unsafe {
+                    $ast::wrap(dest, {
+                        Z3_translate(self.get_ctx().z3_ctx, self.get_z3_ast(), dest.z3_ctx)
+                    })
+                }
             }
         }
 
