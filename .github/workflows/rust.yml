@@ -62,9 +62,8 @@ jobs:
       env:
         SCCACHE_GHA_ENABLED: "true"
         RUSTC_WRAPPER: "sccache"
-        EM_COMPILER_WRAPPER: "sccache"
-        CMAKE_C_COMPILER_LAUNCHER: "sccache"
-        CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
+        CMAKE_C_COMPILER: "sccache emcc"
+        CMAKE_CXX_COMPILER: "sccache em++"
 
   build_with_bundled_z3:
     strategy:
