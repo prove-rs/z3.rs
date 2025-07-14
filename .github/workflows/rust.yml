@@ -53,10 +53,17 @@ jobs:
         source ./emsdk_env.sh
     - name: Install wasm32-unknown-emscripten target
       run: rustup target add wasm32-unknown-emscripten
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.9
     - name: Build z3-sys and z3 with bundled Z3
       run: |
         source ~/emsdk/emsdk_env.sh
         cargo build --target=wasm32-unknown-emscripten --features bundled -vv
+      env:
+        SCCACHE_GHA_ENABLED: "true"
+        RUSTC_WRAPPER: "sccache"
+        CMAKE_C_COMPILER_LAUNCHER: "sccache"
+        CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
 
   build_with_bundled_z3:
     strategy:
@@ -92,6 +99,7 @@ jobs:
           RUSTC_WRAPPER: "sccache"
           CMAKE_C_COMPILER_LAUNCHER: "sccache"
           CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
+
   build_with_vcpkg_installed_z3:
     strategy:
       matrix:
