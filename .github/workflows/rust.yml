@@ -53,6 +53,11 @@ jobs:
         source ./emsdk_env.sh
     - name: Install wasm32-unknown-emscripten target
       run: rustup target add wasm32-unknown-emscripten
+    - name: Cache target directory
+      uses: actions/cache@v4
+      with:
+          path: target
+          key: ${{ runner.os }}-bundled-${{ hashFiles('**/Cargo.toml', '**/build.rs', 'z3-sys/z3/RELEASE_NOTES.md') }}
     - name: Build z3-sys and z3 with bundled Z3
       run: |
         source ~/emsdk/emsdk_env.sh
@@ -83,6 +88,11 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-bundled-${{ hashFiles('**/Cargo.toml', '**/build.rs', 'z3-sys/z3/RELEASE_NOTES.md') }}
       - name: Test `z3-sys` and `z3` with bundled linked Z3
         run: cargo test --workspace --features bundled
 
@@ -155,6 +165,11 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Cache target directory
+        uses: actions/cache@v4
+        with:
+          path: target
+          key: ${{ runner.os }}-gh-release-${{ hashFiles('**/Cargo.toml', '**/build.rs') }}
       - name: Test `z3-sys` and `z3` with gh-release linked Z3
         run: cargo test --workspace --features gh-release
         env:
