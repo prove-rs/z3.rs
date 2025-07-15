@@ -409,17 +409,6 @@ pub trait Ast<'ctx>: fmt::Debug {
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
         }
     }
-
-    fn translate<'src_ctx>(&'src_ctx self, dest: &'ctx Context) -> Self
-    where
-        Self: Sized,
-    {
-        unsafe {
-            Self::wrap(dest, {
-                Z3_translate(self.get_ctx().z3_ctx, self.get_z3_ast(), dest.z3_ctx)
-            })
-        }
-    }
 }
 
 macro_rules! impl_ast {
@@ -447,6 +436,16 @@ macro_rules! impl_ast {
 
             fn get_z3_ast(&self) -> Z3_ast {
                 self.z3_ast
+            }
+        }
+
+        impl<'ctx> $ast<'ctx> {
+            pub fn translate<'dst_ctx>(&self, dest: &'dst_ctx Context) -> $ast<'dst_ctx> {
+                unsafe {
+                    $ast::wrap(dest, {
+                        Z3_translate(self.get_ctx().z3_ctx, self.get_z3_ast(), dest.z3_ctx)
+                    })
+                }
             }
         }
 
@@ -1140,6 +1139,11 @@ impl<'ctx> Float<'ctx> {
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
+        is_infinite(Z3_mk_fpa_is_infinite, Bool<'ctx>);
+        is_normal(Z3_mk_fpa_is_normal, Bool<'ctx>);
+        is_subnormal(Z3_mk_fpa_is_subnormal, Bool<'ctx>);
+        is_zero(Z3_mk_fpa_is_zero, Bool<'ctx>);
+        is_nan(Z3_mk_fpa_is_nan, Bool<'ctx>);
     }
     binop! {
         lt(Z3_mk_fpa_lt, Bool<'ctx>);
