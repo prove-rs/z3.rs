@@ -71,8 +71,8 @@ fn test_solving_for_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
     let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(xv > yv);
     assert!(yv % 7 == 2);
     assert!(xv + 2 > 7);
@@ -101,8 +101,8 @@ fn test_solving_for_model_cloned() {
     let model = cloned.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_i64().unwrap();
     let yv = model.eval(&y, true).unwrap().as_i64().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(xv > yv);
     assert!(yv % 7 == 2);
     assert!(xv + 2 > 7);
@@ -128,7 +128,7 @@ fn test_cloning_ast() {
     assert_eq!(yv, 0);
 }
 
-fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool> {
+fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool<'_>> {
     let s = Solver::new(ctx);
     let x = ast::Int::new_const(ctx, "x");
     let y = ast::Int::new_const(ctx, "y");
@@ -297,6 +297,20 @@ fn test_solver_translate() {
 }
 
 #[test]
+fn test_translate_lifetimes() {
+    let cfg = Config::new();
+    let ctx1 = Context::new(&cfg);
+    let bv1;
+    {
+        let ctx2 = Context::new(&cfg);
+        let bv2 = BV::from_u64(&ctx2, 0, 8);
+        bv1 = bv2.translate(&ctx1);
+    }
+    // The actual test here is that this test even compiles.
+    assert_eq!(bv1.as_u64(), Some(0));
+}
+
+#[test]
 fn test_model_translate() {
     let cfg = Config::new();
     let source = Context::new(&cfg);
@@ -336,8 +350,8 @@ fn test_pb_ops_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
     let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!((xv && !yv) || (!xv && yv));
 
     solver.pop(1);
@@ -347,8 +361,8 @@ fn test_pb_ops_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
     let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(xv && yv);
 
     solver.pop(1);
@@ -357,8 +371,8 @@ fn test_pb_ops_model() {
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
     let yv = model.eval(&y, true).unwrap().as_bool().unwrap();
-    info!("x: {}", xv);
-    info!("y: {}", yv);
+    info!("x: {xv}");
+    info!("y: {yv}");
     assert!(!xv && !yv);
 }
 

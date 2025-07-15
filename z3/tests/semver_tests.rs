@@ -157,19 +157,19 @@ fn test_solve_simple_semver_example() {
     // Make a root Z3 Int constant for each pkg we're trying to solve for.
     for (k, v) in &root {
         let ast = ast::Int::fresh_const(&ctx, "root-pkg");
-        info!("new AST for root {}", k);
+        info!("new AST for root {k}");
 
         match first_version_req_index(&smap, k, v) {
             None => (),
             Some(low) => {
-                info!("Asserting: {} >= #{} (root)", k, low);
+                info!("Asserting: {k} >= #{low} (root)");
                 opt.assert(&ast.ge(&ast::Int::from_u64(&ctx, low as u64)));
             }
         }
         match last_version_req_index(&smap, k, v) {
             None => (),
             Some(high) => {
-                info!("Asserting: {} <= #{} (root)", k, high);
+                info!("Asserting: {k} <= #{high} (root)");
                 opt.assert(&ast.le(&ast::Int::from_u64(&ctx, high as u64)));
             }
         }
@@ -185,7 +185,7 @@ fn test_solve_simple_semver_example() {
     // Ensure we have a constant for every pkg _or_ dep listed
     for k in (smap).keys() {
         asts.entry(k.clone()).or_insert_with(|| {
-            info!("new AST for {}", k);
+            info!("new AST for {k}");
             ast::Int::fresh_const(&ctx, "pkg")
         });
     }
@@ -193,7 +193,7 @@ fn test_solve_simple_semver_example() {
         for spec in specs {
             for r in (spec).reqs.keys() {
                 asts.entry(r.clone()).or_insert_with(|| {
-                    info!("new AST for {}", r);
+                    info!("new AST for {r}");
                     ast::Int::fresh_const(&ctx, "dep-pkg")
                 });
             }

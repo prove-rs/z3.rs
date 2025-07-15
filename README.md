@@ -34,16 +34,3 @@ the meantime.
 
 The only other time to use `z3-sys` directly would be if you are writing your
 own custom high-level API for Z3, instead of using the `z3` crate.
-
-## Release Process
-
-1. Make a version bump commit
-    1. Bump version for the relevant crate in Cargo.toml
-    1. Update version in examples/READMEs
-1. Create a git tag for the commit
-    1. i.e. `git tag z3-v0.10.0`
-1. Push the changes
-    1. `git push`
-    1. `git push --tags`
-1. Publish on crates.io
-    1. `cargo publish`
