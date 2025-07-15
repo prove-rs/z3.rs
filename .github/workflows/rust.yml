@@ -158,6 +158,7 @@ jobs:
       run: cargo clippy --workspace --all-targets
 
   build_with_gh_release_z3:
+    if: ${{ github.repository_owner == 'prove-rs' }}
     strategy:
       matrix:
         build: [linux, macos, windows]
