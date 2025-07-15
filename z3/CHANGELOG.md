@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.1...z3-v0.13.2) - 2025-07-14
+
+### Fixed
+
+- Make translate 'dst lifetime independent of 'ctx ([#365](https://github.com/prove-rs/z3.rs/pull/365)) (by @toolCHAINZ) - #365
+
+### Other
+
+- Better documentation of z3 installation options ([#364](https://github.com/prove-rs/z3.rs/pull/364)) (by @lmondada) - #364
+
+### Contributors
+
+* @toolCHAINZ
+* @lmondada
+
 ## [0.13.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.0...z3-v0.13.1) - 2025-07-10
 
 ### Added
