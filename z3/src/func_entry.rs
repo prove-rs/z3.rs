@@ -14,7 +14,7 @@ impl<'ctx> FuncEntry<'ctx> {
     }
 
     /// Returns the value of the function.
-    pub fn get_value(&self) -> Dynamic {
+    pub fn get_value(&self) -> Dynamic<'_> {
         unsafe {
             Dynamic::wrap(
                 self.ctx,
@@ -29,7 +29,7 @@ impl<'ctx> FuncEntry<'ctx> {
     }
 
     /// Returns the arguments of the function entry.
-    pub fn get_args(&self) -> Vec<Dynamic> {
+    pub fn get_args(&self) -> Vec<Dynamic<'_>> {
         (0..self.get_num_args())
             .map(|i| unsafe {
                 Dynamic::wrap(

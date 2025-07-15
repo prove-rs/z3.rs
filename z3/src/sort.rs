@@ -323,11 +323,11 @@ impl<'ctx> SortDiffers<'ctx> {
         Self { left, right }
     }
 
-    pub fn left(&self) -> &Sort {
+    pub fn left(&self) -> &Sort<'_> {
         &self.left
     }
 
-    pub fn right(&self) -> &Sort {
+    pub fn right(&self) -> &Sort<'_> {
         &self.right
     }
 }
