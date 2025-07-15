@@ -67,7 +67,7 @@ impl<'ctx> Optimize<'ctx> {
     /// - [`Optimize::assert()`]
     /// - [`Optimize::assert_soft()`]
     pub fn assert_and_track(&self, ast: &Bool<'ctx>, p: &Bool<'ctx>) {
-        debug!("assert_and_track: {:?}", ast);
+        debug!("assert_and_track: {ast:?}");
         unsafe { Z3_optimize_assert_and_track(self.ctx.z3_ctx, self.z3_opt, ast.z3_ast, p.z3_ast) };
     }
 

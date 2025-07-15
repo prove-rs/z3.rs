@@ -35,13 +35,9 @@ jobs:
       run: brew install z3
     - name: Run tests
       run: cargo test --workspace
-      # XXX: Ubuntu's Z3 package seems to be missing some symbols, like
-      # `Z3_mk_pbeq`, leading to linker errors. Just ignore this, I guess, until
-      # we figure out how to work around it. At least we have the
-      # build using a bundled Z3 below...
-      if: ${{ success() || failure() }}
 
   build_on_wasm:
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -58,12 +54,20 @@ jobs:
         source ./emsdk_env.sh
     - name: Install wasm32-unknown-emscripten target
       run: rustup target add wasm32-unknown-emscripten
+    - name: Run sccache-cache
+      uses: mozilla-actions/sccache-action@v0.0.9
     - name: Build z3-sys and z3 with bundled Z3
       run: |
         source ~/emsdk/emsdk_env.sh
         cargo build --target=wasm32-unknown-emscripten --features bundled
+      env:
+        SCCACHE_GHA_ENABLED: "true"
+        RUSTC_WRAPPER: "sccache"
+        _EM_CCACHE: "true"
+        EM_COMPILER_WRAPPER: "sccache"
 
   build_with_bundled_z3:
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
         build: [linux, macos, windows]
@@ -88,8 +92,15 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.9
       - name: Test `z3-sys` and `z3` with bundled linked Z3
         run: cargo test --workspace --features bundled
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
+          CMAKE_C_COMPILER_LAUNCHER: "sccache"
+          CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
 
   build_with_vcpkg_installed_z3:
     strategy:
@@ -123,7 +134,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
       - name: vcpkg build z3
-        uses: johnwason/vcpkg-action@v6
+        uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
           pkgs: z3
@@ -145,3 +156,22 @@ jobs:
       run: brew install z3
     - name: Run clippy
       run: cargo clippy --workspace --all-targets
+
+  build_with_gh_release_z3:
+    strategy:
+      matrix:
+        build: [linux, macos, windows]
+        include:
+          - build: linux
+            os: ubuntu-latest
+          - build: macos
+            os: macos-latest
+          - build: windows
+            os: windows-latest
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Test `z3-sys` and `z3` with gh-release linked Z3
+        run: cargo test --workspace --features gh-release
+        env:
+          READ_ONLY_GITHUB_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}

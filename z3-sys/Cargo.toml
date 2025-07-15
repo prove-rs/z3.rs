@@ -1,6 +1,6 @@
 [package]
 name = "z3-sys"
-version = "0.8.1"
+version = "0.9.3"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 build = "build.rs"
 edition = "2018"
@@ -16,17 +16,18 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
-bindgen = { version = "0.70", default-features = false, features = ["runtime"] }
-# Temporarily pinning cc to 1.1 as 1.2 and later use -fno-exceptions, which
-# breaks the z3 build. See https://github.com/prove-rs/z3.rs/issues/328
-cc = "~1.1"
-cmake = { version = "0.1.49", optional = true }
-pkg-config = "0.3.27"
+bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
+cmake = { version = "0.1.54", optional = true }
+zip-extract = { version = "0.4.0", optional = true }
+pkg-config = "0.3.32"
+reqwest = { version = "0.12.22", default-features = false, features = ["blocking", "default-tls"], optional = true }
+serde_json = { version = "1.0.140", optional = true }
 vcpkg = { version = "0.2.15", optional = true }
 
 [features]
 bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
 vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
+gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip-extract"] # Download pre-compiled Z3 lib from GitHub release for supported platforms.
 
 # Legacy feature for short term compatibility
 static-link-z3 = ["bundled", "deprecated-static-link-z3"]
