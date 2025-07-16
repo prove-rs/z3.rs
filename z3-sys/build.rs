@@ -53,7 +53,7 @@ fn main() {
                 println!("cargo:rustc-link-lib=static=z3");
             }
 
-            (z3_header, vec![PathBuf::from(include_dir)])
+            (z3_header, vec![include_dir])
         }
         _ => {
             let search_paths = if let Ok(lib) = pkg_config::Config::new().probe("z3") {
