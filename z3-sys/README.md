@@ -27,7 +27,7 @@ $ cargo add z3-sys
 
 **Note:** This library has a dependency on Z3.
 
-There are 4 ways for this crate to currently find Z3:
+There are 5 ways for this crate to currently find Z3:
 
 * By default, it will look for a system-installed copy of Z3.
   On Linux, this would be via the package manager. On macOS, this
@@ -51,6 +51,9 @@ There are 4 ways for this crate to currently find Z3:
     provide it to the `READ_ONLY_GITHUB_TOKEN` environment variable. The
     `build.rs` step will automatically use this token (if present) to prevent
     throttling.
+* Enabling the `manual` feature requires user provide a pre-built Z3.
+  * Users should specify both `Z3_SYS_Z3_INCLUDE` and `Z3_SYS_Z3_LIB` environment
+  variables indicating the header search path and library search path to find Z3.
 
 **Note:** This crate requires a `z3.h` during build time.
 
@@ -63,6 +66,9 @@ There are 4 ways for this crate to currently find Z3:
 * Enabling the `vcpkg` or `gh-release` feature will cause the copy of
   `z3.h` provided by that version to be used. In this case, there is
   no override via the environment variable.
+* Enabling the `manual` feature will use the `z3.h` under `Z3_SYS_Z3_INCLUDE`
+  directory by default, and this could be overriden by `Z3_SYS_Z3_HEADER`
+  environment variable.
 
 ## Support and Maintenance
 

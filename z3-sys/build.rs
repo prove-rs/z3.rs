@@ -1,4 +1,7 @@
-use std::{env, path::PathBuf};
+use std::{
+    env,
+    path::{Path, PathBuf},
+};
 
 macro_rules! assert_one_of_features {
     ($($feature:literal),*) => {{
@@ -19,7 +22,7 @@ macro_rules! assert_one_of_features {
 
 fn main() {
     // Check that only one of the mutually exclusive features is active
-    let active_feature = assert_one_of_features!("bundled", "vcpkg", "gh-release");
+    let active_feature = assert_one_of_features!("bundled", "vcpkg", "gh-release", "manual");
 
     println!("cargo:rerun-if-changed=build.rs");
 
@@ -30,6 +33,28 @@ fn main() {
         }
         Some("gh-release") => (install_from_gh_release(), vec![]),
         Some("vcpkg") => (find_library_header_by_vcpkg(), vec![]),
+        Some("manual") => {
+            const Z3_INCLUDE_VAR: &str = "Z3_SYS_Z3_INCLUDE";
+            const Z3_LIB_VAR: &str = "Z3_SYS_Z3_LIB";
+            const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
+            let include_dir = env::var(Z3_INCLUDE_VAR).expect("You have specified \"manual\" feature of z3, which expects Z3_SYS_Z3_INCLUDE env to be set");
+            let include_dir = PathBuf::from(include_dir);
+            let lib_dir = env::var(Z3_LIB_VAR).expect("You have specified \"manual\" feature of z3, which expects Z3_SYS_Z3_LIB env to be set");
+            let z3_header = if let Ok(z3_header_path) = env::var(Z3_HEADER_VAR) {
+                PathBuf::from(z3_header_path)
+            } else {
+                include_dir.join("z3.h")
+            };
+
+            println!("cargo:rustc-link-search=native={lib_dir}");
+            if cfg!(target_os = "windows") {
+                println!("cargo:rustc-link-lib=static=libz3");
+            } else {
+                println!("cargo:rustc-link-lib=static=z3");
+            }
+
+            (z3_header, vec![PathBuf::from(include_dir)])
+        }
         _ => {
             let search_paths = if let Ok(lib) = pkg_config::Config::new().probe("z3") {
                 lib.include_paths
@@ -85,7 +110,7 @@ mod gh_release {
     use reqwest::blocking::{Client, ClientBuilder};
     use reqwest::header::{HeaderMap, AUTHORIZATION};
 
-    pub(super) fn install_from_gh_release() -> String {
+    pub(super) fn install_from_gh_release() -> PathBuf {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
         let (header, lib) = retrieve_gh_release_z3(&target_os, &target_arch);
@@ -98,7 +123,7 @@ mod gh_release {
         } else {
             println!("cargo:rustc-link-lib=static=z3");
         }
-        header.to_string_lossy().to_string()
+        header
     }
 
     fn retrieve_gh_release_z3(target_os: &str, target_arch: &str) -> (PathBuf, PathBuf) {
@@ -222,22 +247,20 @@ mod gh_release {
 use gh_release::install_from_gh_release;
 
 #[cfg(not(feature = "gh-release"))]
-fn install_from_gh_release() -> String {
+fn install_from_gh_release() -> PathBuf {
     unreachable!()
 }
 
 #[cfg(feature = "vcpkg")]
-fn find_library_header_by_vcpkg() -> String {
+fn find_library_header_by_vcpkg() -> PathBuf {
     let lib = vcpkg::Config::new()
         .emit_includes(true)
         .find_package("z3")
         .unwrap();
-    for include in &lib.include_paths {
-        let mut include = include.clone();
-        include.push("z3.h");
-        if include.exists() {
-            let header = include.to_str().unwrap().to_owned();
-            println!("cargo:rerun-if-changed={header}");
+    for include in lib.include_paths {
+        let header = include.join("z3.h");
+        if header.exists() {
+            println!("cargo:rerun-if-changed={}", header.display());
             return header;
         }
     }
@@ -245,11 +268,11 @@ fn find_library_header_by_vcpkg() -> String {
 }
 
 #[cfg(not(feature = "vcpkg"))]
-fn find_library_header_by_vcpkg() -> String {
+fn find_library_header_by_vcpkg() -> PathBuf {
     unreachable!()
 }
 
-fn find_header_by_env() -> String {
+fn find_header_by_env() -> PathBuf {
     const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
         "z3/src/api/z3.h".to_string()
@@ -260,10 +283,10 @@ fn find_header_by_env() -> String {
     };
     println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
     println!("cargo:rerun-if-changed={header}");
-    header
+    PathBuf::from(header)
 }
 
-fn generate_binding(header: &str, search_paths: &[PathBuf]) {
+fn generate_binding(header: &Path, search_paths: &[PathBuf]) {
     let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
 
     for x in &[
@@ -279,7 +302,7 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
     ] {
         #[allow(unused_mut)]
         let mut enum_bindings = bindgen::Builder::default()
-            .header(header)
+            .header(header.to_string_lossy().to_string())
             .generate_comments(false)
             .rustified_enum(format!("Z3_{x}"))
             .allowlist_type(format!("Z3_{x}"))

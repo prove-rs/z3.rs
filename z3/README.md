@@ -27,8 +27,8 @@ $ cargo add z3
 
 **Note:** This library has a dependency on Z3.
 
-There are 4 ways for this crate to currently find Z3, controlled by the feature
-flags `bundled`, `vcpkg` and `gh-release`.
+There are 5 ways for this crate to currently find Z3, controlled by the feature
+flags `bundled`, `vcpkg`, `gh-release` and `manual`.
 
 This might look like:
 
@@ -58,13 +58,11 @@ file. On Apple Silicon, this will typically be `/opt/homebrew/include/z3.h`:
 Z3_SYS_Z3_HEADER=/opt/homebrew/include/z3.h cargo build
 ```
 
-You may further have to set `LIBRARY_PATH` to `/opt/homebrew/lib` for the linker
-to find the Z3 library. You can store these settings in the cargo configuration
+You can store these settings in the cargo configuration
 file `.cargo/config.toml` of your project as follows: 
 
 ```toml
 [env]
-LIBRARY_PATH = "/opt/homebrew/lib"
 Z3_SYS_Z3_HEADER = "/opt/homebrew/include/z3.h"
 ```
 
@@ -86,6 +84,12 @@ Enabling the `gh-release` feature will download a pre-compiled
 copy of Z3 from the GitHub release page for the current platform,
 if available. You may specify the version of Z3 to download via the
 `Z3_SYS_Z3_VERSION` environment variable.
+
+#### 5. Manual: Use a user's manually pre-built Z3
+
+Enabling the `manual` feature will use user's pre-built Z3. User
+should provide the header search path and library search path
+via environment variable `Z3_SYS_Z3_INCLUDE` and `Z3_SYS_Z3_LIB`.
 
 ## Support and Maintenance
 
