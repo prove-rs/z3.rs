@@ -11,7 +11,7 @@ readme = "README.md"
 documentation = "https://docs.rs/z3/"
 homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
-edition = "2018"
+edition = "2021"
 
 
 [features]

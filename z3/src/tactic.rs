@@ -88,7 +88,7 @@ impl<'ctx> Tactic<'ctx> {
         unsafe {
             let tactic = Z3_mk_tactic(ctx.z3_ctx, tactic_name.as_ptr());
             if tactic.is_null() {
-                panic!("{} is an invalid tactic", name);
+                panic!("{name} is an invalid tactic");
             } else {
                 Self::wrap(ctx, tactic)
             }
