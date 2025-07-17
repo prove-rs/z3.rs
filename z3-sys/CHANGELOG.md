@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.3...z3-sys-v0.9.4) - 2025-07-17
+
+### Added
+
+- Add Z3_LIBRARY_PATH_OVERRIDE ([#377](https://github.com/prove-rs/z3.rs/pull/377)) (by @Evian-Zhang) - #377
+
+### Fixed
+
+- use zip instead of deprecated zip-extract ([#380](https://github.com/prove-rs/z3.rs/pull/380)) (by @toolCHAINZ) - #380
+
+### Contributors
+
+* @toolCHAINZ
+* @Evian-Zhang
+
 ## [0.9.3](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.2...z3-sys-v0.9.3) - 2025-07-14
 
 ### Fixed
