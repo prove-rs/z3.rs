@@ -30,6 +30,7 @@ mod sort;
 mod statistics;
 mod symbol;
 mod tactic;
+pub mod user_propagator;
 mod version;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};

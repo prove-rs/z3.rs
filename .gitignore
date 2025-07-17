@@ -2,3 +2,9 @@ target
 Cargo.lock
 *~
 .z3-trace
+.DS_Store
+
+# nix
+.envrc
+.direnv
+result

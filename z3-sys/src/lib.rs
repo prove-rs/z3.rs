@@ -1552,6 +1552,73 @@ pub enum ErrorCode {
 pub type Z3_error_handler =
     ::std::option::Option<unsafe extern "C" fn(c: Z3_context, e: ErrorCode)>;
 
+#[doc(hidden)]
+#[repr(C)]
+#[derive(Debug, Copy, Clone)]
+pub struct _Z3_solver_callback {
+    _unused: [u8; 0],
+}
+
+/// Type of callback functions for the User Propagator
+pub type Z3_solver_callback = *mut _Z3_solver_callback;
+
+pub type Z3_push_eh = ::std::option::Option<
+    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cd: Z3_solver_callback),
+>;
+pub type Z3_pop_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        ctx: *mut ::std::ffi::c_void,
+        cb: Z3_solver_callback,
+        num_scopes: ::std::os::raw::c_uint,
+    ),
+>;
+pub type Z3_fresh_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        ctx: *mut ::std::ffi::c_void,
+        new_context: Z3_context,
+    ) -> *mut ::std::ffi::c_void,
+>;
+pub type Z3_fixed_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        ctx: *mut ::std::ffi::c_void,
+        cb: Z3_solver_callback,
+        t: Z3_ast,
+        value: Z3_ast,
+    ),
+>;
+pub type Z3_eq_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        ctx: *mut ::std::ffi::c_void,
+        cb: Z3_solver_callback,
+        s: Z3_ast,
+        t: Z3_ast,
+    ),
+>;
+pub type Z3_final_eh = ::std::option::Option<
+    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cb: Z3_solver_callback),
+>;
+pub type Z3_created_eh = ::std::option::Option<
+    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cb: Z3_solver_callback, t: Z3_ast),
+>;
+pub type Z3_decide_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        cyx: *mut ::std::ffi::c_void,
+        cd: Z3_solver_callback,
+        t: Z3_ast,
+        idx: ::std::os::raw::c_uint,
+        phase: bool,
+    ),
+>;
+pub type Z3_on_clause_eh = ::std::option::Option<
+    unsafe extern "C" fn(
+        ctx: *mut ::std::ffi::c_void,
+        proof_hint: Z3_ast,
+        n: ::std::os::raw::c_uint,
+        deps: *const ::std::os::raw::c_uint,
+        literals: Z3_ast_vector,
+    ),
+>;
+
 /// Precision of a given goal. Some goals can be transformed using over/under approximations.
 ///
 /// This corresponds to `Z3_goal_prec` in the C API.
@@ -8034,6 +8101,157 @@ unsafe extern "C" {
 
     /// Best-effort quantifier elimination
     pub fn Z3_qe_lite(c: Z3_context, vars: Z3_ast_vector, body: Z3_ast) -> Z3_ast;
+
+    /// Sets the next (registered) expression to split on. The function returns
+    /// false and ignores the given expression in case the expression is already
+    /// assigned internally (due to relevancy propagation, this assignments
+    /// might not have been reported yet by the fixed callback). In case the
+    /// function is called in the decide callback, it overrides the currently
+    /// selected variable and phase.
+    pub fn Z3_solver_next_split(
+        c: Z3_context,
+        cb: Z3_solver_callback,
+        t: Z3_ast,
+        idx: ::std::os::raw::c_uint,
+        phase: Z3_lbool,
+    ) -> bool;
+
+    /// propagate a consequence based on fixed values and equalities. A client
+    /// may invoke it during the `propagate_fixed`, `propagate_eq`, `propagate_diseq`,
+    /// and `propagate_final` callbacks. The callback adds a propagation
+    /// consequence based on the fixed values passed ids and equalities eqs
+    /// based on parameters lhs, rhs.
+    ///
+    /// The solver might discard the propagation in case it is true in the
+    /// current state. The function returns false in this case; otw. the
+    /// function returns true. At least one propagation in the final callback
+    /// has to return true in order to prevent the solver from finishing.
+    ///
+    /// - `c`: context
+    /// - `solver_cb`: solver callback
+    /// - `num_ids`: number of fixed terms used as premise to propagation
+    /// - `ids`: array of length `num_ids` containing terms that are fixed in the current scope
+    /// - `num_eqs`: number of equalities used as premise to propagation
+    /// - `lhs`: left side of equalities
+    /// - `rhs`: right side of equalities
+    /// - `consequence`: consequence to propagate. It is typically an atomic formula, but
+    ///                  it can be an arbitrary formula.
+    ///
+    /// Assume the callback has the signature:
+    ///     `propagate_consequence_eh(context, solver_cb, num_ids, ids, num_eqs, lhs, rhs, consequence)`.
+    pub fn Z3_solver_propagate_consequence(
+        c: Z3_context,
+        cb: Z3_solver_callback,
+        num_fixed: ::std::os::raw::c_uint,
+        fixed: *const Z3_ast,
+        num_eqs: ::std::os::raw::c_uint,
+        eq_lhs: *const Z3_ast,
+        eq_rhs: *const Z3_ast,
+        conseq: Z3_ast,
+    ) -> bool;
+
+    /// register a callback when a new expression with a registered function is
+    /// used by the solver The registered function appears at the top level and
+    /// is created using [`Z3_solver_propagate_declare`].
+    pub fn Z3_solver_propagate_created(c: Z3_context, s: Z3_solver, created_eh: Z3_created_eh);
+
+    /// register a callback when the solver decides to split on a registered
+    /// expression. The callback may change the arguments by providing other
+    /// values by calling [`Z3_solver_next_split`].
+    pub fn Z3_solver_propagate_decide(c: Z3_context, s: Z3_solver, decide_eh: Z3_decide_eh);
+
+    /// Create uninterpreted function declaration for the user propagator. When
+    /// expressions using the function are created by the solver invoke a
+    /// callback to [`Z3_solver_propagate_created`] with arguments
+    ///
+    /// 1. context and callback solve
+    /// 2. `declared_expr`: expression using function that was used as the
+    ///    top-level symbol
+    /// 3. `declared_id`: a unique identifier (unique within the current scope) to
+    ///    track the expression.
+    pub fn Z3_solver_propagate_declare(
+        c: Z3_context,
+        name: Z3_symbol,
+        n: ::std::os::raw::c_uint,
+        domain: *const Z3_sort,
+        range: Z3_sort,
+    ) -> Z3_func_decl;
+
+    /// register a callback on expression dis-equalities.
+    pub fn Z3_solver_propagate_diseq(c: Z3_context, s: Z3_solver, eq_eh: Z3_eq_eh);
+
+    /// register a callback on expression equalities.
+    pub fn Z3_solver_propagate_eq(c: Z3_context, s: Z3_solver, eq_eh: Z3_eq_eh);
+
+    /// register a callback on final check. This provides freedom to the
+    /// propagator to delay actions or implement a branch-and bound solver. The
+    /// final check is invoked when all decision variables have been assigned by
+    /// the solver.
+    ///
+    /// The `final_eh` callback takes as argument the origina`user_context`xt that
+    /// was used when calling [`Z3_solver_propagate_init`], and it takes a callback
+    /// context with the opaque type [`Z3_solver_callback`]. The callback context is
+    /// passed as argument to invoke the [`Z3_solver_propagate_consequence`]
+    /// function. The callback context can only be accessed (for propagation and
+    /// for dynamically registering expressions) within a callback. If the
+    /// callback context gets used for propagation or conflicts, those
+    /// propagations take effect and may trigger new decision variables to be
+    /// set.
+    pub fn Z3_solver_propagate_final(c: Z3_context, s: Z3_solver, final_eh: Z3_final_eh);
+
+    /// register a callback for when an expression is bound to a fixed value.
+    /// The supported expression types are:
+    ///
+    /// - Booleans
+    /// - Bit-vectors
+    pub fn Z3_solver_propagate_fixed(c: Z3_context, s: Z3_solver, fixed_eh: Z3_fixed_eh);
+
+    /// register a user-propagator with the solver.
+    ///
+    /// -`c`: context.
+    /// - `s`: solver object.
+    /// - `user_context`: a context used to maintain state for callbacks.
+    /// - `push_eh`: a callback invoked when scopes are pushed
+    /// - `pop_eh`: a callback invoked when scopes are popped
+    /// - `fresh_eh`: a solver may spawn new solvers internally. This callback
+    ///   is used to produce a fresh `user_context` to be associated with fresh
+    ///   solvers.
+    pub fn Z3_solver_propagate_init(
+        c: Z3_context,
+        s: Z3_solver,
+        user_context: *mut ::std::ffi::c_void,
+        push_eh: Z3_push_eh,
+        pop_eh: Z3_pop_eh,
+        fresh_eh: Z3_fresh_eh,
+    );
+
+    /// register an expression to propagate on with the solver. Only expressions
+    /// of type Bool and type Bit-Vector can be registered for propagation.
+    pub fn Z3_solver_propagate_register(c: Z3_context, s: Z3_solver, e: Z3_ast);
+
+    /// register an expression to propagate on with the solver. Only expressions
+    /// of type Bool and type Bit-Vector can be registered for propagation.
+    /// Unlike [`Z3_solver_propagate_register`], this function takes a solver
+    /// callback context as argument. It can be invoked during a callback to
+    /// register new expressions.
+    pub fn Z3_solver_propagate_register_cb(c: Z3_context, cb: Z3_solver_callback, e: Z3_ast);
+
+    /// register a callback to that retrieves assumed, inferred and deleted clauses during search.
+    ///
+    ///
+    /// - `c`: context.
+    /// - `s`: solver object.
+    /// - `user_context`: a context used to maintain state for callbacks.
+    /// - `on_clause_eh`: a callback that is invoked by when a clause is
+    ///    * asserted to the CDCL engine (corresponding to an input clause after pre-processing)
+    ///    * inferred by CDCL(T) using either a SAT or theory conflict/propagation
+    ///    * deleted by the CDCL(T) engine
+    pub fn Z3_solver_register_on_clause(
+        c: Z3_context,
+        s: Z3_solver,
+        user_context: *mut ::std::ffi::c_void,
+        on_clause_eh: Z3_on_clause_eh,
+    );
 }
 
 #[cfg(not(windows))]
