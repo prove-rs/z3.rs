@@ -8,7 +8,9 @@ use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
 impl<'ctx> Sort<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_sort: Z3_sort) -> Sort<'ctx> {
-        Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort));
+        unsafe {
+            Z3_inc_ref(ctx.z3_ctx, Z3_sort_to_ast(ctx.z3_ctx, z3_sort));
+        }
         Sort { ctx, z3_sort }
     }
 

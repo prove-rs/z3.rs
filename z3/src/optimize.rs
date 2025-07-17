@@ -6,8 +6,8 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{
-    ast::{Ast, Bool, Dynamic},
     Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
+    ast::{Ast, Bool, Dynamic},
 };
 
 use num::{
@@ -17,7 +17,9 @@ use num::{
 
 impl<'ctx> Optimize<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_opt: Z3_optimize) -> Optimize<'ctx> {
-        Z3_optimize_inc_ref(ctx.z3_ctx, z3_opt);
+        unsafe {
+            Z3_optimize_inc_ref(ctx.z3_ctx, z3_opt);
+        }
         Optimize { ctx, z3_opt }
     }
 

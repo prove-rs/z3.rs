@@ -3,7 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::{ast, ast::Ast, Context, Goal};
+use crate::{Context, Goal, ast, ast::Ast};
 
 impl Clone for Goal<'_> {
     fn clone(&self) -> Self {
@@ -16,7 +16,9 @@ impl Clone for Goal<'_> {
 
 impl<'ctx> Goal<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_goal: Z3_goal) -> Goal<'ctx> {
-        Z3_goal_inc_ref(ctx.z3_ctx, z3_goal);
+        unsafe {
+            Z3_goal_inc_ref(ctx.z3_ctx, z3_goal);
+        }
         Goal { ctx, z3_goal }
     }
 

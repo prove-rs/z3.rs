@@ -31,7 +31,9 @@ pub struct StatisticsEntry {
 impl<'ctx> Statistics<'ctx> {
     /// Wrap a raw [`Z3_stats`], managing refcounts.
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_stats: Z3_stats) -> Statistics<'ctx> {
-        Z3_stats_inc_ref(ctx.z3_ctx, z3_stats);
+        unsafe {
+            Z3_stats_inc_ref(ctx.z3_ctx, z3_stats);
+        }
         Statistics { ctx, z3_stats }
     }
 
@@ -41,14 +43,16 @@ impl<'ctx> Statistics<'ctx> {
     ///
     /// This assumes that `idx` is a valid index.
     unsafe fn value_at_idx(&self, idx: u32) -> StatisticsValue {
-        if Z3_stats_is_uint(self.ctx.z3_ctx, self.z3_stats, idx) {
-            StatisticsValue::UInt(Z3_stats_get_uint_value(self.ctx.z3_ctx, self.z3_stats, idx))
-        } else {
-            StatisticsValue::Double(Z3_stats_get_double_value(
-                self.ctx.z3_ctx,
-                self.z3_stats,
-                idx,
-            ))
+        unsafe {
+            if Z3_stats_is_uint(self.ctx.z3_ctx, self.z3_stats, idx) {
+                StatisticsValue::UInt(Z3_stats_get_uint_value(self.ctx.z3_ctx, self.z3_stats, idx))
+            } else {
+                StatisticsValue::Double(Z3_stats_get_double_value(
+                    self.ctx.z3_ctx,
+                    self.z3_stats,
+                    idx,
+                ))
+            }
         }
     }
 

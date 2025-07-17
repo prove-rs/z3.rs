@@ -12,7 +12,9 @@ use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 
 impl<'ctx> ApplyResult<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_apply_result: Z3_apply_result) -> ApplyResult<'ctx> {
-        Z3_apply_result_inc_ref(ctx.z3_ctx, z3_apply_result);
+        unsafe {
+            Z3_apply_result_inc_ref(ctx.z3_ctx, z3_apply_result);
+        }
         ApplyResult {
             ctx,
             z3_apply_result,
@@ -63,7 +65,9 @@ impl<'ctx> Tactic<'ctx> {
     }
 
     unsafe fn wrap(ctx: &'ctx Context, z3_tactic: Z3_tactic) -> Tactic<'ctx> {
-        Z3_tactic_inc_ref(ctx.z3_ctx, z3_tactic);
+        unsafe {
+            Z3_tactic_inc_ref(ctx.z3_ctx, z3_tactic);
+        }
         Tactic { ctx, z3_tactic }
     }
 
@@ -88,7 +92,7 @@ impl<'ctx> Tactic<'ctx> {
         unsafe {
             let tactic = Z3_mk_tactic(ctx.z3_ctx, tactic_name.as_ptr());
             if tactic.is_null() {
-                panic!("{} is an invalid tactic", name);
+                panic!("{name} is an invalid tactic");
             } else {
                 Self::wrap(ctx, tactic)
             }

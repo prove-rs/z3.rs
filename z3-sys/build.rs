@@ -45,7 +45,9 @@ fn main() {
     };
 
     #[cfg(feature = "deprecated-static-link-z3")]
-    println!("cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature.");
+    println!(
+        "cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature."
+    );
 
     link_against_cxx_stdlib();
 
@@ -87,9 +89,9 @@ mod gh_release {
 
     use super::*;
     use reqwest::blocking::{Client, ClientBuilder};
-    use reqwest::header::{HeaderMap, AUTHORIZATION};
-    use zip::read::root_dir_common_filter;
+    use reqwest::header::{AUTHORIZATION, HeaderMap};
     use zip::ZipArchive;
+    use zip::read::root_dir_common_filter;
 
     pub(super) fn install_from_gh_release() -> String {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
