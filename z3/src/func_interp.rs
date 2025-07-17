@@ -9,7 +9,9 @@ use crate::{
 
 impl<'ctx> FuncInterp<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_interp: Z3_func_interp) -> Self {
-        Z3_func_interp_inc_ref(ctx.z3_ctx, z3_func_interp);
+        unsafe {
+            Z3_func_interp_inc_ref(ctx.z3_ctx, z3_func_interp);
+        }
 
         Self {
             ctx,

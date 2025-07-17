@@ -9,7 +9,9 @@ use crate::{Context, Goal, Probe};
 
 impl<'ctx> Probe<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_probe: Z3_probe) -> Probe<'ctx> {
-        Z3_probe_inc_ref(ctx.z3_ctx, z3_probe);
+        unsafe {
+            Z3_probe_inc_ref(ctx.z3_ctx, z3_probe);
+        }
         Probe { ctx, z3_probe }
     }
 

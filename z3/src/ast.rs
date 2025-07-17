@@ -421,10 +421,12 @@ macro_rules! impl_ast {
                     z3_ast: {
                         debug!(
                             "new ast: id = {}, pointer = {:p}",
-                            Z3_get_ast_id(ctx.z3_ctx, ast),
+                            unsafe { Z3_get_ast_id(ctx.z3_ctx, ast) },
                             ast
                         );
-                        Z3_inc_ref(ctx.z3_ctx, ast);
+                        unsafe {
+                            Z3_inc_ref(ctx.z3_ctx, ast);
+                        }
                         ast
                     },
                 }

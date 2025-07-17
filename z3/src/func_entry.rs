@@ -9,7 +9,9 @@ use crate::{
 
 impl<'ctx> FuncEntry<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_entry: Z3_func_entry) -> Self {
-        Z3_func_entry_inc_ref(ctx.z3_ctx, z3_func_entry);
+        unsafe {
+            Z3_func_entry_inc_ref(ctx.z3_ctx, z3_func_entry);
+        }
         Self { ctx, z3_func_entry }
     }
 

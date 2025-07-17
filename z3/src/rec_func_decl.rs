@@ -9,7 +9,9 @@ use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 
 impl<'ctx> RecFuncDecl<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {
-        Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
+        unsafe {
+            Z3_inc_ref(ctx.z3_ctx, Z3_func_decl_to_ast(ctx.z3_ctx, z3_func_decl));
+        }
         Self { ctx, z3_func_decl }
     }
 

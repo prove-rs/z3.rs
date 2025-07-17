@@ -7,7 +7,9 @@ use crate::{Context, Params, Symbol};
 
 impl<'ctx> Params<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_params: Z3_params) -> Params<'ctx> {
-        Z3_params_inc_ref(ctx.z3_ctx, z3_params);
+        unsafe {
+            Z3_params_inc_ref(ctx.z3_ctx, z3_params);
+        }
         Params { ctx, z3_params }
     }
 
