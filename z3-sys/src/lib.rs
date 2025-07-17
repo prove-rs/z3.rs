@@ -1578,7 +1578,7 @@ pub enum GoalPrec {
     UnderOver = generated::Z3_goal_prec::Z3_GOAL_UNDER_OVER as u32,
 }
 
-extern "C" {
+unsafe extern "C" {
     /// Set a global (or module) parameter.
     /// This setting is shared by all Z3 contexts.
     ///
@@ -2325,7 +2325,7 @@ extern "C" {
     ///
     /// NOTE: The number of arguments must be greater than zero.
     pub fn Z3_mk_or(c: Z3_context, num_args: ::std::os::raw::c_uint, args: *const Z3_ast)
-        -> Z3_ast;
+    -> Z3_ast;
 
     /// Create an AST node representing `args[0] + ... + args[num_args-1]`.
     ///
@@ -3011,7 +3011,7 @@ extern "C" {
     ///
     /// - [`Z3_mk_numeral`]
     pub fn Z3_mk_bv_numeral(c: Z3_context, sz: ::std::os::raw::c_uint, bits: *const bool)
-        -> Z3_ast;
+    -> Z3_ast;
 
     /// Create a sequence sort out of the sort for the elements.
     pub fn Z3_mk_seq_sort(c: Z3_context, s: Z3_sort) -> Z3_sort;
@@ -3144,7 +3144,7 @@ extern "C" {
     ///
     /// - `n > 0`
     pub fn Z3_mk_re_concat(c: Z3_context, n: ::std::os::raw::c_uint, args: *const Z3_ast)
-        -> Z3_ast;
+    -> Z3_ast;
 
     /// Create the range regular expression over two sequences of length 1.
     pub fn Z3_mk_re_range(c: Z3_context, lo: Z3_ast, hi: Z3_ast) -> Z3_ast;
@@ -5823,7 +5823,7 @@ extern "C" {
 
     /// Translate the AST vector `v` from context `s` into an AST vector in context `t`.
     pub fn Z3_ast_vector_translate(s: Z3_context, v: Z3_ast_vector, t: Z3_context)
-        -> Z3_ast_vector;
+    -> Z3_ast_vector;
 
     /// Convert AST vector into a string.
     pub fn Z3_ast_vector_to_string(c: Z3_context, v: Z3_ast_vector) -> Z3_string;
@@ -6494,7 +6494,7 @@ pub type Z3_fixedpoint_reduce_app_callback_fptr = ::std::option::Option<
         arg5: *mut Z3_ast,
     ),
 >;
-extern "C" {
+unsafe extern "C" {
     /// Initialize the context with a user-defined state.
     pub fn Z3_fixedpoint_init(c: Z3_context, d: Z3_fixedpoint, state: *mut ::std::os::raw::c_void);
 
@@ -6527,7 +6527,7 @@ pub type Z3_fixedpoint_predecessor_eh =
 pub type Z3_fixedpoint_unfold_eh =
     ::std::option::Option<unsafe extern "C" fn(state: *mut ::std::os::raw::c_void)>;
 
-extern "C" {
+unsafe extern "C" {
     /// Set export callback for lemmas.
     pub fn Z3_fixedpoint_add_callback(
         ctx: Z3_context,
@@ -6603,7 +6603,7 @@ extern "C" {
     ///
     /// - [`Z3_optimize_minimize`]
     pub fn Z3_optimize_maximize(c: Z3_context, o: Z3_optimize, t: Z3_ast)
-        -> ::std::os::raw::c_uint;
+    -> ::std::os::raw::c_uint;
 
     /// Add a minimization constraint.
     /// - `c`: - context
@@ -6614,7 +6614,7 @@ extern "C" {
     ///
     /// - [`Z3_optimize_maximize`]
     pub fn Z3_optimize_minimize(c: Z3_context, o: Z3_optimize, t: Z3_ast)
-        -> ::std::os::raw::c_uint;
+    -> ::std::os::raw::c_uint;
 
     /// Create a backtracking point.
     ///
@@ -8038,8 +8038,8 @@ extern "C" {
 
 #[cfg(not(windows))]
 #[link(name = "z3")]
-extern "C" {}
+unsafe extern "C" {}
 
 #[cfg(windows)]
 #[link(name = "libz3")]
-extern "C" {}
+unsafe extern "C" {}

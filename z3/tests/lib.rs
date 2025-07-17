@@ -2,7 +2,7 @@ use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{atleast, atmost, Array, Ast, Bool, Int, BV};
+use z3::ast::{Array, Ast, BV, Bool, Int, atleast, atmost};
 use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};
@@ -1242,14 +1242,18 @@ fn test_dynamic_as_set() {
     let array_of_sets = ast::Array::new_const(&ctx, "array_of_sets", &Sort::int(&ctx), &set_sort);
     let array_of_arrays =
         ast::Array::new_const(&ctx, "array_of_arrays", &Sort::int(&ctx), &array_sort);
-    assert!(array_of_sets
-        .select(&ast::Int::from_u64(&ctx, 0))
-        .as_set()
-        .is_some());
-    assert!(array_of_arrays
-        .select(&ast::Int::from_u64(&ctx, 0))
-        .as_set()
-        .is_none());
+    assert!(
+        array_of_sets
+            .select(&ast::Int::from_u64(&ctx, 0))
+            .as_set()
+            .is_some()
+    );
+    assert!(
+        array_of_arrays
+            .select(&ast::Int::from_u64(&ctx, 0))
+            .as_set()
+            .is_none()
+    );
 }
 
 #[test]

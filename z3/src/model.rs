@@ -3,7 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::{ast::Ast, Context, FuncDecl, FuncInterp, Model, Optimize, Solver};
+use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, ast::Ast};
 
 impl<'ctx> Model<'ctx> {
     unsafe fn wrap(ctx: &'ctx Context, z3_mdl: Z3_model) -> Model<'ctx> {
@@ -218,7 +218,7 @@ impl<'ctx> Iterator for ModelIter<'_, 'ctx> {
 
 #[test]
 fn test_unsat() {
-    use crate::{ast, Config, SatResult};
+    use crate::{Config, SatResult, ast};
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);

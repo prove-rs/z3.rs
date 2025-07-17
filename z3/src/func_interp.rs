@@ -3,8 +3,8 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{
-    ast::{Ast, Dynamic},
     Context, FuncEntry, FuncInterp,
+    ast::{Ast, Dynamic},
 };
 
 impl<'ctx> FuncInterp<'ctx> {

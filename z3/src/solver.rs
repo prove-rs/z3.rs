@@ -6,7 +6,7 @@ use z3_sys::*;
 
 use std::ops::AddAssign;
 
-use crate::{ast, ast::Ast, Context, Model, Params, SatResult, Solver, Statistics, Symbol};
+use crate::{Context, Model, Params, SatResult, Solver, Statistics, Symbol, ast, ast::Ast};
 
 impl<'ctx> Solver<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {

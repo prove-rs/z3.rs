@@ -3,7 +3,7 @@ name = "z3-sys"
 version = "0.9.4"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 build = "build.rs"
-edition = "2021"
+edition = "2024"
 
 description = "Low-level bindings for the Z3 SMT solver from Microsoft Research"
 license = "MIT"

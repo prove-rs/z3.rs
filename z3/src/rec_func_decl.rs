@@ -5,7 +5,7 @@ use std::ops::Deref;
 
 use z3_sys::*;
 
-use crate::{ast, ast::Ast, Context, FuncDecl, RecFuncDecl, Sort, Symbol};
+use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 
 impl<'ctx> RecFuncDecl<'ctx> {
     pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_func_decl: Z3_func_decl) -> Self {

@@ -63,7 +63,9 @@ impl<'ctx> Tactic<'ctx> {
     }
 
     unsafe fn wrap(ctx: &'ctx Context, z3_tactic: Z3_tactic) -> Tactic<'ctx> {
-        Z3_tactic_inc_ref(ctx.z3_ctx, z3_tactic);
+        unsafe {
+            Z3_tactic_inc_ref(ctx.z3_ctx, z3_tactic);
+        }
         Tactic { ctx, z3_tactic }
     }
 

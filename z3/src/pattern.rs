@@ -4,7 +4,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::{ast::Ast, Context, Pattern};
+use crate::{Context, Pattern, ast::Ast};
 
 impl<'ctx> Pattern<'ctx> {
     /// Create a pattern for quantifier instantiation.

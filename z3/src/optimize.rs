@@ -6,8 +6,8 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{
-    ast::{Ast, Bool, Dynamic},
     Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
+    ast::{Ast, Bool, Dynamic},
 };
 
 use num::{
