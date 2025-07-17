@@ -31,7 +31,9 @@ There are 4 ways for this crate to currently find Z3:
 
 * By default, it will look for a system-installed copy of Z3.
   On Linux, this would be via the package manager. On macOS, this
-  might be via Homebrew (`brew install z3`).
+  might be via Homebrew (`brew install z3`). Users could use
+  environment variable `Z3_LIBRARY_PATH_OVERRIDE` to manually
+  specify the library search path.
 * Enabling the `bundled` feature will use `cmake` to build a
   locally bundled copy of Z3. This copy is provided via a git
   submodule within the repository.
