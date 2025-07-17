@@ -88,6 +88,8 @@ mod gh_release {
     use super::*;
     use reqwest::blocking::{Client, ClientBuilder};
     use reqwest::header::{HeaderMap, AUTHORIZATION};
+    use zip::read::root_dir_common_filter;
+    use zip::ZipArchive;
 
     pub(super) fn install_from_gh_release() -> String {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
@@ -168,8 +170,10 @@ mod gh_release {
 
         println!("Downloaded {:0.2}MB", ziplib.len() as f64 / 1024.0 / 1024.0);
 
-        zip_extract::extract(std::io::Cursor::new(ziplib), dir, true).unwrap();
-
+        ZipArchive::new(std::io::Cursor::new(ziplib))
+            .unwrap()
+            .extract_unwrapped_root_dir(dir, root_dir_common_filter)
+            .expect("Failed to extract z3 release asset");
         Ok(())
     }
 
