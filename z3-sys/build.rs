@@ -36,6 +36,10 @@ fn main() {
             } else {
                 vec![]
             };
+            println!("cargo:rerun-if-env-changed=Z3_LIBRARY_PATH_OVERRIDE");
+            if let Ok(lib_path) = env::var("Z3_LIBRARY_PATH_OVERRIDE") {
+                println!("cargo:rustc-link-search=native={lib_path}")
+            }
             (find_header_by_env(), search_paths)
         }
     };

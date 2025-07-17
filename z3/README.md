@@ -58,13 +58,13 @@ file. On Apple Silicon, this will typically be `/opt/homebrew/include/z3.h`:
 Z3_SYS_Z3_HEADER=/opt/homebrew/include/z3.h cargo build
 ```
 
-You may further have to set `LIBRARY_PATH` to `/opt/homebrew/lib` for the linker
+You may further have to set `Z3_LIBRARY_PATH_OVERRIDE` to `/opt/homebrew/lib` for the linker
 to find the Z3 library. You can store these settings in the cargo configuration
 file `.cargo/config.toml` of your project as follows: 
 
 ```toml
 [env]
-LIBRARY_PATH = "/opt/homebrew/lib"
+Z3_LIBRARY_PATH_OVERRIDE = "/opt/homebrew/lib"
 Z3_SYS_Z3_HEADER = "/opt/homebrew/include/z3.h"
 ```
 
