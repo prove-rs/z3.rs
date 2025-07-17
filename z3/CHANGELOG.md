@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.2...z3-v0.13.3) - 2025-07-17
+
+### Added
+
+- Add Z3_LIBRARY_PATH_OVERRIDE ([#377](https://github.com/prove-rs/z3.rs/pull/377)) (by @Evian-Zhang) - #377
+
+### Contributors
+
+* @Evian-Zhang
+
 ## [0.13.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.1...z3-v0.13.2) - 2025-07-14
 
 ### Fixed
