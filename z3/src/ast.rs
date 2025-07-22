@@ -1170,7 +1170,6 @@ impl<'ctx> Float<'ctx> {
         }
     }
 
-
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
