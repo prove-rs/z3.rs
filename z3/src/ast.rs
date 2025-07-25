@@ -1835,6 +1835,12 @@ impl<'ctx> Seq<'ctx> {
         }
     }
 
+    /// Create an empty sequence of the given sort.
+    pub fn empty(ctx: &'ctx Context, eltype: &Sort<'ctx>) -> Self {
+        let sort = Sort::seq(ctx, eltype);
+        unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx, sort.z3_sort)) }
+    }
+
     /// Create a unit sequence of `a`.
     pub fn unit<A: Ast<'ctx>>(ctx: &'ctx Context, a: &A) -> Self {
         unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx, a.get_z3_ast())) }
@@ -1881,6 +1887,15 @@ impl<'ctx> Seq<'ctx> {
 
     pub fn length(&self) -> Int<'ctx> {
         unsafe { Int::wrap(self.ctx, Z3_mk_seq_length(self.ctx.z3_ctx, self.z3_ast)) }
+    }
+
+    pub fn contains(&self, containee: &Self) -> Bool<'ctx> {
+        unsafe {
+            Bool::wrap(
+                self.ctx,
+                Z3_mk_seq_contains(self.ctx.z3_ctx, self.z3_ast, containee.z3_ast),
+            )
+        }
     }
 
     varop! {
