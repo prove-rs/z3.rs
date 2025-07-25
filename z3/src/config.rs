@@ -39,6 +39,12 @@ impl Config {
     ///
     /// - [`Config::set_bool_param_value()`]
     pub fn set_param_value(&mut self, k: &str, v: &str) {
+        if k == "ctrl_c" {
+            eprintln!(
+                "WARNING: Parameter 'ctrl_c' is global-only; use `z3::set_global_param` instead."
+            );
+            return;
+        }
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
         self.kvs.push((ks, vs));
