@@ -6473,6 +6473,18 @@ unsafe extern "C" {
     /// - [`Z3_fixedpoint_from_string`]
     /// - [`Z3_fixedpoint_to_string`]
     pub fn Z3_fixedpoint_from_file(c: Z3_context, f: Z3_fixedpoint, s: Z3_string) -> Z3_ast_vector;
+
+    /// String less-than lexicographic comparison operation.
+    /// Return a new AST node `Bool`.
+    pub fn Z3_mk_str_lt(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Z3_ast;
+
+    /// String less-than-or-equal lexicographic comparison operation.
+    /// Return a new AST node `Bool`.
+    pub fn Z3_mk_str_le(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Z3_ast;
+
+    /// Cardinality of a set.
+    /// Return a new AST node `Int` representing the cardinality of the given set.
+    pub fn Z3_mk_set_card(c: Z3_context, set_ast: Z3_ast) -> Z3_ast;
 }
 /// The following utilities allows adding user-defined domains.
 pub type Z3_fixedpoint_reduce_assign_callback_fptr = ::std::option::Option<
