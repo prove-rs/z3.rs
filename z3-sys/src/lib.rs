@@ -6481,10 +6481,6 @@ unsafe extern "C" {
     /// String less-than-or-equal lexicographic comparison operation.
     /// Return a new AST node `Bool`.
     pub fn Z3_mk_str_le(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Z3_ast;
-
-    /// Cardinality of a set.
-    /// Return a new AST node `Int` representing the cardinality of the given set.
-    pub fn Z3_mk_set_card(c: Z3_context, set_ast: Z3_ast) -> Z3_ast;
 }
 /// The following utilities allows adding user-defined domains.
 pub type Z3_fixedpoint_reduce_assign_callback_fptr = ::std::option::Option<
