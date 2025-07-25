@@ -1138,6 +1138,22 @@ impl<'ctx> Float<'ctx> {
         unsafe { BV::wrap(self.ctx, Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx, self.z3_ast)) }
     }
 
+    /// NaN for an arbitrary FP sort.
+    pub fn nan(ctx: &'ctx Context, sort: &Sort<'ctx>) -> Float<'ctx> {
+        debug_assert!(matches!(sort.kind(), SortKind::FloatingPoint));
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx, sort.z3_sort)) }
+    }
+
+    /// Convenience IEEE-754 single & double.
+    pub fn nan32(ctx: &'ctx Context) -> Float<'ctx> {
+        let s = Sort::float(ctx, 8, 24);
+        Self::nan(ctx, &s)
+    }
+    pub fn nan64(ctx: &'ctx Context) -> Float<'ctx> {
+        let s = Sort::float(ctx, 11, 53);
+        Self::nan(ctx, &s)
+    }
+
     unop! {
         unary_abs(Z3_mk_fpa_abs, Self);
         unary_neg(Z3_mk_fpa_neg, Self);
