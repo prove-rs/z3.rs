@@ -84,7 +84,7 @@ impl<'ctx> Probe<'ctx> {
     /// by `self` is less than the value returned by `p`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn lt(&self, p: Probe) -> Probe<'ctx> {
+    pub fn lt(&self, p: &Probe) -> Probe<'ctx> {
         unsafe {
             Self::wrap(
                 self.ctx,
