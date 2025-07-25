@@ -1298,6 +1298,16 @@ impl<'ctx> String<'ctx> {
         }
     }
 
+    /// Greater than in lexicographic order (str.>  s1 s2)
+    pub fn str_gt(&self, other: &Self) -> Bool<'ctx> {
+        other.str_lt(self)
+    }
+
+    /// Greater than or equal to in lexicographic order (str.>= s1 s2)
+    pub fn str_ge(&self, other: &Self) -> Bool<'ctx> {
+        other.str_le(self)
+    }
+
     varop! {
         /// Appends the argument strings to `Self`
         concat(Z3_mk_seq_concat, String<'ctx>);
@@ -1315,6 +1325,10 @@ impl<'ctx> String<'ctx> {
         prefix(Z3_mk_seq_prefix, Bool<'ctx>);
         /// Checks whether `Self` is a suffix of the argument
         suffix(Z3_mk_seq_suffix, Bool<'ctx>);
+        /// Checks whether `Self` is less than the argument in lexicographic order (str.<  s1 s2)
+        str_lt(Z3_mk_str_lt, Bool<'ctx>);
+        /// Checks whether `Self` is less than or equal to the argument in lexicographic order (str.<= s1 s2)
+        str_le(Z3_mk_str_le, Bool<'ctx>);
     }
 }
 
