@@ -1,12 +1,14 @@
 //! Abstract syntax tree (AST).
 
 use log::debug;
+use num::pow::Pow;
 use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::hash::{Hash, Hasher};
+use std::ops::{Add, Div, Mul, Sub};
 
 pub use z3_sys::AstKind;
 use z3_sys::*;
@@ -921,20 +923,111 @@ impl<'ctx> Int<'ctx> {
         gt(Z3_mk_gt, Bool<'ctx>);
         ge(Z3_mk_ge, Bool<'ctx>);
     }
-    // Z3 does support mixing ints and reals in add(), sub(), mul(), div(), and power()
-    //   (but not rem(), modulo(), lt(), le(), gt(), or ge()).
-    // TODO: we could consider expressing this by having a Numeric trait with these methods.
-    //    Int and Real would have the Numeric trait, but not the other Asts.
-    // For example:
-    //   fn add(&self, other: &impl Numeric<'ctx>) -> Dynamic<'ctx> { ... }
-    // Note the return type would have to be Dynamic I think (?), as the exact result type
-    //   depends on the particular types of the inputs.
-    // Alternately, we could just have
-    //   Int::add_real(&self, other: &Real<'ctx>) -> Real<'ctx>
-    // and
-    //   Real::add_int(&self, other: &Int<'ctx>) -> Real<'ctx>
-    // This might be cleaner because we know exactly what the output type will be for these methods.
 }
+
+// Z3 does support mixing ints and reals in add(), sub(), mul(), div(), and power()
+fn add_int_real<'ctx>(i: &Int<'ctx>, r: &Real<'ctx>) -> Real<'ctx> {
+    unsafe {
+        let args = [i.z3_ast, r.z3_ast];
+        Real::wrap(i.ctx, Z3_mk_add(i.ctx.z3_ctx, 2, args.as_ptr()))
+    }
+}
+fn add_real_int<'ctx>(r: &Real<'ctx>, i: &Int<'ctx>) -> Real<'ctx> {
+    unsafe {
+        let args = [r.z3_ast, i.z3_ast];
+        Real::wrap(r.ctx, Z3_mk_add(r.ctx.z3_ctx, 2, args.as_ptr()))
+    }
+}
+
+fn sub_int_real<'ctx>(i: &Int<'ctx>, r: &Real<'ctx>) -> Real<'ctx> {
+    unsafe {
+        let args = [i.z3_ast, r.z3_ast];
+        Real::wrap(i.ctx, Z3_mk_sub(i.ctx.z3_ctx, 2, args.as_ptr()))
+    }
+}
+fn sub_real_int<'ctx>(r: &Real<'ctx>, i: &Int<'ctx>) -> Real<'ctx> {
+    unsafe {
+        let args = [r.z3_ast, i.z3_ast];
+        Real::wrap(r.ctx, Z3_mk_sub(r.ctx.z3_ctx, 2, args.as_ptr()))
+    }
+}
+
+fn mul_int_real<'ctx>(i: &Int<'ctx>, r: &Real<'ctx>) -> Real<'ctx> {
+    unsafe {
+        let args = [i.z3_ast, r.z3_ast];
+        Real::wrap(i.ctx, Z3_mk_mul(i.ctx.z3_ctx, 2, args.as_ptr()))
+    }
+}
+fn mul_real_int<'ctx>(r: &Real<'ctx>, i: &Int<'ctx>) -> Real<'ctx> {
+    unsafe {
+        let args = [r.z3_ast, i.z3_ast];
+        Real::wrap(r.ctx, Z3_mk_mul(r.ctx.z3_ctx, 2, args.as_ptr()))
+    }
+}
+
+fn div_int_real<'ctx>(i: &Int<'ctx>, r: &Real<'ctx>) -> Real<'ctx> {
+    unsafe { Real::wrap(i.ctx, Z3_mk_div(i.ctx.z3_ctx, i.z3_ast, r.z3_ast)) }
+}
+fn div_real_int<'ctx>(r: &Real<'ctx>, i: &Int<'ctx>) -> Real<'ctx> {
+    unsafe { Real::wrap(r.ctx, Z3_mk_div(r.ctx.z3_ctx, r.z3_ast, i.z3_ast)) }
+}
+
+fn pow_int_real<'ctx>(i: &Int<'ctx>, r: &Real<'ctx>) -> Real<'ctx> {
+    unsafe { Real::wrap(i.ctx, Z3_mk_power(i.ctx.z3_ctx, i.z3_ast, r.z3_ast)) }
+}
+fn pow_real_int<'ctx>(r: &Real<'ctx>, i: &Int<'ctx>) -> Real<'ctx> {
+    unsafe { Real::wrap(r.ctx, Z3_mk_power(r.ctx.z3_ctx, r.z3_ast, i.z3_ast)) }
+}
+
+// Generic macro to implement the four ownership combinations
+macro_rules! impl_mixed_binop {
+    ($Trait:ident, $method:ident, $L:ident, $R:ident, $builder:ident) => {
+        impl<'ctx> $Trait<&$R<'ctx>> for &$L<'ctx> {
+            type Output = Real<'ctx>;
+            fn $method(self, rhs: &$R<'ctx>) -> Real<'ctx> {
+                $builder(self, rhs)
+            }
+        }
+        impl<'ctx> $Trait<$R<'ctx>> for &$L<'ctx> {
+            type Output = Real<'ctx>;
+            fn $method(self, rhs: $R<'ctx>) -> Real<'ctx> {
+                $builder(self, &rhs)
+            }
+        }
+        impl<'ctx> $Trait<&$R<'ctx>> for $L<'ctx> {
+            type Output = Real<'ctx>;
+            fn $method(self, rhs: &$R<'ctx>) -> Real<'ctx> {
+                $builder(&self, rhs)
+            }
+        }
+        impl<'ctx> $Trait<$R<'ctx>> for $L<'ctx> {
+            type Output = Real<'ctx>;
+            fn $method(self, rhs: $R<'ctx>) -> Real<'ctx> {
+                $builder(&self, &rhs)
+            }
+        }
+    };
+}
+
+// Add
+impl_mixed_binop!(Add, add, Int, Real, add_int_real);
+impl_mixed_binop!(Add, add, Real, Int, add_real_int);
+
+// Sub
+impl_mixed_binop!(Sub, sub, Int, Real, sub_int_real);
+impl_mixed_binop!(Sub, sub, Real, Int, sub_real_int);
+
+// Mul
+impl_mixed_binop!(Mul, mul, Int, Real, mul_int_real);
+impl_mixed_binop!(Mul, mul, Real, Int, mul_real_int);
+
+// Div
+impl_mixed_binop!(Div, div, Int, Real, div_int_real);
+impl_mixed_binop!(Div, div, Real, Int, div_real_int);
+
+// Pow
+impl_mixed_binop!(Pow, pow, Int, Real, pow_int_real);
+impl_mixed_binop!(Pow, pow, Real, Int, pow_real_int);
 
 impl<'ctx> Real<'ctx> {
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S) -> Real<'ctx> {
