@@ -38,8 +38,6 @@ impl<'ctx> Solver<'ctx> {
     /// Note however it is possible to set the `solver2_timeout`,
     /// `solver2_unknown`, and `ignore_solver1` parameters of the combined
     /// solver to change its behaviour.
-    ///
-    /// [model construction is enabled]: crate::Config::set_model_generation
     pub fn new(ctx: &'ctx Context) -> Solver<'ctx> {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx)) }
     }
@@ -307,6 +305,8 @@ impl<'ctx> Solver<'ctx> {
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if
     /// the result was [`SatResult::Unsat`].
+    ///
+    /// [model construction is enabled]: crate::Config::set_model_generation
     pub fn get_model(&self) -> Option<Model<'ctx>> {
         Model::of_solver(self)
     }
