@@ -1352,6 +1352,15 @@ impl<'ctx> BV<'ctx> {
         Some(unsafe { Self::wrap(ctx, ast) })
     }
 
+    /// Create a BV from an array of bits.
+    pub fn from_bits(ctx: &'ctx Context, bits: &[bool]) -> BV<'ctx> {
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_bv_numeral(ctx.z3_ctx, bits.len() as u32, bits.as_ptr())
+            })
+        }
+    }
+
     pub fn new_const<S: Into<Symbol>>(ctx: &'ctx Context, name: S, sz: u32) -> BV<'ctx> {
         let sort = Sort::bitvector(ctx, sz);
         unsafe {
