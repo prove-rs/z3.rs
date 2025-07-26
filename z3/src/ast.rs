@@ -1146,11 +1146,11 @@ impl<'ctx> Float<'ctx> {
 
     /// Convenience IEEE-754 single & double.
     pub fn nan32(ctx: &'ctx Context) -> Float<'ctx> {
-        let s = Sort::float32(&ctx);
+        let s = Sort::float32(ctx);
         Self::nan(ctx, &s)
     }
     pub fn nan64(ctx: &'ctx Context) -> Float<'ctx> {
-        let s = Sort::double(&ctx);
+        let s = Sort::double(ctx);
         Self::nan(ctx, &s)
     }
 
