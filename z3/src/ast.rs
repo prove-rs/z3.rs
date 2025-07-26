@@ -1353,6 +1353,17 @@ impl<'ctx> BV<'ctx> {
     }
 
     /// Create a BV from an array of bits.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{ast::{Ast, BV}, Config, Context, Solver};
+    /// # let cfg = Config::new();
+    /// # let ctx = Context::new(&cfg);
+    /// # let solver = Solver::new(&ctx);
+    /// // 0b00000010
+    /// let bv = BV::from_bits(&ctx, &[false, true, false, false, false, false, false, false]);
+    /// solver.assert(&bv._eq(&BV::from_u64(&ctx, 2, 8)));
+    /// ```
     pub fn from_bits(ctx: &'ctx Context, bits: &[bool]) -> BV<'ctx> {
         unsafe {
             Self::wrap(ctx, {
