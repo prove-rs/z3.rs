@@ -1361,8 +1361,9 @@ impl<'ctx> BV<'ctx> {
     /// # let ctx = Context::new(&cfg);
     /// // 0b00000010
     /// let bv = BV::from_bits(&ctx, &[false, true, false, false, false, false, false, false]).unwrap();
+    /// let bv_none = BV::from_bits(&ctx, &[]);
     /// assert_eq!(bv, BV::from_u64(&ctx, 2, 8));
-    /// assert_eq!(None, BV::from_bits(&ctx, &[]));
+    /// assert_eq!(bv_none, None);
     /// ```
     pub fn from_bits(ctx: &'ctx Context, bits: &[bool]) -> Option<BV<'ctx>> {
         let ast = unsafe { Z3_mk_bv_numeral(ctx.z3_ctx, bits.len() as u32, bits.as_ptr()) };
