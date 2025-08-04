@@ -8,12 +8,12 @@ use std::ops::AddAssign;
 
 use crate::{Context, Model, Params, SatResult, Solver, Statistics, Symbol, ast, ast::Ast};
 
-impl<'ctx> Solver<'ctx> {
-    pub(crate) unsafe fn wrap(ctx: &'ctx Context, z3_slv: Z3_solver) -> Solver<'ctx> {
+impl Solver {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
         unsafe {
-            Z3_solver_inc_ref(ctx.z3_ctx, z3_slv);
+            Z3_solver_inc_ref(ctx.z3_ctx.0, z3_slv);
         }
-        Solver { ctx, z3_slv }
+        Solver { ctx: ctx.clone(), z3_slv }
     }
 
     /// Create a new solver. This solver is a "combined solver"
@@ -47,7 +47,7 @@ impl<'ctx> Solver<'ctx> {
     /// is not guaranteed to satisfy quantified assertions.
     ///
     /// [model construction is enabled]: crate::Config::set_model_generation
-    pub fn new(ctx: &'ctx Context) -> Solver<'ctx> {
+    pub fn new(ctx: &'ctx Context) -> Solver {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx)) }
     }
 
@@ -62,7 +62,7 @@ impl<'ctx> Solver<'ctx> {
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
-    pub fn new_for_logic<S: Into<Symbol>>(ctx: &'ctx Context, logic: S) -> Option<Solver<'ctx>> {
+    pub fn new_for_logic<S: Into<Symbol>>(ctx: &'ctx Context, logic: S) -> Option<Solver> {
         unsafe {
             let s = Z3_mk_solver_for_logic(ctx.z3_ctx, logic.into().as_z3_symbol(ctx));
             if s.is_null() {
@@ -109,7 +109,7 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::assert_and_track()`]
-    pub fn assert(&self, ast: &ast::Bool<'ctx>) {
+    pub fn assert(&self, ast: &ast::Bool) {
         debug!("assert: {ast:?}");
         unsafe { Z3_solver_assert(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast) };
     }
@@ -128,7 +128,7 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::assert()`]
-    pub fn assert_and_track(&self, ast: &ast::Bool<'ctx>, p: &ast::Bool<'ctx>) {
+    pub fn assert_and_track(&self, ast: &ast::Bool, p: &ast::Bool) {
         debug!("assert_and_track: {ast:?}");
         unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx, self.z3_slv, ast.z3_ast, p.z3_ast) };
     }
@@ -180,7 +180,7 @@ impl<'ctx> Solver<'ctx> {
     /// # See also:
     ///
     /// - [`Solver::check()`]
-    pub fn check_assumptions(&self, assumptions: &[ast::Bool<'ctx>]) -> SatResult {
+    pub fn check_assumptions(&self, assumptions: &[ast::Bool]) -> SatResult {
         let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
             Z3_solver_check_assumptions(self.ctx.z3_ctx, self.z3_slv, a.len() as u32, a.as_ptr())
@@ -193,7 +193,7 @@ impl<'ctx> Solver<'ctx> {
     }
 
     // Return a vector of assumptions in the solver.
-    pub fn get_assertions(&self) -> Vec<ast::Bool<'ctx>> {
+    pub fn get_assertions(&self) -> Vec<ast::Bool> {
         let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx, self.z3_slv) };
 
         (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx, z3_vec) })
@@ -225,7 +225,7 @@ impl<'ctx> Solver<'ctx> {
     ///
     /// - [`Solver::check_assumptions`]
     /// - [`Solver::assert_and_track`]
-    pub fn get_unsat_core(&self) -> Vec<ast::Bool<'ctx>> {
+    pub fn get_unsat_core(&self) -> Vec<ast::Bool> {
         let z3_unsat_core = unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx, self.z3_slv) };
         if z3_unsat_core.is_null() {
             return vec![];
@@ -247,9 +247,9 @@ impl<'ctx> Solver<'ctx> {
     /// Retrieve consequences from the solver given a set of assumptions.
     pub fn get_consequences(
         &self,
-        assumptions: &[ast::Bool<'ctx>],
-        variables: &[ast::Bool<'ctx>],
-    ) -> Vec<ast::Bool<'ctx>> {
+        assumptions: &[ast::Bool],
+        variables: &[ast::Bool],
+    ) -> Vec<ast::Bool> {
         unsafe {
             let _assumptions = Z3_mk_ast_vector(self.ctx.z3_ctx);
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx, _assumptions);
@@ -307,7 +307,7 @@ impl<'ctx> Solver<'ctx> {
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if
     /// the result was [`SatResult::Unsat`].
-    pub fn get_model(&self) -> Option<Model<'ctx>> {
+    pub fn get_model(&self) -> Option<Model> {
         Model::of_solver(self)
     }
 
@@ -326,7 +326,7 @@ impl<'ctx> Solver<'ctx> {
     //
     // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
     // have an Ast subtype for yet.
-    pub fn get_proof(&self) -> Option<impl Ast<'ctx>> {
+    pub fn get_proof(&self) -> Option<impl Ast> {
         let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx, self.z3_slv) };
         if !m.is_null() {
             Some(unsafe { ast::Dynamic::wrap(self.ctx, m) })
@@ -350,12 +350,12 @@ impl<'ctx> Solver<'ctx> {
     }
 
     /// Set the current solver using the given parameters.
-    pub fn set_params(&self, params: &Params<'ctx>) {
+    pub fn set_params(&self, params: &Params) {
         unsafe { Z3_solver_set_params(self.ctx.z3_ctx, self.z3_slv, params.z3_params) };
     }
 
     /// Retrieve the statistics for the last [`Solver::check()`].
-    pub fn get_statistics(&self) -> Statistics<'ctx> {
+    pub fn get_statistics(&self) -> Statistics {
         unsafe {
             Statistics::wrap(
                 self.ctx,
@@ -427,9 +427,9 @@ impl Drop for Solver<'_> {
     }
 }
 
-impl<'ctx> Clone for Solver<'ctx> {
+impl Clone for Solver {
     // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
-    fn clone(self: &Solver<'ctx>) -> Self {
+    fn clone(self: &Solver) -> Self {
         let new_solver = Solver::new(self.ctx);
 
         self.get_assertions().iter().for_each(|a| {
@@ -440,14 +440,14 @@ impl<'ctx> Clone for Solver<'ctx> {
     }
 }
 
-impl<'ctx> AddAssign<&ast::Bool<'ctx>> for Solver<'ctx> {
-    fn add_assign(&mut self, rhs: &ast::Bool<'ctx>) {
+impl AddAssign<&ast::Bool> for Solver {
+    fn add_assign(&mut self, rhs: &ast::Bool) {
         self.assert(rhs);
     }
 }
 
-impl<'ctx> AddAssign<ast::Bool<'ctx>> for Solver<'ctx> {
-    fn add_assign(&mut self, rhs: ast::Bool<'ctx>) {
+impl AddAssign<ast::Bool> for Solver {
+    fn add_assign(&mut self, rhs: ast::Bool) {
         self.assert(&rhs);
     }
 }
