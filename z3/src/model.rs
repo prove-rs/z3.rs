@@ -6,11 +6,11 @@ use z3_sys::*;
 use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, ast::Ast};
 
 impl Model {
-    unsafe fn wrap(ctx: &'ctx Context, z3_mdl: Z3_model) -> Model {
+    unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
         unsafe {
             Z3_model_inc_ref(ctx.z3_ctx.0, z3_mdl);
         }
-        Model { ctx, z3_mdl }
+        Model { ctx: ctx.clone(), z3_mdl }
     }
 
     pub fn of_solver(slv: &Solver) -> Option<Model> {
@@ -97,7 +97,7 @@ impl Model {
             if ret.is_null() {
                 None
             } else {
-                Some(unsafe { FuncInterp::wrap(self.ctx, ret) })
+                Some(unsafe { FuncInterp::wrap(&self.ctx, ret) })
             }
         }
     }
@@ -119,7 +119,7 @@ impl Model {
             }
         };
         if res {
-            Some(unsafe { T::wrap(self.ctx, tmp) })
+            Some(unsafe { T::wrap(&self.ctx, tmp) })
         } else {
             None
         }
@@ -132,12 +132,12 @@ impl Model {
         }
     }
 
-    pub fn iter<'a>(&'a self) -> ModelIter<'a, 'ctx> {
+    pub fn iter<'a>(&'a self) -> ModelIter<'a> {
         self.into_iter()
     }
 }
 
-impl fmt::Display for Model<'_> {
+impl fmt::Display for Model {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_model_to_string(self.ctx.z3_ctx.0, self.z3_mdl) };
         if p.is_null() {
@@ -150,13 +150,13 @@ impl fmt::Display for Model<'_> {
     }
 }
 
-impl fmt::Debug for Model<'_> {
+impl fmt::Debug for Model {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl Drop for Model<'_> {
+impl Drop for Model {
     fn drop(&mut self) {
         unsafe { Z3_model_dec_ref(self.ctx.z3_ctx.0, self.z3_mdl) };
     }
@@ -164,15 +164,15 @@ impl Drop for Model<'_> {
 
 #[derive(Debug)]
 /// <https://z3prover.github.io/api/html/classz3py_1_1_model_ref.html#a7890b7c9bc70cf2a26a343c22d2c8367>
-pub struct ModelIter<'a, 'ctx> {
+pub struct ModelIter<'a> {
     model: &'a Model,
     idx: u32,
     len: u32,
 }
 
-impl<'a, 'ctx> IntoIterator for &'a Model {
+impl<'a> IntoIterator for &'a Model {
     type Item = FuncDecl;
-    type IntoIter = ModelIter<'a, 'ctx>;
+    type IntoIter = ModelIter<'a>;
 
     fn into_iter(self) -> Self::IntoIter {
         ModelIter {
@@ -183,7 +183,7 @@ impl<'a, 'ctx> IntoIterator for &'a Model {
     }
 }
 
-impl Iterator for ModelIter<'_, 'ctx> {
+impl Iterator for ModelIter<'_> {
     type Item = FuncDecl;
 
     fn next(&mut self) -> Option<Self::Item> {
@@ -197,7 +197,7 @@ impl Iterator for ModelIter<'_, 'ctx> {
                     Z3_model_get_const_decl(self.model.ctx.z3_ctx.0, self.model.z3_mdl, self.idx)
                 };
                 self.idx += 1;
-                Some(unsafe { FuncDecl::wrap(self.model.ctx, const_decl) })
+                Some(unsafe { FuncDecl::wrap(&self.model.ctx, const_decl) })
             } else {
                 let func_decl = unsafe {
                     Z3_model_get_func_decl(
@@ -207,7 +207,7 @@ impl Iterator for ModelIter<'_, 'ctx> {
                     )
                 };
                 self.idx += 1;
-                Some(unsafe { FuncDecl::wrap(self.model.ctx, func_decl) })
+                Some(unsafe { FuncDecl::wrap(&self.model.ctx, func_decl) })
             }
         }
     }
