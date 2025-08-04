@@ -57,8 +57,8 @@ pub struct Config {
 /// - [`Context::handle()`]
 /// - [`ContextHandle::interrupt()`]
 #[derive(PartialEq, Eq, Debug)]
-pub struct ContextHandle {
-    ctx: Context,
+pub struct ContextHandle<'ctx> {
+    ctx: &'ctx Context,
 }
 
 /// Symbols are used to name several term and type constructors.
