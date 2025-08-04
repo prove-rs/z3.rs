@@ -7,6 +7,7 @@
 #![deny(missing_debug_implementations)]
 
 use std::ffi::CString;
+use std::rc::Rc;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
@@ -35,6 +36,7 @@ mod version;
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::version::{Version, full_version, version};
+pub use context::Context;
 
 /// Configuration used to initialize [logical contexts](Context).
 ///
@@ -45,31 +47,6 @@ pub use crate::version::{Version, full_version, version};
 pub struct Config {
     kvs: Vec<(CString, CString)>,
     z3_cfg: Z3_config,
-}
-
-/// Manager of all other Z3 objects, global configuration options, etc.
-///
-/// An application may use multiple Z3 contexts. Objects created in one context
-/// cannot be used in another one. However, several objects may be "translated" from
-/// one context to another. It is not safe to access Z3 objects from multiple threads.
-///
-/// # Examples:
-///
-/// Creating a context with the default configuration:
-///
-/// ```
-/// use z3::{Config, Context};
-/// let cfg = Config::new();
-/// let ctx = Context::new(&cfg);
-/// ```
-///
-/// # See also:
-///
-/// - [`Config`]
-/// - [`Context::new()`]
-#[derive(PartialEq, Eq, Debug)]
-pub struct Context {
-    pub z3_ctx: Z3_context,
 }
 
 /// Handle that can be used to interrupt a computation from another thread.
