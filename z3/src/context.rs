@@ -5,6 +5,8 @@ use z3_sys::*;
 
 use crate::{Config, ContextHandle};
 
+/// A wrapper around [Z3_context] that enforces proper dropping behavior.
+/// All high-level code should instead use [Context](crate::Context)
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct ContextInternal(pub(crate) Z3_context);
 
