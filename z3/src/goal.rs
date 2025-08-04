@@ -5,7 +5,6 @@ use z3_sys::*;
 
 use crate::{Context, Goal, ast, ast::Ast};
 
-
 // todo: is this sound? This should be through `wrap`, no?
 impl Clone for Goal {
     fn clone(&self) -> Self {
@@ -21,7 +20,10 @@ impl Goal {
         unsafe {
             Z3_goal_inc_ref(ctx.z3_ctx.0, z3_goal);
         }
-        Goal { ctx: ctx.clone(), z3_goal }
+        Goal {
+            ctx: ctx.clone(),
+            z3_goal,
+        }
     }
 
     pub fn new(ctx: &Context, models: bool, unsat_cores: bool, proofs: bool) -> Goal {

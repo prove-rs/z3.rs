@@ -12,7 +12,10 @@ impl FuncEntry {
         unsafe {
             Z3_func_entry_inc_ref(ctx.z3_ctx.0, z3_func_entry);
         }
-        Self { ctx: ctx.clone(), z3_func_entry }
+        Self {
+            ctx: ctx.clone(),
+            z3_func_entry,
+        }
     }
 
     /// Returns the value of the function.

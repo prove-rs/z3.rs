@@ -35,9 +35,7 @@ impl DatatypeBuilder {
     }
 }
 
-pub fn create_datatypes(
-    datatype_builders: Vec<DatatypeBuilder>,
-) -> Vec<DatatypeSort> {
+pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<DatatypeSort> {
     let num = datatype_builders.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
@@ -138,7 +136,10 @@ pub fn create_datatypes(
         let num_cs = datatype_builder.constructors.len();
 
         unsafe { Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort)) };
-        let sort = Sort { ctx: ctx.clone(), z3_sort };
+        let sort = Sort {
+            ctx: ctx.clone(),
+            z3_sort,
+        };
 
         let mut variants: Vec<DatatypeVariant> = Vec::with_capacity(num_cs);
 

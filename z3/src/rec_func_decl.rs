@@ -10,17 +10,18 @@ use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 impl RecFuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
-            Z3_inc_ref(ctx.z3_ctx.0, Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl));
+            Z3_inc_ref(
+                ctx.z3_ctx.0,
+                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl),
+            );
         }
-        Self { ctx: ctx.clone(), z3_func_decl }
+        Self {
+            ctx: ctx.clone(),
+            z3_func_decl,
+        }
     }
 
-    pub fn new<S: Into<Symbol>>(
-        ctx: &Context,
-        name: S,
-        domain: &[&Sort],
-        range: &Sort,
-    ) -> Self {
+    pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx.0, range.ctx.z3_ctx.0);
 

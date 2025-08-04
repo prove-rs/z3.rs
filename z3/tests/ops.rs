@@ -269,7 +269,7 @@ fn test_bool_ops() {
     test_unary_op!(!);
 }
 
-fn assert_bool_child<'c>(node: &impl Ast<'c>, idx: usize, expected: &Bool<'c>) {
+fn assert_bool_child<'c>(node: &impl Ast, idx: usize, expected: &Bool) {
     assert_eq!(&node.nth_child(idx).unwrap().as_bool().unwrap(), expected);
 }
 

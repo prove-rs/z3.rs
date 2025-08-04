@@ -10,7 +10,10 @@ impl Model {
         unsafe {
             Z3_model_inc_ref(ctx.z3_ctx.0, z3_mdl);
         }
-        Model { ctx: ctx.clone(), z3_mdl }
+        Model {
+            ctx: ctx.clone(),
+            z3_mdl,
+        }
     }
 
     pub fn of_solver(slv: &Solver) -> Option<Model> {
@@ -63,8 +66,9 @@ impl Model {
     /// Returns `None` if there is no interpretation in the `Model`
     pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp> {
         if f.arity() == 0 {
-            let ret =
-                unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl) };
+            let ret = unsafe {
+                Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl)
+            };
             if ret.is_null() {
                 None
             } else {

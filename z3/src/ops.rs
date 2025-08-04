@@ -452,33 +452,9 @@ macro_rules! impl_binary_mult_op {
 }
 
 // implementations for BV
-impl_binary_op!(
-    BV,
-    Add,
-    AddAssign,
-    add,
-    add_assign,
-    bvadd,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV,
-    Sub,
-    SubAssign,
-    sub,
-    sub_assign,
-    bvsub,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV,
-    Mul,
-    MulAssign,
-    mul,
-    mul_assign,
-    bvmul,
-    mk_const_bv
-);
+impl_binary_op!(BV, Add, AddAssign, add, add_assign, bvadd, mk_const_bv);
+impl_binary_op!(BV, Sub, SubAssign, sub, sub_assign, bvsub, mk_const_bv);
+impl_binary_op!(BV, Mul, MulAssign, mul, mul_assign, bvmul, mk_const_bv);
 impl_binary_op!(
     BV,
     BitAnd,
@@ -506,64 +482,16 @@ impl_binary_op!(
     bvxor,
     mk_const_bv
 );
-impl_binary_op!(
-    BV,
-    Shl,
-    ShlAssign,
-    shl,
-    shl_assign,
-    bvshl,
-    mk_const_bv
-);
+impl_binary_op!(BV, Shl, ShlAssign, shl, shl_assign, bvshl, mk_const_bv);
 impl_unary_op!(BV, Not, not, bvnot);
 impl_unary_op!(BV, Neg, neg, bvneg);
 
 // implementations for Int
-impl_binary_mult_op!(
-    Int,
-    Int,
-    Add,
-    AddAssign,
-    add,
-    add_assign,
-    mk_const_int
-);
-impl_binary_mult_op!(
-    Int,
-    Int,
-    Sub,
-    SubAssign,
-    sub,
-    sub_assign,
-    mk_const_int
-);
-impl_binary_mult_op!(
-    Int,
-    Int,
-    Mul,
-    MulAssign,
-    mul,
-    mul_assign,
-    mk_const_int
-);
-impl_binary_op!(
-    Int,
-    Div,
-    DivAssign,
-    div,
-    div_assign,
-    div,
-    mk_const_int
-);
-impl_binary_op!(
-    Int,
-    Rem,
-    RemAssign,
-    rem,
-    rem_assign,
-    rem,
-    mk_const_int
-);
+impl_binary_mult_op!(Int, Int, Add, AddAssign, add, add_assign, mk_const_int);
+impl_binary_mult_op!(Int, Int, Sub, SubAssign, sub, sub_assign, mk_const_int);
+impl_binary_mult_op!(Int, Int, Mul, MulAssign, mul, mul_assign, mk_const_int);
+impl_binary_op!(Int, Div, DivAssign, div, div_assign, div, mk_const_int);
+impl_binary_op!(Int, Rem, RemAssign, rem, rem_assign, rem, mk_const_int);
 impl_unary_op!(Int, Neg, neg, unary_minus);
 
 // implementations for Real
@@ -577,23 +505,7 @@ impl_unary_op!(Real, Neg, neg, unary_minus);
 impl_unary_op!(Float, Neg, neg, unary_neg);
 
 // implementations for Bool
-impl_binary_mult_op_bool!(
-    Bool,
-    Bool,
-    BitAnd,
-    BitAndAssign,
-    bitand,
-    bitand_assign,
-    and
-);
-impl_binary_mult_op_bool!(
-    Bool,
-    Bool,
-    BitOr,
-    BitOrAssign,
-    bitor,
-    bitor_assign,
-    or
-);
+impl_binary_mult_op_bool!(Bool, Bool, BitAnd, BitAndAssign, bitand, bitand_assign, and);
+impl_binary_mult_op_bool!(Bool, Bool, BitOr, BitOrAssign, bitor, bitor_assign, or);
 impl_binary_op_bool!(Bool, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
 impl_unary_op!(Bool, Not, not, not);

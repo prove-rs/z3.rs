@@ -34,7 +34,10 @@ impl Statistics {
         unsafe {
             Z3_stats_inc_ref(ctx.z3_ctx.0, z3_stats);
         }
-        Statistics { ctx: ctx.clone(), z3_stats }
+        Statistics {
+            ctx: ctx.clone(),
+            z3_stats,
+        }
     }
 
     /// Get the statistics value at the given index.
@@ -45,7 +48,11 @@ impl Statistics {
     unsafe fn value_at_idx(&self, idx: u32) -> StatisticsValue {
         unsafe {
             if Z3_stats_is_uint(self.ctx.z3_ctx.0, self.z3_stats, idx) {
-                StatisticsValue::UInt(Z3_stats_get_uint_value(self.ctx.z3_ctx.0, self.z3_stats, idx))
+                StatisticsValue::UInt(Z3_stats_get_uint_value(
+                    self.ctx.z3_ctx.0,
+                    self.z3_stats,
+                    idx,
+                ))
             } else {
                 StatisticsValue::Double(Z3_stats_get_double_value(
                     self.ctx.z3_ctx.0,

@@ -6,7 +6,7 @@ use z3_sys::*;
 use crate::{Config, ContextHandle};
 
 #[derive(Clone, Debug, PartialEq, Eq)]
-struct ContextInternal(pub(crate) Z3_context);
+pub(crate) struct ContextInternal(pub(crate) Z3_context);
 
 impl Drop for ContextInternal {
     fn drop(&mut self) {
@@ -36,7 +36,7 @@ impl Drop for ContextInternal {
 /// - [`Context::new()`]
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Context {
-    pub z3_ctx: Rc<ContextInternal>,
+    pub(crate) z3_ctx: Rc<ContextInternal>,
 }
 impl Context {
     pub fn new(cfg: &Config) -> Context {

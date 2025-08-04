@@ -13,7 +13,10 @@ impl Solver {
         unsafe {
             Z3_solver_inc_ref(ctx.z3_ctx.0, z3_slv);
         }
-        Solver { ctx: ctx.clone(), z3_slv }
+        Solver {
+            ctx: ctx.clone(),
+            z3_slv,
+        }
     }
 
     /// Create a new solver. This solver is a "combined solver"

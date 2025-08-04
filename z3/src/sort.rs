@@ -11,7 +11,10 @@ impl Sort {
         unsafe {
             Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
         }
-        Sort { ctx: ctx.clone(), z3_sort }
+        Sort {
+            ctx: ctx.clone(),
+            z3_sort,
+        }
     }
 
     pub fn get_z3_sort(&self) -> Z3_sort {
@@ -56,7 +59,12 @@ impl Sort {
     }
 
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_bv_sort(ctx.z3_ctx.0, sz as ::std::os::raw::c_uint)) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_bv_sort(ctx.z3_ctx.0, sz as ::std::os::raw::c_uint),
+            )
+        }
     }
 
     pub fn array(ctx: &Context, domain: &Sort, range: &Sort) -> Sort {

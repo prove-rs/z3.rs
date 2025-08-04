@@ -6,14 +6,17 @@ use z3_sys::*;
 use crate::{Context, Params, Symbol};
 
 impl Params {
-    unsafe fn wrap(ctx: & Context, z3_params: Z3_params) -> Params {
+    unsafe fn wrap(ctx: &Context, z3_params: Z3_params) -> Params {
         unsafe {
             Z3_params_inc_ref(ctx.z3_ctx.0, z3_params);
         }
-        Params { ctx: ctx.clone(), z3_params }
+        Params {
+            ctx: ctx.clone(),
+            z3_params,
+        }
     }
 
-    pub fn new(ctx: & Context) -> Params {
+    pub fn new(ctx: &Context) -> Params {
         unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
     }
 

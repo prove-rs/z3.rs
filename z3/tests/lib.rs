@@ -128,7 +128,7 @@ fn test_cloning_ast() {
     assert_eq!(yv, 0);
 }
 
-fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool<'_>> {
+fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool> {
     let s = Solver::new(ctx);
     let x = ast::Int::new_const(ctx, "x");
     let y = ast::Int::new_const(ctx, "y");

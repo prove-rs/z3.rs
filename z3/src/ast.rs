@@ -249,7 +249,11 @@ pub trait Ast: fmt::Debug {
         match left_sort == right_sort {
             true => Ok(unsafe {
                 Bool::wrap(self.get_ctx(), {
-                    Z3_mk_eq(self.get_ctx().z3_ctx.0, self.get_z3_ast(), other.get_z3_ast())
+                    Z3_mk_eq(
+                        self.get_ctx().z3_ctx.0,
+                        self.get_z3_ast(),
+                        other.get_z3_ast(),
+                    )
                 })
             }),
             false => Err(SortDiffers::new(left_sort, right_sort)),
@@ -687,7 +691,12 @@ impl Bool {
     {
         unsafe {
             T::wrap(&self.ctx, {
-                Z3_mk_ite(self.ctx.z3_ctx.0, self.z3_ast, a.get_z3_ast(), b.get_z3_ast())
+                Z3_mk_ite(
+                    self.ctx.z3_ctx.0,
+                    self.z3_ast,
+                    a.get_z3_ast(),
+                    b.get_z3_ast(),
+                )
             })
         }
     }
@@ -761,12 +770,7 @@ impl Bool {
     }
 }
 
-pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(
-    ctx: &Context,
-    args: I,
-    k: u32,
-) -> Bool
-{
+pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atmost(ctx, args.as_ref(), k)
 }
@@ -775,17 +779,17 @@ fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
     unsafe {
         Bool::wrap(
             ctx,
-            Z3_mk_atmost(ctx.z3_ctx.0, args.len().try_into().unwrap(), args.as_ptr(), k),
+            Z3_mk_atmost(
+                ctx.z3_ctx.0,
+                args.len().try_into().unwrap(),
+                args.as_ptr(),
+                k,
+            ),
         )
     }
 }
 
-pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(
-    ctx: &Context,
-    args: I,
-    k: u32,
-) -> Bool
-{
+pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atleast(ctx, args.as_ref(), k)
 }
@@ -794,7 +798,12 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
     unsafe {
         Bool::wrap(
             ctx,
-            Z3_mk_atleast(ctx.z3_ctx.0, args.len().try_into().unwrap(), args.as_ptr(), k),
+            Z3_mk_atleast(
+                ctx.z3_ctx.0,
+                args.len().try_into().unwrap(),
+                args.as_ptr(),
+                k,
+            ),
         )
     }
 }
@@ -1027,12 +1036,7 @@ impl Real {
 }
 
 impl Float {
-    pub fn new_const<S: Into<Symbol>>(
-        ctx: &Context,
-        name: S,
-        ebits: u32,
-        sbits: u32,
-    ) -> Float {
+    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, ebits: u32, sbits: u32) -> Float {
         let sort = Sort::float(ctx, ebits, sbits);
         unsafe {
             Self::wrap(ctx, {
@@ -1131,7 +1135,12 @@ impl Float {
 
     // Convert to IEEE-754 bit-vector
     pub fn to_ieee_bv(&self) -> BV {
-        unsafe { BV::wrap(&self.ctx, Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx.0, self.z3_ast)) }
+        unsafe {
+            BV::wrap(
+                &self.ctx,
+                Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx.0, self.z3_ast),
+            )
+        }
     }
 
     unop! {
@@ -1620,12 +1629,7 @@ impl Array {
         }
     }
 
-    pub fn fresh_const(
-        ctx: &Context,
-        prefix: &str,
-        domain: &Sort,
-        range: &Sort,
-    ) -> Array {
+    pub fn fresh_const(ctx: &Context, prefix: &str, domain: &Sort, range: &Sort) -> Array {
         let sort = Sort::array(ctx, domain, range);
         unsafe {
             Self::wrap(ctx, {
@@ -1737,11 +1741,7 @@ impl Array {
 }
 
 impl Set {
-    pub fn new_const<S: Into<Symbol>>(
-        ctx: &Context,
-        name: S,
-        eltype: &Sort,
-    ) -> Set {
+    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Set {
         let sort = Sort::set(ctx, eltype);
         unsafe {
             Self::wrap(ctx, {
@@ -1932,7 +1932,12 @@ impl Dynamic {
     }
 
     pub fn sort_kind(&self) -> SortKind {
-        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.0, Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)) }
+        unsafe {
+            Z3_get_sort_kind(
+                self.ctx.z3_ctx.0,
+                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast),
+            )
+        }
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Bool`
@@ -1970,7 +1975,10 @@ impl Dynamic {
     /// Returns `None` if the `Dynamic` is not actually a `String`
     pub fn as_string(&self) -> Option<String> {
         unsafe {
-            if Z3_is_string_sort(self.ctx.z3_ctx.0, Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)) {
+            if Z3_is_string_sort(
+                self.ctx.z3_ctx.0,
+                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast),
+            ) {
                 Some(String::wrap(&self.ctx, self.z3_ast))
             } else {
                 None
@@ -2425,11 +2433,7 @@ pub fn quantifier_const(
 ///
 /// assert_eq!(solver.check(), SatResult::Unsat);
 /// ```
-pub fn lambda_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    body: &Dynamic,
-) -> Array {
+pub fn lambda_const(ctx: &Context, bounds: &[&dyn Ast], body: &Dynamic) -> Array {
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
 
     unsafe {
