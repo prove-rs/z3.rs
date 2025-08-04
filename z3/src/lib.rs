@@ -7,7 +7,6 @@
 #![deny(missing_debug_implementations)]
 
 use std::ffi::CString;
-use std::rc::Rc;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 

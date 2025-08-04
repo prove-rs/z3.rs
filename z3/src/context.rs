@@ -104,8 +104,3 @@ impl ContextHandle<'_> {
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
 
-impl Drop for Context {
-    fn drop(&mut self) {
-        unsafe { Z3_del_context(self.z3_ctx.0) };
-    }
-}
