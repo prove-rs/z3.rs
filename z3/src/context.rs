@@ -105,4 +105,3 @@ impl ContextHandle<'_> {
 
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
-
