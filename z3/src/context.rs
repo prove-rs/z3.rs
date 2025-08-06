@@ -125,6 +125,14 @@ impl Context {
     }
 }
 
+/// The default [`Context`] uses [`Config::default`]
+impl Default for Context {
+    fn default() -> Self {
+        let cfg = Config::default();
+        Context::new(&cfg)
+    }
+}
+
 impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
