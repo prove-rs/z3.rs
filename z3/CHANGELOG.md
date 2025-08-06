@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.3...z3-v0.14.0) - 2025-08-06
+
+### Added
+
+- add BV::from_bits  ([#398](https://github.com/prove-rs/z3.rs/pull/398)) (by @Evian-Zhang) - #398
+- Bump to Rust 2024 edition ([#381](https://github.com/prove-rs/z3.rs/pull/381)) (by @Evian-Zhang) - #381
+
+### Changed
+
+- [**breaking**] refcount z3 context ([#401](https://github.com/prove-rs/z3.rs/pull/401)) (by @toolCHAINZ) - #401
+
+### Fixed
+
+- [**breaking**] make argument of `Probe::lt` consistent with other comparison operations (by @mehrad31415) - #391
+- make BV::from_bits return Option ([#399](https://github.com/prove-rs/z3.rs/pull/399)) (by @toolCHAINZ) - #399
+
+### Contributors
+
+* @toolCHAINZ
+* @Evian-Zhang
+* @mehrad31415
+
 ## [0.13.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.2...z3-v0.13.3) - 2025-07-17
 
 ### Added
