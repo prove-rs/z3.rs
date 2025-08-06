@@ -20,8 +20,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- [**breaking**] make argument of `Probe::lt` consistent with other comparison operations (by @mehrad31415) - #391
 - make BV::from_bits return Option ([#399](https://github.com/prove-rs/z3.rs/pull/399)) (by @toolCHAINZ) - #399
-- make argument of `Probe::lt` consistent with other comparison operations (by @mehrad31415) - #391
 
 ### Contributors
 
