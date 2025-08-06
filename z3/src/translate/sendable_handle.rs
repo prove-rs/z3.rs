@@ -44,7 +44,7 @@ impl<T> SendableHandle<T> {
     /// Make a Sendable handle for a Z3 structure. This is exposed to allow implementation of Sendable
     /// handles for user-provided types that use Z3 types. Most users will not need to use this
     /// function, as the built-in Z3 types already have ways to construct it.
-    /// 
+    ///
     /// # Safety
     ///
     /// The [`Context`] given to this function must NOT be referenced anywhere else. The safety of this structure

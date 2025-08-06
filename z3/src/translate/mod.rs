@@ -1,4 +1,6 @@
-use crate::ast::{Ast, BV, Bool, Translate, String, Array, Int, Real, Float, Set, Seq, Datatype, Dynamic};
+use crate::ast::{
+    Array, Ast, BV, Bool, Datatype, Dynamic, Float, Int, Real, Seq, Set, String, Translate,
+};
 use crate::{Config, Context};
 use z3_sys::Z3_translate;
 
@@ -81,8 +83,8 @@ unsafe impl<T: PrepareSendable + Translate> PrepareSendable for Vec<T> {
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::Bool;
     use crate::Context;
+    use crate::ast::Bool;
     use crate::translate::{PrepareSendable, RecoverSendable};
 
     #[test]
@@ -94,7 +96,8 @@ mod tests {
             let thread_ctx = Context::default();
             let moved = sendable.recover(&thread_ctx);
             assert_eq!(moved.as_bool(), Some(true));
-        }).join().expect("uh oh");
-
+        })
+        .join()
+        .expect("uh oh");
     }
 }

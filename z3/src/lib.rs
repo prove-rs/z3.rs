@@ -35,8 +35,8 @@ mod version;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
-pub use crate::version::{Version, full_version, version};
 pub use crate::translate::*;
+pub use crate::version::{Version, full_version, version};
 pub use context::Context;
 
 /// Configuration used to initialize [logical contexts](Context).
