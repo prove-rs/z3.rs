@@ -52,6 +52,37 @@ impl Context {
         }
     }
 
+    /// Construct a `Context` from a raw `Z3_context` pointer. This is mostly useful for
+    /// consumers who want to interoperate with Z3 contexts created through other means,
+    /// such as the C API or other bindings such as Python.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the pointer is valid and not already managed elsewhere.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use z3::ast::Bool;
+    /// use z3_sys::{Z3_mk_config, Z3_del_config, Z3_mk_context_rc};
+    /// use z3::Context;
+    ///
+    /// // Create a raw Z3_config using the low-level API
+    /// let cfg = unsafe { Z3_mk_config() };
+    /// let raw_ctx = unsafe { Z3_mk_context_rc(cfg) };
+    /// let ctx = unsafe { Context::from_raw(raw_ctx) };
+    /// // Use `ctx` as usual...
+    /// unsafe { Z3_del_config(cfg) };
+    /// let b = Bool::from_bool(&ctx, true);
+    /// assert_eq!(b.as_bool(), Some(true));
+    /// ```
+    pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {
+        debug!("from_raw context {z3_ctx:p}");
+        Context {
+            z3_ctx: Rc::new(ContextInternal(z3_ctx)),
+        }
+    }
+
     pub fn get_z3_context(&self) -> Z3_context {
         self.z3_ctx.0
     }
