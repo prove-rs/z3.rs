@@ -52,7 +52,7 @@ impl Context {
         }
     }
 
-    /// Construct a `Context` from a raw `Z3_context` pointer. This is mostly useful for
+    /// Construct a [`Context`] from a raw [`Z3_context`] pointer. This is mostly useful for
     /// consumers who want to interoperate with Z3 contexts created through other means,
     /// such as the C API or other bindings such as Python.
     ///
