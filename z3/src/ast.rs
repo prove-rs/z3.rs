@@ -415,6 +415,10 @@ pub trait Ast: fmt::Debug {
     }
 }
 
+pub trait Translate: Ast {
+    fn translate(&self, dest: &Context) -> Self;
+}
+
 macro_rules! impl_ast {
     ($ast:ident) => {
         impl Ast for $ast {
@@ -445,8 +449,8 @@ macro_rules! impl_ast {
             }
         }
 
-        impl $ast {
-            pub fn translate(&self, dest: &Context) -> $ast {
+        impl Translate for $ast {
+            fn translate(&self, dest: &Context) -> $ast {
                 unsafe {
                     $ast::wrap(dest, {
                         Z3_translate(self.get_ctx().z3_ctx.0, self.get_z3_ast(), dest.z3_ctx.0)
