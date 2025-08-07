@@ -3,7 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::{Context, Goal, ast, ast::Ast};
+use crate::{Context, Goal, ast, ast::Ast, Translate};
 
 // todo: is this sound? This should be through `wrap`, no?
 impl Clone for Goal {
@@ -70,17 +70,6 @@ impl Goal {
         unsafe { Z3_goal_reset(self.ctx.z3_ctx.0, self.z3_goal) };
     }
 
-    /// Copy a goal `g` from the context `source` to the context `target`.
-    #[allow(clippy::needless_lifetimes)]
-    pub fn translate(self, ctx: &Context) -> Goal {
-        unsafe {
-            Goal::wrap(
-                ctx,
-                Z3_goal_translate(self.ctx.z3_ctx.0, self.z3_goal, ctx.z3_ctx.0),
-            )
-        }
-    }
-
     /// Return the "precision" of the given goal. Goals can be transformed using over and under approximations.
     pub fn get_precision(&self) -> GoalPrec {
         unsafe { Z3_goal_precision(self.ctx.z3_ctx.0, self.z3_goal) }
@@ -139,5 +128,16 @@ impl Drop for Goal {
         unsafe {
             Z3_goal_dec_ref(self.ctx.z3_ctx.0, self.z3_goal);
         };
+    }
+}
+
+unsafe impl Translate for Goal {
+    fn translate(&self, ctx: &Context) -> Goal {
+        unsafe {
+            Goal::wrap(
+                ctx,
+                Z3_goal_translate(self.ctx.z3_ctx.0, self.z3_goal, ctx.z3_ctx.0),
+            )
+        }
     }
 }

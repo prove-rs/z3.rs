@@ -3,7 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, ast::Ast};
+use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Translate, ast::Ast};
 
 impl Model {
     unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
@@ -35,16 +35,6 @@ impl Model {
             } else {
                 Some(Self::wrap(&opt.ctx, m))
             }
-        }
-    }
-
-    /// Translate model to context `dest`
-    pub fn translate(&self, dest: &Context) -> Model {
-        unsafe {
-            Model::wrap(
-                dest,
-                Z3_model_translate(self.ctx.z3_ctx.0, self.z3_mdl, dest.z3_ctx.0),
-            )
         }
     }
 
@@ -219,6 +209,17 @@ impl Iterator for ModelIter<'_> {
     fn size_hint(&self) -> (usize, Option<usize>) {
         let len = (self.len - self.idx) as usize;
         (len, Some(len))
+    }
+}
+
+unsafe impl Translate for Model {
+    fn translate(&self, dest: &Context) -> Model {
+        unsafe {
+            Model::wrap(
+                dest,
+                Z3_model_translate(self.ctx.z3_ctx.0, self.z3_mdl, dest.z3_ctx.0),
+            )
+        }
     }
 }
 

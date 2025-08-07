@@ -14,6 +14,7 @@ use z3_sys::*;
 use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
 
 use num::{bigint::BigInt, rational::BigRational};
+use crate::translate::Translate;
 
 /// [`Ast`] node representing a boolean value.
 pub struct Bool {
@@ -415,10 +416,6 @@ pub trait Ast: fmt::Debug {
     }
 }
 
-pub trait Translate: Ast {
-    fn translate(&self, dest: &Context) -> Self;
-}
-
 macro_rules! impl_ast {
     ($ast:ident) => {
         impl Ast for $ast {
@@ -449,7 +446,7 @@ macro_rules! impl_ast {
             }
         }
 
-        impl Translate for $ast {
+        unsafe impl Translate for $ast {
             fn translate(&self, dest: &Context) -> $ast {
                 unsafe {
                     $ast::wrap(dest, {

@@ -1,91 +1,55 @@
-use crate::ast::{
-    Array, Ast, BV, Bool, Datatype, Dynamic, Float, Int, Real, Seq, Set, String, Translate,
-};
 use crate::{Config, Context};
-use z3_sys::Z3_translate;
 
 mod sendable_handle;
 
 pub use sendable_handle::SendableHandle;
 
-/// This trait creates usable Z3 structures out of some type that is a
-/// [`Send`] wrapper for the underlying C++ structure (usually
-/// some parameterization of [`SendableHandle`]). Users may implement it
-/// for their own types, though almost no users should need to.
+/// Represents types that depend on a [`Context`] and can be translated to another [`Context`].
 ///
 /// # Safety
 ///
-/// todo: maybe this should be a sealed trait; I can't think of many cases where someone should need to do this
-pub unsafe trait RecoverSendable {
-    type Target;
-    fn recover(&self, ctx: &Context) -> Self::Target;
+/// Implementations of this trait must ensure that the `translate` method
+/// translates _all_ contained z3 data into the new `Context`
+pub unsafe trait Translate {
+    fn translate(&self, dest: &Context) -> Self;
 }
-/// # Safety
-/// todo: should this be sealed as well?
+
+unsafe impl<T: Translate> Translate for Vec<T> {
+    fn translate(&self, dest: &Context) -> Self {
+        self.iter().map(|t| t.translate(dest)).collect()
+    }
+}
 pub unsafe trait PrepareSendable {
-    type SendWrapper;
-
-    fn prepare_sendable(&self) -> Self::SendWrapper;
+    type Inner;
+    fn prepare_sendable(&self) -> SendableHandle<Self::Inner>;
 }
 
-macro_rules! impl_translate_ast {
-    ($ty:ident) => {
-        unsafe impl RecoverSendable for SendableHandle<$ty> {
-            type Target = $ty;
-            fn recover(&self, ctx: &Context) -> $ty {
-                let data = unsafe {
-                    Z3_translate(self.ctx.z3_ctx.0, self.data.get_z3_ast(), ctx.z3_ctx.0)
-                };
-                unsafe { $ty::wrap(ctx, data) }
-            }
-        }
-    };
-}
+unsafe impl<T: Translate> PrepareSendable for &[T] {
+    type Inner = Vec<T>;
 
-impl_translate_ast!(Bool);
-impl_translate_ast!(Int);
-impl_translate_ast!(Real);
-impl_translate_ast!(Float);
-impl_translate_ast!(String);
-impl_translate_ast!(BV);
-impl_translate_ast!(Array);
-impl_translate_ast!(Set);
-impl_translate_ast!(Seq);
-impl_translate_ast!(Datatype);
-impl_translate_ast!(Dynamic);
-unsafe impl<T: PrepareSendable + Translate> PrepareSendable for &[T] {
-    type SendWrapper = SendableHandle<Vec<T>>;
-
-    fn prepare_sendable(&self) -> Self::SendWrapper {
-        let ctx = Context::new(&Config::new());
-        let ast = self.iter().map(|t| t.translate(&ctx)).collect();
-        SendableHandle { ctx, data: ast }
+    fn prepare_sendable(&self) -> SendableHandle<Self::Inner> {
+        let ctx = Context::default();
+        let data: Vec<T> = self.iter().map(|t| t.translate(&ctx)).collect();
+        SendableHandle { ctx, data }
     }
 }
 
+/// All `Translate` types are `PrepareSendable`. Users must implement `Translate`
+/// in order to use `PrepareSendable` for their types.
 unsafe impl<T: Translate> PrepareSendable for T {
-    type SendWrapper = SendableHandle<T>;
+    type Inner = T;
 
-    fn prepare_sendable(&self) -> Self::SendWrapper {
+    fn prepare_sendable(&self) -> SendableHandle<Self::Inner> {
         let ctx = Context::new(&Config::new());
         let ast = self.translate(&ctx);
         SendableHandle { ctx, data: ast }
     }
 }
-
-unsafe impl<T: PrepareSendable + Translate> PrepareSendable for Vec<T> {
-    type SendWrapper = SendableHandle<Vec<T>>;
-
-    fn prepare_sendable(&self) -> Self::SendWrapper {
-        self.as_slice().prepare_sendable()
-    }
-}
-
 #[cfg(test)]
 mod tests {
-    use crate::Context;
-    use crate::ast::Bool;
-    use crate::translate::{PrepareSendable, RecoverSendable};
+    use crate::ast::{Ast, Bool};
+    use crate::translate::PrepareSendable;
+    use crate::{Context, Solver};
 
     #[test]
     fn test_send() {
@@ -99,5 +63,41 @@ mod tests {
         })
         .join()
         .expect("uh oh");
+    }
+
+    #[test]
+    fn test_send_vec() {
+        let ctx = Context::default();
+        let bv = vec![Bool::from_bool(&ctx, true); 8];
+        let sendable = bv.prepare_sendable();
+        std::thread::spawn(move || {
+            let thread_ctx = Context::default();
+            let moved = sendable.recover(&thread_ctx);
+            for x in moved {
+                assert_eq!(x.as_bool(), Some(true));
+            }
+        })
+        .join()
+        .expect("uh oh");
+    }
+
+    #[test]
+    fn test_round_trip() {
+        let ctx = Context::default();
+        let bv = Bool::fresh_const(&ctx, "hello");
+        let sendable = bv.prepare_sendable();
+        let model = std::thread::spawn(move || {
+            let thread_ctx = Context::default();
+            let moved = sendable.recover(&thread_ctx);
+            let solver = Solver::new(&thread_ctx);
+            solver.assert(&moved._eq(&Bool::from_bool(&thread_ctx, true)));
+            solver.check();
+            let model = solver.get_model().unwrap();
+            model.prepare_sendable()
+        })
+        .join()
+        .expect("uh oh");
+        let model = model.recover(&ctx);
+        assert_eq!(model.eval(&bv, true), Some(Bool::from_bool(&ctx, true)));
     }
 }

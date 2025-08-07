@@ -1,6 +1,5 @@
 use crate::Context;
-use crate::ast::Translate;
-use crate::translate::RecoverSendable;
+use crate::translate::Translate;
 
 /// This struct provides a way to send z3 structures
 /// ([`Ast`](crate::ast::Ast), [`Solver`], etc)
@@ -29,45 +28,40 @@ use crate::translate::RecoverSendable;
 /// the Z3 structures contained inside. It also assumes that all structures contained inside
 /// are associated with its [`Context`].
 ///
-/// This invariant is upheld in all constructions of this type in z3rs by ensuring the following:
+/// This invariant is upheld in by ensuring the following:
+/// * SendableHandle is only constructable from inside this crate
 /// * [`SendableHandle`] is always constructed with a new [`Context`]
 /// * This [Context] is moved into the structure and no reference/copy of it is kept elsewhere
 /// * All items of the struct are private and are only used to `translate` back into normal z3
 ///   structs
 #[derive(Debug)]
 pub struct SendableHandle<T> {
+    /// Since [`Context`] is refcounted, we actually don't need to keep this around.
+    /// I'm leaving it in here for clarity for the time being but might take it out.
+    #[expect(unused)]
     pub(super) ctx: Context,
     pub(super) data: T,
 }
 
-impl<T> SendableHandle<T> {
-    /// Make a Sendable handle for a Z3 structure. This is exposed to allow implementation of Sendable
-    /// handles for user-provided types that use Z3 types. Most users will not need to use this
-    /// function, as the built-in Z3 types already have ways to construct it.
-    ///
-    /// # Safety
-    ///
-    /// The [`Context`] given to this function must NOT be referenced anywhere else. The safety of this structure
-    /// relies on the assumption that it holds the ONLY references to this [`Context`] AND to
-    /// the Z3 structures contained inside. It also assumes that all structures contained inside
-    /// are associated with its [`Context`].
-    ///
-    /// This invariant is upheld in all constructions of this type in z3.rs by ensuring the following:
-    /// * [`SendableHandle`] is always constructed with a new [`Context`]
-    /// * This [Context] is moved into the structure and no reference/copy of it is kept elsewhere
-    /// * All items of the struct are private and are only used to `translate` back into normal z3
-    ///   structs
-    pub unsafe fn new(ctx: Context, ast: T) -> Self {
-        Self { ctx, data: ast }
+/// If we have a `SendableHandle<T>` where `T: Translate`, we can recover the original data
+/// We only allow construction of `SendableHandle` with `T: Translate` as the inner date is
+/// private to z3.rs, and we manually ensure that it is only constructed for such types.
+impl<T: Translate> SendableHandle<T> {
+    /// Unwrap the `SendableHandle` and return the inner data.
+    pub fn recover(self, ctx: &Context) -> T {
+        self.data.translate(&ctx)
+    }
+}
+
+/// Cloning a `SendableHandle` will create a new `Context` and translate the data into it.
+/// This allows a handle to be easily sent to multiple threads without violating context
+/// memory safety, at the expense of some extra cloning.
+impl<T: Translate> Clone for SendableHandle<T> {
+    fn clone(&self) -> Self {
+        let ctx = Context::default();
+        let data = self.data.translate(&ctx);
+        Self { ctx, data }
     }
 }
 
 unsafe impl<T> Send for SendableHandle<T> {}
-
-unsafe impl<T: Translate> RecoverSendable for SendableHandle<Vec<T>> {
-    type Target = Vec<T>;
-
-    fn recover(&self, ctx: &Context) -> Self::Target {
-        self.data.iter().map(|t| t.translate(ctx)).collect()
-    }
-}
