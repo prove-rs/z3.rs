@@ -18,10 +18,14 @@ use crate::translate::Translate;
 /// overhead in cases where lots of small pieces data needs to be passed to a thread.
 ///
 /// Users wanting to allow their own structure wrapping Z3 types to work with [`SendableHandle`]
-/// may unsafely construct a [`SendableHandle`] with [`SendableHandle::new`], and should
-/// heed the notes below:
+/// may construct a [`SendableHandle`] with [`SendableHandle::new`].
 ///
 /// # Safety notes
+///
+/// This structure is safe to use, the following properties are guaranteed through rust's
+/// type system and package structure. The discussion below is just to clarify the intent.
+///
+/// The safety of this structure relies on the safety of implementations of the [`Translate`] trait.
 ///
 /// The [`Context`] in this struct must NOT be referenced anywhere else. The safety of this structure
 /// relies on the assumption that it holds the ONLY references to this [`Context`] AND to
@@ -29,9 +33,9 @@ use crate::translate::Translate;
 /// are associated with its [`Context`].
 ///
 /// This invariant is upheld in by ensuring the following:
-/// * SendableHandle is only constructable from inside this crate
-/// * [`SendableHandle`] is always constructed with a new [`Context`]
-/// * This [Context] is moved into the structure and no reference/copy of it is kept elsewhere
+/// * [`SendableHandle`] can only be constructed outside this crate through [`SendableHandle::new`],
+///   which provides a fresh [`Context`]
+/// * Direct instantiations of [`SendableHandle`] in this crate always use a new [`Context`]
 /// * All items of the struct are private and are only used to `translate` back into normal z3
 ///   structs
 #[derive(Debug)]
@@ -43,13 +47,21 @@ pub struct SendableHandle<T> {
     pub(super) data: T,
 }
 
+impl<T: Translate> SendableHandle<T> {
+    pub fn new(data: &T) -> Self {
+        let ctx = Context::default();
+        let data = data.translate(&ctx);
+        Self { ctx, data }
+    }
+}
+
 /// If we have a `SendableHandle<T>` where `T: Translate`, we can recover the original data
 /// We only allow construction of `SendableHandle` with `T: Translate` as the inner date is
 /// private to z3.rs, and we manually ensure that it is only constructed for such types.
 impl<T: Translate> SendableHandle<T> {
     /// Unwrap the `SendableHandle` and return the inner data.
     pub fn recover(self, ctx: &Context) -> T {
-        self.data.translate(&ctx)
+        self.data.translate(ctx)
     }
 }
 

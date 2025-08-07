@@ -2,7 +2,7 @@ use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{atleast, atmost, Array, Ast, Bool, Int, BV};
+use z3::ast::{Array, Ast, BV, Bool, Int, atleast, atmost};
 use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};

@@ -1,4 +1,4 @@
-use crate::{Config, Context};
+use crate::Context;
 
 mod sendable_handle;
 
@@ -19,12 +19,15 @@ unsafe impl<T: Translate> Translate for Vec<T> {
         self.iter().map(|t| t.translate(dest)).collect()
     }
 }
-pub unsafe trait PrepareSendable {
+
+/// This trait allows a type to opt-in to multithreading through [`SendableHandle`]
+pub trait PrepareSendable {
     type Inner;
     fn prepare_sendable(&self) -> SendableHandle<Self::Inner>;
 }
 
-unsafe impl<T: Translate> PrepareSendable for &[T] {
+/// Special implementation directly constructing the handle to avoid unnecessary allocations
+impl<T: Translate> PrepareSendable for &[T] {
     type Inner = Vec<T>;
 
     fn prepare_sendable(&self) -> SendableHandle<Self::Inner> {
@@ -34,15 +37,13 @@ unsafe impl<T: Translate> PrepareSendable for &[T] {
     }
 }
 
-/// All `Translate` types are `PrepareSendable`. Users must implement `Translate`
+/// All `Translate` types are `PrepareSendable`. Users should implement `Translate`
 /// in order to use `PrepareSendable` for their types.
-unsafe impl<T: Translate> PrepareSendable for T {
+impl<T: Translate> PrepareSendable for T {
     type Inner = T;
 
     fn prepare_sendable(&self) -> SendableHandle<Self::Inner> {
-        let ctx = Context::new(&Config::new());
-        let ast = self.translate(&ctx);
-        SendableHandle { ctx, data: ast }
+        SendableHandle::new(self)
     }
 }
 #[cfg(test)]

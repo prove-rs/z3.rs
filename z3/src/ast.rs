@@ -13,8 +13,8 @@ use z3_sys::*;
 
 use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
 
-use num::{bigint::BigInt, rational::BigRational};
 use crate::translate::Translate;
+use num::{bigint::BigInt, rational::BigRational};
 
 /// [`Ast`] node representing a boolean value.
 pub struct Bool {

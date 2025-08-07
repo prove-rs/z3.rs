@@ -3,7 +3,7 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::{Context, Goal, ast, ast::Ast, Translate};
+use crate::{Context, Goal, Translate, ast, ast::Ast};
 
 // todo: is this sound? This should be through `wrap`, no?
 impl Clone for Goal {
