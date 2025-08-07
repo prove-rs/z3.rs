@@ -35,10 +35,12 @@ mod version;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
-pub use crate::translate::*;
+pub use crate::translate::Translate;
 pub use crate::version::{Version, full_version, version};
 pub use context::Context;
 
+#[cfg(feature = "synchronization")]
+pub use crate::translate::synchronization::*;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:

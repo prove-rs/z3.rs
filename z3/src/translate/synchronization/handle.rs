@@ -1,24 +1,19 @@
 use crate::Context;
+use crate::Solver;
+use crate::ast::Ast;
 use crate::translate::Translate;
+use std::sync::Mutex;
 
 /// This struct provides a way to send z3 structures
-/// ([`Ast`](crate::ast::Ast), [`Solver`], etc)
+/// ([`Ast`](crate::ast::Ast), [`Solver`](crate::Solver), etc)
 /// to another thread safely. It wraps the Z3 structure you would like to send
 /// combined with the [`Context`] it is associated with.
 ///
 /// This structure is [`Send`] and so can be sent to another thread and then used to
-/// recover the original Z3 structure by calling `translate` on it. The `translate`
-/// method is furnished by implementations of [`RecoverSendable`] for specific inner
-/// data types. The library implements this for all [`Ast`] types as well as [`Solver`],
-/// [`Optimize`], and [`Model`], as well as for [`Vec`]s and slices of any type implementing
-/// [`RecoverSendable`].
-///
-/// The advantage of implementing it for these collections is that it allows one to use
-/// the same temporary context for a whole collection of objects, reducing the amount of
-/// overhead in cases where lots of small pieces data needs to be passed to a thread.
+/// recover the original Z3 structure by calling [`recover`](Self::recover) on it.
 ///
 /// Users wanting to allow their own structure wrapping Z3 types to work with [`SendableHandle`]
-/// may construct a [`SendableHandle`] with [`SendableHandle::new`].
+/// should implement the [`Translate`] trait to benefit from the blanket implementation.
 ///
 /// # Safety notes
 ///
@@ -44,14 +39,22 @@ pub struct SendableHandle<T> {
     /// I'm leaving it in here for clarity for the time being but might take it out.
     #[expect(unused)]
     pub(super) ctx: Context,
-    pub(super) data: T,
+    pub(super) data: Mutex<T>,
 }
 
 impl<T: Translate> SendableHandle<T> {
+    /// Creates a new handle that is [`Send`] and [`Sync`], allowing for easily moving
+    /// your z3 structs to other threads.
+    /// Data passed in here is `translate`'d into a one-off `Context` and is then put in a `Mutex`,
+    /// allowing it to be moved and referenced across threads
+    /// soundly. None of this effects the original data.
     pub fn new(data: &T) -> Self {
         let ctx = Context::default();
         let data = data.translate(&ctx);
-        Self { ctx, data }
+        Self {
+            ctx,
+            data: Mutex::new(data),
+        }
     }
 }
 
@@ -60,8 +63,8 @@ impl<T: Translate> SendableHandle<T> {
 /// private to z3.rs, and we manually ensure that it is only constructed for such types.
 impl<T: Translate> SendableHandle<T> {
     /// Unwrap the `SendableHandle` and return the inner data.
-    pub fn recover(self, ctx: &Context) -> T {
-        self.data.translate(ctx)
+    pub fn recover(&self, ctx: &Context) -> T {
+        self.data.lock().unwrap().translate(ctx)
     }
 }
 
@@ -71,9 +74,16 @@ impl<T: Translate> SendableHandle<T> {
 impl<T: Translate> Clone for SendableHandle<T> {
     fn clone(&self) -> Self {
         let ctx = Context::default();
-        let data = self.data.translate(&ctx);
-        Self { ctx, data }
+        let data = self.data.lock().unwrap().translate(&ctx);
+        Self {
+            ctx,
+            data: Mutex::new(data),
+        }
     }
 }
 
+/// The [`Context`] inside is only used with the [`Ast`] inside, so it is sound to [`Send`]
 unsafe impl<T> Send for SendableHandle<T> {}
+/// The only method access to the [`Ast`] or [`Context`] is guarded by a [`Mutex`], so it is
+/// sound to [`Sync`]
+unsafe impl<T> Sync for SendableHandle<T> {}
