@@ -85,8 +85,8 @@ mod tests {
     #[test]
     fn test_round_trip() {
         let ctx = Context::default();
-        let bv = Bool::fresh_const(&ctx, "hello");
-        let sendable = bv.prepare_sendable();
+        let bool = Bool::new_const(&ctx, "hello");
+        let sendable = bool.prepare_sendable();
         let model = std::thread::spawn(move || {
             let thread_ctx = Context::default();
             let moved = sendable.recover(&thread_ctx);
@@ -99,6 +99,6 @@ mod tests {
         .join()
         .expect("uh oh");
         let model = model.recover(&ctx);
-        assert_eq!(model.eval(&bv, true), Some(Bool::from_bool(&ctx, true)));
+        assert_eq!(model.eval(&bool, true), Some(Bool::from_bool(&ctx, true)));
     }
 }
