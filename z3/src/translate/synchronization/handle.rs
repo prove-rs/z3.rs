@@ -80,9 +80,9 @@ impl<T: Translate> Clone for SendableHandle<T> {
     }
 }
 
-/// The [`Context`] inside is only used with the [`Ast`](crate::ast::Ast) inside, so 
+/// The [`Context`] inside is only used with the [`Ast`](crate::ast::Ast) inside, so
 /// it is sound to [`Send`]
 unsafe impl<T> Send for SendableHandle<T> {}
-/// The only method access to the [`Ast`](crate::ast::Ast) or [`Context`] is guarded 
+/// The only method access to the [`Ast`](crate::ast::Ast) or [`Context`] is guarded
 /// by a [`Mutex`], so it is sound to [`Sync`]
 unsafe impl<T> Sync for SendableHandle<T> {}
