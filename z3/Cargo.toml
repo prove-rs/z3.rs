@@ -16,7 +16,7 @@ edition = "2024"
 
 
 [features]
-default = []
+default = ["synchronization"]
 bundled = ["z3-sys/bundled"]
 vcpkg = ["z3-sys/vcpkg"]
 gh-release = ["z3-sys/gh-release"]
