@@ -2,7 +2,9 @@ use crate::Context;
 use crate::translate::Translate;
 use std::sync::Mutex;
 
-/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]). This wrapper
+/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]). 
+/// 
+/// This wrapper
 /// takes in a Z3 type (or a user-defined type that uses Z3 types) and translates its contents
 /// into a private "singleton" [`Context`]. Since this [`Context`] is unused elsewhere, it is safe
 /// to [`Send`] it and its contents to other threads AND to have [`Sync`] accesses across threads.
@@ -16,7 +18,7 @@ use std::sync::Mutex;
 /// # Performance
 /// 
 /// Initializing this type (usually done through
-/// [`PrepareSynchronized::synchronized`](crate::PrepareSynchronized::synchronized)
+/// [`PrepareSynchronized::synchronized`](crate::PrepareSynchronized::synchronized))
 /// will allocate
 /// a new [`Context`] and [`Translate`] the provided `T` into it. This involves a non-zero amount of
 /// overhead; if you are creating thousands of [`Synchronized`], you will see a performance impact.
@@ -65,33 +67,6 @@ impl<T: Translate> Synchronized<T> {
     }
 }
 
-/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]). This wrapper
-/// takes in a Z3 type (or a user-defined type that uses Z3 types) and translates its contents
-/// into a private "singleton" [`Context`]. Since this [`Context`] is unused elsewhere, it is safe
-/// to [`Send`] it and its contents to other threads AND to have [`Sync`] accesses across threads.
-/// The safety of the [`Sync`] is upheld through an inner [`Mutex`].
-///
-/// Inner data can only be accessed through [`Synchronized::recover`], which translates the contents
-/// for the given [`Context`].
-///
-/// Initializing this type (usually done through
-/// [`PrepareSynchronized::synchronized`](crate::PrepareSynchronized::synchronized)
-/// will allocate
-/// a new [`Context`] and [`Translate`] the provided `T` into it. This involves a non-zero amount of
-/// overhead; if you are creating thousands of [`Synchronized`], you will see a performance impact.
-///
-/// If you need to move/reference a lot of data between threads, put it in a [`Vec`], which also
-/// implements [`PrepareSynchronized`](crate::PrepareSynchronized), which will only create one [`Context`]. You can also
-/// implement [`Translate`] on your own types, which will then inherit from a blanket impl of
-/// [`PrepareSynchronized`](crate::PrepareSynchronized) for [`Translate`]. Note that this will
-/// only alleviate the overhead of
-/// allocating many [`Context`]s. There is still the unavoidable overhead of a single [`Context`]
-/// allocation and the actual translation.
-///
-/// See also:
-///
-/// [`PrepareSendable`](crate::PrepareSynchronized)
-/// [`Translate`]
 impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
     /// and return the inner data.
