@@ -1,23 +1,29 @@
 mod handle;
 
-pub use crate::translate::synchronization::handle::SendableHandle;
+pub use crate::translate::synchronization::handle::Synchronized;
 use crate::{Context, Translate};
 use std::sync::Mutex;
 
-/// This trait allows a type to opt-in to multithreading through [`SendableHandle`]
-pub trait PrepareSendable {
+/// This trait allows a type to opt-in to multithreading through [`Synchronized`]
+pub trait PrepareSynchronized {
     type Inner;
-    fn prepare_sendable(&self) -> SendableHandle<Self::Inner>;
+
+    /// Creates a thread-safe wrapper that is both [`Send`] and [`Sync`].
+    ///
+    /// See also:
+    ///
+    /// [`Synchronized`]
+    fn synchronized(&self) -> Synchronized<Self::Inner>;
 }
 
 /// Special implementation directly constructing the handle to avoid unnecessary allocations
-impl<T: Translate> PrepareSendable for &[T] {
+impl<T: Translate> PrepareSynchronized for &[T] {
     type Inner = Vec<T>;
 
-    fn prepare_sendable(&self) -> SendableHandle<Self::Inner> {
+    fn synchronized(&self) -> Synchronized<Self::Inner> {
         let ctx = Context::default();
         let data: Vec<T> = self.iter().map(|t| t.translate(&ctx)).collect();
-        SendableHandle {
+        Synchronized {
             ctx,
             data: Mutex::new(data),
         }
@@ -26,24 +32,24 @@ impl<T: Translate> PrepareSendable for &[T] {
 
 /// All `Translate` types are `PrepareSendable`. Users should implement `Translate`
 /// in order to use `PrepareSendable` for their types.
-impl<T: Translate> PrepareSendable for T {
+impl<T: Translate> PrepareSynchronized for T {
     type Inner = T;
 
-    fn prepare_sendable(&self) -> SendableHandle<Self::Inner> {
-        SendableHandle::new(self)
+    fn synchronized(&self) -> Synchronized<Self::Inner> {
+        Synchronized::new(self)
     }
 }
 #[cfg(test)]
 mod tests {
     use crate::ast::{Ast, Bool};
-    use crate::translate::synchronization::PrepareSendable;
+    use crate::translate::synchronization::PrepareSynchronized;
     use crate::{Context, Solver};
 
     #[test]
     fn test_send() {
         let ctx = Context::default();
         let bv = Bool::from_bool(&ctx, true);
-        let sendable = bv.prepare_sendable();
+        let sendable = bv.synchronized();
         std::thread::spawn(move || {
             let thread_ctx = Context::default();
             let moved = sendable.recover(&thread_ctx);
@@ -57,7 +63,7 @@ mod tests {
     fn test_send_vec() {
         let ctx = Context::default();
         let bv = vec![Bool::from_bool(&ctx, true); 8];
-        let sendable = bv.prepare_sendable();
+        let sendable = bv.synchronized();
         std::thread::spawn(move || {
             let thread_ctx = Context::default();
             let moved = sendable.recover(&thread_ctx);
@@ -73,7 +79,7 @@ mod tests {
     fn test_round_trip() {
         let ctx = Context::default();
         let bool = Bool::new_const(&ctx, "hello");
-        let sendable = bool.prepare_sendable();
+        let sendable = bool.synchronized();
         let model = std::thread::spawn(move || {
             let thread_ctx = Context::default();
             let moved = sendable.recover(&thread_ctx);
@@ -81,7 +87,7 @@ mod tests {
             solver.assert(&moved._eq(&Bool::from_bool(&thread_ctx, true)));
             solver.check();
             let model = solver.get_model().unwrap();
-            model.prepare_sendable()
+            model.synchronized()
         })
         .join()
         .expect("uh oh");
