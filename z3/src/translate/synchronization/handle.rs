@@ -1,6 +1,4 @@
 use crate::Context;
-use crate::Solver;
-use crate::ast::Ast;
 use crate::translate::Translate;
 use std::sync::Mutex;
 
@@ -82,8 +80,9 @@ impl<T: Translate> Clone for SendableHandle<T> {
     }
 }
 
-/// The [`Context`] inside is only used with the [`Ast`] inside, so it is sound to [`Send`]
+/// The [`Context`] inside is only used with the [`Ast`](crate::ast::Ast) inside, so 
+/// it is sound to [`Send`]
 unsafe impl<T> Send for SendableHandle<T> {}
-/// The only method access to the [`Ast`] or [`Context`] is guarded by a [`Mutex`], so it is
-/// sound to [`Sync`]
+/// The only method access to the [`Ast`](crate::ast::Ast) or [`Context`] is guarded 
+/// by a [`Mutex`], so it is sound to [`Sync`]
 unsafe impl<T> Sync for SendableHandle<T> {}
