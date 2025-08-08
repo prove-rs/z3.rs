@@ -2,8 +2,8 @@ use crate::Context;
 use crate::translate::Translate;
 use std::sync::Mutex;
 
-/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]). 
-/// 
+/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]).
+///
 /// This wrapper
 /// takes in a Z3 type (or a user-defined type that uses Z3 types) and translates its contents
 /// into a private "singleton" [`Context`]. Since this [`Context`] is unused elsewhere, it is safe
@@ -16,28 +16,28 @@ use std::sync::Mutex;
 /// for the given [`Context`].
 ///
 /// # Performance
-/// 
+///
 /// Initializing this type (usually done through
 /// [`PrepareSynchronized::synchronized`](crate::PrepareSynchronized::synchronized))
 /// will allocate
 /// a new [`Context`] and [`Translate`] the provided `T` into it. This involves a non-zero amount of
 /// overhead; if you are creating thousands of [`Synchronized`], you will see a performance impact.
 ///
-/// If you need to move/reference a collection of data between threads, consider putting it in 
-/// a [`Vec`], which also implements [`PrepareSynchronized`](crate::PrepareSynchronized), and will 
-/// only create one [`Context`]. You can also implement [`Translate`] on your own types, which 
-/// will then inherit from a blanket impl of [`PrepareSynchronized`](crate::PrepareSynchronized) 
-/// for [`Translate`]. 
-/// 
+/// If you need to move/reference a collection of data between threads, consider putting it in
+/// a [`Vec`], which also implements [`PrepareSynchronized`](crate::PrepareSynchronized), and will
+/// only create one [`Context`]. You can also implement [`Translate`] on your own types, which
+/// will then inherit from a blanket impl of [`PrepareSynchronized`](crate::PrepareSynchronized)
+/// for [`Translate`].
+///
 /// Note that this will only alleviate the overhead of
 /// allocating many [`Context`]s. There is still some unavoidable overhead:
 /// * A [`Context`] must  be allocated.
 /// * Your `T` must be [`Translate`]'d into the [`Context`].
-/// * The data inside [`Synchronized`] must be [`Translate`]'d out to be used. 
+/// * The data inside [`Synchronized`] must be [`Translate`]'d out to be used.
 ///
 /// Z3 translation scales in proportion to the complexity of the statement; if you use this with
 /// some very complex set of formulas, expect it to take longer.
-/// 
+///
 /// # See also:
 ///
 /// - [`PrepareSendable`](crate::PrepareSynchronized)
