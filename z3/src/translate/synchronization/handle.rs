@@ -2,35 +2,44 @@ use crate::Context;
 use crate::translate::Translate;
 use std::sync::Mutex;
 
-/// This struct provides a way to send z3 structures
-/// ([`Ast`](crate::ast::Ast), [`Solver`](crate::Solver), etc)
-/// to another thread safely. It wraps the Z3 structure you would like to send
-/// combined with the [`Context`] it is associated with.
+/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]). This wrapper
+/// takes in a Z3 type (or a user-defined type that uses Z3 types) and translates its contents
+/// into a private "singleton" [`Context`]. Since this [`Context`] is unused elsewhere, it is safe
+/// to [`Send`] it and its contents to other threads AND to have [`Sync`] accesses across threads.
+/// The safety of the [`Send`] impl is upheld by construction, as all data associated with the inner
+/// [`Context`] is guaranteed to be moved with it.
+/// The safety of the [`Sync`] impl is upheld through an inner [`Mutex`].
 ///
-/// This structure is [`Send`] and so can be sent to another thread and then used to
-/// recover the original Z3 structure by calling [`recover`](Synchronized::recover) on it.
+/// Inner data can only be accessed through [`Synchronized::recover`], which translates the contents
+/// for the given [`Context`].
 ///
-/// Users wanting to allow their own structure wrapping Z3 types to work with [`Synchronized`]
-/// should implement the [`Translate`] trait to benefit from the blanket implementation.
+/// # Performance
+/// 
+/// Initializing this type (usually done through
+/// [`PrepareSynchronized::synchronized`](crate::PrepareSynchronized::synchronized)
+/// will allocate
+/// a new [`Context`] and [`Translate`] the provided `T` into it. This involves a non-zero amount of
+/// overhead; if you are creating thousands of [`Synchronized`], you will see a performance impact.
 ///
-/// # Safety notes
+/// If you need to move/reference a collection of data between threads, consider putting it in 
+/// a [`Vec`], which also implements [`PrepareSynchronized`](crate::PrepareSynchronized), and will 
+/// only create one [`Context`]. You can also implement [`Translate`] on your own types, which 
+/// will then inherit from a blanket impl of [`PrepareSynchronized`](crate::PrepareSynchronized) 
+/// for [`Translate`]. 
+/// 
+/// Note that this will only alleviate the overhead of
+/// allocating many [`Context`]s. There is still some unavoidable overhead:
+/// * A [`Context`] must  be allocated.
+/// * Your `T` must be [`Translate`]'d into the [`Context`].
+/// * The data inside [`Synchronized`] must be [`Translate`]'d out to be used. 
 ///
-/// This structure is safe to use, the following properties are guaranteed through rust's
-/// type system and package structure. The discussion below is just to clarify the intent.
+/// Z3 translation scales in proportion to the complexity of the statement; if you use this with
+/// some very complex set of formulas, expect it to take longer.
+/// 
+/// # See also:
 ///
-/// The safety of this structure relies on the safety of implementations of the [`Translate`] trait.
-///
-/// The [`Context`] in this struct must NOT be referenced anywhere else. The safety of this structure
-/// relies on the assumption that it holds the ONLY references to this [`Context`] AND to
-/// the Z3 structures contained inside. It also assumes that all structures contained inside
-/// are associated with its [`Context`].
-///
-/// This invariant is upheld in by ensuring the following:
-/// * [`Synchronized`] can only be constructed outside this crate through [`Synchronized::new`],
-///   which provides a fresh [`Context`]
-/// * Direct instantiations of [`Synchronized`] in this crate always use a new [`Context`]
-/// * All items of the struct are private and are only used to `translate` back into normal z3
-///   structs
+/// - [`PrepareSendable`](crate::PrepareSynchronized)
+/// - [`Translate`]
 #[derive(Debug)]
 pub struct Synchronized<T> {
     /// Since [`Context`] is refcounted, we actually don't need to keep this around.
