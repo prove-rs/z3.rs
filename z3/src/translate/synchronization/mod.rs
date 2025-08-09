@@ -23,9 +23,7 @@ impl<T: Translate> PrepareSynchronized for &[T] {
     fn synchronized(&self) -> Synchronized<Self::Inner> {
         let ctx = Context::default();
         let data: Vec<T> = self.iter().map(|t| t.translate(&ctx)).collect();
-        Synchronized {
-            data: Mutex::new(data),
-        }
+        Synchronized(Mutex::new(data))
     }
 }
 

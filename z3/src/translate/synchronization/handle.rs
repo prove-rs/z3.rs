@@ -1,5 +1,6 @@
 use crate::Context;
 use crate::translate::Translate;
+use std::fmt::{Debug, Formatter};
 use std::sync::Mutex;
 
 /// A fully thread-safe wrapper for Z3 structures (other than [`Context`]).
@@ -42,11 +43,14 @@ use std::sync::Mutex;
 ///
 /// - [`PrepareSendable`](crate::PrepareSynchronized)
 /// - [`Translate`]
-#[derive(Debug)]
-pub struct Synchronized<T> {
-    pub(super) data: Mutex<T>,
-}
+pub struct Synchronized<T>(pub(super) Mutex<T>);
 
+impl<T: Debug> Debug for Synchronized<T> {
+    fn fmt(&self, f: &mut Formatter<'_>) -> std::fmt::Result {
+        let inner = self.0.lock().unwrap();
+        f.debug_tuple("Synchronized").field(&inner).finish()
+    }
+}
 impl<T: Translate> Synchronized<T> {
     /// Creates a new handle that is [`Send`] and [`Sync`], allowing for easily moving
     /// your z3 structs to other threads.
@@ -56,9 +60,7 @@ impl<T: Translate> Synchronized<T> {
     pub fn new(data: &T) -> Self {
         let ctx = Context::default();
         let data = data.translate(&ctx);
-        Self {
-            data: Mutex::new(data),
-        }
+        Self(Mutex::new(data))
     }
 }
 
@@ -66,7 +68,7 @@ impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
     /// and return the inner data.
     pub fn recover(&self, ctx: &Context) -> T {
-        self.data.lock().unwrap().translate(ctx)
+        self.0.lock().unwrap().translate(ctx)
     }
 }
 
@@ -76,10 +78,8 @@ impl<T: Translate> Synchronized<T> {
 impl<T: Translate> Clone for Synchronized<T> {
     fn clone(&self) -> Self {
         let ctx = Context::default();
-        let data = self.data.lock().unwrap().translate(&ctx);
-        Self {
-            data: Mutex::new(data),
-        }
+        let data = self.0.lock().unwrap().translate(&ctx);
+        Self(Mutex::new(data))
     }
 }
 
