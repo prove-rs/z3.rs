@@ -44,10 +44,6 @@ use std::sync::Mutex;
 /// - [`Translate`]
 #[derive(Debug)]
 pub struct Synchronized<T> {
-    /// Since [`Context`] is refcounted, we actually don't need to keep this around.
-    /// I'm leaving it in here for clarity for the time being but might take it out.
-    #[expect(unused)]
-    pub(super) ctx: Context,
     pub(super) data: Mutex<T>,
 }
 
@@ -61,7 +57,6 @@ impl<T: Translate> Synchronized<T> {
         let ctx = Context::default();
         let data = data.translate(&ctx);
         Self {
-            ctx,
             data: Mutex::new(data),
         }
     }
@@ -83,7 +78,6 @@ impl<T: Translate> Clone for Synchronized<T> {
         let ctx = Context::default();
         let data = self.data.lock().unwrap().translate(&ctx);
         Self {
-            ctx,
             data: Mutex::new(data),
         }
     }

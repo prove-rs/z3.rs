@@ -24,7 +24,6 @@ impl<T: Translate> PrepareSynchronized for &[T] {
         let ctx = Context::default();
         let data: Vec<T> = self.iter().map(|t| t.translate(&ctx)).collect();
         Synchronized {
-            ctx,
             data: Mutex::new(data),
         }
     }
@@ -103,21 +102,22 @@ mod thread_tests {
 mod rayon_tests {
     use crate::ast::{Ast, Int};
     use crate::{Context, PrepareSynchronized, Solver};
+    use std::ops::Add;
 
     #[test]
     fn test_rayon() {
         use rayon::prelude::*;
         let ctx = Context::default();
-        let int = Int::new_const(&ctx, "hello");
+        let int = Int::fresh_const(&ctx, "hello").add(&Int::from_u64(&ctx, 2));
         let sendable = int.synchronized();
         (0..100).into_par_iter().for_each(|i| {
             let ctx = Context::default();
             let moved = sendable.recover(&ctx);
             let solver = Solver::new(&ctx);
-            solver.assert(&moved._eq(&Int::from_i64(&ctx, i * 2)));
+            solver.assert(&moved._eq(&Int::from_i64(&ctx, i)));
             assert_eq!(solver.check(), crate::SatResult::Sat);
             let model = solver.get_model().unwrap();
-            assert_eq!(model.eval(&moved, true), Some(Int::from_i64(&ctx, i * 2)));
+            assert_eq!(model.eval(&moved, true), Some(Int::from_i64(&ctx, i)));
         })
     }
 }
