@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.0...z3-v0.14.1) - 2025-08-09
+
+### Added
+
+- enable moving and referencing z3 types between threads ([#404](https://github.com/prove-rs/z3.rs/pull/404)) (by @toolCHAINZ) - #404
+- impl default for context ([#402](https://github.com/prove-rs/z3.rs/pull/402)) (by @toolCHAINZ) - #402
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.14.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.3...z3-v0.14.0) - 2025-08-06
 
 ### Added
