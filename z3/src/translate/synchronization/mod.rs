@@ -100,7 +100,7 @@ mod thread_tests {
 }
 
 #[cfg(test)]
-mod rayon_tests{
+mod rayon_tests {
     use crate::ast::{Ast, Int};
     use crate::{Context, PrepareSynchronized, Solver};
 
