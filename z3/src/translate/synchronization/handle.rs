@@ -3,7 +3,7 @@ use crate::translate::Translate;
 use std::fmt::{Debug, Formatter};
 use std::sync::Mutex;
 
-/// A fully thread-safe wrapper for Z3 structures (other than [`Context`]).
+/// A [`Send`] and [`Sync`] wrapper for Z3 structures associated with a [`Context`].
 ///
 /// This wrapper
 /// takes in a Z3 type (or a user-defined type that uses Z3 types) and translates its contents
