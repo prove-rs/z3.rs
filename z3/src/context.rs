@@ -24,7 +24,7 @@ impl Drop for ContextInternal {
 ///
 /// While it is not safe to access Z3 objects from multiple threads, this library includes
 /// a safe structured abstraction for usage of Z3 objects across threads.
-/// See [`Synchronized`](crate::Synchronized) and the `synchronization` feature.
+/// See [`Synchronized`](crate::Synchronized).
 ///
 ///
 ///

@@ -39,8 +39,11 @@ impl<T: Translate> PrepareSynchronized for T {
         Synchronized::new(self)
     }
 }
+
+/// Test using standard threads
 #[cfg(test)]
-mod tests {
+#[cfg(not(target_arch = "wasm32"))]
+mod thread_tests {
     use crate::ast::{Ast, Bool};
     use crate::translate::synchronization::PrepareSynchronized;
     use crate::{Context, Solver};
@@ -93,5 +96,28 @@ mod tests {
         .expect("uh oh");
         let model = model.recover(&ctx);
         assert_eq!(model.eval(&bool, true), Some(Bool::from_bool(&ctx, true)));
+    }
+}
+
+#[cfg(test)]
+mod rayon_tests{
+    use crate::ast::{Ast, Int};
+    use crate::{Context, PrepareSynchronized, Solver};
+
+    #[test]
+    fn test_rayon() {
+        use rayon::prelude::*;
+        let ctx = Context::default();
+        let int = Int::new_const(&ctx, "hello");
+        let sendable = int.synchronized();
+        (0..100).into_par_iter().for_each(|i| {
+            let ctx = Context::default();
+            let moved = sendable.recover(&ctx);
+            let solver = Solver::new(&ctx);
+            solver.assert(&moved._eq(&Int::from_i64(&ctx, i * 2)));
+            assert_eq!(solver.check(), crate::SatResult::Sat);
+            let model = solver.get_model().unwrap();
+            assert_eq!(model.eval(&moved, true), Some(Int::from_i64(&ctx, i * 2)));
+        })
     }
 }

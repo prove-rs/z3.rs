@@ -2,7 +2,6 @@ use crate::Context;
 use crate::ast::Ast;
 use z3_sys::Z3_translate;
 
-#[cfg(feature = "synchronization")]
 pub mod synchronization;
 
 /// Represents types that depend on a [`Context`] and can be translated to another [`Context`].

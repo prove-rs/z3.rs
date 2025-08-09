@@ -16,11 +16,9 @@ edition = "2024"
 
 
 [features]
-default = ["synchronization"]
 bundled = ["z3-sys/bundled"]
 vcpkg = ["z3-sys/vcpkg"]
 gh-release = ["z3-sys/gh-release"]
-synchronization = []
 
 # This is a legacy feature here for short term compatibility.
 static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]
@@ -34,6 +32,7 @@ num = "0.4"
 [dev-dependencies]
 env_logger = "0.11"
 semver = "1"
+rayon = "1.10.0"
 
 [dependencies.z3-sys]
 path = "../z3-sys"
