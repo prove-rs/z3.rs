@@ -27,10 +27,10 @@ use std::sync::Mutex;
 /// }).join().expect("Thread panicked");
 ///```
 ///
-/// [`Synchronized`] handles can hold anything that is [`Translate`], including [`Ast`](crate::ast::Ast)s, 
+/// [`Synchronized`] handles can hold anything that is [`Translate`], including [`Ast`](crate::ast::Ast)s,
 /// [`Solver`](crate::Solver)s and [`Model`](crate::Model)s. This allows the pattern of defining
-/// a set of [`Ast`](crate::ast::Ast)s and [`Solver`](crate::Solver)s in a main thread and 
-/// offloading the actual [`Solver::check`](crate::Solver::check) call to a worker thread, 
+/// a set of [`Ast`](crate::ast::Ast)s and [`Solver`](crate::Solver)s in a main thread and
+/// offloading the actual [`Solver::check`](crate::Solver::check) call to a worker thread,
 /// with the eventual resulting model being moved back into the main thread.
 ///
 ///```
