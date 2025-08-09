@@ -7,6 +7,7 @@ use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
+use z3::Translate;
 
 mod objectives;
 mod ops;

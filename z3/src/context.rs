@@ -20,7 +20,13 @@ impl Drop for ContextInternal {
 ///
 /// An application may use multiple Z3 contexts. Objects created in one context
 /// cannot be used in another one. However, several objects may be "translated" from
-/// one context to another. It is not safe to access Z3 objects from multiple threads.
+/// one context to another.
+///
+/// While it is not safe to access Z3 objects from multiple threads, this library includes
+/// a safe structured abstraction for usage of Z3 objects across threads.
+/// See [`Synchronized`](crate::Synchronized).
+///
+///
 ///
 /// # Examples:
 ///

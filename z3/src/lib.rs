@@ -30,13 +30,16 @@ mod sort;
 mod statistics;
 mod symbol;
 mod tactic;
+mod translate;
 mod version;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
+pub use crate::translate::Translate;
 pub use crate::version::{Version, full_version, version};
 pub use context::Context;
 
+pub use crate::translate::synchronization::*;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:
@@ -194,7 +197,7 @@ pub use z3_sys::DeclKind;
 /// solver.assert(&y._eq(&value.as_datatype().unwrap()));
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
-/// let model = solver.get_model().unwrap();;
+/// let model = solver.get_model().unwrap();
 ///
 /// // Get the value out of Some(3)
 /// let ast = option_int.variants[1].accessors[0].apply(&[&y]);

@@ -33,6 +33,7 @@ num = "0.4"
 [dev-dependencies]
 env_logger = "0.11"
 semver = "1"
+rayon = "1.10.0"
 
 [dependencies.z3-sys]
 path = "../z3-sys"

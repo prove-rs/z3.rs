@@ -445,16 +445,6 @@ macro_rules! impl_ast {
             }
         }
 
-        impl $ast {
-            pub fn translate(&self, dest: &Context) -> $ast {
-                unsafe {
-                    $ast::wrap(dest, {
-                        Z3_translate(self.get_ctx().z3_ctx.0, self.get_z3_ast(), dest.z3_ctx.0)
-                    })
-                }
-            }
-        }
-
         impl From<$ast> for Z3_ast {
             fn from(ast: $ast) -> Self {
                 ast.z3_ast
