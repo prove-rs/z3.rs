@@ -1,4 +1,6 @@
 use crate::Context;
+use crate::ast::Ast;
+use z3_sys::Z3_translate;
 
 #[cfg(feature = "synchronization")]
 pub mod synchronization;
@@ -16,5 +18,15 @@ pub unsafe trait Translate {
 unsafe impl<T: Translate> Translate for Vec<T> {
     fn translate(&self, dest: &Context) -> Self {
         self.iter().map(|t| t.translate(dest)).collect()
+    }
+}
+
+unsafe impl<T: Ast> Translate for T {
+    fn translate(&self, dest: &Context) -> Self {
+        unsafe {
+            Self::wrap(dest, {
+                Z3_translate(self.get_ctx().z3_ctx.0, self.get_z3_ast(), dest.z3_ctx.0)
+            })
+        }
     }
 }

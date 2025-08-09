@@ -13,7 +13,6 @@ use z3_sys::*;
 
 use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
 
-use crate::translate::Translate;
 use num::{bigint::BigInt, rational::BigRational};
 
 /// [`Ast`] node representing a boolean value.
@@ -443,16 +442,6 @@ macro_rules! impl_ast {
 
             fn get_z3_ast(&self) -> Z3_ast {
                 self.z3_ast
-            }
-        }
-
-        unsafe impl Translate for $ast {
-            fn translate(&self, dest: &Context) -> $ast {
-                unsafe {
-                    $ast::wrap(dest, {
-                        Z3_translate(self.get_ctx().z3_ctx.0, self.get_z3_ast(), dest.z3_ctx.0)
-                    })
-                }
             }
         }
 
