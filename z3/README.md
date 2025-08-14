@@ -75,7 +75,7 @@ Enabling the `bundled` feature will use `cmake` to build and statically
 link Z3. This feature, as is, is only usable when `z3` or `z3-sys` is used
 as a `git` dependency, as it assumes the existence of a `git submodule` for
 Z3. Users wishing to use this feature with the release of `z3` or `z3-sys` on
-crates.io may optionally use the `Z3_SYS_BUNDLED_DIR_OVERRIDE` to point it to
+crates.io must use the `Z3_SYS_BUNDLED_DIR_OVERRIDE` to point it to
 their own checkout of Z3.
 
 #### 3. VCPKG: Use a copy of Z3 installed via vcpkg
