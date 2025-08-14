@@ -13,7 +13,7 @@ use std::sync::Mutex;
 ///
 /// [`Synchronized`] handles can be _moved_ to another thread.
 /// ```
-/// use z3::ast::{Ast, Bool, Int};
+/// use z3::ast::{ Bool, Int};
 /// use z3::{Context, PrepareSynchronized, Solver, Translate};
 ///
 /// // Creating a Synchronized<BV> and moving it to another thread.

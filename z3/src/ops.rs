@@ -493,7 +493,7 @@ macro_rules! impl_bin_trait {
             type Output = $t;
             fn $trop(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into_ast(&self);
-                self.$op(rhs)
+                (self as $t).$op(rhs)
             }
         }
     };
@@ -543,20 +543,18 @@ impl_bin_assign_trait!(Int, DivAssign, div_assign, div);
 impl_bin_assign_trait!(Int, RemAssign, rem_assign, rem);
 impl_bin_assign_trait!(Int, ShlAssign, shl_assign, shl);
 
-//
-// // implementations for Int
-// impl_binary_mult_op!(Int, Int, Add, AddAssign, add, add_assign, mk_const_int);
-// impl_binary_mult_op!(Int, Int, Sub, SubAssign, sub, sub_assign, mk_const_int);
-// impl_binary_mult_op!(Int, Int, Mul, MulAssign, mul, mul_assign, mk_const_int);
-// impl_binary_op!(Int, Div, DivAssign, div, div_assign, div, mk_const_int);
-// impl_binary_op!(Int, Rem, RemAssign, rem, rem_assign, rem, mk_const_int);
-//
-// // implementations for Real
-// impl_binary_mult_op_without_numbers!(Real, Real, Add, AddAssign, add, add_assign);
-// impl_binary_mult_op_without_numbers!(Real, Real, Sub, SubAssign, sub, sub_assign);
-// impl_binary_mult_op_without_numbers!(Real, Real, Mul, MulAssign, mul, mul_assign);
-// impl_binary_op_without_numbers!(Real, Div, DivAssign, div, div_assign, div);
-// impl_unary_op!(Real, Neg, neg, unary_minus);
+impl_bin_trait!(Real, Add, add, add);
+impl_bin_trait!(Real, Sub, sub, sub);
+impl_bin_trait!(Real, Mul, mul, mul);
+impl_bin_trait!(Real, Div, div, div);
+impl_unary_op!(Real, Neg, neg, unary_minus);
+
+impl_bin_assign_trait!(Real, AddAssign, add_assign, add);
+impl_bin_assign_trait!(Real, SubAssign, sub_assign, sub);
+impl_bin_assign_trait!(Real, MulAssign, mul_assign, mul);
+impl_bin_assign_trait!(Real, DivAssign, div_assign, div);
+
+// implementations for Real
 //
 // // // implementations for Float
 // impl_unary_op!(Float, Neg, neg, unary_neg);
