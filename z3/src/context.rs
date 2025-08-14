@@ -72,7 +72,7 @@ impl Context {
     /// # Examples
     ///
     /// ```
-    /// use z3::ast::Bool;
+    /// use z3::ast::bool::Bool;
     /// use z3_sys::{Z3_mk_config, Z3_del_config, Z3_mk_context_rc};
     /// use z3::Context;
     ///

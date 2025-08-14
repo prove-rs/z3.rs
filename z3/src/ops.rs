@@ -1,11 +1,10 @@
-use crate::ast::IntoAst;
+use crate::ast::{Float, IntoAst};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
 };
 
-use crate::ast::{Ast, BV, Bool, Float, Int, Real};
-
+use crate::ast::{Int, Real, BV};
 macro_rules! mk_const_bv {
     ($constant:expr, $function:ident, $val:expr, $other:expr) => {
         $constant = BV::$function($other.get_ctx(), $val, $other.get_size());
@@ -557,7 +556,7 @@ impl_bin_assign_trait!(Real, DivAssign, div_assign, div);
 // implementations for Real
 //
 // // // implementations for Float
-// impl_unary_op!(Float, Neg, neg, unary_neg);
+impl_unary_op!(Float, Neg, neg, unary_neg);
 //
 // // implementations for Bool
 // impl_binary_mult_op_bool!(Bool, Bool, BitAnd, BitAndAssign, bitand, bitand_assign, and);
