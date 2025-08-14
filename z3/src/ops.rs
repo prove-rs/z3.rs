@@ -1,3 +1,4 @@
+use crate::ast::IntoAst;
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
@@ -452,60 +453,116 @@ macro_rules! impl_binary_mult_op {
 }
 
 // implementations for BV
-impl_binary_op!(BV, Add, AddAssign, add, add_assign, bvadd, mk_const_bv);
-impl_binary_op!(BV, Sub, SubAssign, sub, sub_assign, bvsub, mk_const_bv);
-impl_binary_op!(BV, Mul, MulAssign, mul, mul_assign, bvmul, mk_const_bv);
-impl_binary_op!(
-    BV,
-    BitAnd,
-    BitAndAssign,
-    bitand,
-    bitand_assign,
-    bvand,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV,
-    BitOr,
-    BitOrAssign,
-    bitor,
-    bitor_assign,
-    bvor,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV,
-    BitXor,
-    BitXorAssign,
-    bitxor,
-    bitxor_assign,
-    bvxor,
-    mk_const_bv
-);
-impl_binary_op!(BV, Shl, ShlAssign, shl, shl_assign, bvshl, mk_const_bv);
+// impl_binary_op!(BV, Add, AddAssign, add, add_assign, bvadd, mk_const_bv);
+// impl_binary_op!(BV, Sub, SubAssign, sub, sub_assign, bvsub, mk_const_bv);
+// impl_binary_op!(BV, Mul, MulAssign, mul, mul_assign, bvmul, mk_const_bv);
+// impl_binary_op!(
+//     BV,
+//     BitAnd,
+//     BitAndAssign,
+//     bitand,
+//     bitand_assign,
+//     bvand,
+//     mk_const_bv
+// );
+// impl_binary_op!(
+//     BV,
+//     BitOr,
+//     BitOrAssign,
+//     bitor,
+//     bitor_assign,
+//     bvor,
+//     mk_const_bv
+// );
+// impl_binary_op!(
+//     BV,
+//     BitXor,
+//     BitXorAssign,
+//     bitxor,
+//     bitxor_assign,
+//     bvxor,
+//     mk_const_bv
+// );
+// impl_binary_op!(BV, Shl, ShlAssign, shl, shl_assign, bvshl, mk_const_bv);
 impl_unary_op!(BV, Not, not, bvnot);
 impl_unary_op!(BV, Neg, neg, bvneg);
 
-// implementations for Int
-impl_binary_mult_op!(Int, Int, Add, AddAssign, add, add_assign, mk_const_int);
-impl_binary_mult_op!(Int, Int, Sub, SubAssign, sub, sub_assign, mk_const_int);
-impl_binary_mult_op!(Int, Int, Mul, MulAssign, mul, mul_assign, mk_const_int);
-impl_binary_op!(Int, Div, DivAssign, div, div_assign, div, mk_const_int);
-impl_binary_op!(Int, Rem, RemAssign, rem, rem_assign, rem, mk_const_int);
+macro_rules! impl_bin_trait {
+    ($t:ty, $tr:ident, $trop:ident, $op:ident) => {
+        impl<T: IntoAst<$t>> $tr<T> for $t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                self.$op(rhs)
+            }
+        }
+    };
+}
+
+macro_rules! impl_bin_assign_trait {
+    ($t:ty, $tr:ident, $trop:ident, $op:ident) => {
+        impl<T: IntoAst<$t>> $tr<T> for $t {
+            fn $trop(&mut self, rhs: T) {
+                let res = (self as &mut $t).clone().$op(rhs);
+                *self = res
+            }
+        }
+    };
+}
+
+
+impl_bin_trait!(BV, Add, add, bvadd);
+impl_bin_trait!(BV, Sub, sub, bvsub);
+impl_bin_trait!(BV, Mul, mul, bvmul);
+impl_bin_trait!(BV, BitAnd, bitand, bvand);
+impl_bin_trait!(BV, BitOr, bitor, bvor);
+impl_bin_trait!(BV, BitXor, bitxor, bvxor);
+impl_bin_trait!(BV, Shl, shl, bvshl);
+
+impl_bin_assign_trait!(BV, AddAssign, add_assign, bvadd);
+impl_bin_assign_trait!(BV, SubAssign, sub_assign, bvsub);
+impl_bin_assign_trait!(BV, MulAssign, mul_assign, bvmul);
+impl_bin_assign_trait!(BV, BitAndAssign, bitand_assign, bvand);
+impl_bin_assign_trait!(BV, BitOrAssign, bitor_assign, bvor);
+impl_bin_assign_trait!(BV, BitXorAssign, bitxor_assign, bvxor);
+impl_bin_assign_trait!(BV, ShlAssign, shl_assign, bvshl);
+
 impl_unary_op!(Int, Neg, neg, unary_minus);
 
-// implementations for Real
-impl_binary_mult_op_without_numbers!(Real, Real, Add, AddAssign, add, add_assign);
-impl_binary_mult_op_without_numbers!(Real, Real, Sub, SubAssign, sub, sub_assign);
-impl_binary_mult_op_without_numbers!(Real, Real, Mul, MulAssign, mul, mul_assign);
-impl_binary_op_without_numbers!(Real, Div, DivAssign, div, div_assign, div);
-impl_unary_op!(Real, Neg, neg, unary_minus);
+impl_bin_trait!(Int, Add, add, add);
+impl_bin_trait!(Int, Sub, sub, sub);
+impl_bin_trait!(Int, Mul, mul, mul);
+impl_bin_trait!(Int, Div, div, div);
+impl_bin_trait!(Int, Rem, rem, rem);
+impl_bin_trait!(Int, Shl, shl, shl);
 
-// // implementations for Float
-impl_unary_op!(Float, Neg, neg, unary_neg);
+impl_bin_assign_trait!(Int, AddAssign, add_assign, add);
+impl_bin_assign_trait!(Int, SubAssign, sub_assign, sub);
+impl_bin_assign_trait!(Int, MulAssign, mul_assign, mul);
+impl_bin_assign_trait!(Int, DivAssign, div_assign, div);
+impl_bin_assign_trait!(Int, RemAssign, rem_assign, rem);
+impl_bin_assign_trait!(Int, ShlAssign, shl_assign, shl);
 
-// implementations for Bool
-impl_binary_mult_op_bool!(Bool, Bool, BitAnd, BitAndAssign, bitand, bitand_assign, and);
-impl_binary_mult_op_bool!(Bool, Bool, BitOr, BitOrAssign, bitor, bitor_assign, or);
-impl_binary_op_bool!(Bool, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
-impl_unary_op!(Bool, Not, not, not);
+//
+// // implementations for Int
+// impl_binary_mult_op!(Int, Int, Add, AddAssign, add, add_assign, mk_const_int);
+// impl_binary_mult_op!(Int, Int, Sub, SubAssign, sub, sub_assign, mk_const_int);
+// impl_binary_mult_op!(Int, Int, Mul, MulAssign, mul, mul_assign, mk_const_int);
+// impl_binary_op!(Int, Div, DivAssign, div, div_assign, div, mk_const_int);
+// impl_binary_op!(Int, Rem, RemAssign, rem, rem_assign, rem, mk_const_int);
+//
+// // implementations for Real
+// impl_binary_mult_op_without_numbers!(Real, Real, Add, AddAssign, add, add_assign);
+// impl_binary_mult_op_without_numbers!(Real, Real, Sub, SubAssign, sub, sub_assign);
+// impl_binary_mult_op_without_numbers!(Real, Real, Mul, MulAssign, mul, mul_assign);
+// impl_binary_op_without_numbers!(Real, Div, DivAssign, div, div_assign, div);
+// impl_unary_op!(Real, Neg, neg, unary_minus);
+//
+// // // implementations for Float
+// impl_unary_op!(Float, Neg, neg, unary_neg);
+//
+// // implementations for Bool
+// impl_binary_mult_op_bool!(Bool, Bool, BitAnd, BitAndAssign, bitand, bitand_assign, and);
+// impl_binary_mult_op_bool!(Bool, Bool, BitOr, BitOrAssign, bitor, bitor_assign, or);
+// impl_binary_op_bool!(Bool, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
+// impl_unary_op!(Bool, Not, not, not);

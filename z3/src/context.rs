@@ -1,3 +1,5 @@
+use std::cell::{Ref, RefCell};
+use std::clone::Clone;
 use log::debug;
 use std::ffi::CString;
 use std::rc::Rc;
@@ -46,6 +48,7 @@ impl Drop for ContextInternal {
 pub struct Context {
     pub(crate) z3_ctx: Rc<ContextInternal>,
 }
+
 impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
@@ -150,3 +153,7 @@ impl ContextHandle<'_> {
 
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
+
+thread_local!{
+    static DEFAULT_CONTEXT: RefCell<Context> = RefCell::new(Context::default())
+}
