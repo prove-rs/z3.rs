@@ -38,7 +38,7 @@ There are 4 ways for this crate to currently find Z3:
   link Z3. This feature, as is, is only usable when `z3` or `z3-sys` is used
   as a `git` dependency, as it assumes the existence of a `git submodule` for
   Z3. Users wishing to use this feature with the release of `z3` or `z3-sys` on
-  crates.io must use the `Z3_SYS_BUNDLED_DIR_OVERRIDE` to point it to
+  crates.io must set `Z3_SYS_BUNDLED_DIR_OVERRIDE` to point to
   their own checkout of Z3.
 * Enabling the `vcpkg` feature will use `vcpkg` to build and
   install a copy of Z3 which is then used.
