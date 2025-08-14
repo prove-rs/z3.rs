@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.1...z3-v0.14.2) - 2025-08-14
+
+### Added
+
+- add bundled path override ([#408](https://github.com/prove-rs/z3.rs/pull/408)) (by @toolCHAINZ)
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.14.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.0...z3-v0.14.1) - 2025-08-09
 
 ### Added
