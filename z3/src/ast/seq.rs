@@ -1,8 +1,8 @@
 use crate::ast::IntoAstFromCtx;
+use crate::ast::{Ast, Dynamic, Int, varop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::ast::{varop, Ast, Dynamic, Int};
-use crate::{Context, Sort, Symbol};
 
 impl Seq {
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Self {

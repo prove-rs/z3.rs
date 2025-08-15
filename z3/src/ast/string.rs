@@ -1,10 +1,10 @@
-use crate::ast::IntoAstFromCtx;
 use crate::ast::IntoAst;
+use crate::ast::IntoAstFromCtx;
+use crate::ast::regexp::Regexp;
+use crate::ast::{Ast, Bool, Int, binop, unop, varop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::{CStr, CString};
 use z3_sys::*;
-use crate::ast::{binop, unop, varop, Ast, Bool, Int};
-use crate::{Context, Sort, Symbol};
-use crate::ast::regexp::Regexp;
 
 /// [`Ast`] node representing a string value.
 pub struct String {

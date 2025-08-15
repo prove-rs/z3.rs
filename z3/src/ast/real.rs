@@ -1,12 +1,12 @@
-use crate::ast::{Ast, IntoAst};
 use crate::ast::IntoAstFromCtx;
-use std::ffi::{CStr, CString};
-use num::BigRational;
-use std::fmt;
-use std::borrow::Borrow;
-use z3_sys::*;
+use crate::ast::{Ast, IntoAst};
+use crate::ast::{Bool, Dynamic, Int, binop, unop, varop};
 use crate::{Context, FuncDecl, IsNotApp, Sort, SortDiffers, Symbol};
-use crate::ast::{binop, unop, varop, Bool, Dynamic, Int};
+use num::BigRational;
+use std::borrow::Borrow;
+use std::ffi::{CStr, CString};
+use std::fmt;
+use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
 

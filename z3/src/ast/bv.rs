@@ -2,7 +2,6 @@ use crate::ast::IntoAst;
 use crate::ast::{Ast, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use std::ops::{Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Mul, MulAssign, Shl, ShlAssign, Shr, Sub, SubAssign};
 use z3_sys::*;
 
 /// [`Ast`] node representing a bitvector value.

@@ -4,7 +4,7 @@ use std::ops::{
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
 };
 
-use crate::ast::{Int, Real, BV};
+use crate::ast::{BV, Int, Real};
 macro_rules! mk_const_bv {
     ($constant:expr, $function:ident, $val:expr, $other:expr) => {
         $constant = BV::$function($other.get_ctx(), $val, $other.get_size());
@@ -492,7 +492,7 @@ macro_rules! impl_bin_trait {
             type Output = $t;
             fn $trop(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into_ast(&self);
-                 <$t>::$op(&self, rhs)
+                <$t>::$op(&self, rhs)
             }
         }
 
@@ -500,7 +500,7 @@ macro_rules! impl_bin_trait {
             type Output = $t;
             fn $trop(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into_ast(&self);
-                 <$t>::$op(&self, rhs)
+                <$t>::$op(&self, rhs)
             }
         }
     };

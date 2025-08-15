@@ -1,6 +1,6 @@
+use log::debug;
 use std::cell::{Ref, RefCell};
 use std::clone::Clone;
-use log::debug;
 use std::ffi::CString;
 use std::rc::Rc;
 use z3_sys::*;
@@ -154,6 +154,6 @@ impl ContextHandle<'_> {
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
 
-thread_local!{
+thread_local! {
     static DEFAULT_CONTEXT: RefCell<Context> = RefCell::new(Context::default())
 }

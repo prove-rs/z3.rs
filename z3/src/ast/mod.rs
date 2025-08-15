@@ -15,18 +15,18 @@ use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol, Tra
 
 use num::{bigint::BigInt, rational::BigRational};
 
+mod array;
+mod bool;
 mod bv;
+mod datatype;
+mod dynamic;
+mod float;
 mod int;
 mod real;
-mod float;
-mod string;
-mod array;
-mod set;
-mod seq;
-mod dynamic;
-mod datatype;
 mod regexp;
-mod bool;
+mod seq;
+mod set;
+mod string;
 
 pub use array::Array;
 pub use bool::Bool;
@@ -369,13 +369,13 @@ impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
     }
 }
 
-impl<T: IntoAstFromCtx<T> + Ast> IntoAstFromCtx<T> for &T{
+impl<T: IntoAstFromCtx<T> + Ast> IntoAstFromCtx<T> for &T {
     fn into_ast_ctx(self, a: &Context) -> T {
         self.clone().into_ast_ctx(a)
     }
 }
 
-impl<T: IntoAst<T> + Ast> IntoAst<T> for &T{
+impl<T: IntoAst<T> + Ast> IntoAst<T> for &T {
     fn into_ast(self, a: &T) -> T {
         self.clone().into_ast(a)
     }

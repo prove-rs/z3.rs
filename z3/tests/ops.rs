@@ -1,18 +1,18 @@
-use z3::{
-    ast, ast::{Ast, AstKind, Int, Real, BV}, Config, Context, DeclKind, FuncDecl, SatResult, Solver,
-    Sort,
-};
 use z3::ast::Array;
 use z3::ast::Bool;
 use z3::ast::Dynamic;
 use z3::ast::Float;
 use z3::ast::Set;
+use z3::{
+    Config, Context, DeclKind, FuncDecl, SatResult, Solver, Sort, ast,
+    ast::{Ast, AstKind, BV, Int, Real},
+};
 
 #[test]
 fn test_bv_ops() {
     let cfg = Config::default();
     let ctx = Context::new(&cfg);
-    let bv = BV::from_u64(&ctx, 23,23);
+    let bv = BV::from_u64(&ctx, 23, 23);
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = BV::new_const(&ctx, "a", 5);

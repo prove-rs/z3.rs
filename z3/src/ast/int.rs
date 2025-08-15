@@ -1,10 +1,10 @@
 use crate::ast::IntoAstFromCtx;
-use crate::ast::{unop, varop, Bool, IntoAst};
-use std::ffi::CString;
-use num::BigInt;
-use z3_sys::*;
-use crate::ast::{binop, Ast, Real, BV};
+use crate::ast::{Ast, BV, Real, binop};
+use crate::ast::{Bool, IntoAst, unop, varop};
 use crate::{Context, Sort, Symbol};
+use num::BigInt;
+use std::ffi::CString;
+use z3_sys::*;
 
 /// [`Ast`] node representing an integer value.
 pub struct Int {
@@ -131,7 +131,6 @@ impl Int {
     pub fn to_ast(&self, sz: u32) -> BV {
         BV::from_int(self, sz)
     }
-
 
     varop! {
         add(Z3_mk_add, Self);
