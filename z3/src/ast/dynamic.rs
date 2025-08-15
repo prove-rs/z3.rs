@@ -1,8 +1,5 @@
-use crate::ast::float::Float;
-use crate::ast::set::Set;
-use crate::ast::string::String;
-use crate::ast::{Array, Ast, BV, Bool, Datatype, Int, Real, Seq};
-use crate::{Context, Sort, Symbol};
+use crate::ast::{Array, Ast, BV, Bool, Datatype, Float, Int, Real, Seq, Set};
+use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
 use z3_sys::*;
 
@@ -78,13 +75,13 @@ impl Dynamic {
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `String`
-    pub fn as_string(&self) -> Option<String> {
+    pub fn as_string(&self) -> Option<ast::String> {
         unsafe {
             if Z3_is_string_sort(
                 self.ctx.z3_ctx.0,
                 Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast),
             ) {
-                Some(String::wrap(&self.ctx, self.z3_ast))
+                Some(ast::String::wrap(&self.ctx, self.z3_ast))
             } else {
                 None
             }

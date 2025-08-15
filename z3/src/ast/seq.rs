@@ -4,6 +4,12 @@ use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
 
+/// [`Ast`] node representing a sequence value.
+pub struct Seq {
+    pub(crate) ctx: Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
 impl Seq {
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Self {
         let sort = Sort::seq(ctx, eltype);
@@ -46,7 +52,7 @@ impl Seq {
     /// # Examples
     /// ```
     /// # use z3::{ast, Config, Context, Solver, Sort};
-    /// # use z3::ast::{Ast, Bool, Int, Seq };
+    /// # use z3::ast::{Ast, Bool, Int, Seq};
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new(&ctx);
@@ -77,10 +83,4 @@ impl Seq {
         /// Concatenate sequences.
         concat(Z3_mk_seq_concat, Self);
     }
-}
-
-/// [`Ast`] node representing a sequence value.
-pub struct Seq {
-    pub(crate) ctx: Context,
-    pub(crate) z3_ast: Z3_ast,
 }

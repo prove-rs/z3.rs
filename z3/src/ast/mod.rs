@@ -798,10 +798,9 @@ pub fn quantifier_const(
 /// # Examples
 /// ```
 /// # use z3::{
-/// #     ast::{lambda_const, Ast as _, Int },
+/// #     ast::{lambda_const, Ast as _, Int, Dynamic},
 /// #     Config, Context, Solver, SatResult,
 /// # };
-/// # use z3::ast::Dynamic;
 /// #
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
