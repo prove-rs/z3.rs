@@ -20,6 +20,7 @@ mod float;
 mod string;
 mod bv;
 mod array;
+mod set;
 
 pub use array::Array;
 pub use bool::Bool;
@@ -27,13 +28,8 @@ pub use bv::BV;
 pub use float::Float;
 pub use int::Int;
 pub use real::Real;
+pub use set::Set;
 pub use string::String;
-
-/// [`Ast`] node representing a set value.
-pub struct Set {
-    pub(crate) ctx: Context,
-    pub(crate) z3_ast: Z3_ast,
-}
 
 /// [`Ast`] node representing a sequence value.
 pub struct Seq {
@@ -569,98 +565,6 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
                 k,
             ),
         )
-    }
-}
-
-impl Set {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Set {
-        let sort = Sort::set(ctx, eltype);
-        unsafe {
-            Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
-            })
-        }
-    }
-
-    pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Set {
-        let sort = Sort::set(ctx, eltype);
-        unsafe {
-            Self::wrap(ctx, {
-                let pp = CString::new(prefix).unwrap();
-                let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
-            })
-        }
-    }
-
-    /// Creates a set that maps the domain to false by default
-    pub fn empty(ctx: &Context, domain: &Sort) -> Set {
-        unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.0, domain.z3_sort)) }
-    }
-
-    /// Add an element to the set.
-    ///
-    /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
-    //
-    // We avoid the binop! macro because the argument has a non-Self type
-    pub fn add<A>(&self, element: &A) -> Set
-    where
-        A: Ast,
-    {
-        unsafe {
-            Self::wrap(&self.ctx, {
-                Z3_mk_set_add(self.ctx.z3_ctx.0, self.z3_ast, element.get_z3_ast())
-            })
-        }
-    }
-
-    /// Remove an element from the set.
-    ///
-    /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
-    //
-    // We avoid the binop! macro because the argument has a non-Self type
-    pub fn del<A>(&self, element: &A) -> Set
-    where
-        A: Ast,
-    {
-        unsafe {
-            Self::wrap(&self.ctx, {
-                Z3_mk_set_del(self.ctx.z3_ctx.0, self.z3_ast, element.get_z3_ast())
-            })
-        }
-    }
-
-    /// Check if an item is a member of the set.
-    ///
-    /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
-    //
-    // We avoid the binop! macro because the argument has a non-Self type
-    pub fn member<A>(&self, element: &A) -> Bool
-    where
-        A: Ast,
-    {
-        unsafe {
-            Bool::wrap(&self.ctx, {
-                Z3_mk_set_member(self.ctx.z3_ctx.0, element.get_z3_ast(), self.z3_ast)
-            })
-        }
-    }
-
-    varop! {
-        /// Take the intersection of a list of sets.
-        intersect(Z3_mk_set_intersect, Self);
-        /// Take the union of a list of sets.
-        set_union(Z3_mk_set_union, Self);
-    }
-    unop! {
-        /// Take the complement of the set.
-        complement(Z3_mk_set_complement, Self);
-    }
-    binop! {
-        /// Check if the set is a subset of another set.
-        set_subset(Z3_mk_set_subset, Bool);
-        /// Take the set difference between two sets.
-        difference(Z3_mk_set_difference, Self);
     }
 }
 
