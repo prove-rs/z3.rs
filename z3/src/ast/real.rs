@@ -1,15 +1,12 @@
 use crate::ast::IntoAstFromCtx;
 use crate::ast::{Ast, IntoAst};
-use crate::ast::{Bool, Dynamic, Int, binop, unop, varop};
-use crate::{Context, FuncDecl, IsNotApp, Sort, SortDiffers, Symbol};
+use crate::ast::{Bool, Int, binop, unop, varop};
+use crate::{Context, Sort, Symbol};
 use num::BigRational;
-use std::borrow::Borrow;
 use std::ffi::{CStr, CString};
-use std::fmt;
 use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
-
 pub struct Real {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,

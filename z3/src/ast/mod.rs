@@ -4,7 +4,7 @@ use log::{debug, warn};
 use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
-use std::ffi::{CStr, CString};
+use std::ffi::CStr;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
@@ -12,8 +12,6 @@ pub use z3_sys::AstKind;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol, Translate};
-
-use num::{bigint::BigInt, rational::BigRational};
 
 mod array;
 mod bool;

@@ -1,5 +1,4 @@
 use log::debug;
-use std::cell::{Ref, RefCell};
 use std::clone::Clone;
 use std::ffi::CString;
 use std::rc::Rc;
@@ -153,7 +152,3 @@ impl ContextHandle<'_> {
 
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
-
-thread_local! {
-    static DEFAULT_CONTEXT: RefCell<Context> = RefCell::new(Context::default())
-}
