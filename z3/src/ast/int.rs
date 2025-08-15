@@ -181,12 +181,28 @@ macro_rules! into_int {
     };
 }
 
+macro_rules! into_int_signed {
+    ($t:ty) => {
+        impl IntoAst<Int> for $t {
+            fn into_ast(self, a: &Int) -> Int {
+                Int::from_i64(&a.ctx, self as i64)
+            }
+        }
+
+        impl IntoAstFromCtx<Int> for $t {
+            fn into_ast_ctx(self, a: &Context) -> Int {
+                Int::from_i64(&a, self as i64)
+            }
+        }
+    };
+}
+
 into_int!(u8);
 into_int!(u16);
 into_int!(u32);
 into_int!(u64);
 
-into_int!(i8);
-into_int!(i16);
-into_int!(i32);
-into_int!(i64);
+into_int_signed!(i8);
+into_int_signed!(i16);
+into_int_signed!(i32);
+into_int_signed!(i64);
