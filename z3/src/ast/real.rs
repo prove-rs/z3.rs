@@ -9,6 +9,7 @@ use crate::{Context, FuncDecl, IsNotApp, Sort, SortDiffers, Symbol};
 use crate::ast::{binop, unop, varop, Bool, Dynamic, Int};
 
 /// [`Ast`] node representing a real value.
+
 pub struct Real {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,

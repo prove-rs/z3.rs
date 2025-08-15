@@ -1,4 +1,4 @@
-use crate::ast::{Float, IntoAst};
+use crate::ast::{Bool, Float, IntoAst};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
@@ -492,7 +492,15 @@ macro_rules! impl_bin_trait {
             type Output = $t;
             fn $trop(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into_ast(&self);
-                (self as $t).$op(rhs)
+                 <$t>::$op(&self, rhs)
+            }
+        }
+
+        impl<T: IntoAst<$t>> $tr<T> for &$t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                 <$t>::$op(&self, rhs)
             }
         }
     };
@@ -508,7 +516,33 @@ macro_rules! impl_bin_assign_trait {
         }
     };
 }
+macro_rules! impl_var_trait {
+    ($t:ty, $tr:ident, $trop:ident, $op:ident) => {
+        impl<T: IntoAst<$t>> $tr<T> for $t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                <$t>::$op(&self.ctx, &[self.clone(), rhs])
+            }
+        }
 
+        impl<T: IntoAst<$t>> $tr<T> for &$t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                <$t>::$op(&self.ctx, &[self.clone(), rhs])
+            }
+        }
+    };
+}
+
+impl_var_trait!(Bool, BitAnd, bitand, and);
+impl_var_trait!(Bool, BitOr, bitor, or);
+impl_bin_trait!(Bool, BitXor, bitxor, xor);
+
+impl_bin_assign_trait!(Bool, BitAndAssign, bitand_assign, bitand);
+impl_bin_assign_trait!(Bool, BitOrAssign, bitor_assign, bitor);
+impl_bin_assign_trait!(Bool, BitXorAssign, bitxor_assign, bitxor);
 
 impl_bin_trait!(BV, Add, add, bvadd);
 impl_bin_trait!(BV, Sub, sub, bvsub);
@@ -528,23 +562,21 @@ impl_bin_assign_trait!(BV, ShlAssign, shl_assign, bvshl);
 
 impl_unary_op!(Int, Neg, neg, unary_minus);
 
-impl_bin_trait!(Int, Add, add, add);
-impl_bin_trait!(Int, Sub, sub, sub);
-impl_bin_trait!(Int, Mul, mul, mul);
+impl_var_trait!(Int, Add, add, add);
+impl_var_trait!(Int, Sub, sub, sub);
+impl_var_trait!(Int, Mul, mul, mul);
 impl_bin_trait!(Int, Div, div, div);
 impl_bin_trait!(Int, Rem, rem, rem);
-impl_bin_trait!(Int, Shl, shl, shl);
 
 impl_bin_assign_trait!(Int, AddAssign, add_assign, add);
 impl_bin_assign_trait!(Int, SubAssign, sub_assign, sub);
 impl_bin_assign_trait!(Int, MulAssign, mul_assign, mul);
 impl_bin_assign_trait!(Int, DivAssign, div_assign, div);
 impl_bin_assign_trait!(Int, RemAssign, rem_assign, rem);
-impl_bin_assign_trait!(Int, ShlAssign, shl_assign, shl);
 
-impl_bin_trait!(Real, Add, add, add);
-impl_bin_trait!(Real, Sub, sub, sub);
-impl_bin_trait!(Real, Mul, mul, mul);
+impl_var_trait!(Real, Add, add, add);
+impl_var_trait!(Real, Sub, sub, sub);
+impl_var_trait!(Real, Mul, mul, mul);
 impl_bin_trait!(Real, Div, div, div);
 impl_unary_op!(Real, Neg, neg, unary_minus);
 
@@ -559,7 +591,4 @@ impl_bin_assign_trait!(Real, DivAssign, div_assign, div);
 impl_unary_op!(Float, Neg, neg, unary_neg);
 //
 // // implementations for Bool
-// impl_binary_mult_op_bool!(Bool, Bool, BitAnd, BitAndAssign, bitand, bitand_assign, and);
-// impl_binary_mult_op_bool!(Bool, Bool, BitOr, BitOrAssign, bitor, bitor_assign, or);
-// impl_binary_op_bool!(Bool, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
-// impl_unary_op!(Bool, Not, not, not);
+impl_unary_op!(Bool, Not, not, not);

@@ -139,3 +139,15 @@ impl Bool {
         }
     }
 }
+
+impl IntoAst<Bool> for bool{
+    fn into_ast(self, a: &Bool) -> Bool {
+        Bool::from_bool(&a.ctx, self)
+    }
+}
+
+impl IntoAstFromCtx<Bool> for bool{
+    fn into_ast_ctx(self, ctx: &Context) -> Bool {
+        Bool::from_bool(ctx, self)
+    }
+}

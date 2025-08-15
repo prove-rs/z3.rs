@@ -803,6 +803,7 @@ pub fn quantifier_const(
 /// #     ast::{lambda_const, Ast as _, Int },
 /// #     Config, Context, Solver, SatResult,
 /// # };
+/// # use z3::ast::Dynamic;
 /// #
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
