@@ -1,5 +1,6 @@
-use crate::ast::Borrow;
-use crate::ast::{Ast, Bool, Int, binop, unop, varop};
+use crate::ast::IntoAstFromCtx;
+use crate::ast::{Ast, IntoAst};
+use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
 use std::ffi::{CStr, CString};

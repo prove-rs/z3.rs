@@ -2,7 +2,7 @@ use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{Array, Ast, BV, Bool, Int, atleast, atmost};
+use z3::ast::{Array, Ast, BV, Bool, Float, Int, Set, atleast, atmost};
 use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};
@@ -206,9 +206,9 @@ fn test_floating_point_bits() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
-    let float32 = ast::Float::new_const_float32(&ctx, "float32");
-    let float64 = ast::Float::new_const_double(&ctx, "float64");
-    let float128 = ast::Float::new_const(&ctx, "float128", 15, 113);
+    let float32 = Float::new_const_float32(&ctx, "float32");
+    let float64 = Float::new_const_double(&ctx, "float64");
+    let float128 = Float::new_const(&ctx, "float128", 15, 113);
     let i = ast::Int::new_const(&ctx, "int");
 
     let exp32 = Sort::float_exponent_size(&float32.get_sort());
@@ -464,7 +464,7 @@ fn test_float() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
-    let f = ast::Float::from_f64(&ctx, 1.0);
+    let f = Float::from_f64(&ctx, 1.0);
     assert_eq!(f.as_f64(), 1.0);
 }
 
@@ -474,9 +474,9 @@ fn test_float_add() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let x = ast::Float::new_const_float32(&ctx, "x");
-    let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
-    let y = ast::Float::from_f32(&ctx, std::f32::consts::PI);
+    let x = Float::new_const_float32(&ctx, "x");
+    let x_plus_one = Float::round_towards_zero(&ctx).add(&x, &Float::from_f32(&ctx, 1.0));
+    let y = Float::from_f32(&ctx, std::f32::consts::PI);
 
     solver.assert(&x_plus_one._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
@@ -630,7 +630,7 @@ fn test_rec_func_def() {
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
-    let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
+    let cond: ast::Bool = n.le(ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
@@ -662,7 +662,7 @@ fn test_rec_func_def_unsat() {
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
-    let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
+    let cond: ast::Bool = n.le(ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
@@ -1192,11 +1192,11 @@ fn test_set_membership() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
-    let set = ast::Set::new_const(&ctx, "integer_set", &Sort::int(&ctx));
+    let set = Set::new_const(&ctx, "integer_set", &Sort::int(&ctx));
     let one = ast::Int::from_u64(&ctx, 1);
 
     solver.push();
-    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx))));
+    solver.assert(&set._eq(&Set::empty(&ctx, &Sort::int(&ctx))));
 
     solver.push();
     solver.assert(&set.member(&one));
@@ -1227,7 +1227,7 @@ fn test_set_membership() {
 
     solver.push();
     // A singleton set of 1 will contain 1
-    solver.assert(&set._eq(&ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
+    solver.assert(&set._eq(&Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
     solver.assert(&set.member(&one));
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
@@ -1336,7 +1336,7 @@ fn test_tactic_try_for() {
     let x = ast::Int::new_const(&ctx, "x");
 
     let goal = Goal::new(&ctx, false, false, false);
-    goal.assert(&x.ge(&one.add(&two)));
+    goal.assert(&x.ge(one.add(&two)));
 
     let tactic = Tactic::new(&ctx, "simplify");
     let try_for_tactic = tactic.try_for(Duration::from_secs(u64::MAX));
@@ -1644,14 +1644,14 @@ fn test_probe_ne() {
 }
 
 #[test]
-#[should_panic]
 fn test_issue_94() {
     let cfg = Config::new();
     let ctx0 = Context::new(&cfg);
     let ctx1 = Context::new(&cfg);
     let i0 = ast::Int::fresh_const(&ctx0, "a");
     let i1 = ast::Int::fresh_const(&ctx1, "b");
-    ast::Int::add(&ctx0, &[&i0, &i1]);
+    let i2 = ast::Int::add(&ctx0, &[&i0, &i1]);
+    assert_eq!(i2.get_ctx(), i0.get_ctx());
 }
 
 #[test]

@@ -1,4 +1,4 @@
-use crate::ast::Borrow;
+use crate::ast::IntoAstFromCtx;
 use crate::ast::{Ast, Dynamic, Int, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;

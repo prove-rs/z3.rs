@@ -1,5 +1,6 @@
-use crate::ast::Borrow;
-use crate::ast::{Ast, binop, bool, unop, varop};
+use crate::ast::IntoAst;
+use crate::ast::IntoAstFromCtx;
+use crate::ast::{Ast, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -136,5 +137,17 @@ impl Bool {
                 )
             })
         }
+    }
+}
+
+impl IntoAst<Bool> for bool {
+    fn into_ast(self, a: &Bool) -> Bool {
+        Bool::from_bool(&a.ctx, self)
+    }
+}
+
+impl IntoAstFromCtx<Bool> for bool {
+    fn into_ast_ctx(self, ctx: &Context) -> Bool {
+        Bool::from_bool(ctx, self)
     }
 }

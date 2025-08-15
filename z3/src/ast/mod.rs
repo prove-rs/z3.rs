@@ -1,6 +1,6 @@
 //! Abstract syntax tree (AST).
 
-use log::debug;
+use log::{debug, warn};
 use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
@@ -11,7 +11,7 @@ use std::hash::{Hash, Hasher};
 pub use z3_sys::AstKind;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
+use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol, Translate};
 
 mod array;
 mod bool;
@@ -66,11 +66,11 @@ macro_rules! binop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(&self, other: &Self) -> $retty {
-                assert!(self.ctx == other.ctx);
+            pub fn $f<T: IntoAst<Self>>(&self, other: T) -> $retty {
+                let ast = other.into_ast(self);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
-                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast)
+                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, ast.z3_ast)
                     })
                 }
             }
@@ -106,13 +106,13 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(ctx: &Context, values: &[impl Borrow<Self>]) -> $retty {
-                assert!(values.iter().all(|v| v.borrow().get_ctx().z3_ctx == ctx.z3_ctx));
+            pub fn $f<T: IntoAstFromCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
                 unsafe {
                     <$retty>::wrap(ctx, {
-                        let tmp: Vec<_> = values.iter().map(|x| x.borrow().z3_ast).collect();
+                        let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
+                        let tmp2: Vec<_> = tmp.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
-                        $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp.as_ptr())
+                        $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr())
                     })
                 }
             }
@@ -341,6 +341,52 @@ pub trait Ast: fmt::Debug {
                 Z3_get_app_decl(ctx.z3_ctx.0, app)
             };
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
+        }
+    }
+}
+
+/// Turns a piece of data into a Z3 [`Ast`], with an existing piece
+/// of data also of that [`Ast`] provided as context
+pub trait IntoAst<T: Ast>: Clone {
+    fn into_ast(self, a: &T) -> T;
+}
+
+pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
+    fn into_ast_ctx(self, ctx: &Context) -> T;
+}
+
+impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
+    fn into_ast_ctx(self, ctx: &Context) -> T {
+        if self.get_ctx() != ctx {
+            #[cfg(debug_assertions)]
+            warn!("translating ast {self:?} into ctx {ctx:?}");
+            self.translate(ctx)
+        } else {
+            self
+        }
+    }
+}
+
+impl<T: IntoAstFromCtx<T> + Ast> IntoAstFromCtx<T> for &T {
+    fn into_ast_ctx(self, a: &Context) -> T {
+        self.clone().into_ast_ctx(a)
+    }
+}
+
+impl<T: IntoAst<T> + Ast> IntoAst<T> for &T {
+    fn into_ast(self, a: &T) -> T {
+        self.clone().into_ast(a)
+    }
+}
+
+impl<T: Ast + Translate + Clone> IntoAst<T> for T {
+    fn into_ast(self, a: &T) -> T {
+        if self.get_ctx() != a.get_ctx() {
+            #[cfg(debug_assertions)]
+            warn!("translating ast {self:?} into ctx of ast {a:?}");
+            self.translate(a.get_ctx())
+        } else {
+            self
         }
     }
 }

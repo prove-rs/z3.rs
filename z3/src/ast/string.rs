@@ -1,4 +1,5 @@
-use crate::ast::Borrow;
+use crate::ast::IntoAst;
+use crate::ast::IntoAstFromCtx;
 use crate::ast::regexp::Regexp;
 use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};

@@ -1,13 +1,17 @@
+use z3::ast::Array;
+use z3::ast::Bool;
+use z3::ast::Dynamic;
+use z3::ast::Float;
+use z3::ast::Set;
 use z3::{
     Config, Context, DeclKind, FuncDecl, SatResult, Solver, Sort, ast,
-    ast::{Array, Ast, AstKind, BV, Bool, Dynamic, Float, Int, Real},
+    ast::{Ast, AstKind, BV, Int, Real},
 };
 
 #[test]
 fn test_bv_ops() {
     let cfg = Config::default();
     let ctx = Context::new(&cfg);
-
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = BV::new_const(&ctx, "a", 5);
@@ -347,7 +351,7 @@ fn test_ast_attributes() {
     assert_ast_attributes(&ast::String::new_const(&ctx, "st"), true);
 
     let int_expr = Int::new_const(&ctx, "i");
-    let set_expr = ast::Set::new_const(&ctx, "set", &Sort::int(&ctx));
+    let set_expr = Set::new_const(&ctx, "set", &Sort::int(&ctx));
     assert_ast_attributes(&int_expr, true);
     assert_ast_attributes(&set_expr, true);
     assert_ast_attributes(&set_expr.add(&Dynamic::from_ast(&int_expr)), false);
