@@ -12,7 +12,6 @@ use z3::{
 fn test_bv_ops() {
     let cfg = Config::default();
     let ctx = Context::new(&cfg);
-    let bv = BV::from_u64(&ctx, 23, 23);
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = BV::new_const(&ctx, "a", 5);
