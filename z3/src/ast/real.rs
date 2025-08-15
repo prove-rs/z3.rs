@@ -1,9 +1,9 @@
 use crate::ast::Borrow;
-use std::ffi::{CStr, CString};
-use num::BigRational;
-use z3_sys::*;
+use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
-use crate::ast::{binop, unop, varop, Ast, Bool, Int};
+use num::BigRational;
+use std::ffi::{CStr, CString};
+use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
 pub struct Real {

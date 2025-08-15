@@ -1,8 +1,8 @@
 use crate::ast::Borrow;
+use crate::ast::{Ast, Dynamic, Int, varop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::ast::{varop, Ast, Dynamic, Int};
-use crate::{Context, Sort, Symbol};
 
 /// [`Ast`] node representing a sequence value.
 pub struct Seq {

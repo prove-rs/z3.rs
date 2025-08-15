@@ -1,10 +1,10 @@
 use crate::ast::Borrow;
+use crate::ast::real::Real;
+use crate::ast::{Ast, BV, Bool, binop, bool, unop, varop};
+use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;
 use z3_sys::*;
-use crate::{Context, Sort, Symbol};
-use crate::ast::{binop, bool, unop, varop, Ast, Bool, BV};
-use crate::ast::real::Real;
 
 /// [`Ast`] node representing an integer value.
 pub struct Int {

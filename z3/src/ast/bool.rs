@@ -1,8 +1,8 @@
 use crate::ast::Borrow;
+use crate::ast::{Ast, binop, bool, unop, varop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::{Context, Sort, Symbol};
-use crate::ast::{binop, bool, unop, varop, Ast};
 
 /// [`Ast`] node representing a boolean value.
 pub struct Bool {

@@ -1,7 +1,7 @@
+use crate::ast::Ast;
+use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::{Context, Sort, Symbol};
-use crate::ast::Ast;
 
 /// [`Ast`] node representing a datatype or enumeration value.
 pub struct Datatype {

@@ -1,8 +1,9 @@
 use crate::ast::Borrow;
+use crate::ast::regexp::Regexp;
+use crate::ast::{Ast, Bool, Int, binop, unop, varop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::{CStr, CString};
 use z3_sys::*;
-use crate::ast::{binop, unop, varop, Ast, Bool, Int, Regexp};
-use crate::{Context, Sort, Symbol};
 
 /// [`Ast`] node representing a string value.
 pub struct String {

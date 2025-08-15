@@ -1,8 +1,8 @@
 use crate::ast::Borrow;
+use crate::ast::{Ast, Bool, binop, unop, varop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::{Context, Sort, Symbol};
-use crate::ast::{binop, unop, varop, Ast, Bool};
 
 /// [`Ast`] node representing a set value.
 pub struct Set {

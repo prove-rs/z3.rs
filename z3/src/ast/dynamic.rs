@@ -1,7 +1,7 @@
+use crate::ast::{Array, Ast, BV, Bool, Datatype, Float, Int, Real, Seq, Set};
+use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::ast::{Array, Ast, Bool, Datatype, Float, Int, Real, Seq, Set, BV};
-use crate::{ast, Context, Sort, Symbol};
 
 /// A dynamically typed [`Ast`] node.
 pub struct Dynamic {

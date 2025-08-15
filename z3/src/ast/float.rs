@@ -1,7 +1,7 @@
+use crate::ast::{Ast, BV, Bool, binop, trinop, unop};
+use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
-use crate::{Context, Sort, Symbol};
-use crate::ast::{binop, trinop, unop, Ast, Bool, BV};
 
 /// [`Ast`] node representing a float value.
 pub struct Float {
