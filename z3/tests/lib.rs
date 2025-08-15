@@ -630,7 +630,7 @@ fn test_rec_func_def() {
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
-    let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
+    let cond: ast::Bool = n.le(ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
@@ -662,7 +662,7 @@ fn test_rec_func_def_unsat() {
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
-    let cond: ast::Bool = n.le(&ast::Int::from_i64(&ctx, 0));
+    let cond: ast::Bool = n.le(ast::Int::from_i64(&ctx, 0));
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
@@ -1336,7 +1336,7 @@ fn test_tactic_try_for() {
     let x = ast::Int::new_const(&ctx, "x");
 
     let goal = Goal::new(&ctx, false, false, false);
-    goal.assert(&x.ge(&one.add(&two)));
+    goal.assert(&x.ge(one.add(&two)));
 
     let tactic = Tactic::new(&ctx, "simplify");
     let try_for_tactic = tactic.try_for(Duration::from_secs(u64::MAX));
