@@ -58,6 +58,23 @@ macro_rules! impl_bin_assign_trait {
         }
     };
 }
+
+macro_rules! impl_trait_number_types {
+    ($Z3ty:ty, $tr:ident, [$($num:ty),+]) => {
+        $(
+        impl_trait_number_types!($Z3ty, $tr, $num)
+        )+
+    };
+    ($Z3ty:ty, $tr:ident, $num:ty) => {
+        impl $tr<$Z3ty> for $num {
+            type Output = BV;
+            fn add(self, rhs: BV) -> Self::Output {
+                let lhs = self.into_ast(&rhs);
+                <BV>::bvadd(&lhs, &rhs)
+            }
+        }
+    };
+}
 macro_rules! impl_var_trait {
     ($t:ty, $tr:ident, $trop:ident, $op:ident) => {
         impl<T: IntoAst<$t>> $tr<T> for $t {
@@ -134,3 +151,5 @@ impl_unary_op!(Float, Neg, neg, unary_neg);
 //
 // // implementations for Bool
 impl_unary_op!(Bool, Not, not, not);
+
+impl_trait_number_types!(Int, Add, [i8, i16, i32, i64]);
