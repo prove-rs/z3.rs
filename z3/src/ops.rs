@@ -59,22 +59,6 @@ macro_rules! impl_bin_assign_trait {
     };
 }
 
-macro_rules! impl_trait_number_types {
-    ($Z3ty:ty, $tr:ident, [$($num:ty),+]) => {
-        $(
-        impl_trait_number_types!($Z3ty, $tr, $num)
-        )+
-    };
-    ($Z3ty:ty, $tr:ident, $num:ty) => {
-        impl $tr<$Z3ty> for $num {
-            type Output = BV;
-            fn add(self, rhs: BV) -> Self::Output {
-                let lhs = self.into_ast(&rhs);
-                <BV>::bvadd(&lhs, &rhs)
-            }
-        }
-    };
-}
 macro_rules! impl_var_trait {
     ($t:ty, $tr:ident, $trop:ident, $op:ident) => {
         impl<T: IntoAst<$t>> $tr<T> for $t {
@@ -152,4 +136,37 @@ impl_unary_op!(Float, Neg, neg, unary_neg);
 // // implementations for Bool
 impl_unary_op!(Bool, Not, not, not);
 
-impl_trait_number_types!(Int, Add, [i8, i16, i32, i64]);
+// Impl bin ops for concrete types on the left-hand-side that people
+// might want to use
+// Note that this is not necessary when an Ast is on the left hand
+// side because it is covered by a blanket impl of `IntoAst`. This
+// does not work for the IntoAst being on the LHS because of the orphan
+// rule
+macro_rules! impl_trait_number_types {
+    ($Z3ty:ty, $tr:ident::$op:ident, [$($num:ty),+]) => {
+        $(
+        impl_trait_number_types!($Z3ty, $tr::$op, $num);
+        )+
+    };
+    ($Z3ty:ty, $tr:ident::$op:ident, $num:ty) => {
+        impl $tr<$Z3ty> for $num {
+            type Output = $Z3ty;
+            fn $op(self, rhs: $Z3ty) -> Self::Output {
+                let lhs = self.into_ast(&rhs);
+                lhs.$op(&rhs)
+            }
+        }
+    };
+}
+
+impl_trait_number_types!(Int, Add::add, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(Int, Sub::sub, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(Int, Mul::mul, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(Int, Div::div, [u8, i8, u16, i16, u32, i32, u64, i64]);
+
+impl_trait_number_types!(BV, Add::add, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, Sub::sub, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, Mul::mul, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, BitXor::bitxor, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, BitAnd::bitand, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, BitOr::bitor, [u8, i8, u16, i16, u32, i32, u64, i64]);
