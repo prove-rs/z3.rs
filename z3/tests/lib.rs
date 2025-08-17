@@ -1644,14 +1644,14 @@ fn test_probe_ne() {
 }
 
 #[test]
+#[should_panic]
 fn test_issue_94() {
     let cfg = Config::new();
     let ctx0 = Context::new(&cfg);
     let ctx1 = Context::new(&cfg);
     let i0 = ast::Int::fresh_const(&ctx0, "a");
     let i1 = ast::Int::fresh_const(&ctx1, "b");
-    let i2 = ast::Int::add(&ctx0, &[&i0, &i1]);
-    assert_eq!(i2.get_ctx(), i0.get_ctx());
+    ast::Int::add(&ctx0, &[&i0, &i1]);
 }
 
 #[test]
