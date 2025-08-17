@@ -1,5 +1,4 @@
 use log::debug;
-use std::clone::Clone;
 use std::ffi::CString;
 use std::rc::Rc;
 use z3_sys::*;
@@ -47,7 +46,6 @@ impl Drop for ContextInternal {
 pub struct Context {
     pub(crate) z3_ctx: Rc<ContextInternal>,
 }
-
 impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
