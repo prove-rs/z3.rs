@@ -156,6 +156,14 @@ macro_rules! impl_trait_number_types {
                 lhs.$op(&rhs)
             }
         }
+
+        impl<'a> $tr<&'a $Z3ty> for $num {
+            type Output = $Z3ty;
+            fn $op(self, rhs: &'a $Z3ty) -> Self::Output {
+                let lhs = self.into_ast(rhs);
+                lhs.$op(rhs)
+            }
+        }
     };
 }
 

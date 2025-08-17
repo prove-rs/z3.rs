@@ -427,3 +427,29 @@ fn test_real_approx() {
     assert_eq!(res.approx_f64(), res.approx(32).parse().unwrap());
     assert_ne!(res.approx_f64(), res.approx(16).parse().unwrap());
 }
+
+#[test]
+fn into_ast_int() {
+    let ctx = Context::default();
+    let i = Int::from_u64(&ctx, 10);
+
+    let a1 = &i + 1;
+    let a2: Int = 1 + &i;
+    assert_eq!(a1.simplify().as_u64(), Some(11));
+    assert_eq!(a2.simplify().as_u64(), Some(11));
+
+    let a1 = &i - 1;
+    let a2: Int = 1 - &i;
+    assert_eq!(a1.simplify().as_i64(), Some(9));
+    assert_eq!(a2.simplify().as_i64(), Some(-9));
+
+    let a1 = &i * 2;
+    let a2: Int = 2 * &i;
+    assert_eq!(a1.simplify().as_i64(), Some(20));
+    assert_eq!(a2.simplify().as_i64(), Some(20));
+
+    let a1 = &i / 2;
+    let a2: Int = 200 / &i;
+    assert_eq!(a1.simplify().as_i64(), Some(5));
+    assert_eq!(a2.simplify().as_i64(), Some(20));
+}
