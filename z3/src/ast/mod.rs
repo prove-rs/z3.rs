@@ -382,9 +382,12 @@ impl<T: IntoAst<T> + Ast> IntoAst<T> for &T {
 impl<T: Ast + Translate + Clone> IntoAst<T> for T {
     fn into_ast(self, a: &T) -> T {
         if self.get_ctx() != a.get_ctx() {
-            #[cfg(debug_assertions)]
-            warn!("translating ast {self:?} into ctx of ast {a:?}");
-            self.translate(a.get_ctx())
+            let a = self.get_ctx();
+            let b = self.get_ctx();
+            panic!(
+                "Attempted to build an expression from asts of multiple contexts ({a:?} and {b:?})!\
+            This is likely a logic error in your code."
+            );
         } else {
             self
         }
