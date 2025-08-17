@@ -166,3 +166,29 @@ impl Float {
         div(Z3_mk_fpa_div, Self);
     }
 }
+
+macro_rules! into_float_32 {
+    ($t:ty) => {
+        impl IntoAst<Float> for $t {
+            fn into_ast(self, a: &Float) -> Float {
+                Float::from_f32(&a.ctx, self as f32)
+            }
+        }
+    };
+}
+
+macro_rules! into_float_64 {
+    ($t:ty) => {
+        impl IntoAst<Float> for $t {
+            fn into_ast(self, a: &Float) -> Float {
+                Float::from_f64(&a.ctx, self as f64)
+            }
+        }
+    };
+}
+
+// just these two for now as doing additional
+// may be confusing?
+
+into_float_32!(f32);
+into_float_64!(f64);

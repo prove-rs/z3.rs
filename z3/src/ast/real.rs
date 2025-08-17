@@ -127,3 +127,9 @@ impl Real {
         ge(Z3_mk_ge, Bool);
     }
 }
+
+impl IntoAst<Real> for BigRational {
+    fn into_ast(self, a: &Real) -> Real {
+        Real::from_big_rational(a.get_ctx(), &self)
+    }
+}
