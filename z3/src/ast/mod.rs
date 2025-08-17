@@ -347,7 +347,7 @@ pub trait Ast: fmt::Debug {
 
 /// Turns a piece of data into a Z3 [`Ast`], with an existing piece
 /// of data also of that [`Ast`] provided as context
-pub trait IntoAst<T: Ast>: Clone {
+pub trait IntoAst<T: Ast> {
     fn into_ast(self, a: &T) -> T;
 }
 
@@ -373,7 +373,7 @@ impl<T: IntoAstFromCtx<T> + Ast> IntoAstFromCtx<T> for &T {
     }
 }
 
-impl<T: IntoAst<T> + Ast> IntoAst<T> for &T {
+impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
     fn into_ast(self, a: &T) -> T {
         self.clone().into_ast(a)
     }

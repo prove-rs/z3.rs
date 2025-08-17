@@ -170,7 +170,7 @@ impl String {
 }
 
 
-impl<T: AsRef<str> + Clone> IntoAst<String> for T {
+impl<T: AsRef<str>> IntoAst<String> for T {
     fn into_ast(self, a: &String) -> String {
         String::from_str(&a.ctx, self.as_ref()).unwrap()
     }
