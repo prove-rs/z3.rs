@@ -358,10 +358,9 @@ pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
 impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
     fn into_ast_ctx(self, ctx: &Context) -> T {
         if self.get_ctx() != ctx {
-            let a = self.get_ctx();
-            let b = self.get_ctx();
+            let s_ctx = self.get_ctx();
             panic!(
-                "Attempted to build an expression from asts of multiple contexts ({a:?} and {b:?})!\
+                "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {ctx:?})!\
             This is likely a logic error in your code."
             );
         } else {
@@ -385,10 +384,10 @@ impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
 impl<T: Ast> IntoAst<T> for T {
     fn into_ast(self, a: &T) -> T {
         if self.get_ctx() != a.get_ctx() {
-            let a = self.get_ctx();
-            let b = self.get_ctx();
+            let s_ctx = self.get_ctx();
+            let o_ctx = a.get_ctx();
             panic!(
-                "Attempted to build an expression from asts of multiple contexts ({a:?} and {b:?})!\
+                "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {o_ctx:?})!\
             This is likely a logic error in your code."
             );
         } else {
