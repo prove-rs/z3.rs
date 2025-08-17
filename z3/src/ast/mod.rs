@@ -1,6 +1,6 @@
 //! Abstract syntax tree (AST).
 
-use log::{debug, warn};
+use log::debug;
 use std::borrow::Borrow;
 use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
@@ -11,7 +11,7 @@ use std::hash::{Hash, Hasher};
 pub use z3_sys::AstKind;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol, Translate};
+use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
 
 mod array;
 mod bool;
@@ -358,9 +358,12 @@ pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
 impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
     fn into_ast_ctx(self, ctx: &Context) -> T {
         if self.get_ctx() != ctx {
-            #[cfg(debug_assertions)]
-            warn!("translating ast {self:?} into ctx {ctx:?}");
-            self.translate(ctx)
+            let a = self.get_ctx();
+            let b = self.get_ctx();
+            panic!(
+                "Attempted to build an expression from asts of multiple contexts ({a:?} and {b:?})!\
+            This is likely a logic error in your code."
+            );
         } else {
             self
         }
@@ -379,7 +382,7 @@ impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
     }
 }
 
-impl<T: Ast + Translate + Clone> IntoAst<T> for T {
+impl<T: Ast> IntoAst<T> for T {
     fn into_ast(self, a: &T) -> T {
         if self.get_ctx() != a.get_ctx() {
             let a = self.get_ctx();
