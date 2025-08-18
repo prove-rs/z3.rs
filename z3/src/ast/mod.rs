@@ -36,6 +36,7 @@ pub use float::Float;
 pub use int::Int;
 pub use real::Real;
 pub use regexp::Regexp;
+pub use rounding_mode::RoundingMode;
 pub use seq::Seq;
 pub use set::Set;
 pub use string::String;
@@ -364,13 +365,13 @@ pub trait IntoAst<T: Ast> {
 }
 
 /// Turns a piece of data into a Z3 [`Ast`], associated with the
-/// given context.
+/// given [`Context`].
 pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
     fn into_ast_ctx(self, ctx: &Context) -> T;
 }
 
 /// This is trivially implemented for Asts. It also
-/// serves as a unified place to check for context mismatches.
+/// serves as a unified place to check for [`Context`] mismatches.
 impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
     fn into_ast_ctx(self, ctx: &Context) -> T {
         self.check_ctx(ctx);
@@ -378,21 +379,21 @@ impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
     }
 }
 
-/// Implemented for Ast references for ease.
+/// Implemented for [`Ast`] references for ease.
 impl<T: IntoAstFromCtx<T> + Ast> IntoAstFromCtx<T> for &T {
     fn into_ast_ctx(self, a: &Context) -> T {
         self.clone().into_ast_ctx(a)
     }
 }
 
-/// Implemented for Ast references for ease.
+/// Implemented for [`Ast`] references for ease.
 impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
     fn into_ast(self, a: &T) -> T {
         self.clone().into_ast(a)
     }
 }
 
-/// This is trivially implemented for Asts. It also
+/// This is trivially implemented for [`Ast`]s. It also
 /// serves as a unified place to check for context mismatches.
 impl<T: Ast> IntoAst<T> for T {
     fn into_ast(self, a: &T) -> T {
@@ -880,5 +881,4 @@ impl fmt::Display for IsNotApp {
     }
 }
 
-pub use crate::ast::rounding_mode::RoundingMode;
 pub(crate) use {binop, trinop, unop, varop};

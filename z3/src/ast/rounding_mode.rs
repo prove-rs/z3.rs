@@ -3,6 +3,7 @@ use crate::ast::IntoAstFromCtx;
 use crate::ast::{Ast, Float, trinop};
 use z3_sys::*;
 
+/// [`Ast`] node representing a rounding mode for [`Float`] operations.
 pub struct RoundingMode {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,

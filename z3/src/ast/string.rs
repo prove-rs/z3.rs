@@ -174,3 +174,9 @@ impl<T: AsRef<str>> IntoAst<String> for T {
         String::from_str(&a.ctx, self.as_ref()).unwrap()
     }
 }
+
+impl<T: AsRef<str> + Clone> IntoAstFromCtx<String> for T {
+    fn into_ast_ctx(self, ctx: &Context) -> String {
+        String::from_str(ctx, self.as_ref()).unwrap()
+    }
+}
