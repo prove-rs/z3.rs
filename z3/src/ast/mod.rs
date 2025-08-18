@@ -345,6 +345,16 @@ pub trait Ast: fmt::Debug {
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
         }
     }
+
+    fn check_ctx(&self, ctx: &Context){
+        if self.get_ctx() != ctx{
+            let s_ctx = self.get_ctx();
+            panic!(
+                "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {ctx:?})!\
+            If this was intentional, you need to `translate` one of the asts into the context of the other."
+            );
+        }
+    }
 }
 
 /// Turns a piece of data into a Z3 [`Ast`], with an existing piece
@@ -363,15 +373,8 @@ pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
 /// serves as a unified place to check for context mismatches.
 impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
     fn into_ast_ctx(self, ctx: &Context) -> T {
-        if self.get_ctx() != ctx {
-            let s_ctx = self.get_ctx();
-            panic!(
-                "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {ctx:?})!\
-            This is likely a logic error in your code."
-            );
-        } else {
-            self
-        }
+        self.check_ctx(ctx);
+        self
     }
 }
 
@@ -393,16 +396,8 @@ impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
 /// serves as a unified place to check for context mismatches.
 impl<T: Ast> IntoAst<T> for T {
     fn into_ast(self, a: &T) -> T {
-        if self.get_ctx() != a.get_ctx() {
-            let s_ctx = self.get_ctx();
-            let o_ctx = a.get_ctx();
-            panic!(
-                "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {o_ctx:?})!\
-            This is likely a logic error in your code."
-            );
-        } else {
-            self
-        }
+        self.check_ctx(a.get_ctx());
+        self
     }
 }
 
@@ -524,6 +519,13 @@ macro_rules! impl_from_try_into_dynamic {
             fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
                 ast.$as_ast()
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
+            }
+        }
+        
+        impl IntoAst<Dynamic> for $ast {
+            fn into_ast(self, d: &Dynamic) -> Dynamic {
+                self.check_ctx(d.get_ctx());
+                Dynamic::from_ast(&self)
             }
         }
     };

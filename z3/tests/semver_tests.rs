@@ -222,7 +222,7 @@ fn test_solve_simple_semver_example() {
                         );
                         opt.assert(
                             &k_ast
-                                ._eq(&ast::Int::from_u64(&ctx, n as u64))
+                                ._eq(ast::Int::from_u64(&ctx, n as u64))
                                 .implies(r_ast.ge(ast::Int::from_u64(&ctx, low as u64))),
                         );
                     }
@@ -241,7 +241,7 @@ fn test_solve_simple_semver_example() {
                         );
                         opt.assert(
                             &k_ast
-                                ._eq(&ast::Int::from_u64(&ctx, n as u64))
+                                ._eq(ast::Int::from_u64(&ctx, n as u64))
                                 .implies(r_ast.le(ast::Int::from_u64(&ctx, high as u64))),
                         );
                     }
