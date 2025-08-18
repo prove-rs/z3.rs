@@ -1145,6 +1145,24 @@ impl<'ctx> Float<'ctx> {
     }
 
     /// Convenience IEEE-754 single & double.
+    /// Any two NANs are equal to eachother and they are not equal to any concrete number.
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, Float};
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let solver = Solver::new(&ctx);
+    ///
+    /// let nan_32 = Float::nan32(&ctx);
+    /// let nan_64 = Float::nan64(&ctx);
+    /// 
+    /// solver.assert(&nan_32._eq(&nan_32));
+    /// solver.assert(&nan_64._eq(&nan_64));
+    /// solver.assert(&nan_32._eq(&Float::from_f32(&ctx, 1.0)).not());
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
     pub fn nan32(ctx: &'ctx Context) -> Float<'ctx> {
         let s = Sort::float32(ctx);
         Self::nan(ctx, &s)
