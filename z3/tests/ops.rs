@@ -436,23 +436,23 @@ fn into_ast_int() {
 
     let a1 = &i + 1;
     let a2: Int = 1 + &i;
-    assert_eq!(a1.simplify().as_u64(), Some(11));
-    assert_eq!(a2.simplify().as_u64(), Some(11));
+    assert_eq!(a1.simplify(), 11);
+    assert_eq!(a2.simplify(), 11);
 
     let a1 = &i - 1;
     let a2: Int = 1 - &i;
-    assert_eq!(a1.simplify().as_i64(), Some(9));
-    assert_eq!(a2.simplify().as_i64(), Some(-9));
+    assert_eq!(a1.simplify(), 9);
+    assert_eq!(a2.simplify(), -9);
 
     let a1 = &i * 2;
     let a2: Int = 2 * &i;
-    assert_eq!(a1.simplify().as_i64(), Some(20));
-    assert_eq!(a2.simplify().as_i64(), Some(20));
+    assert_eq!(a1.simplify(), 20);
+    assert_eq!(a2.simplify(), 20);
 
     let a1 = &i / 2;
     let a2: Int = 200 / &i;
-    assert_eq!(a1.simplify().as_i64(), Some(5));
-    assert_eq!(a2.simplify().as_i64(), Some(20));
+    assert_eq!(a1.simplify(), 5);
+    assert_eq!(a2.simplify(), 20);
 }
 
 #[test]
@@ -460,6 +460,8 @@ fn test_eq() {
     let ctx = Context::default();
     let t = Bool::from_bool(&ctx, false);
     let t2 = Bool::from_bool(&ctx, true);
+    // the `true` here is being transparently converted
+    // to a z3 Bool
     assert_eq!((t | t2).simplify(), true);
 }
 
