@@ -273,6 +273,11 @@ impl Solver {
                 let val = Z3_ast_vector_get(self.ctx.z3_ctx.0, consequences, i);
                 cons.push(ast::Bool::wrap(&self.ctx, val));
             }
+
+            Z3_ast_vector_dec_ref(self.ctx.z3_ctx.0, _assumptions);
+            Z3_ast_vector_dec_ref(self.ctx.z3_ctx.0, _variables);
+            Z3_ast_vector_dec_ref(self.ctx.z3_ctx.0, consequences);
+
             cons
         }
     }
