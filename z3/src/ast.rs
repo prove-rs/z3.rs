@@ -1299,11 +1299,46 @@ impl<'ctx> String<'ctx> {
     }
 
     /// Greater than in lexicographic order (str.>  s1 s2)
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, String};
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let solver = Solver::new(&ctx);
+    ///
+    /// let string1 = String::from_str(&ctx, "apple").unwrap();
+    /// let string2 = String::from_str(&ctx, "apple juice").unwrap();
+    ///
+    /// solver.assert(&string1.str_gt(&string2));
+    /// assert_eq!(solver.check(), z3::SatResult::Unsat);
+    /// 
+    /// let solver = Solver::new(&ctx);
+    /// solver.assert(&string1.str_lt(&string2));
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
     pub fn str_gt(&self, other: &Self) -> Bool<'ctx> {
         other.str_lt(self)
     }
 
     /// Greater than or equal to in lexicographic order (str.>= s1 s2)
+    /// Anything is greater or equal than itself (or less than equal itself).
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, String};
+    ///
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let solver = Solver::new(&ctx);
+    ///
+    /// let string1 = String::from_str(&ctx, "apple").unwrap();
+    ///
+    /// solver.assert(&string1.str_ge(&string1));
+    /// solver.assert(&string1.str_le(&string1));
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
     pub fn str_ge(&self, other: &Self) -> Bool<'ctx> {
         other.str_le(self)
     }
