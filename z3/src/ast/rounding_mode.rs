@@ -24,6 +24,16 @@ impl RoundingMode {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.0)) }
     }
 
+    // returns RoundingMode towards positive
+    pub fn round_nearest_ties_to_away(ctx: &Context) -> RoundingMode {
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_nearest_ties_to_away(ctx.z3_ctx.0)) }
+    }
+
+    // returns RoundingMode towards positive
+    pub fn round_nearest_ties_to_even(ctx: &Context) -> RoundingMode {
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_nearest_ties_to_even(ctx.z3_ctx.0)) }
+    }
+
     trinop! {
         add(Z3_mk_fpa_add, Float);
         sub(Z3_mk_fpa_sub, Float);
