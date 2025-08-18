@@ -1835,7 +1835,21 @@ impl<'ctx> Seq<'ctx> {
         }
     }
 
-    /// Create an empty sequence of the given sort.
+    /// the concatenation of any sequence T and the empty sequence is T.
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, Seq};
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let solver = Solver::new(&ctx);
+    /// let empty_seq = Seq::empty(&ctx, &Sort::int(&ctx));
+    /// let any_seq = Seq::new_const(&ctx, "any_seq", &Sort::int(&ctx));
+    /// let concatenated = Seq::concat(&ctx, &[&empty_seq, &any_seq]);
+    ///
+    /// solver.assert(&concatenated._eq(&any_seq));
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
     pub fn empty(ctx: &'ctx Context, eltype: &Sort<'ctx>) -> Self {
         let sort = Sort::seq(ctx, eltype);
         unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx, sort.z3_sort)) }
@@ -1889,6 +1903,21 @@ impl<'ctx> Seq<'ctx> {
         unsafe { Int::wrap(self.ctx, Z3_mk_seq_length(self.ctx.z3_ctx, self.z3_ast)) }
     }
 
+    /// Any extension of a seq contains itself.
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, Seq};
+    /// let cfg = Config::new();
+    /// let ctx = Context::new(&cfg);
+    /// let solver = Solver::new(&ctx);
+    /// let seq1 = Seq::unit(&ctx, &ast::Int::from_u64(&ctx, 0));
+    /// let seq2 = Seq::unit(&ctx, &ast::Int::from_u64(&ctx, 1));
+    /// let concatenated = Seq::concat(&ctx, &[&seq1, &seq2]);
+    ///
+    /// solver.assert(&z3::ast::Bool::<'_>::and(&ctx, &[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
     pub fn contains(&self, containee: &Self) -> Bool<'ctx> {
         unsafe {
             Bool::wrap(
