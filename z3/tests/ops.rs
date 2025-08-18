@@ -1,3 +1,4 @@
+use num::abs;
 use z3::{
     Config, Context, DeclKind, FuncDecl, SatResult, Solver, Sort, ast,
     ast::{Array, Ast, AstKind, BV, Bool, Dynamic, Float, Int, Real},
@@ -281,7 +282,7 @@ fn test_ast_children() {
     let a = Bool::new_const(&ctx, "a");
     assert_eq!(a.num_children(), 0);
     assert_eq!(a.nth_child(0), None);
-    assert_eq!(a.children(), vec![]);
+    assert_eq!(a.children().len(), 0);
 
     let not_a = a.not();
     assert_eq!(not_a.num_children(), 1);
@@ -452,4 +453,22 @@ fn into_ast_int() {
     let a2: Int = 200 / &i;
     assert_eq!(a1.simplify().as_i64(), Some(5));
     assert_eq!(a2.simplify().as_i64(), Some(20));
+}
+
+#[test]
+fn test_eq() {
+    let ctx = Context::default();
+    let t = Bool::from_bool(&ctx, false);
+    let t2 = Bool::from_bool(&ctx, true);
+    assert_eq!((t | t2).simplify(), true);
+}
+
+#[test]
+fn test_float_ops() {
+    let ctx = Context::default();
+    let t = Float::from_f64(&ctx, 10.0);
+    assert!(abs(t.add_towards_zero(1.0).simplify().as_f64() - 11.0) < 0.1);
+    assert!(abs(t.sub_towards_zero(1.0).simplify().as_f64() - 9.0) < 0.1);
+    assert!(abs(t.mul_towards_zero(2.0).simplify().as_f64() - 20.0) < 0.1);
+    assert!(abs(t.div_towards_zero(2.0).simplify().as_f64() - 5.0) < 0.1);
 }

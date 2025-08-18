@@ -1,0 +1,33 @@
+use crate::Context;
+use crate::ast::IntoAstFromCtx;
+use crate::ast::{Ast, Float, trinop};
+use z3_sys::*;
+
+pub struct RoundingMode {
+    pub(crate) ctx: Context,
+    pub(crate) z3_ast: Z3_ast,
+}
+
+impl RoundingMode {
+    // returns RoundingMode towards zero
+    pub fn round_towards_zero(ctx: &Context) -> RoundingMode {
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_zero(ctx.z3_ctx.0)) }
+    }
+
+    // returns RoundingMode towards negative
+    pub fn round_towards_negative(ctx: &Context) -> RoundingMode {
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_negative(ctx.z3_ctx.0)) }
+    }
+
+    // returns RoundingMode towards positive
+    pub fn round_towards_positive(ctx: &Context) -> RoundingMode {
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.0)) }
+    }
+
+    trinop! {
+        add(Z3_mk_fpa_add, Float);
+        sub(Z3_mk_fpa_sub, Float);
+        mul(Z3_mk_fpa_mul, Float);
+        div(Z3_mk_fpa_div, Float);
+    }
+}

@@ -22,6 +22,7 @@ mod float;
 mod int;
 mod real;
 mod regexp;
+mod rounding_mode;
 mod seq;
 mod set;
 mod string;
@@ -86,8 +87,9 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(&self, a: &Self, b: &Self) -> $retty {
-                assert!((self.ctx == a.ctx) && (a.ctx == b.ctx));
+            pub fn $f<A: IntoAstFromCtx<$retty>, B: IntoAstFromCtx<$retty>>(&self, a: A, b: B) -> $retty {
+                let a = a.into_ast_ctx(&self.ctx);
+                let b = b.into_ast_ctx(&self.ctx);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
                         $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast)
@@ -159,7 +161,7 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must be the same type.
     //
     // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq(&self, other: &Self) -> Bool
+    fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
     where
         Self: Sized,
     {
@@ -168,11 +170,11 @@ pub trait Ast: fmt::Debug {
 
     /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
     /// match for the two values.
-    fn _safe_eq(&self, other: &Self) -> Result<Bool, SortDiffers>
+    fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
     where
         Self: Sized,
     {
-        assert_eq!(self.get_ctx(), other.get_ctx());
+        let other = other.into_ast(self);
 
         let left_sort = self.get_sort();
         let right_sort = other.get_sort();
@@ -440,9 +442,9 @@ macro_rules! impl_ast {
             }
         }
 
-        impl PartialEq for $ast {
-            fn eq(&self, other: &$ast) -> bool {
-                assert_eq!(self.ctx, other.ctx);
+        impl<T: IntoAst<$ast> + Clone> PartialEq<T> for $ast {
+            fn eq(&self, other: &T) -> bool {
+                let other = other.clone().into_ast(self);
                 unsafe { Z3_is_eq_ast(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast) }
             }
         }
@@ -551,7 +553,7 @@ impl_ast!(Datatype);
 impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
-
+impl_ast!(RoundingMode);
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atmost(ctx, args.as_ref(), k)
@@ -876,4 +878,5 @@ impl fmt::Display for IsNotApp {
     }
 }
 
+pub use crate::ast::rounding_mode::RoundingMode;
 pub(crate) use {binop, trinop, unop, varop};

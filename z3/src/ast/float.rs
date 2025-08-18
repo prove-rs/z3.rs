@@ -1,5 +1,6 @@
-use crate::ast::IntoAst;
-use crate::ast::{Ast, BV, Bool, binop, trinop, unop};
+use crate::ast::rounding_mode::RoundingMode;
+use crate::ast::{Ast, BV, Bool, binop, unop};
+use crate::ast::{IntoAst, IntoAstFromCtx};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -99,39 +100,60 @@ impl Float {
         }
     }
 
-    // returns RoundingMode towards zero
-    pub fn round_towards_zero(ctx: &Context) -> Float {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_zero(ctx.z3_ctx.0)) }
+    /// Add with the provided [`RoundingMode`]
+    pub fn add_with_rounding_mode<T: IntoAstFromCtx<Self>>(
+        &self,
+        other: T,
+        r: &RoundingMode,
+    ) -> Float {
+        r.add(self, other)
     }
 
-    // returns RoundingMode towards negative
-    pub fn round_towards_negative(ctx: &Context) -> Float {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_negative(ctx.z3_ctx.0)) }
+    /// Subtract with the provided [`RoundingMode`]
+    pub fn sub_with_rounding_mode<T: IntoAstFromCtx<Self>>(
+        &self,
+        other: T,
+        r: &RoundingMode,
+    ) -> Float {
+        r.sub(self, other)
     }
 
-    // returns RoundingMode towards positive
-    pub fn round_towards_positive(ctx: &Context) -> Float {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.0)) }
+    /// Multiply with the provided [`RoundingMode`]
+    pub fn mul_with_rounding_mode<T: IntoAstFromCtx<Self>>(
+        &self,
+        other: T,
+        r: &RoundingMode,
+    ) -> Float {
+        r.mul(self, other)
+    }
+
+    /// Divide with the provided [`RoundingMode`]
+    pub fn div_with_rounding_mode<T: IntoAstFromCtx<Self>>(
+        &self,
+        other: T,
+        r: &RoundingMode,
+    ) -> Float {
+        r.div(self, other)
     }
 
     // Add two floats of the same size, rounding towards zero
-    pub fn add_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).add(self, other)
+    pub fn add_towards_zero<T: IntoAstFromCtx<Self>>(&self, other: T) -> Float {
+        self.add_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Subtract two floats of the same size, rounding towards zero
-    pub fn sub_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).sub(self, other)
+    pub fn sub_towards_zero<T: IntoAstFromCtx<Self>>(&self, other: T) -> Float {
+        self.sub_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Multiply two floats of the same size, rounding towards zero
-    pub fn mul_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).mul(self, other)
+    pub fn mul_towards_zero<T: IntoAstFromCtx<Self>>(&self, other: T) -> Float {
+        self.mul_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Divide two floats of the same size, rounding towards zero
-    pub fn div_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).div(self, other)
+    pub fn div_towards_zero<T: IntoAstFromCtx<Self>>(&self, other: T) -> Float {
+        self.div_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Convert to IEEE-754 bit-vector
@@ -159,12 +181,6 @@ impl Float {
         gt(Z3_mk_fpa_gt, Bool);
         ge(Z3_mk_fpa_geq, Bool);
     }
-    trinop! {
-        add(Z3_mk_fpa_add, Self);
-        sub(Z3_mk_fpa_sub, Self);
-        mul(Z3_mk_fpa_mul, Self);
-        div(Z3_mk_fpa_div, Self);
-    }
 }
 
 impl IntoAst<Float> for f32 {
@@ -175,5 +191,16 @@ impl IntoAst<Float> for f32 {
 impl IntoAst<Float> for f64 {
     fn into_ast(self, a: &Float) -> Float {
         Float::from_f64(&a.ctx, self)
+    }
+}
+
+impl IntoAstFromCtx<Float> for f32 {
+    fn into_ast_ctx(self, a: &Context) -> Float {
+        Float::from_f32(a, self)
+    }
+}
+impl IntoAstFromCtx<Float> for f64 {
+    fn into_ast_ctx(self, a: &Context) -> Float {
+        Float::from_f64(a, self)
     }
 }

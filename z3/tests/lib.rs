@@ -475,7 +475,8 @@ fn test_float_add() {
     let solver = Solver::new(&ctx);
 
     let x = ast::Float::new_const_float32(&ctx, "x");
-    let x_plus_one = ast::Float::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
+    let x_plus_one =
+        ast::RoundingMode::round_towards_zero(&ctx).add(&x, &ast::Float::from_f32(&ctx, 1.0));
     let y = ast::Float::from_f32(&ctx, std::f32::consts::PI);
 
     solver.assert(&x_plus_one._eq(&y));
