@@ -206,3 +206,9 @@ into_int_signed!(i8);
 into_int_signed!(i16);
 into_int_signed!(i32);
 into_int_signed!(i64);
+
+impl IntoAst<Int> for BigInt {
+    fn into_ast(self, a: &Int) -> Int {
+        Int::from_big_int(&a.ctx, &self)
+    }
+}

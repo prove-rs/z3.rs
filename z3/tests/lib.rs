@@ -287,12 +287,12 @@ fn test_solver_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&destination);
-    slv.assert(&translated_a._eq(ast::Int::from_u64(&destination, 2)));
+    slv.assert(&translated_a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
     let translated_slv = slv.translate(&source);
     // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
-    slv.assert(&translated_a._eq(ast::Int::from_u64(&destination, 3)));
+    slv.assert(&translated_a._eq(3));
     assert_eq!(slv.check(), SatResult::Unsat);
     assert_eq!(translated_slv.check(), SatResult::Sat);
 }
@@ -321,7 +321,7 @@ fn test_model_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&source);
-    slv.assert(&a._eq(ast::Int::from_u64(&source, 2)));
+    slv.assert(&a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
     let model = slv.get_model().unwrap();
@@ -475,11 +475,10 @@ fn test_float_add() {
     let solver = Solver::new(&ctx);
 
     let x = ast::Float::new_const_float32(&ctx, "x");
-    let x_plus_one =
-        ast::RoundingMode::round_towards_zero(&ctx).add(&x, ast::Float::from_f32(&ctx, 1.0));
+    let x_plus_one = ast::RoundingMode::round_towards_zero(&ctx).add(&x, 1.0f32);
     let y = ast::Float::from_f32(&ctx, std::f32::consts::PI);
 
-    solver.assert(&x_plus_one._eq(&y));
+    solver.assert(&x_plus_one._eq(y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -522,9 +521,8 @@ fn test_arbitrary_size_real_from_bigrational() {
     let num = BigInt::from_str("99999999999999999999998").unwrap();
     let den = BigInt::from_str("99999999999999999999999").unwrap();
     let ratio = BigRational::new(num, den);
-    let y = ast::Real::from_big_rational(&ctx, &ratio);
 
-    solver.assert(&x._eq(&y));
+    solver.assert(&x._eq(ratio));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -539,9 +537,8 @@ fn test_arbitrary_size_int_from_bigint() {
     let y = ast::Int::from_i64(&ctx, 1);
 
     let num2 = BigInt::from_str("99999999999999999999999").unwrap();
-    let z = ast::Int::from_big_int(&ctx, &num2);
 
-    solver.assert(&ast::Int::add(&ctx, &[&x, &y])._eq(&z));
+    solver.assert(&ast::Int::add(&ctx, &[&x, &y])._eq(num2));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -552,16 +549,14 @@ fn test_string_eq() {
     let solver = Solver::new(&ctx);
 
     let x = ast::String::from_str(&ctx, "foo").unwrap();
-    let y = ast::String::from_str(&ctx, "foo").unwrap();
-    let z = ast::String::from_str(&ctx, "bar").unwrap();
     let h = ast::String::new_const(&ctx, "h");
 
-    solver.assert(&x._eq(&y));
-    solver.assert(&x._eq(&z).not());
+    solver.assert(&x._eq("foo"));
+    solver.assert(&x._eq("bar").not());
     solver.assert(&h._eq(&x));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    solver.assert(&h._eq(&z));
+    solver.assert(&h._eq("bar"));
     assert_eq!(solver.check(), SatResult::Unsat);
 }
 
@@ -571,11 +566,7 @@ fn test_string_concat() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    let x = ast::String::from_str(&ctx, "foo").unwrap();
-    let y = ast::String::from_str(&ctx, "bar").unwrap();
-    let z = ast::String::from_str(&ctx, "foobar").unwrap();
-
-    solver.assert(&ast::String::concat(&ctx, &[&x, &y])._eq(&z));
+    solver.assert(&ast::String::concat(&ctx, &["foo", "bar"])._eq("foobar"));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -586,9 +577,8 @@ fn test_string_prefix() {
     let solver = Solver::new(&ctx);
 
     let x = ast::String::from_str(&ctx, "foo").unwrap();
-    let y = ast::String::from_str(&ctx, "foobar").unwrap();
 
-    solver.assert(&x.prefix(&y));
+    solver.assert(&x.prefix("foobar"));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -599,9 +589,8 @@ fn test_string_suffix() {
     let solver = Solver::new(&ctx);
 
     let x = ast::String::from_str(&ctx, "bar").unwrap();
-    let y = ast::String::from_str(&ctx, "foobar").unwrap();
 
-    solver.assert(&x.suffix(&y));
+    solver.assert(&x.suffix("foobar"));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -629,9 +618,9 @@ fn test_rec_func_def() {
 
     let fac = RecFuncDecl::new(&ctx, "fac", &[&Sort::int(&ctx)], &Sort::int(&ctx));
     let n = ast::Int::new_const(&ctx, "n");
-    let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
+    let n_minus_1 = &n - 1;
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
-    let cond: ast::Bool = n.le(ast::Int::from_i64(&ctx, 0));
+    let cond: ast::Bool = n.le(0);
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
@@ -647,7 +636,7 @@ fn test_rec_func_def() {
     solver.assert(&x._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
     solver.assert(&y._eq(ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
     solver.assert(&y._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
-    solver.assert(&y._eq(ast::Int::from_i64(&ctx, 120)));
+    solver.assert(&y._eq(120));
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -663,7 +652,7 @@ fn test_rec_func_def_unsat() {
     let n = ast::Int::new_const(&ctx, "n");
     let n_minus_1 = ast::Int::sub(&ctx, &[&n, &ast::Int::from_i64(&ctx, 1)]);
     let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
-    let cond: ast::Bool = n.le(ast::Int::from_i64(&ctx, 0));
+    let cond: ast::Bool = n.le(0);
     let body = cond.ite(
         &ast::Int::from_i64(&ctx, 1),
         &ast::Int::mul(&ctx, &[&n, &fac_of_n_minus_1.as_int().unwrap()]),
@@ -682,7 +671,7 @@ fn test_rec_func_def_unsat() {
 
     // If fac was an uninterpreted function, this assertion would work.
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
-    solver.assert(&y._eq(ast::Int::from_i64(&ctx, 25)));
+    solver.assert(&y._eq(25));
 
     assert_eq!(solver.check(), SatResult::Unsat);
 }
@@ -703,8 +692,8 @@ fn test_solver_unknown() {
     let x_cube = ast::Int::mul(&ctx, &[&x, &x, &x]);
     let y_cube = ast::Int::mul(&ctx, &[&y, &y, &y]);
     let z_cube = ast::Int::mul(&ctx, &[&z, &z, &z]);
-    let sum_of_cubes = &ast::Int::add(&ctx, &[&x_cube, &y_cube, &z_cube]);
-    let sum_of_cubes_is_42 = sum_of_cubes._eq(ast::Int::from_i64(&ctx, 42));
+    let sum_of_cubes = x_cube + y_cube + z_cube;
+    let sum_of_cubes_is_42 = sum_of_cubes._eq(42);
 
     let solver = Solver::new(&ctx);
     solver.assert(&sum_of_cubes_is_42);
@@ -729,8 +718,8 @@ fn test_optimize_unknown() {
     let x_cube = ast::Int::mul(&ctx, &[&x, &x, &x]);
     let y_cube = ast::Int::mul(&ctx, &[&y, &y, &y]);
     let z_cube = ast::Int::mul(&ctx, &[&z, &z, &z]);
-    let sum_of_cubes = &ast::Int::add(&ctx, &[&x_cube, &y_cube, &z_cube]);
-    let sum_of_cubes_is_42 = sum_of_cubes._eq(ast::Int::from_i64(&ctx, 42));
+    let sum_of_cubes = x_cube + y_cube + z_cube;
+    let sum_of_cubes_is_42 = sum_of_cubes._eq(42);
 
     let optimize = Optimize::new(&ctx);
     optimize.assert(&sum_of_cubes_is_42);
@@ -772,10 +761,10 @@ fn test_get_unsat_core() {
     let x = ast::Int::new_const(&ctx, "x");
 
     let x_is_three = ast::Bool::new_const(&ctx, "x-is-three");
-    solver.assert_and_track(&x._eq(ast::Int::from_i64(&ctx, 3)), &x_is_three);
+    solver.assert_and_track(&x._eq(3), &x_is_three);
 
     let x_is_five = ast::Bool::new_const(&ctx, "x-is-five");
-    solver.assert_and_track(&x._eq(ast::Int::from_i64(&ctx, 5)), &x_is_five);
+    solver.assert_and_track(&x._eq(5), &x_is_five);
 
     assert!(
         solver.get_unsat_core().is_empty(),
@@ -807,10 +796,10 @@ fn test_optimize_get_unsat_core() {
     let x = Int::new_const(&ctx, "x");
 
     let x_is_three = Bool::new_const(&ctx, "x-is-three");
-    optimize.assert_and_track(&x._eq(Int::from_i64(&ctx, 3)), &x_is_three);
+    optimize.assert_and_track(&x._eq(3), &x_is_three);
 
     let x_is_five = Bool::new_const(&ctx, "x-is-five");
-    optimize.assert_and_track(&x._eq(Int::from_i64(&ctx, 5)), &x_is_five);
+    optimize.assert_and_track(&x._eq(5), &x_is_five);
 
     assert!(
         optimize.get_unsat_core().is_empty(),
@@ -827,8 +816,8 @@ fn test_optimize_get_unsat_core() {
 
     // try check API
 
-    let a = x._eq(Int::from_i64(&ctx, 4));
-    let b = x._eq(Int::from_i64(&ctx, 6));
+    let a = x._eq(4);
+    let b = x._eq(6);
     let result = optimize.check(&[a.clone(), b.clone()]);
     assert_eq!(result, SatResult::Unsat);
 
@@ -1296,8 +1285,7 @@ fn test_tactic_skip() {
 
     let a = ast::Bool::new_const(&ctx, "a");
     let b = ast::Bool::new_const(&ctx, "b");
-    let bools = [&a, &b, &a];
-    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let a_and_b_and_a = &a & &b & &a;
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
 
@@ -1360,8 +1348,7 @@ fn test_tactic_and_then() {
 
     let a = ast::Bool::new_const(&ctx, "a");
     let b = ast::Bool::new_const(&ctx, "b");
-    let bools = [&a, &b, &a];
-    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let a_and_b_and_a = &a & &b & &a;
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
 
@@ -1384,8 +1371,7 @@ fn test_tactic_or_else() {
 
     let a = ast::Bool::new_const(&ctx, "a");
     let b = ast::Bool::new_const(&ctx, "b");
-    let bools = [&a, &b, &a];
-    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let a_and_b_and_a = &a & &b & &a;
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
 
@@ -1433,8 +1419,7 @@ fn test_goal_apply_tactic() {
     let a = ast::Bool::new_const(&ctx, "a");
     let b = ast::Bool::new_const(&ctx, "b");
 
-    let bools = [&a, &b, &a];
-    let a_and_b_and_a = Bool::and(&ctx, &bools);
+    let a_and_b_and_a = &a & &b & &a;
     let goal = Goal::new(&ctx, false, false, false);
     goal.assert(&a_and_b_and_a);
     test_apply_tactic(
@@ -1466,10 +1451,9 @@ fn test_goal_apply_tactic() {
         vec![a.clone(), b.clone()],
     );
 
-    let true_bool = ast::Bool::from_bool(&ctx, true);
     let false_bool = ast::Bool::from_bool(&ctx, false);
     let goal = Goal::new(&ctx, false, false, false);
-    let true_and_false_and_true = ast::Bool::and(&ctx, &[&true_bool, &false_bool, &true_bool]);
+    let true_and_false_and_true = ast::Bool::and(&ctx, &[true, false, true]);
     goal.assert(&true_and_false_and_true);
     test_apply_tactic(
         &ctx,
@@ -1521,14 +1505,11 @@ fn test_probe_names() {
     let ctx = Context::new(&cfg);
 
     let x = ast::Int::fresh_const(&ctx, "x");
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
-    let twenty = ast::Int::from_u64(&ctx, 20);
     let g = Goal::new(&ctx, false, false, false);
 
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
-    g.assert(&x.lt(&twenty));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
+    g.assert(&x.lt(20));
 
     let num_consts_probe = Probe::new(&ctx, "num-consts");
     assert_eq!(1.0, num_consts_probe.apply(&g));
@@ -1545,17 +1526,14 @@ fn test_probe_eq() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
 
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
-
     let two_probe = Probe::constant(&ctx, 2.0);
     let size_probe = Probe::new(&ctx, "size");
     let equals_two_probe = &size_probe.eq(&two_probe);
 
     let x = ast::Int::fresh_const(&ctx, "x");
     let g = Goal::new(&ctx, false, false, false);
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
     assert_eq!(1.0, equals_two_probe.apply(&g));
 }
 
@@ -1568,11 +1546,9 @@ fn test_probe_gt() {
     let gt_ten_probe = &size_probe.gt(&ten_probe);
 
     let x = ast::Int::fresh_const(&ctx, "x");
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
     let g = Goal::new(&ctx, false, false, false);
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
     assert_eq!(0.0, gt_ten_probe.apply(&g));
 }
 
@@ -1585,11 +1561,9 @@ fn test_probe_gte() {
     let ge_two_probe = &size_probe.ge(&two_probe);
 
     let x = ast::Int::fresh_const(&ctx, "x");
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
     let g = Goal::new(&ctx, false, false, false);
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
     assert_eq!(1.0, ge_two_probe.apply(&g));
 }
 
@@ -1602,11 +1576,9 @@ fn test_probe_le() {
     let le_two_probe = &size_probe.le(&two_probe);
 
     let x = ast::Int::fresh_const(&ctx, "x");
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
     let g = Goal::new(&ctx, false, false, false);
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
     assert_eq!(1.0, le_two_probe.apply(&g));
 }
 
@@ -1619,11 +1591,9 @@ fn test_probe_lt() {
     let le_ten_probe = &size_probe.le(&ten_probe);
 
     let x = ast::Int::fresh_const(&ctx, "x");
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
     let g = Goal::new(&ctx, false, false, false);
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
     assert_eq!(1.0, le_ten_probe.apply(&g));
 }
 
@@ -1636,11 +1606,9 @@ fn test_probe_ne() {
     let ne_two_probe = &size_probe.ne(&two_probe);
 
     let x = ast::Int::fresh_const(&ctx, "x");
-    let zero = ast::Int::from_u64(&ctx, 0);
-    let ten = ast::Int::from_u64(&ctx, 10);
     let g = Goal::new(&ctx, false, false, false);
-    g.assert(&x.gt(&zero));
-    g.assert(&x.lt(&ten));
+    g.assert(&x.gt(0));
+    g.assert(&x.lt(10));
     assert_eq!(0.0, ne_two_probe.apply(&g));
 }
 
@@ -1859,14 +1827,12 @@ fn iterate_all_solutions() {
     let a = &Int::new_const(ctx, "a");
     let b = &Int::new_const(ctx, "b");
     let one = Int::from_u64(ctx, 1);
-    let two = Int::from_u64(ctx, 2);
-    let five = &Int::from_u64(ctx, 5);
 
     solver.assert(&one.le(a));
-    solver.assert(&a.le(five));
+    solver.assert(&a.le(5));
     solver.assert(&one.le(b));
-    solver.assert(&b.le(five));
-    solver.assert(&a.ge(&(two * b)));
+    solver.assert(&b.le(5));
+    solver.assert(&a.ge(&(2 * b)));
 
     let mut solutions = std::collections::HashSet::new();
     while solver.check() == SatResult::Sat {
@@ -2001,8 +1967,7 @@ fn test_model_iter() {
     let solver = Solver::new(&ctx);
 
     let a = ast::Int::new_const(&ctx, "a");
-    let two = ast::Int::from_u64(&ctx, 2);
-    solver.assert(&a._eq(&two));
+    solver.assert(&a._eq(2));
     solver.check();
 
     let model = solver.get_model().unwrap();
