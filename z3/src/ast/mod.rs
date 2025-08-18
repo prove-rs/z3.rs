@@ -346,8 +346,8 @@ pub trait Ast: fmt::Debug {
         }
     }
 
-    fn check_ctx(&self, ctx: &Context){
-        if self.get_ctx() != ctx{
+    fn check_ctx(&self, ctx: &Context) {
+        if self.get_ctx() != ctx {
             let s_ctx = self.get_ctx();
             panic!(
                 "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {ctx:?})!\
@@ -521,7 +521,7 @@ macro_rules! impl_from_try_into_dynamic {
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
         }
-        
+
         impl IntoAst<Dynamic> for $ast {
             fn into_ast(self, d: &Dynamic) -> Dynamic {
                 self.check_ctx(d.get_ctx());
