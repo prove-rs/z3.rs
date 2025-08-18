@@ -200,10 +200,10 @@ mod rayon_tests {
             let ctx = Context::default();
             let moved = sendable.recover(&ctx);
             let solver = Solver::new(&ctx);
-            solver.assert(&moved._eq(Int::from_i64(&ctx, i)));
+            solver.assert(&moved._eq(i));
             assert_eq!(solver.check(), crate::SatResult::Sat);
             let model = solver.get_model().unwrap();
-            assert_eq!(model.eval(&moved, true), Some(Int::from_i64(&ctx, i)));
+            assert_eq!(model.eval(&moved, true).unwrap(), i);
         })
     }
 }
