@@ -240,10 +240,10 @@ fn test_ast_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&destination);
-    slv.assert(&translated_a._eq(ast::Int::from_u64(&destination, 2)));
+    slv.assert(&translated_a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
-    slv.assert(&translated_a._eq(ast::Int::from_u64(&destination, 3)));
+    slv.assert(&translated_a._eq(3));
     assert_eq!(slv.check(), SatResult::Unsat);
 }
 
