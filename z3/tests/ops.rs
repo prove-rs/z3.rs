@@ -8,16 +8,16 @@ use z3::{
 fn test_bv_ops() {
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = BV::new_const( "a", 5);
-            let b = BV::new_const( "b", 5);
+            let a = BV::new_const("a", 5);
+            let b = BV::new_const("b", 5);
             let _ = a $op b $op 2u64 $op 2i64;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = BV::new_const( "a", 5);
-            let b = BV::new_const( "b", 5);
+            let mut a = BV::new_const("a", 5);
+            let b = BV::new_const("b", 5);
             a $assign b;
             a $assign 2u64;
             a $assign 2i64;
@@ -25,7 +25,7 @@ fn test_bv_ops() {
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = BV::new_const( "a", 5);
+            let a = BV::new_const("a", 5);
             let _ = $op a;
         };
     }
@@ -45,16 +45,16 @@ fn test_bv_ops() {
 fn test_int_ops() {
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = Int::new_const( "a");
-            let b = Int::new_const( "b");
+            let a = Int::new_const("a");
+            let b = Int::new_const("b");
             let _ = a $op b $op 2u64 $op 2i64;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = Int::new_const( "a");
-            let b = Int::new_const( "b");
+            let mut a = Int::new_const("a");
+            let b = Int::new_const("b");
             a $assign b;
             a $assign 2u64;
             a $assign 2i64;
@@ -62,7 +62,7 @@ fn test_int_ops() {
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Int::new_const( "a");
+            let a = Int::new_const("a");
             let _ = $op a;
         };
     }
@@ -86,22 +86,22 @@ fn test_pow_ret_real() {
 fn test_real_ops() {
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = Real::new_const( "a");
-            let b = Real::new_const( "b");
+            let a = Real::new_const("a");
+            let b = Real::new_const("b");
             let _ = a $op b;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = Real::new_const( "a");
-            let b = Real::new_const( "b");
+            let mut a = Real::new_const("a");
+            let b = Real::new_const("b");
             a $assign b;
         };
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Real::new_const( "a");
+            let a = Real::new_const("a");
             let _ = $op a;
         };
     }
@@ -117,7 +117,7 @@ fn test_real_ops() {
 fn test_float32_ops() {
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Float::new_const_float32( "a");
+            let a = Float::new_const_float32("a");
             let _ = $op a;
         };
     }
@@ -151,7 +151,7 @@ fn test_float32_ops() {
 fn test_double_ops() {
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Float::new_const_double( "a");
+            let a = Float::new_const_double("a");
             let _ = $op a;
         };
     }
@@ -218,16 +218,16 @@ fn test_double_ops() {
 fn test_bool_ops() {
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = Bool::new_const( "a");
-            let b = Bool::new_const( "b");
+            let a = Bool::new_const("a");
+            let b = Bool::new_const("b");
             let _ = a $op b $op true $op false;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = Bool::new_const( "a");
-            let b = Bool::new_const( "b");
+            let mut a = Bool::new_const("a");
+            let b = Bool::new_const("b");
             a $assign b;
             a $assign true;
             a $assign false;
@@ -235,7 +235,7 @@ fn test_bool_ops() {
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Bool::new_const( "a");
+            let a = Bool::new_const("a");
             let _ = $op a;
         };
     }

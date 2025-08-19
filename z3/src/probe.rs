@@ -79,7 +79,7 @@ impl Probe {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::constant( 1.0);
+    /// let probe = Probe::constant(1.0);
     /// ```
     pub fn constant(ctx: &Context, val: f64) -> Probe {
         unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }

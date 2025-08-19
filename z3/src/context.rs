@@ -108,7 +108,7 @@ impl Context {
     /// let ctx = unsafe { Context::from_raw(raw_ctx) };
     /// // Use `ctx` as usual...
     /// unsafe { Z3_del_config(cfg) };
-    /// let b = Bool::from_bool( true);
+    /// let b = Bool::from_bool(true);
     /// assert_eq!(b.as_bool(), Some(true));
     /// ```
     pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {

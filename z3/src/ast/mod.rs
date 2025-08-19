@@ -611,11 +611,11 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const( "x");
+/// let x = ast::Int::new_const("x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
 ///     &Context::thread_local(),
 ///     &[&x],
@@ -627,7 +627,7 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64( 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn forall_const(
@@ -671,11 +671,11 @@ pub fn forall_const(
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const( "x");
+/// let x = ast::Int::new_const("x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
 ///     &Context::thread_local(),
 ///     &[&x],
@@ -687,7 +687,7 @@ pub fn forall_const(
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64( 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn exists_const(
@@ -740,11 +740,11 @@ pub fn exists_const(
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const( "x");
+/// let x = ast::Int::new_const("x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
 ///     &Context::thread_local(),
 ///     true,
@@ -761,7 +761,7 @@ pub fn exists_const(
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64( 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 #[allow(clippy::too_many_arguments)]
@@ -825,23 +825,23 @@ pub fn quantifier_const(
 /// #
 /// # let solver = Solver::new();
 /// #
-/// let input = Int::fresh_const( "");
+/// let input = Int::fresh_const("");
 /// let lambda = lambda_const(
 ///     &Context::thread_local(),
 ///     &[&input],
-///     &Dynamic::from_ast(&Int::add(&[&input, &Int::from_i64( 2)])),
+///     &Dynamic::from_ast(&Int::add(&[&input, &Int::from_i64(2)])),
 /// );
 ///
 /// solver.assert(
-///     &lambda.select_n(&[&Int::from_i64( 1)]).as_int().unwrap()
-///         ._eq(&Int::from_i64( 3))
+///     &lambda.select_n(&[&Int::from_i64(1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(3))
 /// );
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
 ///
 /// solver.assert(
-///     &lambda.select_n(&[&Int::from_i64( 1)]).as_int().unwrap()
-///         ._eq(&Int::from_i64( 2))
+///     &lambda.select_n(&[&Int::from_i64(1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(2))
 /// );
 ///
 /// assert_eq!(solver.check(), SatResult::Unsat);

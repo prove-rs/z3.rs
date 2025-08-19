@@ -78,7 +78,7 @@ impl Seq {
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Int, Seq};
     /// # let solver = Solver::new();
-    /// let seq = Seq::fresh_const( "", &Sort::bool());
+    /// let seq = Seq::fresh_const("", &Sort::bool());
     ///
     /// solver.assert(
     ///     &seq.nth(0)

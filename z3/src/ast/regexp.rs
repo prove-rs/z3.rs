@@ -12,7 +12,7 @@ use z3_sys::*;
 /// use z3::{Config, Context, Solver, SatResult};
 ///
 /// let solver = Solver::new();
-/// let s = ast::String::new_const( "s");
+/// let s = ast::String::new_const("s");
 ///
 /// // the regexp representing foo[a-c]*
 /// let a = ast::Regexp::concat(&[

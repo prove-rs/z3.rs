@@ -51,10 +51,10 @@ impl RecFuncDecl {
     ///     "f",
     ///     &[&Sort::int()],
     ///     &Sort::int());
-    /// let n = Int::new_const( "n");
+    /// let n = Int::new_const("n");
     /// f.add_def(
     ///     &[&n],
-    ///     &Int::add(&[&n, &Int::from_i64( 1)])
+    ///     &Int::add(&[&n, &Int::from_i64(1)])
     /// );
     ///
     /// let f_of_n = &f.apply(&[&n.clone()]);
