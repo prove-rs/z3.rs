@@ -26,6 +26,7 @@ mod rounding_mode;
 mod seq;
 mod set;
 mod string;
+mod numeric;
 
 pub use array::Array;
 pub use bool::Bool;

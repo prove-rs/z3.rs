@@ -2054,10 +2054,10 @@ fn test_div_int_real() {
     let a = ast::Int::from_i64(&ctx, 1);
     let b =
         ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(13), BigInt::from(10)));
-    let res: ast::Real<'_> =
+    let res =
         ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(10), BigInt::from(13)));
-    let div1= &a / &b;
-    let div2= &a / &(&b / &a);
+    let div1 = &a / &b;
+    let div2 = &a / &(&b / &a);
 
     solver.assert(&div1._eq(&res));
     solver.assert(&div2._eq(&res));
@@ -2074,7 +2074,7 @@ fn test_pow_int_real() {
 
     let a = ast::Int::from_i64(&ctx, 2);
     let b = ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(2), BigInt::from(1)));
-    let res: ast::Real<'_> =
+    let res =
         ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(4), BigInt::from(1)));
     let pow1 = &a.pow(&b);
     let pow2 = &b.pow(&a);
