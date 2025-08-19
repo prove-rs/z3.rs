@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.3...z3-v0.14.4) - 2025-08-19
+
+### Added
+
+- Add string comparison APIs ([#386](https://github.com/prove-rs/z3.rs/pull/386)) (by @mehrad31415) - #386
+- Add Sequence::empty and contains Methods ([#390](https://github.com/prove-rs/z3.rs/pull/390)) (by @mehrad31415) - #390
+- Add Constructors for Floating-Point NaN Values ([#392](https://github.com/prove-rs/z3.rs/pull/392)) (by @mehrad31415) - #392
+
+### Other
+
+- Move Model Retrieval Docs ([#394](https://github.com/prove-rs/z3.rs/pull/394)) (by @mehrad31415) - #394
+
+### Contributors
+
+* @mehrad31415
+
 ## [0.14.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.2...z3-v0.14.3) - 2025-08-18
 
 ### Fixed
