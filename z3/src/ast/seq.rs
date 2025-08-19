@@ -78,10 +78,8 @@ impl Seq {
     /// ```
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Int, Seq};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
     /// # let solver = Solver::new();
-    /// let seq = Seq::fresh_const( "", &Sort::bool(&ctx));
+    /// let seq = Seq::fresh_const( "", &Sort::bool());
     ///
     /// solver.assert(
     ///     &seq.nth(0)
@@ -113,9 +111,9 @@ impl Seq {
     /// let solver = Solver::new();
     /// let seq1 = Seq::unit(&ast::Int::from_u64(0));
     /// let seq2 = Seq::unit(&ast::Int::from_u64(1));
-    /// let concatenated = Seq::concat(&ctx, &[&seq1, &seq2]);
+    /// let concatenated = Seq::concat(&[&seq1, &seq2]);
     ///
-    /// solver.assert(&Bool::and(&ctx, &[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));
+    /// solver.assert(&Bool::and(&[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
     pub fn contains<T: IntoAst<Self>>(&self, containee: T) -> Bool {

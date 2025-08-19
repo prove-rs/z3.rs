@@ -51,8 +51,8 @@ impl Tactic {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let tactics: Vec<_> = Tactic::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(tactics.contains(&"ufbv"));
+    /// let tactics: Vec<_> = Tactic::list_all().into_iter().filter_map(|r| r.ok()).collect();
+    /// assert!(tactics.contains(&"ufbv".to_string()));
     /// ```
     #[z3(Context::thread_local)]
     pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {

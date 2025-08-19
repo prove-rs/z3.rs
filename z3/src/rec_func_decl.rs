@@ -47,24 +47,21 @@ impl RecFuncDecl {
     /// ```
     /// # use z3::{Config, Context, RecFuncDecl, Solver, Sort, Symbol, ast::Int, SatResult};
     /// # use std::convert::TryInto;
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
     /// let mut f = RecFuncDecl::new(
-    ///     &ctx,
     ///     "f",
     ///     &[&Sort::int()],
     ///     &Sort::int());
     /// let n = Int::new_const( "n");
     /// f.add_def(
     ///     &[&n],
-    ///     &Int::add(&ctx, &[&n, &Int::from_i64( 1)])
+    ///     &Int::add(&[&n, &Int::from_i64( 1)])
     /// );
     ///
     /// let f_of_n = &f.apply(&[&n.clone()]);
     ///
     /// let solver = Solver::new();
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
-    ///         &ctx,
+    ///         &Context::thread_local(),
     ///         &[&n],
     ///         &[],
     ///         &n.lt(&f_of_n.as_int().unwrap())

@@ -140,8 +140,6 @@ fn test_solve_simple_semver_example() {
         .collect(),
     );
 
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
     let opt = Optimize::new();
 
     let mut root: HashMap<String, VersionReq> = HashMap::new();

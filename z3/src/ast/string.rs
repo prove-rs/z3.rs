@@ -77,7 +77,7 @@ impl String {
     /// # use z3::ast::{Ast as _, Int};
     /// #
     /// # let cfg = Config::new();
-    /// #
+    /// # let solver = Solver::new();
     /// let s = z3::ast::String::fresh_const("");
     ///
     /// solver.assert(

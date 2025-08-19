@@ -46,12 +46,9 @@ impl FuncDecl {
     ///
     /// ```
     /// # use z3::{Config, Context, FuncDecl, Solver, Sort, Symbol};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
     /// let f = FuncDecl::new(
-    ///     &ctx,
     ///     "f",
-    ///     &[&Sort::int(), &Sort::real(&ctx)],
+    ///     &[&Sort::int(), &Sort::real()],
     ///     &Sort::int());
     /// assert_eq!(f.arity(), 2);
     /// ```

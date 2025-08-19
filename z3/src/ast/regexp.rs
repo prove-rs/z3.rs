@@ -11,20 +11,18 @@ use z3_sys::*;
 /// use z3::ast;
 /// use z3::{Config, Context, Solver, SatResult};
 ///
-/// let cfg = Config::new();
-/// let ctx = &Context::new(&cfg);
 /// let solver = Solver::new();
 /// let s = ast::String::new_const( "s");
 ///
 /// // the regexp representing foo[a-c]*
-/// let a = ast::Regexp::concat(ctx, &[
-///     &ast::Regexp::literal(ctx, "foo"),
-///     &ast::Regexp::range(ctx, &'a', &'c').star()
+/// let a = ast::Regexp::concat(&[
+///     &ast::Regexp::literal("foo"),
+///     &ast::Regexp::range(&'a', &'c').star()
 /// ]);
 /// // the regexp representing [a-z]+
-/// let b = ast::Regexp::range(ctx, &'a', &'z').plus();
+/// let b = ast::Regexp::range(&'a', &'z').plus();
 /// // intersection of a and b is non-empty
-/// let intersect = ast::Regexp::intersect(ctx, &[&a, &b]);
+/// let intersect = ast::Regexp::intersect(&[&a, &b]);
 /// solver.assert(&s.regex_matches(&intersect));
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// ```

@@ -52,7 +52,7 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> proc_macro2::To
     let inner_method = ImplItem::Fn(ImplItemFn {
         attrs: attrs_for_inner,
         vis: vis.clone(),
-        defaultness: m.defaultness.clone(),
+        defaultness: m.defaultness,
         sig: inner_sig,
         block: m.block,
     });
@@ -122,7 +122,7 @@ fn split_attrs(attrs: &[Attribute], name: &str) -> (Vec<Attribute>, Vec<Attribut
 }
 
 fn has_receiver(sig: &Signature) -> bool {
-    matches!(sig.receiver(), Some(_))
+    sig.receiver().is_some()
 }
 
 fn extract_ctx_and_args(sig: &Signature) -> Result<(usize, Pat, Vec<Pat>), String> {

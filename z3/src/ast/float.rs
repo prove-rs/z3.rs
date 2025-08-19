@@ -57,12 +57,12 @@ impl Float {
     /// let ctx = Context::default();
     /// let solver = Solver::new();
     ///
-    /// let nan_32 = Float::nan32(&ctx);
-    /// let nan_64 = Float::nan64(&ctx);
+    /// let nan_32 = Float::nan32();
+    /// let nan_64 = Float::nan64();
     ///
     /// solver.assert(&nan_32._eq(&nan_32));
     /// solver.assert(&nan_64._eq(&nan_64));
-    /// solver.assert(&nan_32._eq(&Float::from_f32(&ctx, 1.0)).not());
+    /// solver.assert(&nan_32._eq(&Float::from_f32(1.0)).not());
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
     #[z3(Context::thread_local)]
@@ -82,12 +82,12 @@ impl Float {
     /// let ctx = Context::default();
     /// let solver = Solver::new();
     ///
-    /// let nan_32 = Float::nan32(&ctx);
-    /// let nan_64 = Float::nan64(&ctx);
+    /// let nan_32 = Float::nan32();
+    /// let nan_64 = Float::nan64();
     ///
     /// solver.assert(&nan_32._eq(&nan_32));
     /// solver.assert(&nan_64._eq(&nan_64));
-    /// solver.assert(&nan_32._eq(&Float::from_f32(&ctx, 1.0)).not());
+    /// solver.assert(&nan_32._eq(&Float::from_f32(1.0)).not());
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
     #[z3(Context::thread_local)]
@@ -270,7 +270,7 @@ mod tests {
     #[test]
     fn test_nonstandard_float() {
         // this float has a nonstandard size
-        let f1 = Float::new_const( "weird", 15, 53);
+        let f1 = Float::new_const("weird", 15, 53);
         let solver = Solver::new();
         // but we can make compatible symbolic floats out of a f64!
         solver.assert(f1._eq(300.0));

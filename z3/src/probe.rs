@@ -27,8 +27,8 @@ impl Probe {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let probes: Vec<_> = Probe::list_all().filter_map(|r| r.ok()).collect();
-    /// assert!(probes.contains("is-quasi-pb"));
+    /// let probes: Vec<_> = Probe::list_all().into_iter().filter_map(|r| r.ok()).collect();
+    /// assert!(probes.contains(&"is-quasi-pb".to_string()));
     /// ```
     #[z3(Context::thread_local)]
     pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {

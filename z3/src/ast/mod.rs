@@ -611,8 +611,6 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new();
 /// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
 ///
@@ -620,7 +618,7 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
-///     &ctx,
+///     &Context::thread_local(),
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x)
@@ -673,7 +671,6 @@ pub fn forall_const(
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new();
 /// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
 ///
@@ -681,7 +678,7 @@ pub fn forall_const(
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
-///     &ctx,
+///     &Context::thread_local(),
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x).not()
@@ -743,8 +740,6 @@ pub fn exists_const(
 /// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new();
 /// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
 ///
@@ -752,7 +747,7 @@ pub fn exists_const(
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
-///     &ctx,
+///     &Context::thread_local(),
 ///     true,
 ///     0,
 ///     "def_f",
@@ -829,15 +824,13 @@ pub fn quantifier_const(
 /// #     Config, Context, Solver, SatResult,
 /// # };
 /// #
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
 /// # let solver = Solver::new();
 /// #
 /// let input = Int::fresh_const( "");
 /// let lambda = lambda_const(
-///     &ctx,
+///     &Context::thread_local(),
 ///     &[&input],
-///     &Dynamic::from_ast(&Int::add(&ctx, &[&input, &Int::from_i64( 2)])),
+///     &Dynamic::from_ast(&Int::add(&[&input, &Int::from_i64( 2)])),
 /// );
 ///
 /// solver.assert(

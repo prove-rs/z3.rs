@@ -11,8 +11,6 @@ use z3::*;
 fn test_optimize_assert_soft_and_get_objectives() {
     const COUNT: u64 = 10;
 
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
     let opt = Optimize::new();
 
     let int = Sort::int();

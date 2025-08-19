@@ -127,9 +127,9 @@ impl<T: Translate> PrepareSynchronized for T {
 #[cfg(test)]
 #[cfg(not(target_arch = "wasm32"))]
 mod thread_tests {
+    use crate::Solver;
     use crate::ast::{Ast, Bool};
     use crate::translate::synchronization::PrepareSynchronized;
-    use crate::{Context, Solver};
 
     #[test]
     fn test_send() {
@@ -145,7 +145,6 @@ mod thread_tests {
 
     #[test]
     fn test_send_vec() {
-        let ctx = Context::default();
         let bv = vec![Bool::from_bool(true); 8];
         let sendable = bv.synchronized();
         std::thread::spawn(move || {
@@ -160,8 +159,7 @@ mod thread_tests {
 
     #[test]
     fn test_round_trip() {
-        let ctx = Context::default();
-        let bool = Bool::new_const( "hello");
+        let bool = Bool::new_const("hello");
         let sendable = bool.synchronized();
         let model = std::thread::spawn(move || {
             let moved = sendable.recover();
@@ -174,7 +172,7 @@ mod thread_tests {
         .join()
         .expect("uh oh");
         let model = model.recover();
-        assert_eq!(model.eval(&bool, true), Some(Bool::from_bool( true)));
+        assert_eq!(model.eval(&bool, true), Some(Bool::from_bool(true)));
     }
 }
 
@@ -187,7 +185,7 @@ mod rayon_tests {
     #[test]
     fn test_rayon() {
         use rayon::prelude::*;
-        let int = Int::fresh_const( "hello").add(2);
+        let int = Int::fresh_const("hello").add(2);
         let sendable = int.synchronized();
         (0..100).into_par_iter().for_each(|i| {
             let moved = sendable.recover();
