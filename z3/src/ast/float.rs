@@ -34,7 +34,7 @@ impl Float {
         unsafe { Z3_get_numeral_double(self.ctx.z3_ctx.0, self.z3_ast) }
     }
 
-    /// NaN for an arbitrary FP sort.
+    /// A NaN (Not a Number) value of the given ([`Float`]) [`Sort`].
     pub fn nan(ctx: &Context, sort: &Sort) -> Float {
         assert!(matches!(sort.kind(), SortKind::FloatingPoint));
         unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.0, sort.z3_sort)) }
