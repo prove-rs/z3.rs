@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.5...z3-sys-v0.9.6) - 2025-08-14
+
+### Added
+
+- add bundled path override ([#408](https://github.com/prove-rs/z3.rs/pull/408)) (by @toolCHAINZ)
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.9.5](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.4...z3-sys-v0.9.5) - 2025-08-06
+
+### Added
+
+- Bump to Rust 2024 edition ([#381](https://github.com/prove-rs/z3.rs/pull/381)) (by @Evian-Zhang) - #381
+
+### Contributors
+
+* @Evian-Zhang
+
 ## [0.9.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.3...z3-sys-v0.9.4) - 2025-07-17
 
 ### Added

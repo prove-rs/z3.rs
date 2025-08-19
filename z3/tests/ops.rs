@@ -269,7 +269,7 @@ fn test_bool_ops() {
     test_unary_op!(!);
 }
 
-fn assert_bool_child<'c>(node: &impl Ast<'c>, idx: usize, expected: &Bool<'c>) {
+fn assert_bool_child(node: &impl Ast, idx: usize, expected: &Bool) {
     assert_eq!(&node.nth_child(idx).unwrap().as_bool().unwrap(), expected);
 }
 
@@ -313,7 +313,7 @@ fn test_ast_children() {
     assert_eq!(children[2].as_bool().unwrap(), c);
 }
 
-fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
+fn assert_ast_attributes<T: Ast>(expr: &T, is_const: bool) {
     assert_eq!(expr.kind(), AstKind::App);
     assert!(expr.is_app());
     assert_eq!(expr.is_const(), is_const);

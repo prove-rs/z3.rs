@@ -315,7 +315,8 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
 /// Build z3 with bundled source codes.
 #[cfg(feature = "bundled")]
 fn build_bundled_z3() {
-    let mut cfg = cmake::Config::new("z3");
+    let bundled_path = env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or("z3".to_string());
+    let mut cfg = cmake::Config::new(bundled_path);
     // Don't build `libz3.so`, build `libz3.a` instead.
     cfg.define("Z3_BUILD_LIBZ3_SHARED", "false")
         // Don't build the Z3 repl.
