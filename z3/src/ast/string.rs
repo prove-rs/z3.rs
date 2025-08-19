@@ -148,6 +148,49 @@ impl String {
         }
     }
 
+    /// Greater than in lexicographic order (str.>  s1 s2)
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, String};
+    ///
+    /// let ctx = Context::default();
+    /// let solver = Solver::new(&ctx);
+    ///
+    /// let string1 = String::from_str(&ctx, "apple").unwrap();
+    /// let string2 = String::from_str(&ctx, "apple juice").unwrap();
+    ///
+    /// solver.assert(&string1.str_gt(&string2));
+    /// assert_eq!(solver.check(), z3::SatResult::Unsat);
+    ///
+    /// let solver = Solver::new(&ctx);
+    /// solver.assert(&string1.str_lt(&string2));
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
+    pub fn str_gt(&self, other: &Self) -> Bool {
+        other.str_lt(self)
+    }
+
+    /// Greater than or equal to in lexicographic order (str.>= s1 s2)
+    /// Anything is greater or equal than itself (or less than equal itself).
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, String};
+    ///
+    /// let ctx = Context::default();
+    /// let solver = Solver::new(&ctx);
+    ///
+    /// let string1 = String::from_str(&ctx, "apple").unwrap();
+    ///
+    /// solver.assert(&string1.str_ge(&string1));
+    /// solver.assert(&string1.str_le(&string1));
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
+    pub fn str_ge(&self, other: &Self) -> Bool {
+        other.str_le(self)
+    }
+
     varop! {
         /// Appends the argument strings to `Self`
         concat(Z3_mk_seq_concat, String);
@@ -165,5 +208,9 @@ impl String {
         prefix(Z3_mk_seq_prefix, Bool);
         /// Checks whether `Self` is a suffix of the argument
         suffix(Z3_mk_seq_suffix, Bool);
+        /// Checks whether `Self` is less than the argument in lexicographic order (str.<  s1 s2)
+        str_lt(Z3_mk_str_lt, Bool);
+        /// Checks whether `Self` is less than or equal to the argument in lexicographic order (str.<= s1 s2)
+        str_le(Z3_mk_str_le, Bool);
     }
 }
