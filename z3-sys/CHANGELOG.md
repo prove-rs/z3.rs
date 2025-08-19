@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.7](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.6...z3-sys-v0.9.7) - 2025-08-19
+
+### Added
+
+- add string comparison APIs ([#386](https://github.com/prove-rs/z3.rs/pull/386)) (by @mehrad31415) - #386
+
+### Contributors
+
+* @mehrad31415
+
 ## [0.9.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.5...z3-sys-v0.9.6) - 2025-08-14
 
 ### Added
