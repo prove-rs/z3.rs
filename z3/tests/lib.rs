@@ -2002,8 +2002,8 @@ fn test_add_int_real() {
     let sum1 = &a + &b;
     let sum2 = &b + &a;
 
-    solver.assert(&sum1._eq(&res));
-    solver.assert(&sum2._eq(&res));
+    solver.assert(sum1._eq(&res));
+    solver.assert(sum2._eq(&res));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -2021,8 +2021,8 @@ fn test_sub_int_real() {
     let sub1 = &a - &b;
     let sub2 = -(&b - &a);
 
-    solver.assert(&sub1._eq(&res));
-    solver.assert(&sub2._eq(&res));
+    solver.assert(sub1._eq(&res));
+    solver.assert(sub2._eq(&res));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -2040,8 +2040,8 @@ fn test_mul_int_real() {
     let mul1 = &a * &b;
     let mul2 = &b * &a;
 
-    solver.assert(&mul1._eq(&res));
-    solver.assert(&mul2._eq(&res));
+    solver.assert(mul1._eq(&res));
+    solver.assert(mul2._eq(&res));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -2059,8 +2059,8 @@ fn test_div_int_real() {
     let div1 = &a / &b;
     let div2 = &a / &(&b / &a);
 
-    solver.assert(&div1._eq(&res));
-    solver.assert(&div2._eq(&res));
+    solver.assert(div1._eq(&res));
+    solver.assert(div2._eq(&res));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -2079,7 +2079,7 @@ fn test_pow_int_real() {
     let pow1 = &a.pow(&b);
     let pow2 = &b.pow(&a);
 
-    solver.assert(&pow1._eq(&res));
-    solver.assert(&pow2._eq(&res));
+    solver.assert(pow1._eq(&res));
+    solver.assert(pow2._eq(&res));
     assert_eq!(solver.check(), SatResult::Sat);
 }

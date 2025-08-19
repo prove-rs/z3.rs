@@ -20,13 +20,13 @@ mod datatype;
 mod dynamic;
 mod float;
 mod int;
+mod numeric;
 mod real;
 mod regexp;
 mod rounding_mode;
 mod seq;
 mod set;
 mod string;
-mod numeric;
 
 pub use array::Array;
 pub use bool::Bool;
