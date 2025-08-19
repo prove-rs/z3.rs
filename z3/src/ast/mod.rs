@@ -883,5 +883,5 @@ impl fmt::Display for IsNotApp {
     }
 }
 
-pub(crate) use {binop, trinop, unop, varop};
 use z3_macros::z3;
+pub(crate) use {binop, trinop, unop, varop};

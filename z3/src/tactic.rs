@@ -57,10 +57,12 @@ impl Tactic {
     #[z3(Context::thread_local)]
     pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {
         let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.0) };
-        (0..p).map(move |n| {
-            let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.0, n) };
-            unsafe { CStr::from_ptr(t) }.to_str().map(String::from)
-        }).collect()
+        (0..p)
+            .map(move |n| {
+                let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.0, n) };
+                unsafe { CStr::from_ptr(t) }.to_str().map(String::from)
+            })
+            .collect()
     }
 
     unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {

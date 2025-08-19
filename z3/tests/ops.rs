@@ -6,7 +6,6 @@ use z3::{
 
 #[test]
 fn test_bv_ops() {
-
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = BV::new_const( "a", 5);
@@ -44,7 +43,6 @@ fn test_bv_ops() {
 
 #[test]
 fn test_int_ops() {
-
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = Int::new_const( "a");
@@ -86,7 +84,6 @@ fn test_pow_ret_real() {
 
 #[test]
 fn test_real_ops() {
-
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = Real::new_const( "a");
@@ -118,7 +115,6 @@ fn test_real_ops() {
 
 #[test]
 fn test_float32_ops() {
-
     macro_rules! test_unary_op {
         ($op:tt) => {
             let a = Float::new_const_float32( "a");
@@ -153,7 +149,6 @@ fn test_float32_ops() {
 
 #[test]
 fn test_double_ops() {
-
     macro_rules! test_unary_op {
         ($op:tt) => {
             let a = Float::new_const_double( "a");
@@ -221,7 +216,6 @@ fn test_double_ops() {
 
 #[test]
 fn test_bool_ops() {
-
     macro_rules! test_binary_op {
         ($op:tt) => {
             let a = Bool::new_const( "a");
@@ -258,7 +252,6 @@ fn assert_bool_child(node: &impl Ast, idx: usize, expected: &Bool) {
 
 #[test]
 fn test_ast_children() {
-
     let a = Bool::new_const("a");
     assert_eq!(a.num_children(), 0);
     assert_eq!(a.nth_child(0), None);
@@ -302,7 +295,6 @@ fn assert_ast_attributes<T: Ast>(expr: &T, is_const: bool) {
 
 #[test]
 fn test_ast_attributes() {
-
     let a = Bool::new_const("a");
     let b = Bool::from_bool(false);
     let not_a = a.not();
@@ -331,7 +323,6 @@ fn test_ast_attributes() {
 
 #[test]
 fn test_func_decl_attributes() {
-
     let const_decl = FuncDecl::new("c", &[], &Sort::bool());
     assert_eq!(const_decl.kind(), DeclKind::UNINTERPRETED);
     assert_eq!(const_decl.name(), "c");

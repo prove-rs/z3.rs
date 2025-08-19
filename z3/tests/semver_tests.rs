@@ -154,21 +154,21 @@ fn test_solve_simple_semver_example() {
 
     // Make a root Z3 Int constant for each pkg we're trying to solve for.
     for (k, v) in &root {
-        let ast = ast::Int::fresh_const( "root-pkg");
+        let ast = ast::Int::fresh_const("root-pkg");
         info!("new AST for root {k}");
 
         match first_version_req_index(&smap, k, v) {
             None => (),
             Some(low) => {
                 info!("Asserting: {k} >= #{low} (root)");
-                opt.assert(&ast.ge(ast::Int::from_u64( low as u64)));
+                opt.assert(&ast.ge(ast::Int::from_u64(low as u64)));
             }
         }
         match last_version_req_index(&smap, k, v) {
             None => (),
             Some(high) => {
                 info!("Asserting: {k} <= #{high} (root)");
-                opt.assert(&ast.le(ast::Int::from_u64( high as u64)));
+                opt.assert(&ast.le(ast::Int::from_u64(high as u64)));
             }
         }
         asts.insert(k.clone(), ast);
@@ -183,7 +183,7 @@ fn test_solve_simple_semver_example() {
     for k in (smap).keys() {
         asts.entry(k.clone()).or_insert_with(|| {
             info!("new AST for {k}");
-            ast::Int::fresh_const( "pkg")
+            ast::Int::fresh_const("pkg")
         });
     }
     for specs in smap.values() {
@@ -191,7 +191,7 @@ fn test_solve_simple_semver_example() {
             for r in (spec).reqs.keys() {
                 asts.entry(r.clone()).or_insert_with(|| {
                     info!("new AST for {r}");
-                    ast::Int::fresh_const( "dep-pkg")
+                    ast::Int::fresh_const("dep-pkg")
                 });
             }
         }
@@ -219,8 +219,8 @@ fn test_solve_simple_semver_example() {
                         );
                         opt.assert(
                             &k_ast
-                                ._eq(ast::Int::from_u64( n as u64))
-                                .implies(r_ast.ge(ast::Int::from_u64( low as u64))),
+                                ._eq(ast::Int::from_u64(n as u64))
+                                .implies(r_ast.ge(ast::Int::from_u64(low as u64))),
                         );
                     }
                 }
@@ -238,8 +238,8 @@ fn test_solve_simple_semver_example() {
                         );
                         opt.assert(
                             &k_ast
-                                ._eq(ast::Int::from_u64( n as u64))
-                                .implies(r_ast.le(ast::Int::from_u64( high as u64))),
+                                ._eq(ast::Int::from_u64(n as u64))
+                                .implies(r_ast.le(ast::Int::from_u64(high as u64))),
                         );
                     }
                 }

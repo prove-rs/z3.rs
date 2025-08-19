@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
-use quote::{format_ident, quote, ToTokens};
+use quote::{ToTokens, format_ident, quote};
 use syn::{
-    parse_macro_input, spanned::Spanned, Attribute, ImplItem, ImplItemFn, ItemFn, Pat, PatType,
-    Path, Signature, FnArg,
+    Attribute, FnArg, ImplItem, ImplItemFn, ItemFn, Pat, PatType, Path, Signature,
+    parse_macro_input, spanned::Spanned,
 };
 
 /// Usage:
@@ -127,9 +127,15 @@ fn has_receiver(sig: &Signature) -> bool {
 
 fn extract_ctx_and_args(sig: &Signature) -> Result<(usize, Pat, Vec<Pat>), String> {
     for (i, arg) in sig.inputs.iter().enumerate() {
-        if matches!(arg, FnArg::Receiver(_)) { continue; }
+        if matches!(arg, FnArg::Receiver(_)) {
+            continue;
+        }
         if let FnArg::Typed(PatType { pat, .. }) = arg {
-            return Ok((index_of_nonreceiver(sig, i), (*pat.as_ref()).clone(), collect_pats(sig)));
+            return Ok((
+                index_of_nonreceiver(sig, i),
+                (*pat.as_ref()).clone(),
+                collect_pats(sig),
+            ));
         } else {
             return Err("Unsupported function arg pattern".into());
         }
@@ -140,34 +146,46 @@ fn extract_ctx_and_args(sig: &Signature) -> Result<(usize, Pat, Vec<Pat>), Strin
 fn index_of_nonreceiver(sig: &Signature, abs_idx: usize) -> usize {
     let mut count = 0usize;
     for (i, arg) in sig.inputs.iter().enumerate() {
-        if matches!(arg, FnArg::Receiver(_)) { continue; }
-        if i == abs_idx { return count; }
+        if matches!(arg, FnArg::Receiver(_)) {
+            continue;
+        }
+        if i == abs_idx {
+            return count;
+        }
         count += 1;
     }
     0
 }
 
 fn collect_pats(sig: &Signature) -> Vec<Pat> {
-    sig.inputs.iter().filter_map(|a| {
-        match a {
+    sig.inputs
+        .iter()
+        .filter_map(|a| match a {
             FnArg::Receiver(_) => None,
-            FnArg::Typed(PatType { pat, .. }) => Some((**pat).clone())
-        }
-    }).collect()
+            FnArg::Typed(PatType { pat, .. }) => Some((**pat).clone()),
+        })
+        .collect()
 }
 
 fn remove_nth_nonreceiver_arg(sig: &mut Signature, n: usize) {
     let mut k = 0usize;
     let mut to_remove: Option<usize> = None;
     for (i, arg) in sig.inputs.iter().enumerate() {
-        if matches!(arg, FnArg::Receiver(_)) { continue; }
-        if k == n { to_remove = Some(i); break; }
+        if matches!(arg, FnArg::Receiver(_)) {
+            continue;
+        }
+        if k == n {
+            to_remove = Some(i);
+            break;
+        }
         k += 1;
     }
     if let Some(i) = to_remove {
         let mut new_inputs = syn::punctuated::Punctuated::<FnArg, syn::token::Comma>::new();
         for (j, pair) in sig.inputs.clone().into_pairs().enumerate() {
-            if j == i { continue; }
+            if j == i {
+                continue;
+            }
             let v = pair.into_value();
             new_inputs.push(v)
             // punctuation will be reinserted by pretty printer; no need to manage commas perfectly
@@ -179,7 +197,7 @@ fn remove_nth_nonreceiver_arg(sig: &mut Signature, n: usize) {
 fn build_call_args_calling_fn(
     sig: &Signature,
     ctx_index: usize,
-    default_ctx_fn: &Path
+    default_ctx_fn: &Path,
 ) -> Vec<proc_macro2::TokenStream> {
     // Pass all non-receiver args, but at the ctx slot, call the provided function.
     let mut args: Vec<proc_macro2::TokenStream> = Vec::new();

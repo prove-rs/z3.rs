@@ -103,7 +103,11 @@ impl Float {
         let sort = Sort::float_in_ctx(ctx, ebits, sbits);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
+                Z3_mk_const(
+                    ctx.z3_ctx.0,
+                    name.into().as_z3_symbol_in_ctx(ctx),
+                    sort.z3_sort,
+                )
             })
         }
     }
@@ -114,7 +118,11 @@ impl Float {
         let sort = Sort::float32_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
+                Z3_mk_const(
+                    ctx.z3_ctx.0,
+                    name.into().as_z3_symbol_in_ctx(ctx),
+                    sort.z3_sort,
+                )
             })
         }
     }
@@ -125,7 +133,11 @@ impl Float {
         let sort = Sort::double_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
+                Z3_mk_const(
+                    ctx.z3_ctx.0,
+                    name.into().as_z3_symbol_in_ctx(ctx),
+                    sort.z3_sort,
+                )
             })
         }
     }
@@ -264,8 +276,8 @@ impl_into_ast!(f64, from_f64_in_ctx);
 
 #[cfg(test)]
 mod tests {
-    use crate::ast::{Ast, Float};
     use crate::Solver;
+    use crate::ast::{Ast, Float};
 
     #[test]
     fn test_nonstandard_float() {

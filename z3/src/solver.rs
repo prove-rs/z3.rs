@@ -4,12 +4,12 @@ use std::fmt;
 
 use z3_sys::*;
 
-use std::ops::AddAssign;
-use z3_macros::z3;
 use crate::ast::{Bool, IntoAstCtx};
 use crate::{
     Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast, ast::Ast,
 };
+use std::ops::AddAssign;
+use z3_macros::z3;
 
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {

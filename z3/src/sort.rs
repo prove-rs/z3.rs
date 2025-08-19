@@ -135,7 +135,10 @@ impl Sort {
         name: Symbol,
         enum_names: &[Symbol],
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
-        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol_in_ctx(ctx)).collect();
+        let enum_names: Vec<_> = enum_names
+            .iter()
+            .map(|s| s.as_z3_symbol_in_ctx(ctx))
+            .collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
