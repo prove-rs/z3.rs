@@ -1,5 +1,5 @@
 use crate::ast::IntoAst;
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
@@ -146,7 +146,7 @@ impl IntoAst<Bool> for bool {
     }
 }
 
-impl IntoAstFromCtx<Bool> for bool {
+impl IntoAstCtx<Bool> for bool {
     fn into_ast_ctx(self, ctx: &Context) -> Bool {
         Bool::from_bool(ctx, self)
     }

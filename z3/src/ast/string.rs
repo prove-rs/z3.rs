@@ -1,5 +1,5 @@
 use crate::ast::IntoAst;
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::regexp::Regexp;
 use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
@@ -83,7 +83,7 @@ impl String {
     /// );
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn at<T: IntoAstFromCtx<Int>>(&self, index: T) -> Self {
+    pub fn at<T: IntoAstCtx<Int>>(&self, index: T) -> Self {
         let index = index.into_ast_ctx(&self.ctx);
         unsafe {
             Self::wrap(
@@ -126,7 +126,7 @@ impl String {
     ///     "bc",
     /// );
     /// ```
-    pub fn substr<T: IntoAstFromCtx<Int>, R: IntoAstFromCtx<Int>>(
+    pub fn substr<T: IntoAstCtx<Int>, R: IntoAstCtx<Int>>(
         &self,
         offset: T,
         length: R,
@@ -227,7 +227,7 @@ impl<T: AsRef<str>> IntoAst<String> for T {
     }
 }
 
-impl<T: AsRef<str> + Clone> IntoAstFromCtx<String> for T {
+impl<T: AsRef<str> + Clone> IntoAstCtx<String> for T {
     fn into_ast_ctx(self, ctx: &Context) -> String {
         String::from_str(ctx, self.as_ref()).unwrap()
     }

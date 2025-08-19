@@ -1,5 +1,5 @@
 use crate::Context;
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, varop};
 use crate::ast::{IntoAst, unop};
 use std::ffi::CString;

@@ -1,4 +1,4 @@
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Dynamic, Int, varop};
 use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
@@ -87,7 +87,7 @@ impl Seq {
     ///         ._eq(true)
     /// );
     /// ```
-    pub fn nth<T: IntoAstFromCtx<Int>>(&self, index: T) -> Dynamic {
+    pub fn nth<T: IntoAstCtx<Int>>(&self, index: T) -> Dynamic {
         let index = index.into_ast_ctx(&self.ctx);
         unsafe {
             Dynamic::wrap(

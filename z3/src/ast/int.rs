@@ -1,4 +1,4 @@
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, BV, Real, binop};
 use crate::ast::{Bool, IntoAst, unop, varop};
 use crate::{Context, Sort, Symbol};
@@ -173,7 +173,7 @@ macro_rules! into_int {
             }
         }
 
-        impl IntoAstFromCtx<Int> for $t {
+        impl IntoAstCtx<Int> for $t {
             fn into_ast_ctx(self, a: &Context) -> Int {
                 Int::from_u64(&a, self as u64)
             }
@@ -189,7 +189,7 @@ macro_rules! into_int_signed {
             }
         }
 
-        impl IntoAstFromCtx<Int> for $t {
+        impl IntoAstCtx<Int> for $t {
             fn into_ast_ctx(self, a: &Context) -> Int {
                 Int::from_i64(&a, self as i64)
             }

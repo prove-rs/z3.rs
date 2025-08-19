@@ -88,7 +88,7 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: IntoAstFromCtx<$retty>, B: IntoAstFromCtx<$retty>>(&self, a: A, b: B) -> $retty {
+            pub fn $f<A: IntoAstCtx<$retty>, B: IntoAstCtx<$retty>>(&self, a: A, b: B) -> $retty {
                 let a = a.into_ast_ctx(&self.ctx);
                 let b = b.into_ast_ctx(&self.ctx);
                 unsafe {
@@ -109,7 +109,7 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<T: IntoAstFromCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
+            pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
                 unsafe {
                     <$retty>::wrap(ctx, {
                         let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
@@ -372,13 +372,13 @@ pub trait IntoAst<T: Ast> {
 
 /// Turns a piece of data into a Z3 [`Ast`], associated with the
 /// given [`Context`]. This is used in "varop" operations.
-pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
+pub trait IntoAstCtx<T: Ast>: Clone + IntoAst<T> {
     fn into_ast_ctx(self, ctx: &Context) -> T;
 }
 
 /// This is trivially implemented for Asts. It also
 /// serves as a unified place to check for [`Context`] mismatches.
-impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
+impl<T: Ast + Clone> IntoAstCtx<T> for T {
     fn into_ast_ctx(self, ctx: &Context) -> T {
         self.check_ctx(ctx);
         self
@@ -386,7 +386,7 @@ impl<T: Ast + Clone> IntoAstFromCtx<T> for T {
 }
 
 /// Implemented for [`Ast`] references for ease.
-impl<T: IntoAstFromCtx<T> + Ast> IntoAstFromCtx<T> for &T {
+impl<T: IntoAstCtx<T> + Ast> IntoAstCtx<T> for &T {
     fn into_ast_ctx(self, a: &Context) -> T {
         self.clone().into_ast_ctx(a)
     }

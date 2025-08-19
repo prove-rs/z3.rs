@@ -1,5 +1,5 @@
 use crate::Context;
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Float, trinop};
 use z3_sys::*;
 

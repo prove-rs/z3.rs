@@ -1,4 +1,4 @@
-use crate::ast::IntoAstFromCtx;
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, IntoAst};
 use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
