@@ -126,11 +126,7 @@ impl String {
     ///     "bc",
     /// );
     /// ```
-    pub fn substr<T: IntoAstCtx<Int>, R: IntoAstCtx<Int>>(
-        &self,
-        offset: T,
-        length: R,
-    ) -> Self {
+    pub fn substr<T: IntoAstCtx<Int>, R: IntoAstCtx<Int>>(&self, offset: T, length: R) -> Self {
         let offset = offset.into_ast_ctx(&self.ctx);
         let length = length.into_ast_ctx(&self.ctx);
         unsafe {

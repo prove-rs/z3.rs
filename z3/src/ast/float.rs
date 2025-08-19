@@ -155,41 +155,25 @@ impl Float {
     }
 
     /// Add with the provided [`RoundingMode`]
-    pub fn add_with_rounding_mode<T: IntoAst<Self>>(
-        &self,
-        other: T,
-        r: &RoundingMode,
-    ) -> Float {
+    pub fn add_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
         let other = other.into_ast(self);
         r.add(self, other)
     }
 
     /// Subtract with the provided [`RoundingMode`]
-    pub fn sub_with_rounding_mode<T: IntoAst<Self>>(
-        &self,
-        other: T,
-        r: &RoundingMode,
-    ) -> Float {
+    pub fn sub_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
         let other = other.into_ast(self);
         r.sub(self, other)
     }
 
     /// Multiply with the provided [`RoundingMode`]
-    pub fn mul_with_rounding_mode<T: IntoAst<Self>>(
-        &self,
-        other: T,
-        r: &RoundingMode,
-    ) -> Float {
+    pub fn mul_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
         let other = other.into_ast(self);
         r.mul(self, other)
     }
 
     /// Divide with the provided [`RoundingMode`]
-    pub fn div_with_rounding_mode<T: IntoAst<Self>>(
-        &self,
-        other: T,
-        r: &RoundingMode,
-    ) -> Float {
+    pub fn div_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
         let other = other.into_ast(self);
         r.div(self, other)
     }
@@ -266,14 +250,13 @@ macro_rules! impl_into_ast {
 impl_into_ast!(f32, from_f32);
 impl_into_ast!(f64, from_f64);
 
-
 #[cfg(test)]
-mod tests{
+mod tests {
     use crate::ast::{Ast, Float};
     use crate::{Context, Solver};
 
     #[test]
-    fn test_nonstandard_float(){
+    fn test_nonstandard_float() {
         let ctx = Context::default();
         // this float has a nonstandard size
         let f1 = Float::new_const(&ctx, "weird", 15, 53);
