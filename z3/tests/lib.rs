@@ -1987,3 +1987,99 @@ fn test_model_iter() {
         vec![ast::Dynamic::new_const(&ctx, "a", &Sort::int(&ctx))]
     );
 }
+
+#[test]
+fn test_add_int_real() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::from_i64(&ctx, 1);
+    let b =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(13), BigInt::from(10)));
+    let res =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(23), BigInt::from(10)));
+    let sum1 = &a + &b;
+    let sum2 = &b + &a;
+
+    solver.assert(&sum1._eq(&res));
+    solver.assert(&sum2._eq(&res));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_sub_int_real() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::from_i64(&ctx, 1);
+    let b =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(13), BigInt::from(10)));
+    let res =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(-3), BigInt::from(10)));
+    let sub1 = &a - &b;
+    let sub2 = -(&b - &a);
+
+    solver.assert(&sub1._eq(&res));
+    solver.assert(&sub2._eq(&res));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_mul_int_real() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::from_i64(&ctx, 1);
+    let b =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(13), BigInt::from(10)));
+    let res =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(13), BigInt::from(10)));
+    let mul1 = &a * &b;
+    let mul2 = &b * &a;
+
+    solver.assert(&mul1._eq(&res));
+    solver.assert(&mul2._eq(&res));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_div_int_real() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::from_i64(&ctx, 1);
+    let b =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(13), BigInt::from(10)));
+    let res: ast::Real<'_> =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(10), BigInt::from(13)));
+    let div1= &a / &b;
+    let div2= &a / &(&b / &a);
+
+    solver.assert(&div1._eq(&res));
+    solver.assert(&div2._eq(&res));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_pow_int_real() {
+    use num::traits::Pow;
+
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let a = ast::Int::from_i64(&ctx, 2);
+    let b = ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(2), BigInt::from(1)));
+    let res: ast::Real<'_> =
+        ast::Real::from_big_rational(&ctx, &BigRational::new(BigInt::from(4), BigInt::from(1)));
+    let pow1 = &a.pow(&b);
+    let pow2 = &b.pow(&a);
+
+    solver.assert(&pow1._eq(&res));
+    solver.assert(&pow2._eq(&res));
+    assert_eq!(solver.check(), SatResult::Sat);
+}
