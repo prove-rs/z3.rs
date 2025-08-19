@@ -49,10 +49,27 @@ pub struct Context {
     pub(crate) z3_ctx: Rc<ContextInternal>,
 }
 impl Context {
+    /// Returns a handle to the default thread-local [`Context`].
+    /// This [`Context`] is used by default in any API that does not
+    /// act on an existing [`Ast`] and does not have a [`Context`] argument.
+    ///
+    /// # See also:
+    /// - [`Context::set_thread_local_from_config()`]
     pub fn thread_local() -> Context {
         DEFAULT_CONTEXT.with(|f| f.borrow().clone())
     }
 
+    /// _Replaces_ the thread-local [`Context`] with a new one created from the given [`Config`].
+    /// This is useful if you want to use a specific configuration, but also want
+    /// to use the default thread-local context. Note that calling this function will
+    /// _replace_ the existing thread-local context. All existing [`Ast`]s and other Z3 objects
+    /// that were created using the previous thread-local context will still be valid, but cannot
+    /// be used with the new context without translation. You will generally want to call this
+    /// before you create any [`Ast`]s or other Z3 objects to avoid confusion. Also note that
+    /// since the [`Context`] is thread-local, this will only affect the current thread.
+    ///
+    /// # See also:
+    /// /// - [`Context::thread_local()`]
     pub fn set_thread_local_from_config(cfg: &Config) {
         DEFAULT_CONTEXT.with(|f| {
             *f.borrow_mut() = Context::new(cfg);
