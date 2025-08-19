@@ -93,7 +93,7 @@ impl Optimize {
         let weight_string = weight.to_string();
         let weight_cstring = CString::new(weight_string).unwrap();
         let group = group
-            .map(|g| g.as_z3_symbol(&self.ctx))
+            .map(|g| g.as_z3_symbol_in_ctx(&self.ctx))
             .unwrap_or_else(std::ptr::null_mut);
         unsafe {
             Z3_optimize_assert_soft(

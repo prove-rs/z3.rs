@@ -63,7 +63,7 @@ impl Solver {
     #[z3(Context::thread_local)]
     pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
         unsafe {
-            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol(ctx));
+            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol_in_ctx(ctx));
             if s.is_null() {
                 None
             } else {

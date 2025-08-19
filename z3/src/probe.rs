@@ -27,16 +27,18 @@ impl Probe {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let probes: Vec<_> = Probe::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(probes.contains(&"is-quasi-pb"));
+    /// let probes: Vec<_> = Probe::list_all().filter_map(|r| r.ok()).collect();
+    /// assert!(probes.contains("is-quasi-pb"));
     /// ```
     #[z3(Context::thread_local)]
-    pub fn list_all(ctx: &Context) -> impl Iterator<Item = std::result::Result<&str, Utf8Error>> {
+    pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.0) };
-        (0..p).map(move |n| {
-            let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.0, n) };
-            unsafe { CStr::from_ptr(t) }.to_str()
-        })
+        (0..p)
+            .map(move |n| {
+                let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.0, n) };
+                unsafe { CStr::from_ptr(t).to_str().map(String::from) }
+            })
+            .collect()
     }
 
     /// Return a string containing a description of the probe with
@@ -44,7 +46,11 @@ impl Probe {
     #[z3(Context::thread_local)]
     pub fn describe(ctx: &Context, name: &str) -> std::result::Result<String, Utf8Error> {
         let probe_name = CString::new(name).unwrap();
-        unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr())).to_str().map(|s|s.to_string()) }
+        unsafe {
+            CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr()))
+                .to_str()
+                .map(|s| s.to_string())
+        }
     }
 
     /// Return a probe associated with the given `name`.

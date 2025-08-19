@@ -26,8 +26,8 @@ impl Params {
             Z3_params_set_symbol(
                 self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(&self.ctx),
-                v.into().as_z3_symbol(&self.ctx),
+                k.into().as_z3_symbol_in_ctx(&self.ctx),
+                v.into().as_z3_symbol_in_ctx(&self.ctx),
             );
         };
     }
@@ -37,7 +37,7 @@ impl Params {
             Z3_params_set_bool(
                 self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(&self.ctx),
+                k.into().as_z3_symbol_in_ctx(&self.ctx),
                 v,
             );
         };
@@ -48,7 +48,7 @@ impl Params {
             Z3_params_set_double(
                 self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(&self.ctx),
+                k.into().as_z3_symbol_in_ctx(&self.ctx),
                 v,
             );
         };
@@ -59,7 +59,7 @@ impl Params {
             Z3_params_set_uint(
                 self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(&self.ctx),
+                k.into().as_z3_symbol_in_ctx(&self.ctx),
                 v,
             );
         };

@@ -192,22 +192,22 @@ impl Float {
 
     // Add two floats of the same size, rounding towards zero
     pub fn add_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
-        self.add_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
+        self.add_with_rounding_mode(other, &RoundingMode::round_towards_zero_in_ctx(&self.ctx))
     }
 
     // Subtract two floats of the same size, rounding towards zero
     pub fn sub_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
-        self.sub_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
+        self.sub_with_rounding_mode(other, &RoundingMode::round_towards_zero_in_ctx(&self.ctx))
     }
 
     // Multiply two floats of the same size, rounding towards zero
     pub fn mul_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
-        self.mul_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
+        self.mul_with_rounding_mode(other, &RoundingMode::round_towards_zero_in_ctx(&self.ctx))
     }
 
     // Divide two floats of the same size, rounding towards zero
     pub fn div_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
-        self.div_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
+        self.div_with_rounding_mode(other, &RoundingMode::round_towards_zero_in_ctx(&self.ctx))
     }
 
     // Convert to IEEE-754 bit-vector

@@ -21,13 +21,13 @@ impl Sort {
     pub fn get_z3_sort(&self) -> Z3_sort {
         self.z3_sort
     }
-    
+
     #[z3(Context::thread_local)]
     pub fn uninterpreted(ctx: &Context, name: Symbol) -> Sort {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol(ctx)),
+                Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol_in_ctx(ctx)),
             )
         }
     }
@@ -135,7 +135,7 @@ impl Sort {
         name: Symbol,
         enum_names: &[Symbol],
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
-        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol(ctx)).collect();
+        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol_in_ctx(ctx)).collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
@@ -144,7 +144,7 @@ impl Sort {
                 ctx,
                 Z3_mk_enumeration_sort(
                     ctx.z3_ctx.0,
-                    name.as_z3_symbol(ctx),
+                    name.as_z3_symbol_in_ctx(ctx),
                     enum_names.len().try_into().unwrap(),
                     enum_names.as_ptr(),
                     enum_consts.as_mut_ptr(),

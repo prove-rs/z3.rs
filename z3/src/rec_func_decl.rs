@@ -33,7 +33,7 @@ impl RecFuncDecl {
                 ctx,
                 Z3_mk_rec_func_decl(
                     ctx.z3_ctx.0,
-                    name.into().as_z3_symbol(ctx),
+                    name.into().as_z3_symbol_in_ctx(ctx),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,

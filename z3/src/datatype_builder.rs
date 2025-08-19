@@ -52,7 +52,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     let mut ctors: Vec<Z3_constructor> = Vec::with_capacity(num * 2);
 
     for d in datatype_builders.iter() {
-        names.push(d.name.as_z3_symbol(&ctx));
+        names.push(d.name.as_z3_symbol_in_ctx(&ctx));
         let num_cs = d.constructors.len();
         let mut cs: Vec<Z3_constructor> = Vec::with_capacity(num_cs);
 
@@ -60,8 +60,8 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             let mut rname: String = "is-".to_string();
             rname.push_str(cname);
 
-            let cname_symbol: Z3_symbol = Symbol::String(cname.clone()).as_z3_symbol(&ctx);
-            let rname_symbol: Z3_symbol = Symbol::String(rname).as_z3_symbol(&ctx);
+            let cname_symbol: Z3_symbol = Symbol::String(cname.clone()).as_z3_symbol_in_ctx(&ctx);
+            let rname_symbol: Z3_symbol = Symbol::String(rname).as_z3_symbol_in_ctx(&ctx);
 
             let num_fs = fs.len();
             let mut field_names: Vec<Z3_symbol> = Vec::with_capacity(num_fs);
@@ -69,7 +69,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             let mut sort_refs: Vec<::std::os::raw::c_uint> = Vec::with_capacity(num_fs);
 
             for (fname, accessor) in fs {
-                field_names.push(Symbol::String(fname.clone()).as_z3_symbol(&ctx));
+                field_names.push(Symbol::String(fname.clone()).as_z3_symbol_in_ctx(&ctx));
                 match accessor {
                     DatatypeAccessor::Datatype(dtype_name) => {
                         field_sorts.push(null_mut());
