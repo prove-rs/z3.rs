@@ -20,6 +20,7 @@ mod datatype;
 mod dynamic;
 mod float;
 mod int;
+mod numeric;
 mod real;
 mod regexp;
 mod rounding_mode;
