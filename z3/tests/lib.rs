@@ -1987,3 +1987,41 @@ fn test_model_iter() {
         vec![ast::Dynamic::new_const(&ctx, "a", &Sort::int(&ctx))]
     );
 }
+
+#[test]
+fn test_round_towards_nearest_away() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let eps = f64::from_bits(0x3cb0000000000000);
+    let x = z3::ast::Float::from_f64(&ctx, 1.0);
+    let y = z3::ast::Float::from_f64(&ctx, 0.5 * eps);
+
+    let rtna = z3::ast::RoundingMode::round_nearest_ties_to_away(&ctx);
+    let res_rtna = x.add_with_rounding_mode(y, &rtna);
+
+    let expected = z3::ast::Float::from_f64(&ctx, 1.0000000000000002);
+    solver.assert(res_rtna._eq(&expected));
+
+    assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_round_towards_nearest_even() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+    let solver = Solver::new(&ctx);
+
+    let eps = f64::from_bits(0x3cb0000000000000);
+    let x = z3::ast::Float::from_f64(&ctx, 1.0);
+    let y = z3::ast::Float::from_f64(&ctx, 0.5 * eps);
+
+    let rtne = z3::ast::RoundingMode::round_nearest_ties_to_even(&ctx);
+    let res_rtne = x.add_with_rounding_mode(y, &rtne);
+
+    let expected = z3::ast::Float::from_f64(&ctx, 1.0);
+    solver.assert(res_rtne._eq(&expected));
+
+    assert_eq!(solver.check(), SatResult::Sat);
+}
