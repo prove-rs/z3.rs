@@ -1,10 +1,51 @@
 use log::debug;
 use std::ffi::CString;
-
+use std::rc::Rc;
 use z3_sys::*;
 
-use crate::{Config, Context, ContextHandle};
+use crate::{Config, ContextHandle};
 
+/// A wrapper around [`Z3_context`] that enforces proper dropping behavior.
+/// All high-level code should instead use [`Context`]
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) struct ContextInternal(pub(crate) Z3_context);
+
+impl Drop for ContextInternal {
+    fn drop(&mut self) {
+        unsafe { Z3_del_context(self.0) };
+    }
+}
+
+/// Manager of all other Z3 objects, global configuration options, etc.
+///
+/// An application may use multiple Z3 contexts. Objects created in one context
+/// cannot be used in another one. However, several objects may be "translated" from
+/// one context to another.
+///
+/// While it is not safe to access Z3 objects from multiple threads, this library includes
+/// a safe structured abstraction for usage of Z3 objects across threads.
+/// See [`Synchronized`](crate::Synchronized).
+///
+///
+///
+/// # Examples:
+///
+/// Creating a context with the default configuration:
+///
+/// ```
+/// use z3::{Config, Context};
+/// let cfg = Config::new();
+/// let ctx = Context::new(&cfg);
+/// ```
+///
+/// # See also:
+///
+/// - [`Config`]
+/// - [`Context::new()`]
+#[derive(PartialEq, Eq, Debug, Clone)]
+pub struct Context {
+    pub(crate) z3_ctx: Rc<ContextInternal>,
+}
 impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
@@ -12,13 +53,44 @@ impl Context {
                 let p = Z3_mk_context_rc(cfg.z3_cfg);
                 debug!("new context {p:p}");
                 Z3_set_error_handler(p, None);
-                p
+                Rc::new(ContextInternal(p))
             },
         }
     }
 
+    /// Construct a [`Context`] from a raw [`Z3_context`] pointer. This is mostly useful for
+    /// consumers who want to interoperate with Z3 contexts created through other means,
+    /// such as the C API or other bindings such as Python.
+    ///
+    /// # Safety
+    ///
+    /// The caller must ensure the pointer is valid and not already managed elsewhere.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// use z3::ast::Bool;
+    /// use z3_sys::{Z3_mk_config, Z3_del_config, Z3_mk_context_rc};
+    /// use z3::Context;
+    ///
+    /// // Create a raw Z3_config using the low-level API
+    /// let cfg = unsafe { Z3_mk_config() };
+    /// let raw_ctx = unsafe { Z3_mk_context_rc(cfg) };
+    /// let ctx = unsafe { Context::from_raw(raw_ctx) };
+    /// // Use `ctx` as usual...
+    /// unsafe { Z3_del_config(cfg) };
+    /// let b = Bool::from_bool(&ctx, true);
+    /// assert_eq!(b.as_bool(), Some(true));
+    /// ```
+    pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {
+        debug!("from_raw context {z3_ctx:p}");
+        Context {
+            z3_ctx: Rc::new(ContextInternal(z3_ctx)),
+        }
+    }
+
     pub fn get_z3_context(&self) -> Z3_context {
-        self.z3_ctx
+        self.z3_ctx.0
     }
 
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
@@ -44,7 +116,7 @@ impl Context {
     pub fn update_param_value(&mut self, k: &str, v: &str) {
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
-        unsafe { Z3_update_param_value(self.z3_ctx, ks.as_ptr(), vs.as_ptr()) };
+        unsafe { Z3_update_param_value(self.z3_ctx.0, ks.as_ptr(), vs.as_ptr()) };
     }
 
     /// Update a global parameter.
@@ -59,20 +131,22 @@ impl Context {
     }
 }
 
+/// The default [`Context`] uses [`Config::default`]
+impl Default for Context {
+    fn default() -> Self {
+        let cfg = Config::default();
+        Context::new(&cfg)
+    }
+}
+
 impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
         unsafe {
-            Z3_interrupt(self.ctx.z3_ctx);
+            Z3_interrupt(self.ctx.z3_ctx.0);
         }
     }
 }
 
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
-
-impl Drop for Context {
-    fn drop(&mut self) {
-        unsafe { Z3_del_context(self.z3_ctx) };
-    }
-}
