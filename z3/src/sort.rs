@@ -7,6 +7,7 @@ use z3_sys::*;
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 use z3_macros::z3;
 
+#[z3(Context::thread_local)]
 impl Sort {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
         unsafe {
@@ -22,7 +23,7 @@ impl Sort {
         self.z3_sort
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn uninterpreted(ctx: &Context, name: Symbol) -> Sort {
         unsafe {
             Self::wrap(
@@ -32,42 +33,42 @@ impl Sort {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn bool(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn int(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn real(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn float(ctx: &Context, ebits: u32, sbits: u32) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn float32(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn double(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn string(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
         unsafe {
             Self::wrap(
@@ -77,7 +78,7 @@ impl Sort {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn array(ctx: &Context, domain: &Sort, range: &Sort) -> Sort {
         unsafe {
             Self::wrap(
@@ -87,12 +88,12 @@ impl Sort {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn set(ctx: &Context, elt: &Sort) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn seq(ctx: &Context, elt: &Sort) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
@@ -129,7 +130,7 @@ impl Sort {
     ///
     /// assert!(model.eval(&eq, true).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```
-    #[z3(Context::thread_local)]
+
     pub fn enumeration(
         ctx: &Context,
         name: Symbol,

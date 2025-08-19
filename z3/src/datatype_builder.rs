@@ -8,9 +8,9 @@ use crate::{
     Context, DatatypeAccessor, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort,
     Symbol,
 };
-
+#[z3(Context::thread_local)]
 impl DatatypeBuilder {
-    #[z3(Context::thread_local)]
+
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S) -> Self {
         Self {
             ctx: ctx.clone(),

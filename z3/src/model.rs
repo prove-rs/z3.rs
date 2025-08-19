@@ -1,10 +1,10 @@
 use std::ffi::CStr;
 use std::fmt;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Translate, ast::Ast};
-
+#[z3(Context::thread_local)]
 impl Model {
     unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
         unsafe {

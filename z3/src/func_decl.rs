@@ -5,7 +5,7 @@ use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast};
-
+#[z3(Context::thread_local)]
 impl FuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
@@ -20,7 +20,7 @@ impl FuncDecl {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);

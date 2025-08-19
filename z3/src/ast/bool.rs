@@ -11,9 +11,9 @@ pub struct Bool {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
+#[z3(Context::thread_local)]
 impl Bool {
-    #[z3(Context::thread_local)]
+
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Bool {
         let sort = Sort::bool_in_ctx(ctx);
         unsafe {
@@ -27,7 +27,7 @@ impl Bool {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const(ctx: &Context, prefix: &str) -> Bool {
         let sort = Sort::bool_in_ctx(ctx);
         unsafe {
@@ -39,7 +39,7 @@ impl Bool {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn from_bool(ctx: &Context, b: bool) -> Bool {
         unsafe {
             Self::wrap(ctx, {
@@ -92,7 +92,7 @@ impl Bool {
         not(Z3_mk_not, Self);
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn pb_le(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {
             Bool::wrap(ctx, {
@@ -111,7 +111,7 @@ impl Bool {
             })
         }
     }
-    #[z3(Context::thread_local)]
+
     pub fn pb_ge(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {
             Bool::wrap(ctx, {
@@ -130,7 +130,7 @@ impl Bool {
             })
         }
     }
-    #[z3(Context::thread_local)]
+
     pub fn pb_eq(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {
             Bool::wrap(ctx, {

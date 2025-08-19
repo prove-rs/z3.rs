@@ -5,7 +5,7 @@ use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, Pattern, ast::Ast};
-
+#[z3(Context::thread_local)]
 impl Pattern {
     /// Create a pattern for quantifier instantiation.
     ///
@@ -25,7 +25,7 @@ impl Pattern {
     ///
     /// - `ast::forall_const()`
     /// - `ast::exists_const()`
-    #[z3(Context::thread_local)]
+
     pub fn new(ctx: &Context, terms: &[&dyn Ast]) -> Pattern {
         assert!(!terms.is_empty());
         assert!(terms.iter().all(|t| t.get_ctx().z3_ctx == ctx.z3_ctx));

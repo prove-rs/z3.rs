@@ -4,7 +4,7 @@ use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, Params, Symbol};
-
+#[z3(Context::thread_local)]
 impl Params {
     unsafe fn wrap(ctx: &Context, z3_params: Z3_params) -> Params {
         unsafe {
@@ -16,7 +16,7 @@ impl Params {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn new(ctx: &Context) -> Params {
         unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
     }

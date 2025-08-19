@@ -12,10 +12,10 @@ pub struct String {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
+#[z3(Context::thread_local)]
 impl String {
     /// Creates a new constant using the built-in string sort
-    #[z3(Context::thread_local)]
+
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> String {
         let sort = Sort::string_in_ctx(ctx);
         unsafe {
@@ -30,7 +30,7 @@ impl String {
     }
 
     /// Creates a fresh constant using the built-in string sort
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const(ctx: &Context, prefix: &str) -> String {
         let sort = Sort::string_in_ctx(ctx);
         unsafe {
@@ -43,7 +43,7 @@ impl String {
     }
 
     /// Creates a Z3 constant string from a `&str`
-    #[z3(Context::thread_local)]
+
     pub fn from_str(ctx: &Context, string: &str) -> Result<String, std::ffi::NulError> {
         let string = CString::new(string)?;
         Ok(unsafe {

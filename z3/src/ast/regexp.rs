@@ -31,9 +31,10 @@ pub struct Regexp {
     pub(crate) z3_ast: Z3_ast,
 }
 
+#[z3(Context::thread_local)]
 impl Regexp {
     /// Creates a regular expression that recognizes the string given as parameter
-    #[z3(Context::thread_local)]
+
     pub fn literal(ctx: &Context, s: &str) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -45,7 +46,7 @@ impl Regexp {
 
     /// Creates a regular expression that recognizes a character in the specified range (e.g.
     /// `[a-z]`)
-    #[z3(Context::thread_local)]
+
     pub fn range(ctx: &Context, lo: &char, hi: &char) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -85,7 +86,7 @@ impl Regexp {
     }
 
     /// Creates a regular expression that recognizes all sequences
-    #[z3(Context::thread_local)]
+
     pub fn full(ctx: &Context) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -99,7 +100,7 @@ impl Regexp {
 
     /// Creates a regular expression that accepts all singleton sequences of the characters
     /// Requires Z3 4.8.13 or later.
-    #[z3(Context::thread_local)]
+
     pub fn allchar(ctx: &Context) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -112,7 +113,7 @@ impl Regexp {
     }
 
     /// Creates a regular expression that doesn't recognize any sequences
-    #[z3(Context::thread_local)]
+
     pub fn empty(ctx: &Context) -> Self {
         unsafe {
             Self::wrap(ctx, {

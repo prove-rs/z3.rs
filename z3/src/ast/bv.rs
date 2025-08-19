@@ -30,8 +30,8 @@ macro_rules! bv_overflow_check_signed {
     };
 }
 
+#[z3(Context::thread_local)]
 impl BV {
-    #[z3(Context::thread_local)]
     pub fn from_str(ctx: &Context, sz: u32, value: &str) -> Option<BV> {
         let sort = Sort::bitvector_in_ctx(ctx, sz);
         let ast = unsafe {
@@ -57,7 +57,6 @@ impl BV {
     /// assert_eq!(bv, 2);
     /// assert_eq!(bv_none, None);
     /// ```
-    #[z3(Context::thread_local)]
     pub fn from_bits(ctx: &Context, bits: &[bool]) -> Option<BV> {
         let ast = unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.0, bits.len() as u32, bits.as_ptr()) };
         if ast.is_null() {
@@ -67,7 +66,6 @@ impl BV {
         }
     }
 
-    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sz: u32) -> BV {
         let sort = Sort::bitvector_in_ctx(ctx, sz);
         unsafe {
@@ -81,7 +79,6 @@ impl BV {
         }
     }
 
-    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str, sz: u32) -> BV {
         let sort = Sort::bitvector_in_ctx(ctx, sz);
         unsafe {
@@ -93,13 +90,11 @@ impl BV {
         }
     }
 
-    #[z3(Context::thread_local)]
     pub fn from_i64(ctx: &Context, i: i64, sz: u32) -> BV {
         let sort = Sort::bitvector_in_ctx(ctx, sz);
         unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort)) }
     }
 
-    #[z3(Context::thread_local)]
     pub fn from_u64(ctx: &Context, u: u64, sz: u32) -> BV {
         let sort = Sort::bitvector_in_ctx(ctx, sz);
         unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort)) }

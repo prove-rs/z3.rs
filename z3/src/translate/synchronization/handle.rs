@@ -64,11 +64,11 @@ impl<T: Translate> Synchronized<T> {
         Self(Mutex::new(data))
     }
 }
-
+#[z3(Context::thread_local)]
 impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
     /// and return the inner data.
-    #[z3(Context::thread_local)]
+
     pub fn recover(&self, ctx: &Context) -> T {
         self.0.lock().unwrap().translate(ctx)
     }

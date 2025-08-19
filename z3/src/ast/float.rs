@@ -11,10 +11,10 @@ pub struct Float {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
+#[z3(Context::thread_local)]
 impl Float {
     // Create a 32-bit (IEEE-754) Float [`Ast`] from a rust f32
-    #[z3(Context::thread_local)]
+
     pub fn from_f32(ctx: &Context, value: f32) -> Float {
         let sort = Sort::float32_in_ctx(ctx);
         unsafe {
@@ -25,7 +25,7 @@ impl Float {
     }
 
     // Create a 364-bit (IEEE-754) Float [`Ast`] from a rust f64
-    #[z3(Context::thread_local)]
+
     pub fn from_f64(ctx: &Context, value: f64) -> Float {
         let sort = Sort::double_in_ctx(ctx);
         unsafe {
@@ -40,7 +40,7 @@ impl Float {
     }
 
     /// A NaN (Not a Number) value of the given ([`Float`]) [`Sort`].
-    #[z3(Context::thread_local)]
+
     pub fn nan(ctx: &Context, sort: &Sort) -> Float {
         assert!(matches!(sort.kind(), SortKind::FloatingPoint));
         unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.0, sort.z3_sort)) }
@@ -65,7 +65,7 @@ impl Float {
     /// solver.assert(&nan_32._eq(&Float::from_f32(1.0)).not());
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    #[z3(Context::thread_local)]
+
     pub fn nan32(ctx: &Context) -> Float {
         let s = Sort::float32_in_ctx(ctx);
         Self::nan_in_ctx(ctx, &s)
@@ -90,15 +90,15 @@ impl Float {
     /// solver.assert(&nan_32._eq(&Float::from_f32(1.0)).not());
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    #[z3(Context::thread_local)]
+
     pub fn nan64(ctx: &Context) -> Float {
         let s = Sort::double_in_ctx(ctx);
         Self::nan_in_ctx(ctx, &s)
     }
 }
-
+#[z3(Context::thread_local)]
 impl Float {
-    #[z3(Context::thread_local)]
+
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, ebits: u32, sbits: u32) -> Float {
         let sort = Sort::float_in_ctx(ctx, ebits, sbits);
         unsafe {
@@ -113,7 +113,7 @@ impl Float {
     }
 
     /// Create a 32-bit (IEEE-754) Float [`Ast`].
-    #[z3(Context::thread_local)]
+
     pub fn new_const_float32<S: Into<Symbol>>(ctx: &Context, name: S) -> Float {
         let sort = Sort::float32_in_ctx(ctx);
         unsafe {
@@ -128,7 +128,7 @@ impl Float {
     }
 
     /// Create a 64-bit (IEEE-754) Float [`Ast`].
-    #[z3(Context::thread_local)]
+
     pub fn new_const_double<S: Into<Symbol>>(ctx: &Context, name: S) -> Float {
         let sort = Sort::double_in_ctx(ctx);
         unsafe {
@@ -142,7 +142,7 @@ impl Float {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const(ctx: &Context, prefix: &str, ebits: u32, sbits: u32) -> Float {
         let sort = Sort::float_in_ctx(ctx, ebits, sbits);
         unsafe {
@@ -154,7 +154,7 @@ impl Float {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const_float32(ctx: &Context, prefix: &str) -> Float {
         let sort = Sort::float32_in_ctx(ctx);
         unsafe {
@@ -166,7 +166,7 @@ impl Float {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const_double(ctx: &Context, prefix: &str) -> Float {
         let sort = Sort::double_in_ctx(ctx);
         unsafe {

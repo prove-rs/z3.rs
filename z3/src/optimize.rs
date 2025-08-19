@@ -15,7 +15,7 @@ use num::{
     rational::BigRational,
 };
 use z3_macros::z3;
-
+#[z3(Context::thread_local)]
 impl Optimize {
     unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {
@@ -28,7 +28,7 @@ impl Optimize {
     }
 
     /// Create a new optimize context.
-    #[z3(Context::thread_local)]
+
     pub fn new(ctx: &Context) -> Optimize {
         unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.0)) }
     }

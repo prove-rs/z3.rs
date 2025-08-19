@@ -11,12 +11,13 @@ pub struct Array {
     pub(crate) z3_ast: Z3_ast,
 }
 
+#[z3(Context::thread_local)]
 impl Array {
     /// Create an `Array` which maps from indices of the `domain` `Sort` to
     /// values of the `range` `Sort`.
     ///
     /// All values in the `Array` will be unconstrained.
-    #[z3(Context::thread_local)]
+
     pub fn new_const<S: Into<Symbol>>(
         ctx: &Context,
         name: S,
@@ -35,7 +36,7 @@ impl Array {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const(ctx: &Context, prefix: &str, domain: &Sort, range: &Sort) -> Array {
         let sort = Sort::array_in_ctx(ctx, domain, range);
         unsafe {
@@ -49,7 +50,7 @@ impl Array {
 
     /// Create a "constant array", that is, an `Array` initialized so that all of the
     /// indices in the `domain` map to the given value `val`
-    #[z3(Context::thread_local)]
+
     pub fn const_array<A>(ctx: &Context, domain: &Sort, val: &A) -> Array
     where
         A: Ast,

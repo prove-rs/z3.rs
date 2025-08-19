@@ -201,7 +201,7 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    #[z3(Context::thread_local)]
+
     fn distinct(ctx: &Context, values: &[impl Borrow<Self>]) -> Bool
     where
         Self: Sized,

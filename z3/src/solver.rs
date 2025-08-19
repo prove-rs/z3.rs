@@ -10,7 +10,7 @@ use crate::{
 };
 use std::ops::AddAssign;
 use z3_macros::z3;
-
+#[z3(Context::thread_local)]
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
         unsafe {
@@ -44,7 +44,7 @@ impl Solver {
     /// Note however it is possible to set the `solver2_timeout`,
     /// `solver2_unknown`, and `ignore_solver1` parameters of the combined
     /// solver to change its behaviour.
-    #[z3(Context::thread_local)]
+
     pub fn new(ctx: &Context) -> Solver {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0)) }
     }
@@ -60,7 +60,7 @@ impl Solver {
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
-    #[z3(Context::thread_local)]
+
     pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
         unsafe {
             let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol_in_ctx(ctx));

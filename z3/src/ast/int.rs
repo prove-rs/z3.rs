@@ -12,14 +12,14 @@ pub struct Int {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
+#[z3(Context::thread_local)]
 impl Int {
-    #[z3(Context::thread_local)]
+
     pub fn from_big_int(ctx: &Context, value: &BigInt) -> Int {
         Int::from_str_in_ctx(ctx, &value.to_str_radix(10)).unwrap()
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn from_str(ctx: &Context, value: &str) -> Option<Int> {
         let sort = Sort::int_in_ctx(ctx);
         let ast = unsafe {
@@ -35,8 +35,9 @@ impl Int {
     }
 }
 
+#[z3(Context::thread_local)]
 impl Int {
-    #[z3(Context::thread_local)]
+
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Int {
         let sort = Sort::int_in_ctx(ctx);
         unsafe {
@@ -50,7 +51,7 @@ impl Int {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const(ctx: &Context, prefix: &str) -> Int {
         let sort = Sort::int_in_ctx(ctx);
         unsafe {
@@ -62,13 +63,13 @@ impl Int {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn from_i64(ctx: &Context, i: i64) -> Int {
         let sort = Sort::int_in_ctx(ctx);
         unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort)) }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn from_u64(ctx: &Context, u: u64) -> Int {
         let sort = Sort::int_in_ctx(ctx);
         unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort)) }

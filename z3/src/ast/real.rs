@@ -12,16 +12,16 @@ pub struct Real {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
+#[z3(Context::thread_local)]
 impl Real {
-    #[z3(Context::thread_local)]
+
     pub fn from_big_rational(ctx: &Context, value: &BigRational) -> Real {
         let num = value.numer();
         let den = value.denom();
         Real::from_real_str_in_ctx(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn from_real_str(ctx: &Context, num: &str, den: &str) -> Option<Real> {
         let sort = Sort::real_in_ctx(ctx);
         let ast = unsafe {
@@ -36,9 +36,9 @@ impl Real {
         Some(unsafe { Real::wrap(ctx, ast) })
     }
 }
-
+#[z3(Context::thread_local)]
 impl Real {
-    #[z3(Context::thread_local)]
+
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Real {
         let sort = Sort::real_in_ctx(ctx);
         unsafe {
@@ -52,7 +52,7 @@ impl Real {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn fresh_const(ctx: &Context, prefix: &str) -> Real {
         let sort = Sort::real_in_ctx(ctx);
         unsafe {
@@ -64,7 +64,7 @@ impl Real {
         }
     }
 
-    #[z3(Context::thread_local)]
+
     pub fn from_real(ctx: &Context, num: i32, den: i32) -> Real {
         unsafe {
             Self::wrap(ctx, {

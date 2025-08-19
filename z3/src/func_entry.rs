@@ -1,12 +1,12 @@
 use std::fmt;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{
     Context, FuncEntry,
     ast::{Ast, Dynamic},
 };
-
+#[z3(Context::thread_local)]
 impl FuncEntry {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Z3_func_entry) -> Self {
         unsafe {
