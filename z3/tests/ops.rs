@@ -1,3 +1,4 @@
+use num::abs;
 use z3::{
     Config, Context, DeclKind, FuncDecl, SatResult, Solver, Sort, ast,
     ast::{Array, Ast, AstKind, BV, Bool, Dynamic, Float, Int, Real},
@@ -269,7 +270,7 @@ fn test_bool_ops() {
     test_unary_op!(!);
 }
 
-fn assert_bool_child<'c>(node: &impl Ast<'c>, idx: usize, expected: &Bool<'c>) {
+fn assert_bool_child(node: &impl Ast, idx: usize, expected: &Bool) {
     assert_eq!(&node.nth_child(idx).unwrap().as_bool().unwrap(), expected);
 }
 
@@ -281,7 +282,7 @@ fn test_ast_children() {
     let a = Bool::new_const(&ctx, "a");
     assert_eq!(a.num_children(), 0);
     assert_eq!(a.nth_child(0), None);
-    assert_eq!(a.children(), vec![]);
+    assert_eq!(a.children().len(), 0);
 
     let not_a = a.not();
     assert_eq!(not_a.num_children(), 1);
@@ -313,7 +314,7 @@ fn test_ast_children() {
     assert_eq!(children[2].as_bool().unwrap(), c);
 }
 
-fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
+fn assert_ast_attributes<T: Ast>(expr: &T, is_const: bool) {
     assert_eq!(expr.kind(), AstKind::App);
     assert!(expr.is_app());
     assert_eq!(expr.is_const(), is_const);
@@ -387,8 +388,8 @@ fn test_real_approx() {
     let zero = Real::from_real(&ctx, 0, 1);
     let two = Real::from_real(&ctx, 2, 1);
     let s = Solver::new(&ctx);
-    s.assert(&x.ge(&zero));
-    s.assert(&xx._eq(&two));
+    s.assert(x.ge(&zero));
+    s.assert(xx._eq(&two));
     assert_eq!(s.check(), SatResult::Sat);
     let m = s.get_model().unwrap();
     let res = m.eval(&x, false).unwrap();
@@ -426,4 +427,50 @@ fn test_real_approx() {
     assert_eq!(res.approx(28), "1.4142135623730950488016887242");
     assert_eq!(res.approx_f64(), res.approx(32).parse().unwrap());
     assert_ne!(res.approx_f64(), res.approx(16).parse().unwrap());
+}
+
+#[test]
+fn into_ast_int() {
+    let ctx = Context::default();
+    let i = Int::from_u64(&ctx, 10);
+
+    let a1 = &i + 1;
+    let a2: Int = 1 + &i;
+    assert_eq!(a1.simplify(), 11);
+    assert_eq!(a2.simplify(), 11);
+
+    let a1 = &i - 1;
+    let a2: Int = 1 - &i;
+    assert_eq!(a1.simplify(), 9);
+    assert_eq!(a2.simplify(), -9);
+
+    let a1 = &i * 2;
+    let a2: Int = 2 * &i;
+    assert_eq!(a1.simplify(), 20);
+    assert_eq!(a2.simplify(), 20);
+
+    let a1 = &i / 2;
+    let a2: Int = 200 / &i;
+    assert_eq!(a1.simplify(), 5);
+    assert_eq!(a2.simplify(), 20);
+}
+
+#[test]
+fn test_eq() {
+    let ctx = Context::default();
+    let t = Bool::from_bool(&ctx, false);
+    let t2 = Bool::from_bool(&ctx, true);
+    // the `true` here is being transparently converted
+    // to a z3 Bool
+    assert_eq!((t | t2).simplify(), true);
+}
+
+#[test]
+fn test_float_ops() {
+    let ctx = Context::default();
+    let t = Float::from_f64(&ctx, 10.0);
+    assert!(abs(t.add_towards_zero(1.0).simplify().as_f64() - 11.0) < 0.1);
+    assert!(abs(t.sub_towards_zero(1.0).simplify().as_f64() - 9.0) < 0.1);
+    assert!(abs(t.mul_towards_zero(2.0).simplify().as_f64() - 20.0) < 0.1);
+    assert!(abs(t.div_towards_zero(2.0).simplify().as_f64() - 5.0) < 0.1);
 }
