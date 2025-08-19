@@ -2017,7 +2017,8 @@ fn test_int_i128_u128() {
     assert_eq!(int_i.to_string(), int_u.to_string());
 }
 
-  fn test_round_towards_nearest_away() {
+#[test]
+fn test_round_towards_nearest_away() {
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
