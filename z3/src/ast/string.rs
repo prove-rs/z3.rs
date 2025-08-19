@@ -4,6 +4,7 @@ use crate::ast::regexp::Regexp;
 use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::{CStr, CString};
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a string value.
@@ -14,18 +15,20 @@ pub struct String {
 
 impl String {
     /// Creates a new constant using the built-in string sort
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> String {
-        let sort = Sort::string(ctx);
+        let sort = Sort::string_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
     /// Creates a fresh constant using the built-in string sort
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str) -> String {
-        let sort = Sort::string(ctx);
+        let sort = Sort::string_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -36,6 +39,7 @@ impl String {
     }
 
     /// Creates a Z3 constant string from a `&str`
+    #[z3(Context::thread_local)]
     pub fn from_str(ctx: &Context, string: &str) -> Result<String, std::ffi::NulError> {
         let string = CString::new(string)?;
         Ok(unsafe {
@@ -73,10 +77,8 @@ impl String {
     /// # use z3::ast::{Ast as _, Int};
     /// #
     /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
     /// #
-    /// let s = z3::ast::String::fresh_const(&ctx, "");
+    /// let s = z3::ast::String::fresh_const("");
     ///
     /// solver.assert(
     ///     &s.at(0)._eq("a")
@@ -100,12 +102,10 @@ impl String {
     /// # use z3::{Config, Context, Solver, SatResult};
     /// # use z3::ast::{Ast as _, Int, String};
     /// #
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
+    /// # let solver = Solver::new();
     /// #
-    /// let s = String::from_str(&ctx, "abc").unwrap();
-    /// let sub = String::fresh_const(&ctx, "");
+    /// let s = String::from_str("abc").unwrap();
+    /// let sub = String::fresh_const( "");
     ///
     /// solver.assert(
     ///     &sub._eq(
@@ -154,16 +154,15 @@ impl String {
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, String};
     ///
-    /// let ctx = Context::default();
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     ///
-    /// let string1 = String::from_str(&ctx, "apple").unwrap();
-    /// let string2 = String::from_str(&ctx, "apple juice").unwrap();
+    /// let string1 = String::from_str("apple").unwrap();
+    /// let string2 = String::from_str("apple juice").unwrap();
     ///
     /// solver.assert(&string1.str_gt("apple juice"));
     /// assert_eq!(solver.check(), z3::SatResult::Unsat);
     ///
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     /// solver.assert(&string1.str_lt("apple juice"));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
@@ -179,10 +178,9 @@ impl String {
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, String};
     ///
-    /// let ctx = Context::default();
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     ///
-    /// let string1 = String::from_str(&ctx, "apple").unwrap();
+    /// let string1 = String::from_str("apple").unwrap();
     ///
     /// solver.assert(&string1.str_ge(&string1));
     /// solver.assert(&string1.str_le(&string1));
@@ -219,12 +217,12 @@ impl String {
 
 impl<T: AsRef<str>> IntoAst<String> for T {
     fn into_ast(self, a: &String) -> String {
-        String::from_str(&a.ctx, self.as_ref()).unwrap()
+        String::from_str_in_ctx(&a.ctx, self.as_ref()).unwrap()
     }
 }
 
 impl<T: AsRef<str> + Clone> IntoAstCtx<String> for T {
     fn into_ast_ctx(self, ctx: &Context) -> String {
-        String::from_str(ctx, self.as_ref()).unwrap()
+        String::from_str_in_ctx(ctx, self.as_ref()).unwrap()
     }
 }

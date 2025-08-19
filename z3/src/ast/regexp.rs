@@ -3,6 +3,7 @@ use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, varop};
 use crate::ast::{IntoAst, unop};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a regular expression.
@@ -34,6 +35,7 @@ pub struct Regexp {
 
 impl Regexp {
     /// Creates a regular expression that recognizes the string given as parameter
+    #[z3(Context::thread_local)]
     pub fn literal(ctx: &Context, s: &str) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -45,6 +47,7 @@ impl Regexp {
 
     /// Creates a regular expression that recognizes a character in the specified range (e.g.
     /// `[a-z]`)
+    #[z3(Context::thread_local)]
     pub fn range(ctx: &Context, lo: &char, hi: &char) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -84,6 +87,7 @@ impl Regexp {
     }
 
     /// Creates a regular expression that recognizes all sequences
+    #[z3(Context::thread_local)]
     pub fn full(ctx: &Context) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -97,6 +101,7 @@ impl Regexp {
 
     /// Creates a regular expression that accepts all singleton sequences of the characters
     /// Requires Z3 4.8.13 or later.
+    #[z3(Context::thread_local)]
     pub fn allchar(ctx: &Context) -> Self {
         unsafe {
             Self::wrap(ctx, {
@@ -109,6 +114,7 @@ impl Regexp {
     }
 
     /// Creates a regular expression that doesn't recognize any sequences
+    #[z3(Context::thread_local)]
     pub fn empty(ctx: &Context) -> Self {
         unsafe {
             Self::wrap(ctx, {

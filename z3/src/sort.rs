@@ -8,7 +8,6 @@ use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 use z3_macros::z3;
 
 impl Sort {
-    #[z3(Context::thread_local)]
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
         unsafe {
             Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
@@ -22,44 +21,53 @@ impl Sort {
     pub fn get_z3_sort(&self) -> Z3_sort {
         self.z3_sort
     }
-
+    
+    #[z3(Context::thread_local)]
     pub fn uninterpreted(ctx: &Context, name: Symbol) -> Sort {
         unsafe {
-            Self::wrap_in_ctx(
+            Self::wrap(
                 ctx,
                 Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol(ctx)),
             )
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn bool(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn int(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn real(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn float(ctx: &Context, ebits: u32, sbits: u32) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn float32(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn double(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn string(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
         unsafe {
             Self::wrap(
@@ -69,6 +77,7 @@ impl Sort {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn array(ctx: &Context, domain: &Sort, range: &Sort) -> Sort {
         unsafe {
             Self::wrap(
@@ -78,10 +87,12 @@ impl Sort {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn set(ctx: &Context, elt: &Sort) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
 
+    #[z3(Context::thread_local)]
     pub fn seq(ctx: &Context, elt: &Sort) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
@@ -99,10 +110,8 @@ impl Sort {
     /// ```
     /// # use z3::{Config, Context, SatResult, Solver, Sort, Symbol};
     /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
+    /// # let solver = Solver::new();
     /// let (colors, color_consts, color_testers) = Sort::enumeration(
-    ///     &ctx,
     ///     "Color".into(),
     ///     &[
     ///         "Red".into(),
@@ -120,6 +129,7 @@ impl Sort {
     ///
     /// assert!(model.eval(&eq, true).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```
+    #[z3(Context::thread_local)]
     pub fn enumeration(
         ctx: &Context,
         name: Symbol,
@@ -203,12 +213,10 @@ impl Sort {
     /// # Examples
     /// ```
     /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// let bool_sort = Sort::bool(&ctx);
-    /// let int_sort = Sort::int(&ctx);
-    /// let array_sort = Sort::array(&ctx, &int_sort, &bool_sort);
-    /// let set_sort = Sort::set(&ctx, &int_sort);
+    /// let bool_sort = Sort::bool();
+    /// let int_sort = Sort::int();
+    /// let array_sort = Sort::array(&int_sort, &bool_sort);
+    /// let set_sort = Sort::set(&int_sort);
     /// assert!(array_sort.is_array());
     /// assert!(set_sort.is_array());
     /// assert!(!int_sort.is_array());
@@ -225,12 +233,10 @@ impl Sort {
     /// # Examples
     /// ```
     /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// let bool_sort = Sort::bool(&ctx);
-    /// let int_sort = Sort::int(&ctx);
-    /// let array_sort = Sort::array(&ctx, &int_sort, &bool_sort);
-    /// let set_sort = Sort::set(&ctx, &int_sort);
+    /// let bool_sort = Sort::bool();
+    /// let int_sort = Sort::int();
+    /// let array_sort = Sort::array(&int_sort, &bool_sort);
+    /// let set_sort = Sort::set(&int_sort);
     /// assert_eq!(array_sort.array_domain().unwrap(), int_sort);
     /// assert_eq!(set_sort.array_domain().unwrap(), int_sort);
     /// assert!(int_sort.array_domain().is_none());
@@ -259,12 +265,10 @@ impl Sort {
     /// # Examples
     /// ```
     /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// let bool_sort = Sort::bool(&ctx);
-    /// let int_sort = Sort::int(&ctx);
-    /// let array_sort = Sort::array(&ctx, &int_sort, &bool_sort);
-    /// let set_sort = Sort::set(&ctx, &int_sort);
+    /// let bool_sort = Sort::bool();
+    /// let int_sort = Sort::int();
+    /// let array_sort = Sort::array(&int_sort, &bool_sort);
+    /// let set_sort = Sort::set(&int_sort);
     /// assert_eq!(array_sort.array_range().unwrap(), bool_sort);
     /// assert_eq!(set_sort.array_range().unwrap(), bool_sort);
     /// assert!(int_sort.array_range().is_none());

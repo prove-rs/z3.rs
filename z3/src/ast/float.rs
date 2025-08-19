@@ -3,6 +3,7 @@ use crate::ast::{Ast, BV, Bool, binop, unop};
 use crate::ast::{IntoAst, IntoAstCtx};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a float value.
@@ -13,8 +14,9 @@ pub struct Float {
 
 impl Float {
     // Create a 32-bit (IEEE-754) Float [`Ast`] from a rust f32
+    #[z3(Context::thread_local)]
     pub fn from_f32(ctx: &Context, value: f32) -> Float {
-        let sort = Sort::float32(ctx);
+        let sort = Sort::float32_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_fpa_numeral_float(ctx.z3_ctx.0, value, sort.z3_sort)
@@ -23,8 +25,9 @@ impl Float {
     }
 
     // Create a 364-bit (IEEE-754) Float [`Ast`] from a rust f64
+    #[z3(Context::thread_local)]
     pub fn from_f64(ctx: &Context, value: f64) -> Float {
-        let sort = Sort::double(ctx);
+        let sort = Sort::double_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort)
@@ -37,6 +40,7 @@ impl Float {
     }
 
     /// A NaN (Not a Number) value of the given ([`Float`]) [`Sort`].
+    #[z3(Context::thread_local)]
     pub fn nan(ctx: &Context, sort: &Sort) -> Float {
         assert!(matches!(sort.kind(), SortKind::FloatingPoint));
         unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.0, sort.z3_sort)) }
@@ -61,9 +65,10 @@ impl Float {
     /// solver.assert(&nan_32._eq(&Float::from_f32(&ctx, 1.0)).not());
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
+    #[z3(Context::thread_local)]
     pub fn nan32(ctx: &Context) -> Float {
-        let s = Sort::float32(ctx);
-        Self::nan(ctx, &s)
+        let s = Sort::float32_in_ctx(ctx);
+        Self::nan_in_ctx(ctx, &s)
     }
 
     /// A double-precision [`Float`] NaN value.
@@ -85,44 +90,49 @@ impl Float {
     /// solver.assert(&nan_32._eq(&Float::from_f32(&ctx, 1.0)).not());
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
+    #[z3(Context::thread_local)]
     pub fn nan64(ctx: &Context) -> Float {
-        let s = Sort::double(ctx);
-        Self::nan(ctx, &s)
+        let s = Sort::double_in_ctx(ctx);
+        Self::nan_in_ctx(ctx, &s)
     }
 }
 
 impl Float {
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, ebits: u32, sbits: u32) -> Float {
-        let sort = Sort::float(ctx, ebits, sbits);
+        let sort = Sort::float_in_ctx(ctx, ebits, sbits);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
     /// Create a 32-bit (IEEE-754) Float [`Ast`].
+    #[z3(Context::thread_local)]
     pub fn new_const_float32<S: Into<Symbol>>(ctx: &Context, name: S) -> Float {
-        let sort = Sort::float32(ctx);
+        let sort = Sort::float32_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
     /// Create a 64-bit (IEEE-754) Float [`Ast`].
+    #[z3(Context::thread_local)]
     pub fn new_const_double<S: Into<Symbol>>(ctx: &Context, name: S) -> Float {
-        let sort = Sort::double(ctx);
+        let sort = Sort::double_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str, ebits: u32, sbits: u32) -> Float {
-        let sort = Sort::float(ctx, ebits, sbits);
+        let sort = Sort::float_in_ctx(ctx, ebits, sbits);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -132,8 +142,9 @@ impl Float {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const_float32(ctx: &Context, prefix: &str) -> Float {
-        let sort = Sort::float32(ctx);
+        let sort = Sort::float32_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -143,8 +154,9 @@ impl Float {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const_double(ctx: &Context, prefix: &str) -> Float {
-        let sort = Sort::double(ctx);
+        let sort = Sort::double_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -247,8 +259,8 @@ macro_rules! impl_into_ast {
     };
 }
 
-impl_into_ast!(f32, from_f32);
-impl_into_ast!(f64, from_f64);
+impl_into_ast!(f32, from_f32_in_ctx);
+impl_into_ast!(f64, from_f64_in_ctx);
 
 #[cfg(test)]
 mod tests {
@@ -257,10 +269,9 @@ mod tests {
 
     #[test]
     fn test_nonstandard_float() {
-        let ctx = Context::default();
         // this float has a nonstandard size
-        let f1 = Float::new_const(&ctx, "weird", 15, 53);
-        let solver = Solver::new(&ctx);
+        let f1 = Float::new_const( "weird", 15, 53);
+        let solver = Solver::new();
         // but we can make compatible symbolic floats out of a f64!
         solver.assert(f1._eq(300.0));
         solver.check();

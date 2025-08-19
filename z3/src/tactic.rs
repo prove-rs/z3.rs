@@ -5,7 +5,7 @@ use std::os::raw::c_uint;
 use std::result::Result;
 use std::str::Utf8Error;
 use std::time::Duration;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
@@ -54,6 +54,7 @@ impl Tactic {
     /// let tactics: Vec<_> = Tactic::list_all(&ctx).filter_map(|r| r.ok()).collect();
     /// assert!(tactics.contains(&"ufbv"));
     /// ```
+    #[z3(Context::thread_local)]
     pub fn list_all(ctx: &Context) -> impl Iterator<Item = std::result::Result<&str, Utf8Error>> {
         let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.0) };
         (0..p).map(move |n| {
@@ -87,6 +88,7 @@ impl Tactic {
     /// # See also
     ///
     /// - [`Tactic::list_all()`]
+    #[z3(Context::thread_local)]
     pub fn new(ctx: &Context, name: &str) -> Tactic {
         let tactic_name = CString::new(name).unwrap();
 
@@ -101,17 +103,20 @@ impl Tactic {
     }
 
     /// Return a tactic that just return the given goal.
+    #[z3(Context::thread_local)]
     pub fn create_skip(ctx: &Context) -> Tactic {
         unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that always fails.
+    #[z3(Context::thread_local)]
     pub fn create_fail(ctx: &Context) -> Tactic {
         unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
+    #[z3(Context::thread_local)]
     pub fn repeat(ctx: &Context, t: &Tactic, max: u32) -> Tactic {
         unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max)) }
     }
@@ -174,18 +179,20 @@ impl Tactic {
 
     /// Return a tactic that applies `t1` to a given goal if the probe `p` evaluates to true,
     /// and `t2` if `p` evaluates to false.
-    pub fn cond(ctx: &Context, p: &Probe, t1: &Tactic, t2: &Tactic) -> Tactic {
+    pub fn cond(p: &Probe, t1: &Tactic, t2: &Tactic) -> Tactic {
+        assert_eq!(p.ctx, t1.ctx);
+        assert_eq!(t1.ctx, t2.ctx);
         unsafe {
             Self::wrap(
-                ctx,
-                Z3_tactic_cond(ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic),
+                &p.ctx,
+                Z3_tactic_cond(p.ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic),
             )
         }
     }
 
     /// Return a tactic that fails if the probe `p` evaluates to false.
-    pub fn fail_if(ctx: &Context, p: &Probe) -> Tactic {
-        unsafe { Self::wrap(ctx, Z3_tactic_fail_if(ctx.z3_ctx.0, p.z3_probe)) }
+    pub fn fail_if(p: &Probe) -> Tactic {
+        unsafe { Self::wrap(&p.ctx, Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe)) }
     }
 
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns

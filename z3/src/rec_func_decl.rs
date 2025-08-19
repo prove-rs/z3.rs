@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::ops::Deref;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
@@ -21,6 +21,7 @@ impl RecFuncDecl {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx.0, range.ctx.z3_ctx.0);

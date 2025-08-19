@@ -1,6 +1,7 @@
 use crate::ast::Ast;
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a datatype or enumeration value.
@@ -10,17 +11,19 @@ pub struct Datatype {
 }
 
 impl Datatype {
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sort: &Sort) -> Self {
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str, sort: &Sort) -> Self {
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);

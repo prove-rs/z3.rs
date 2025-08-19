@@ -1,14 +1,14 @@
 use proc_macro::TokenStream;
-use proc_macro2::{Ident, Span};
 use quote::{format_ident, quote, ToTokens};
 use syn::{
     parse_macro_input, spanned::Spanned, Attribute, ImplItem, ImplItemFn, ItemFn, Pat, PatType,
-    Path, Receiver, Signature, FnArg,
+    Path, Signature, FnArg,
 };
 
 /// Usage:
 ///     #[z3(my_ctx_fn)]
 /// where `my_ctx_fn` is a zero-arg function/path you can call like `my_ctx_fn()`.
+/// This will always be `Context::thread_local`
 #[proc_macro_attribute]
 pub fn z3(attr: TokenStream, item: TokenStream) -> TokenStream {
     // Attribute is a callable path, e.g. `Context::default_ctx`
@@ -23,7 +23,7 @@ pub fn z3(attr: TokenStream, item: TokenStream) -> TokenStream {
     transform_free_fn(default_ctx_fn, func).into()
 }
 
-fn transform_impl_method(default_ctx_fn: Path, mut m: ImplItemFn) -> proc_macro2::TokenStream {
+fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> proc_macro2::TokenStream {
     let orig_ident = m.sig.ident.clone();
     let renamed_ident = format_ident!("{}_in_ctx", orig_ident, span = orig_ident.span());
 
@@ -169,7 +169,7 @@ fn remove_nth_nonreceiver_arg(sig: &mut Signature, n: usize) {
         for (j, pair) in sig.inputs.clone().into_pairs().enumerate() {
             if j == i { continue; }
             let v = pair.into_value();
-            new_inputs.push_value(v);
+            new_inputs.push(v)
             // punctuation will be reinserted by pretty printer; no need to manage commas perfectly
         }
         sig.inputs = new_inputs;
@@ -189,7 +189,7 @@ fn build_call_args_calling_fn(
             FnArg::Receiver(_) => {}
             FnArg::Typed(PatType { pat, .. }) => {
                 if k == ctx_index {
-                    args.push(quote!(#default_ctx_fn()));
+                    args.push(quote!(&#default_ctx_fn()));
                 } else {
                     args.push(pat.to_token_stream());
                 }

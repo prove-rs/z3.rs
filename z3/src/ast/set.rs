@@ -3,6 +3,7 @@ use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Bool, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a set value.
@@ -12,8 +13,9 @@ pub struct Set {
 }
 
 impl Set {
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Set {
-        let sort = Sort::set(ctx, eltype);
+        let sort = Sort::set_in_ctx(ctx, eltype);
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
@@ -21,8 +23,9 @@ impl Set {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Set {
-        let sort = Sort::set(ctx, eltype);
+        let sort = Sort::set_in_ctx(ctx, eltype);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -33,6 +36,7 @@ impl Set {
     }
 
     /// Creates a set that maps the domain to false by default
+    #[z3(Context::thread_local)]
     pub fn empty(ctx: &Context, domain: &Sort) -> Set {
         unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.0, domain.z3_sort)) }
     }

@@ -200,6 +200,7 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
+    #[z3(Context::thread_local)]
     fn distinct(ctx: &Context, values: &[impl Borrow<Self>]) -> Bool
     where
         Self: Sized,
@@ -563,6 +564,7 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
+
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atmost(ctx, args.as_ref(), k)
@@ -888,3 +890,4 @@ impl fmt::Display for IsNotApp {
 }
 
 pub(crate) use {binop, trinop, unop, varop};
+use z3_macros::z3;

@@ -1,6 +1,7 @@
 use crate::ast::{Ast, Dynamic};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing an array value.
@@ -15,13 +16,14 @@ impl Array {
     /// values of the `range` `Sort`.
     ///
     /// All values in the `Array` will be unconstrained.
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(
         ctx: &Context,
         name: S,
         domain: &Sort,
         range: &Sort,
     ) -> Array {
-        let sort = Sort::array(ctx, domain, range);
+        let sort = Sort::array_in_ctx(ctx, domain, range);
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
@@ -29,8 +31,9 @@ impl Array {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str, domain: &Sort, range: &Sort) -> Array {
-        let sort = Sort::array(ctx, domain, range);
+        let sort = Sort::array_in_ctx(ctx, domain, range);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -42,6 +45,7 @@ impl Array {
 
     /// Create a "constant array", that is, an `Array` initialized so that all of the
     /// indices in the `domain` map to the given value `val`
+    #[z3(Context::thread_local)]
     pub fn const_array<A>(ctx: &Context, domain: &Sort, val: &A) -> Array
     where
         A: Ast,
@@ -125,11 +129,9 @@ impl Array {
     /// # use z3::{ast, Config, Context, ast::{Array, Int}, Sort};
     /// # use z3::ast::Ast;
     /// # use std::convert::TryInto;
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// let arr = Array::const_array(&ctx, &Sort::int(&ctx), &Int::from_u64(&ctx, 9));
+    /// let arr = Array::const_array(&Sort::int(), &Int::from_u64(9));
     /// assert!(arr.is_const_array());
-    /// let arr2 = Array::fresh_const(&ctx, "a", &Sort::int(&ctx), &Sort::int(&ctx));
+    /// let arr2 = Array::fresh_const("a", &Sort::int(), &Sort::int());
     /// assert!(!arr2.is_const_array());
     /// ```
     pub fn is_const_array(&self) -> bool {

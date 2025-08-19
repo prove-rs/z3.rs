@@ -4,6 +4,7 @@ use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
 use std::ffi::{CStr, CString};
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
@@ -13,14 +14,16 @@ pub struct Real {
 }
 
 impl Real {
+    #[z3(Context::thread_local)]
     pub fn from_big_rational(ctx: &Context, value: &BigRational) -> Real {
         let num = value.numer();
         let den = value.denom();
-        Real::from_real_str(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
+        Real::from_real_str_in_ctx(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
     }
 
+    #[z3(Context::thread_local)]
     pub fn from_real_str(ctx: &Context, num: &str, den: &str) -> Option<Real> {
-        let sort = Sort::real(ctx);
+        let sort = Sort::real_in_ctx(ctx);
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
             let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, fraction_cstring.as_ptr(), sort.z3_sort);
@@ -35,17 +38,19 @@ impl Real {
 }
 
 impl Real {
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Real {
-        let sort = Sort::real(ctx);
+        let sort = Sort::real_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str) -> Real {
-        let sort = Sort::real(ctx);
+        let sort = Sort::real_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -55,6 +60,7 @@ impl Real {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn from_real(ctx: &Context, num: i32, den: i32) -> Real {
         unsafe {
             Self::wrap(ctx, {
@@ -130,6 +136,6 @@ impl Real {
 
 impl IntoAst<Real> for BigRational {
     fn into_ast(self, a: &Real) -> Real {
-        Real::from_big_rational(a.get_ctx(), &self)
+        Real::from_big_rational_in_ctx(a.get_ctx(), &self)
     }
 }

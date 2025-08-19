@@ -1,6 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::fmt;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, Params, Symbol};
@@ -16,6 +16,7 @@ impl Params {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn new(ctx: &Context) -> Params {
         unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
     }

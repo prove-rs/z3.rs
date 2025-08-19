@@ -1,10 +1,11 @@
 use std::ffi::CString;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, Symbol};
 
 impl Symbol {
+    #[z3(Context::thread_local)]
     pub fn as_z3_symbol(&self, ctx: &Context) -> Z3_symbol {
         match self {
             Symbol::Int(i) => unsafe {

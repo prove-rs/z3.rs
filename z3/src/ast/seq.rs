@@ -3,6 +3,7 @@ use crate::ast::{Ast, Dynamic, Int, varop};
 use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a sequence value.
@@ -12,17 +13,19 @@ pub struct Seq {
 }
 
 impl Seq {
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Self {
-        let sort = Sort::seq(ctx, eltype);
+        let sort = Sort::seq_in_ctx(ctx, eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol_in_ctx(ctx), sort.z3_sort)
             })
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Self {
-        let sort = Sort::seq(ctx, eltype);
+        let sort = Sort::seq_in_ctx(ctx, eltype);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -37,22 +40,23 @@ impl Seq {
     /// ```
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, Seq};
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let solver = Solver::new(&ctx);
-    /// let empty_seq = Seq::empty(&ctx, &Sort::int(&ctx));
-    /// let any_seq = Seq::new_const(&ctx, "any_seq", &Sort::int(&ctx));
-    /// let concatenated = Seq::concat(&ctx, &[&empty_seq, &any_seq]);
+    /// let solver = Solver::new();
+    /// let empty_seq = Seq::empty(&Sort::int());
+    /// let any_seq = Seq::new_const("any_seq", &Sort::int());
+    /// let concatenated = Seq::concat(&[&empty_seq, &any_seq]);
     ///
     /// solver.assert(&concatenated._eq(&any_seq));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
+    #[z3(Context::thread_local)]
     pub fn empty(ctx: &Context, eltype: &Sort) -> Self {
-        let sort = Sort::seq(ctx, eltype);
+        let sort = Sort::seq_in_ctx(ctx, eltype);
         unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.0, sort.z3_sort)) }
     }
 
     /// Create a unit sequence of `a`.
+    #[z3(Context::thread_local)]
+
     pub fn unit<A: Ast>(ctx: &Context, a: &A) -> Self {
         unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.0, a.get_z3_ast())) }
     }
@@ -106,10 +110,9 @@ impl Seq {
     /// ```
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Seq};
-    /// let ctx = Context::default();
-    /// let solver = Solver::new(&ctx);
-    /// let seq1 = Seq::unit(&ctx, &ast::Int::from_u64(&ctx, 0));
-    /// let seq2 = Seq::unit(&ctx, &ast::Int::from_u64(&ctx, 1));
+    /// let solver = Solver::new();
+    /// let seq1 = Seq::unit(&ast::Int::from_u64(0));
+    /// let seq2 = Seq::unit(&ast::Int::from_u64(1));
     /// let concatenated = Seq::concat(&ctx, &[&seq1, &seq2]);
     ///
     /// solver.assert(&Bool::and(&ctx, &[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));

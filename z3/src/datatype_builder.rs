@@ -1,7 +1,7 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
 
 use std::{convert::TryInto, ptr::null_mut};
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{
@@ -10,6 +10,7 @@ use crate::{
 };
 
 impl DatatypeBuilder {
+    #[z3(Context::thread_local)]
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S) -> Self {
         Self {
             ctx: ctx.clone(),

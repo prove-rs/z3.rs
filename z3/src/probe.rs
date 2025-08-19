@@ -2,7 +2,7 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::result::Result;
 use std::str::Utf8Error;
-
+use z3_macros::z3;
 use z3_sys::*;
 
 use crate::{Context, Goal, Probe};
@@ -30,6 +30,7 @@ impl Probe {
     /// let probes: Vec<_> = Probe::list_all(&ctx).filter_map(|r| r.ok()).collect();
     /// assert!(probes.contains(&"is-quasi-pb"));
     /// ```
+    #[z3(Context::thread_local)]
     pub fn list_all(ctx: &Context) -> impl Iterator<Item = std::result::Result<&str, Utf8Error>> {
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.0) };
         (0..p).map(move |n| {
@@ -40,9 +41,10 @@ impl Probe {
 
     /// Return a string containing a description of the probe with
     /// the given `name`.
-    pub fn describe<'a>(ctx: &'a Context, name: &str) -> std::result::Result<&'a str, Utf8Error> {
+    #[z3(Context::thread_local)]
+    pub fn describe(ctx: &Context, name: &str) -> std::result::Result<String, Utf8Error> {
         let probe_name = CString::new(name).unwrap();
-        unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr())).to_str() }
+        unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr())).to_str().map(|s|s.to_string()) }
     }
 
     /// Return a probe associated with the given `name`.
@@ -50,12 +52,11 @@ impl Probe {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Probe};
+    /// # use z3::{Config, Context, Probe};
     ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::new(&ctx, "is-qfbv");
+    /// let probe = Probe::new("is-qfbv");
     /// ```
+    #[z3(Context::thread_local)]
     pub fn new(ctx: &Context, name: &str) -> Probe {
         let probe_name = CString::new(name).unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr())) }
@@ -77,6 +78,7 @@ impl Probe {
     /// let ctx = Context::new(&cfg);
     /// let probe = Probe::constant(&ctx, 1.0);
     /// ```
+    #[z3(Context::thread_local)]
     pub fn constant(ctx: &Context, val: f64) -> Probe {
         unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }
     }

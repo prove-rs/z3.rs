@@ -1389,20 +1389,12 @@ fn test_tactic_or_else() {
 
 #[test]
 fn test_goal_apply_tactic() {
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-
-    pub fn test_apply_tactic(
-        ctx: &Context,
-        goal: Goal,
-        before_formulas: Vec<Bool>,
-        after_formulas: Vec<Bool>,
-    ) {
+    pub fn test_apply_tactic(goal: Goal, before_formulas: Vec<Bool>, after_formulas: Vec<Bool>) {
         assert_eq!(goal.get_formulas::<Bool>(), before_formulas);
-        let params = Params::new(ctx);
+        let params = Params::new();
 
-        let tactic = Tactic::new(ctx, "sat-preprocess");
-        let repeat_tactic = Tactic::repeat(ctx, &tactic, 100);
+        let tactic = Tactic::new("sat-preprocess");
+        let repeat_tactic = Tactic::repeat(&tactic, 100);
         let apply_results = repeat_tactic.apply(&goal, Some(&params));
         let goal_results = apply_results
             .unwrap()
@@ -1416,86 +1408,72 @@ fn test_goal_apply_tactic() {
         );
     }
 
-    let a = ast::Bool::new_const(&ctx, "a");
-    let b = ast::Bool::new_const(&ctx, "b");
+    let a = ast::Bool::new_const("a");
+    let b = ast::Bool::new_const("b");
 
     let a_and_b_and_a = &a & &b & &a;
-    let goal = Goal::new(&ctx, false, false, false);
+    let goal = Goal::new(false, false, false);
     goal.assert(&a_and_b_and_a);
     test_apply_tactic(
-        &ctx,
         goal,
         vec![a.clone(), b.clone(), a.clone()],
         vec![a.clone(), b.clone()],
     );
 
     let a_implies_b = ast::Bool::implies(&a, &b).simplify();
-    let a_and_a_implies_b = Bool::and(&ctx, &[&a, &a_implies_b]);
+    let a_and_a_implies_b = Bool::and(&[&a, &a_implies_b]);
 
-    let goal = Goal::new(&ctx, false, false, false);
+    let goal = Goal::new(false, false, false);
     goal.assert(&a_and_a_implies_b);
     test_apply_tactic(
-        &ctx,
         goal,
         vec![a.clone(), a_implies_b.clone()],
         vec![a.clone(), b.clone()],
     );
 
-    let goal = Goal::new(&ctx, false, false, false);
+    let goal = Goal::new(false, false, false);
     goal.assert(&a);
     goal.assert(&a_implies_b.clone());
     test_apply_tactic(
-        &ctx,
         goal,
         vec![a.clone(), a_implies_b.clone()],
         vec![a.clone(), b.clone()],
     );
 
-    let false_bool = ast::Bool::from_bool(&ctx, false);
-    let goal = Goal::new(&ctx, false, false, false);
-    let true_and_false_and_true = ast::Bool::and(&ctx, &[true, false, true]);
+    let false_bool = ast::Bool::from_bool(false);
+    let goal = Goal::new(false, false, false);
+    let true_and_false_and_true = ast::Bool::and(&[true, false, true]);
     goal.assert(&true_and_false_and_true);
-    test_apply_tactic(
-        &ctx,
-        goal,
-        vec![false_bool.clone()],
-        vec![false_bool.clone()],
-    );
+    test_apply_tactic(goal, vec![false_bool.clone()], vec![false_bool.clone()]);
 }
 
 #[test]
 fn test_tactic_cond() {
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-    let t1 = Tactic::new(&ctx, "qfnra");
-    let t2 = Tactic::new(&ctx, "smt");
-    let p = Probe::new(&ctx, "is-qfnra");
+    let t1 = Tactic::new("qfnra");
+    let t2 = Tactic::new("smt");
+    let p = Probe::new("is-qfnra");
 
-    let _t = Tactic::cond(&ctx, &p, &t1, &t2);
+    let _t = Tactic::cond(&p, &t1, &t2);
 }
 
 #[test]
 fn test_tactic_conditions() {
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-    let t1 = Tactic::new(&ctx, "qfnra");
-    let t2 = Tactic::new(&ctx, "smt");
-    let p = Probe::new(&ctx, "is-qfnra");
+    let t1 = Tactic::new("qfnra");
+    let t2 = Tactic::new("smt");
+    let p = Probe::new("is-qfnra");
 
     t1.probe_or_else(&p, &t2);
     t1.when(&p);
-    Tactic::cond(&ctx, &p, &t1, &t2);
-    Tactic::fail_if(&ctx, &p);
+    Tactic::cond(&p, &t1, &t2);
+    Tactic::fail_if(&p);
 }
 
 #[test]
 fn test_probe_debug() {
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-    let _v: Vec<&str> = Probe::list_all(&ctx).map(|x| x.unwrap()).collect();
+    let _v: Vec<&str> = Probe::list_all().map(|x| x.unwrap()).collect();
     assert_eq!(
         "A probe to give an upper bound of Ackermann congruence lemmas that a formula might generate.",
-        Probe::describe(&ctx, "ackr-bound-probe").unwrap(),
+        Probe::describe("ackr-bound-probe").unwrap(),
     );
 }
 

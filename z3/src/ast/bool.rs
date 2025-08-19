@@ -3,6 +3,7 @@ use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use z3_macros::z3;
 use z3_sys::*;
 
 /// [`Ast`] node representing a boolean value.
@@ -12,8 +13,9 @@ pub struct Bool {
 }
 
 impl Bool {
+    #[z3(Context::thread_local)]
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Bool {
-        let sort = Sort::bool(ctx);
+        let sort = Sort::bool_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
@@ -21,8 +23,9 @@ impl Bool {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn fresh_const(ctx: &Context, prefix: &str) -> Bool {
-        let sort = Sort::bool(ctx);
+        let sort = Sort::bool_in_ctx(ctx);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -32,6 +35,7 @@ impl Bool {
         }
     }
 
+    #[z3(Context::thread_local)]
     pub fn from_bool(ctx: &Context, b: bool) -> Bool {
         unsafe {
             Self::wrap(ctx, {
@@ -84,6 +88,7 @@ impl Bool {
         not(Z3_mk_not, Self);
     }
 
+    #[z3(Context::thread_local)]
     pub fn pb_le(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {
             Bool::wrap(ctx, {
@@ -102,6 +107,7 @@ impl Bool {
             })
         }
     }
+    #[z3(Context::thread_local)]
     pub fn pb_ge(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {
             Bool::wrap(ctx, {
@@ -120,6 +126,7 @@ impl Bool {
             })
         }
     }
+    #[z3(Context::thread_local)]
     pub fn pb_eq(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {
             Bool::wrap(ctx, {
@@ -142,12 +149,12 @@ impl Bool {
 
 impl IntoAst<Bool> for bool {
     fn into_ast(self, a: &Bool) -> Bool {
-        Bool::from_bool(&a.ctx, self)
+        Bool::from_bool_in_ctx(&a.ctx, self)
     }
 }
 
 impl IntoAstCtx<Bool> for bool {
     fn into_ast_ctx(self, ctx: &Context) -> Bool {
-        Bool::from_bool(ctx, self)
+        Bool::from_bool_in_ctx(ctx, self)
     }
 }
