@@ -33,6 +33,39 @@ impl Float {
     pub fn as_f64(&self) -> f64 {
         unsafe { Z3_get_numeral_double(self.ctx.z3_ctx.0, self.z3_ast) }
     }
+
+    /// NaN for an arbitrary FP sort.
+    pub fn nan(ctx: &Context, sort: &Sort) -> Float {
+        assert!(matches!(sort.kind(), SortKind::FloatingPoint));
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.0, sort.z3_sort)) }
+    }
+
+    /// Convenience IEEE-754 single & double.
+    /// Any two NANs are equal to each-other, and they are not equal to any concrete number.
+    /// # Example
+    /// ```
+    /// use z3::{ast, Config, Context, Solver, Sort};
+    /// use z3::ast::{Ast, Float};
+    ///
+    /// let ctx = Context::default();
+    /// let solver = Solver::new(&ctx);
+    ///
+    /// let nan_32 = Float::nan32(&ctx);
+    /// let nan_64 = Float::nan64(&ctx);
+    ///
+    /// solver.assert(&nan_32._eq(&nan_32));
+    /// solver.assert(&nan_64._eq(&nan_64));
+    /// solver.assert(&nan_32._eq(&Float::from_f32(&ctx, 1.0)).not());
+    /// assert_eq!(solver.check(), z3::SatResult::Sat);
+    /// ```
+    pub fn nan32(ctx: &Context) -> Float {
+        let s = Sort::float32(ctx);
+        Self::nan(ctx, &s)
+    }
+    pub fn nan64(ctx: &Context) -> Float {
+        let s = Sort::double(ctx);
+        Self::nan(ctx, &s)
+    }
 }
 
 impl Float {
