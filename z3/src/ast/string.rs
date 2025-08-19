@@ -79,12 +79,12 @@ impl String {
     /// let s = z3::ast::String::fresh_const(&ctx, "");
     ///
     /// solver.assert(
-    ///     &s.at(&Int::from_u64(&ctx, 0))
-    ///         ._eq(&z3::ast::String::from_str(&ctx, "a").unwrap())
+    ///     &s.at(0)._eq("a")
     /// );
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn at(&self, index: &Int) -> Self {
+    pub fn at<T: IntoAstFromCtx<Int>>(&self, index: T) -> Self {
+        let index = index.into_ast_ctx(&self.ctx);
         unsafe {
             Self::wrap(
                 &self.ctx,
@@ -109,10 +109,7 @@ impl String {
     ///
     /// solver.assert(
     ///     &sub._eq(
-    ///         &s.substr(
-    ///             &Int::from_u64(&ctx, 1),
-    ///             &Int::from_u64(&ctx, 2),
-    ///         )
+    ///         &s.substr(1,2)
     ///     )
     /// );
     ///
@@ -129,7 +126,13 @@ impl String {
     ///     "bc",
     /// );
     /// ```
-    pub fn substr(&self, offset: &Int, length: &Int) -> Self {
+    pub fn substr<T: IntoAstFromCtx<Int>, R: IntoAstFromCtx<Int>>(
+        &self,
+        offset: T,
+        length: R,
+    ) -> Self {
+        let offset = offset.into_ast_ctx(&self.ctx);
+        let length = length.into_ast_ctx(&self.ctx);
         unsafe {
             Self::wrap(
                 &self.ctx,
@@ -161,14 +164,15 @@ impl String {
     /// let string1 = String::from_str(&ctx, "apple").unwrap();
     /// let string2 = String::from_str(&ctx, "apple juice").unwrap();
     ///
-    /// solver.assert(&string1.str_gt(&string2));
+    /// solver.assert(&string1.str_gt("apple juice"));
     /// assert_eq!(solver.check(), z3::SatResult::Unsat);
     ///
     /// let solver = Solver::new(&ctx);
-    /// solver.assert(&string1.str_lt(&string2));
+    /// solver.assert(&string1.str_lt("apple juice"));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn str_gt(&self, other: &Self) -> Bool {
+    pub fn str_gt<T: IntoAst<Self>>(&self, other: T) -> Bool {
+        let other = other.into_ast(self);
         other.str_lt(self)
     }
 
@@ -188,7 +192,8 @@ impl String {
     /// solver.assert(&string1.str_le(&string1));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn str_ge(&self, other: &Self) -> Bool {
+    pub fn str_ge<T: IntoAst<Self>>(&self, other: T) -> Bool {
+        let other = other.into_ast(self);
         other.str_le(self)
     }
 

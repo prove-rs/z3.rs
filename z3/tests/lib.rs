@@ -46,7 +46,7 @@ fn test_solving() {
     let y = ast::Int::new_const(&ctx, "y");
 
     let solver = Solver::new(&ctx);
-    solver.assert(&x.gt(&y));
+    solver.assert(x.gt(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -62,11 +62,11 @@ fn test_solving_for_model() {
     let seven = ast::Int::from_i64(&ctx, 7);
 
     let solver = Solver::new(&ctx);
-    solver.assert(&x.gt(&y));
-    solver.assert(&y.gt(&zero));
-    solver.assert(&y.rem(&seven)._eq(&two));
+    solver.assert(x.gt(&y));
+    solver.assert(y.gt(&zero));
+    solver.assert(y.rem(&seven)._eq(&two));
     let x_plus_two = ast::Int::add(&ctx, &[&x, &two]);
-    solver.assert(&x_plus_two.gt(&seven));
+    solver.assert(x_plus_two.gt(&seven));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
@@ -91,11 +91,11 @@ fn test_solving_for_model_cloned() {
     let seven = ast::Int::from_i64(&ctx, 7);
 
     let solver = Solver::new(&ctx);
-    solver.assert(&x.gt(&y));
-    solver.assert(&y.gt(&zero));
-    solver.assert(&y.rem(&seven)._eq(&two));
+    solver.assert(x.gt(&y));
+    solver.assert(y.gt(&zero));
+    solver.assert(y.rem(&seven)._eq(&two));
     let x_plus_two = ast::Int::add(&ctx, &[&x, &two]);
-    solver.assert(&x_plus_two.gt(&seven));
+    solver.assert(x_plus_two.gt(&seven));
     let cloned = solver.clone();
     assert_eq!(cloned.check(), SatResult::Sat);
 
@@ -119,7 +119,7 @@ fn test_cloning_ast() {
     let zero = ast::Int::from_i64(&ctx, 0);
 
     let solver = Solver::new(&ctx);
-    solver.assert(&x._eq(&zero));
+    solver.assert(x._eq(&zero));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
@@ -133,7 +133,7 @@ fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool> {
     let s = Solver::new(ctx);
     let x = ast::Int::new_const(ctx, "x");
     let y = ast::Int::new_const(ctx, "y");
-    s.assert(&x.gt(&y));
+    s.assert(x.gt(&y));
     s.get_assertions()
 }
 
@@ -169,10 +169,10 @@ fn test_bitvectors() {
     let two = ast::BV::from_i64(&ctx, 2, 64);
 
     let solver = Solver::new(&ctx);
-    solver.assert(&a.bvsgt(&b));
-    solver.assert(&b.bvsgt(&two));
+    solver.assert(a.bvsgt(&b));
+    solver.assert(b.bvsgt(&two));
     let b_plus_two = b.bvadd(&two);
-    solver.assert(&b_plus_two.bvsgt(&a));
+    solver.assert(b_plus_two.bvsgt(&a));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
@@ -193,7 +193,7 @@ fn test_bitvector_from_str() {
     let b = ast::BV::from_str(&ctx, 129, "340282366920938463463374607431768211456").unwrap();
 
     let solver = Solver::new(&ctx);
-    solver.assert(&a._eq(&b));
+    solver.assert(a._eq(&b));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let model = solver.get_model().unwrap();
@@ -240,10 +240,10 @@ fn test_ast_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&destination);
-    slv.assert(&translated_a._eq(2));
+    slv.assert(translated_a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
-    slv.assert(&translated_a._eq(3));
+    slv.assert(translated_a._eq(3));
     assert_eq!(slv.check(), SatResult::Unsat);
 }
 
@@ -270,7 +270,7 @@ fn test_solver_to_smtlib2() {
     let solver1 = Solver::new(&ctx);
     let t1 = ast::Bool::from_bool(&ctx, true);
     let t2 = ast::Bool::from_bool(&ctx, true);
-    solver1.assert(&t1._eq(&t2));
+    solver1.assert(t1._eq(&t2));
     let s1_smt2 = solver1.to_smt2();
     let solver2 = Solver::new(&ctx);
     solver2.from_string(s1_smt2);
@@ -287,12 +287,12 @@ fn test_solver_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&destination);
-    slv.assert(&translated_a._eq(2));
+    slv.assert(translated_a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
     let translated_slv = slv.translate(&source);
     // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
-    slv.assert(&translated_a._eq(3));
+    slv.assert(translated_a._eq(3));
     assert_eq!(slv.check(), SatResult::Unsat);
     assert_eq!(translated_slv.check(), SatResult::Sat);
 }
@@ -321,7 +321,7 @@ fn test_model_translate() {
     let translated_a = a.translate(&destination);
 
     let slv = Solver::new(&source);
-    slv.assert(&a._eq(2));
+    slv.assert(a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
     let model = slv.get_model().unwrap();
@@ -346,7 +346,7 @@ fn test_pb_ops_model() {
     let solver = Solver::new(&ctx);
     solver.push();
 
-    solver.assert(&ast::Bool::pb_eq(&ctx, &[(&x, 1), (&y, 1)], 1));
+    solver.assert(ast::Bool::pb_eq(&ctx, &[(&x, 1), (&y, 1)], 1));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
@@ -357,7 +357,7 @@ fn test_pb_ops_model() {
 
     solver.pop(1);
     solver.push();
-    solver.assert(&ast::Bool::pb_ge(&ctx, &[(&x, 1), (&y, 1)], 2));
+    solver.assert(ast::Bool::pb_ge(&ctx, &[(&x, 1), (&y, 1)], 2));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
@@ -367,7 +367,7 @@ fn test_pb_ops_model() {
     assert!(xv && yv);
 
     solver.pop(1);
-    solver.assert(&ast::Bool::pb_le(&ctx, &[(&x, 1), (&y, 1)], 0));
+    solver.assert(ast::Bool::pb_le(&ctx, &[(&x, 1), (&y, 1)], 0));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
     let xv = model.eval(&x, true).unwrap().as_bool().unwrap();
@@ -406,7 +406,7 @@ fn test_params() {
 
     let solver = Solver::new(&ctx);
     solver.set_params(&params);
-    solver.assert(&x.gt(&y));
+    solver.assert(x.gt(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -478,7 +478,7 @@ fn test_float_add() {
     let x_plus_one = ast::RoundingMode::round_towards_zero(&ctx).add(&x, 1.0f32);
     let y = ast::Float::from_f32(&ctx, std::f32::consts::PI);
 
-    solver.assert(&x_plus_one._eq(y));
+    solver.assert(x_plus_one._eq(y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -492,7 +492,7 @@ fn test_arbitrary_size_real() {
         .unwrap();
     let y = ast::Real::from_real(&ctx, 1, 1);
 
-    solver.assert(&x.lt(&y));
+    solver.assert(x.lt(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -506,7 +506,7 @@ fn test_arbitrary_size_int() {
     let one = ast::Int::from_i64(&ctx, 1);
     let y = ast::Int::from_str(&ctx, "99999999999999999999999").unwrap();
 
-    solver.assert(&ast::Int::add(&ctx, &[&x, &one])._eq(&y));
+    solver.assert(ast::Int::add(&ctx, &[&x, &one])._eq(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -522,7 +522,7 @@ fn test_arbitrary_size_real_from_bigrational() {
     let den = BigInt::from_str("99999999999999999999999").unwrap();
     let ratio = BigRational::new(num, den);
 
-    solver.assert(&x._eq(ratio));
+    solver.assert(x._eq(ratio));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -538,7 +538,7 @@ fn test_arbitrary_size_int_from_bigint() {
 
     let num2 = BigInt::from_str("99999999999999999999999").unwrap();
 
-    solver.assert(&ast::Int::add(&ctx, &[&x, &y])._eq(num2));
+    solver.assert(ast::Int::add(&ctx, &[&x, &y])._eq(num2));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -551,12 +551,12 @@ fn test_string_eq() {
     let x = ast::String::from_str(&ctx, "foo").unwrap();
     let h = ast::String::new_const(&ctx, "h");
 
-    solver.assert(&x._eq("foo"));
-    solver.assert(&x._eq("bar").not());
-    solver.assert(&h._eq(&x));
+    solver.assert(x._eq("foo"));
+    solver.assert(x._eq("bar").not());
+    solver.assert(h._eq(&x));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    solver.assert(&h._eq("bar"));
+    solver.assert(h._eq("bar"));
     assert_eq!(solver.check(), SatResult::Unsat);
 }
 
@@ -566,7 +566,7 @@ fn test_string_concat() {
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
 
-    solver.assert(&ast::String::concat(&ctx, &["foo", "bar"])._eq("foobar"));
+    solver.assert(ast::String::concat(&ctx, &["foo", "bar"])._eq("foobar"));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -578,7 +578,7 @@ fn test_string_prefix() {
 
     let x = ast::String::from_str(&ctx, "foo").unwrap();
 
-    solver.assert(&x.prefix("foobar"));
+    solver.assert(x.prefix("foobar"));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -590,7 +590,7 @@ fn test_string_suffix() {
 
     let x = ast::String::from_str(&ctx, "bar").unwrap();
 
-    solver.assert(&x.suffix("foobar"));
+    solver.assert(x.suffix("foobar"));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -633,10 +633,10 @@ fn test_rec_func_def() {
 
     let solver = Solver::new(&ctx);
 
-    solver.assert(&x._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
-    solver.assert(&y._eq(ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
-    solver.assert(&y._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
-    solver.assert(&y._eq(120));
+    solver.assert(x._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
+    solver.assert(y._eq(ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
+    solver.assert(y._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
+    solver.assert(y._eq(120));
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -665,13 +665,13 @@ fn test_rec_func_def_unsat() {
 
     let solver = Solver::new(&ctx);
 
-    solver.assert(&x._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
-    solver.assert(&y._eq(ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
-    solver.assert(&y._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
+    solver.assert(x._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 4)]).as_int().unwrap()));
+    solver.assert(y._eq(ast::Int::mul(&ctx, &[&ast::Int::from_i64(&ctx, 5), &x])));
+    solver.assert(y._eq(fac.apply(&[&ast::Int::from_i64(&ctx, 5)]).as_int().unwrap()));
 
     // If fac was an uninterpreted function, this assertion would work.
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
-    solver.assert(&y._eq(25));
+    solver.assert(y._eq(25));
 
     assert_eq!(solver.check(), SatResult::Unsat);
 }
@@ -761,10 +761,10 @@ fn test_get_unsat_core() {
     let x = ast::Int::new_const(&ctx, "x");
 
     let x_is_three = ast::Bool::new_const(&ctx, "x-is-three");
-    solver.assert_and_track(&x._eq(3), &x_is_three);
+    solver.assert_and_track(x._eq(3), &x_is_three);
 
     let x_is_five = ast::Bool::new_const(&ctx, "x-is-five");
-    solver.assert_and_track(&x._eq(5), &x_is_five);
+    solver.assert_and_track(x._eq(5), &x_is_five);
 
     assert!(
         solver.get_unsat_core().is_empty(),
@@ -859,14 +859,14 @@ fn test_datatype_builder() {
         .apply(&[&nothing])
         .as_bool()
         .unwrap();
-    solver.assert(&nothing_is_just.not());
+    solver.assert(nothing_is_just.not());
 
     let just_five_is_nothing = maybe_int.variants[0]
         .tester
         .apply(&[&just_five])
         .as_bool()
         .unwrap();
-    solver.assert(&just_five_is_nothing.not());
+    solver.assert(just_five_is_nothing.not());
 
     let just_five_is_just = maybe_int.variants[1]
         .tester
@@ -879,7 +879,7 @@ fn test_datatype_builder() {
         .apply(&[&just_five])
         .as_int()
         .unwrap();
-    solver.assert(&five._eq(&five_two));
+    solver.assert(five._eq(&five_two));
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -919,14 +919,14 @@ fn test_recursive_datatype() {
         .apply(&[&nil])
         .as_bool()
         .unwrap();
-    solver.assert(&nil_is_cons.not());
+    solver.assert(nil_is_cons.not());
 
     let cons_five_nil_is_nil = list_sort.variants[0]
         .tester
         .apply(&[&cons_five_nil])
         .as_bool()
         .unwrap();
-    solver.assert(&cons_five_nil_is_nil.not());
+    solver.assert(cons_five_nil_is_nil.not());
 
     let cons_five_nil_is_cons = list_sort.variants[1]
         .tester
@@ -939,14 +939,14 @@ fn test_recursive_datatype() {
         .apply(&[&cons_five_nil])
         .as_int()
         .unwrap();
-    solver.assert(&car_cons_five_is_five._eq(&five));
+    solver.assert(car_cons_five_is_five._eq(&five));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let cdr_cons_five_is_nil = list_sort.variants[1].accessors[1]
         .apply(&[&cons_five_nil])
         .as_datatype()
         .unwrap();
-    solver.assert(&cdr_cons_five_is_nil._eq(nil.as_datatype().unwrap()));
+    solver.assert(cdr_cons_five_is_nil._eq(nil.as_datatype().unwrap()));
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -995,7 +995,7 @@ fn test_mutually_recursive_datatype() {
         .apply(&[&leaf_ten])
         .as_int()
         .unwrap();
-    solver.assert(&leaf_ten_val_is_ten._eq(ten.clone()));
+    solver.assert(leaf_ten_val_is_ten._eq(ten.clone()));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let nil = tree_list_sort.variants[0].constructor.apply(&[]);
@@ -1017,11 +1017,11 @@ fn test_mutually_recursive_datatype() {
     // n2 = Tree.node(TreeList.cons(n1, TreeList.nil))
     let n2 = tree_sort.variants[1].constructor.apply(&[&n1_cons_nil]);
 
-    solver.assert(&n2._eq(&n1).not());
+    solver.assert(n2._eq(&n1).not());
 
     // assert(TreeList.car(Tree.children(n2)) == n1)
     solver.assert(
-        &tree_list_sort.variants[1].accessors[0]
+        tree_list_sort.variants[1].accessors[0]
             .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
             ._eq(&n1),
     );
@@ -1186,10 +1186,10 @@ fn test_set_membership() {
     let one = ast::Int::from_u64(&ctx, 1);
 
     solver.push();
-    solver.assert(&set._eq(ast::Set::empty(&ctx, &Sort::int(&ctx))));
+    solver.assert(set._eq(ast::Set::empty(&ctx, &Sort::int(&ctx))));
 
     solver.push();
-    solver.assert(&set.member(&one));
+    solver.assert(set.member(&one));
     // An empty set will never contain 1
     assert_eq!(solver.check(), SatResult::Unsat);
     solver.pop(1);
@@ -1197,11 +1197,11 @@ fn test_set_membership() {
     solver.push();
     let set_with_one = set.add(&one);
     // Adding 1 to the empty set means it does now contain 1
-    solver.assert(&set_with_one.member(&one));
+    solver.assert(set_with_one.member(&one));
     assert_eq!(solver.check(), SatResult::Sat);
     let set_without_one = set_with_one.del(&one);
     // Removing 1 from the set means it no longer contains 1
-    solver.assert(&set_without_one.member(&one));
+    solver.assert(set_without_one.member(&one));
     assert_eq!(solver.check(), SatResult::Unsat);
     solver.pop(1);
 
@@ -1217,8 +1217,8 @@ fn test_set_membership() {
 
     solver.push();
     // A singleton set of 1 will contain 1
-    solver.assert(&set._eq(ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
-    solver.assert(&set.member(&one));
+    solver.assert(set._eq(ast::Set::empty(&ctx, &Sort::int(&ctx)).add(&one)));
+    solver.assert(set.member(&one));
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
 }
@@ -1258,7 +1258,7 @@ fn test_array_store_select() {
     let set = ast::Array::new_const(&ctx, "integer_array", &Sort::int(&ctx), &Sort::int(&ctx))
         .store(&zero, &one);
 
-    solver.assert(&set.select(&zero)._eq(one).not());
+    solver.assert(set.select(&zero)._eq(one).not());
     assert_eq!(solver.check(), SatResult::Unsat);
 }
 
@@ -1683,7 +1683,7 @@ fn test_regex_capital_foobar_intersect_az_plus_is_unsat() {
             &ast::Regexp::plus(&ast::Regexp::range(ctx, &'a', &'z')),
         ],
     );
-    solver.assert(&s.regex_matches(&re));
+    solver.assert(s.regex_matches(&re));
     assert!(solver.check() == SatResult::Unsat);
 }
 
@@ -1702,9 +1702,9 @@ fn test_regex_union() {
             ast::Regexp::literal(ctx, "b"),
         ],
     );
-    solver.assert(&a.regex_matches(&re));
-    solver.assert(&b.regex_matches(&re));
-    solver.assert(&c.regex_matches(&re).not());
+    solver.assert(a.regex_matches(&re));
+    solver.assert(b.regex_matches(&re));
+    solver.assert(c.regex_matches(&re).not());
     assert!(solver.check() == SatResult::Sat);
 }
 
@@ -1721,7 +1721,7 @@ fn test_regex_union2() {
             ast::Regexp::literal(ctx, "b"),
         ],
     );
-    solver.assert(&c.regex_matches(&re));
+    solver.assert(c.regex_matches(&re));
     assert!(solver.check() == SatResult::Unsat);
 }
 
@@ -1791,15 +1791,15 @@ fn return_number_args_in_given_entry() {
 
     let solver = Solver::new(ctx);
     solver.assert(
-        &f.apply(&[&Int::from_u64(ctx, 0), &Int::from_u64(ctx, 1)])
+        f.apply(&[&Int::from_u64(ctx, 0), &Int::from_u64(ctx, 1)])
             ._eq(Int::from_u64(ctx, 10)),
     );
     solver.assert(
-        &f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 2)])
+        f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 2)])
             ._eq(Int::from_u64(ctx, 20)),
     );
     solver.assert(
-        &f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 0)])
+        f.apply(&[&Int::from_u64(ctx, 1), &Int::from_u64(ctx, 0)])
             ._eq(Int::from_u64(ctx, 10)),
     );
 
@@ -1828,11 +1828,11 @@ fn iterate_all_solutions() {
     let b = &Int::new_const(ctx, "b");
     let one = Int::from_u64(ctx, 1);
 
-    solver.assert(&one.le(a));
-    solver.assert(&a.le(5));
-    solver.assert(&one.le(b));
-    solver.assert(&b.le(5));
-    solver.assert(&a.ge(&(2 * b)));
+    solver.assert(one.le(a));
+    solver.assert(a.le(5));
+    solver.assert(one.le(b));
+    solver.assert(b.le(5));
+    solver.assert(a.ge(&(2 * b)));
 
     let mut solutions = std::collections::HashSet::new();
     while solver.check() == SatResult::Sat {
@@ -1855,7 +1855,7 @@ fn iterate_all_solutions() {
             .collect::<Vec<_>>()
             .join(", ");
         solutions.insert(format!("[{this_solution}]"));
-        solver.assert(&Bool::or(ctx, &modifications.iter().collect::<Vec<_>>()));
+        solver.assert(Bool::or(ctx, &modifications.iter().collect::<Vec<_>>()));
     }
 
     assert!(
@@ -1888,8 +1888,8 @@ fn test_consequences() {
     let b = Bool::new_const(&ctx, "b");
     let c = Bool::new_const(&ctx, "c");
     let d = Bool::new_const(&ctx, "d");
-    solver.assert(&a.implies(&b));
-    solver.assert(&b.implies(&c));
+    solver.assert(a.implies(&b));
+    solver.assert(b.implies(&c));
 
     let assumptions = vec![a.clone()];
     let variables = vec![b.clone(), c.clone(), d.clone()];
@@ -1917,8 +1917,8 @@ fn test_atmost() {
     let b = Bool::new_const(ctx, "b");
     let c = Bool::new_const(ctx, "c");
     let d = Bool::new_const(ctx, "d");
-    solver.assert(&a.implies(&b));
-    solver.assert(&b.implies(&c));
+    solver.assert(a.implies(&b));
+    solver.assert(b.implies(&c));
 
     solver.push();
     let am = atmost(ctx, [&a, &b, &c, &d], 2);
@@ -1943,8 +1943,8 @@ fn test_atleast() {
     let b = Bool::new_const(ctx, "b");
     let c = Bool::new_const(ctx, "c");
     let d = Bool::new_const(ctx, "d");
-    solver.assert(&a.implies(&b));
-    solver.assert(&b.implies(&c));
+    solver.assert(a.implies(&b));
+    solver.assert(b.implies(&c));
 
     solver.push();
     let am = atleast(ctx, [&a, &b, &c, &d], 4);
@@ -1953,7 +1953,7 @@ fn test_atleast() {
     solver.pop(1);
 
     solver.push();
-    solver.assert(&a.not());
+    solver.assert(a.not());
     let am = atleast(ctx, [&a, &b, &c, &d], 4);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Unsat));
@@ -1967,7 +1967,7 @@ fn test_model_iter() {
     let solver = Solver::new(&ctx);
 
     let a = ast::Int::new_const(&ctx, "a");
-    solver.assert(&a._eq(2));
+    solver.assert(a._eq(2));
     solver.check();
 
     let model = solver.get_model().unwrap();

@@ -225,11 +225,11 @@ unsafe impl Translate for Model {
 
 #[test]
 fn test_unsat() {
-    use crate::{Config, SatResult, ast};
+    use crate::{Config, SatResult};
     let cfg = Config::new();
     let ctx = Context::new(&cfg);
     let solver = Solver::new(&ctx);
-    solver.assert(&ast::Bool::from_bool(&ctx, false));
+    solver.assert(false);
     assert_eq!(solver.check(), SatResult::Unsat);
     assert!(solver.get_model().is_none());
 }

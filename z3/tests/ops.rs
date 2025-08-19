@@ -388,8 +388,8 @@ fn test_real_approx() {
     let zero = Real::from_real(&ctx, 0, 1);
     let two = Real::from_real(&ctx, 2, 1);
     let s = Solver::new(&ctx);
-    s.assert(&x.ge(&zero));
-    s.assert(&xx._eq(&two));
+    s.assert(x.ge(&zero));
+    s.assert(xx._eq(&two));
     assert_eq!(s.check(), SatResult::Sat);
     let m = s.get_model().unwrap();
     let res = m.eval(&x, false).unwrap();
