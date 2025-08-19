@@ -7,6 +7,7 @@ use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
+use z3::Translate;
 
 mod objectives;
 mod ops;
@@ -128,7 +129,7 @@ fn test_cloning_ast() {
     assert_eq!(yv, 0);
 }
 
-fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool<'_>> {
+fn get_some_solver_assertions(ctx: &Context) -> Vec<ast::Bool> {
     let s = Solver::new(ctx);
     let x = ast::Int::new_const(ctx, "x");
     let y = ast::Int::new_const(ctx, "y");
@@ -1663,7 +1664,7 @@ fn test_ast_safe_eq() {
     let other_bool: ast::Dynamic = ast::Bool::new_const(ctx, "c").into();
     let other_string: ast::Dynamic = ast::String::from_str(ctx, "d").unwrap().into();
 
-    let sd: SortDiffers<'_> = SortDiffers::new(other_bool.get_sort(), other_string.get_sort());
+    let sd: SortDiffers = SortDiffers::new(other_bool.get_sort(), other_string.get_sort());
 
     let result = x._safe_eq(&y);
     assert!(result.is_err());
