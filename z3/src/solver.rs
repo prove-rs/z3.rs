@@ -43,15 +43,6 @@ impl Solver {
     /// Note however it is possible to set the `solver2_timeout`,
     /// `solver2_unknown`, and `ignore_solver1` parameters of the combined
     /// solver to change its behaviour.
-    ///
-    /// The function [`Solver::get_model()`] retrieves a model if the
-    /// assertions is satisfiable (i.e., the result is
-    /// `SatResult::Sat`) and [model construction is enabled].
-    /// The function [`Solver::get_model()`] can also be used even
-    /// if the result is `SatResult::Unknown`, but the returned model
-    /// is not guaranteed to satisfy quantified assertions.
-    ///
-    /// [model construction is enabled]: crate::Config::set_model_generation
     pub fn new(ctx: &Context) -> Solver {
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0)) }
     }
@@ -303,11 +294,19 @@ impl Solver {
     }
 
     /// Retrieve the model for the last [`Solver::check()`]
-    /// or [`Solver::check_assumptions()`].
+    /// or [`Solver::check_assumptions()`] if the
+    /// assertions is satisfiable (i.e., the result is
+    /// `SatResult::Sat`) and [model construction is enabled].
+    ///
+    /// It can also be used
+    /// if the result is `SatResult::Unknown`, but the returned model
+    /// is not guaranteed to satisfy quantified assertions.
     ///
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if
     /// the result was [`SatResult::Unsat`].
+    ///
+    /// [model construction is enabled]: crate::Config::set_model_generation
     pub fn get_model(&self) -> Option<Model> {
         Model::of_solver(self)
     }
