@@ -130,7 +130,6 @@ impl Sort {
     ///
     /// assert!(model.eval(&eq, true).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```
-
     pub fn enumeration(
         ctx: &Context,
         name: Symbol,

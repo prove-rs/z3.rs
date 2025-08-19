@@ -30,7 +30,6 @@ impl Probe {
     /// let probes: Vec<_> = Probe::list_all().into_iter().filter_map(|r| r.ok()).collect();
     /// assert!(probes.contains(&"is-quasi-pb".to_string()));
     /// ```
-
     pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.0) };
         (0..p)
@@ -43,7 +42,6 @@ impl Probe {
 
     /// Return a string containing a description of the probe with
     /// the given `name`.
-
     pub fn describe(ctx: &Context, name: &str) -> std::result::Result<String, Utf8Error> {
         let probe_name = CString::new(name).unwrap();
         unsafe {
@@ -62,7 +60,6 @@ impl Probe {
     ///
     /// let probe = Probe::new("is-qfbv");
     /// ```
-
     pub fn new(ctx: &Context, name: &str) -> Probe {
         let probe_name = CString::new(name).unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr())) }
@@ -84,7 +81,6 @@ impl Probe {
     /// let ctx = Context::new(&cfg);
     /// let probe = Probe::constant( 1.0);
     /// ```
-
     pub fn constant(ctx: &Context, val: f64) -> Probe {
         unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }
     }

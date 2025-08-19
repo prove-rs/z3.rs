@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, format_ident, quote};
 use syn::{
-    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemFn, ItemImpl, Pat, PatType, Path, Signature,
+    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemImpl, Pat, PatType, Path, Signature,
     Type, parse_macro_input, spanned::Spanned,
 };
 
@@ -67,7 +67,7 @@ fn handle_impl(default_ctx_fn: Path, block: ItemImpl) -> TokenStream {
         items: vec![],
     };
     for x in block.items.iter() {
-        if let Some(f) = syn::parse::<ImplItemFn>(TokenStream::from(x.to_token_stream())).ok() {
+        if let Ok(f) = syn::parse::<ImplItemFn>(TokenStream::from(x.to_token_stream())) {
             if f.sig.ident != "wrap" && extract_ctx_and_args(&f.sig).is_ok() {
                 let (a, b) = transform_impl_method(default_ctx_fn.clone(), f);
                 i.items.push(a);

@@ -56,7 +56,6 @@ impl Tactic {
     /// let tactics: Vec<_> = Tactic::list_all().into_iter().filter_map(|r| r.ok()).collect();
     /// assert!(tactics.contains(&"ufbv".to_string()));
     /// ```
-
     pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {
         let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.0) };
         (0..p)
@@ -92,7 +91,6 @@ impl Tactic {
     /// # See also
     ///
     /// - [`Tactic::list_all()`]
-
     pub fn new(ctx: &Context, name: &str) -> Tactic {
         let tactic_name = CString::new(name).unwrap();
 
@@ -107,20 +105,17 @@ impl Tactic {
     }
 
     /// Return a tactic that just return the given goal.
-
     pub fn create_skip(ctx: &Context) -> Tactic {
         unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that always fails.
-
     pub fn create_fail(ctx: &Context) -> Tactic {
         unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
-
     pub fn repeat(ctx: &Context, t: &Tactic, max: u32) -> Tactic {
         unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max)) }
     }
