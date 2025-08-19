@@ -16,7 +16,6 @@ impl Params {
         }
     }
 
-
     pub fn new(ctx: &Context) -> Params {
         unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
     }

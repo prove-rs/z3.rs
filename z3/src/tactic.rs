@@ -10,7 +10,6 @@ use z3_sys::*;
 
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 
-
 impl ApplyResult {
     unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
         unsafe {

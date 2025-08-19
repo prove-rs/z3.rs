@@ -14,7 +14,6 @@ pub struct Set {
 
 #[z3(Context::thread_local)]
 impl Set {
-
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Set {
         let sort = Sort::set_in_ctx(ctx, eltype);
         unsafe {
@@ -28,7 +27,6 @@ impl Set {
         }
     }
 
-
     pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Set {
         let sort = Sort::set_in_ctx(ctx, eltype);
         unsafe {
@@ -41,7 +39,6 @@ impl Set {
     }
 
     /// Creates a set that maps the domain to false by default
-
     pub fn empty(ctx: &Context, domain: &Sort) -> Set {
         unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.0, domain.z3_sort)) }
     }

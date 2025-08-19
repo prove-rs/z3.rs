@@ -10,7 +10,6 @@ use crate::{
 };
 #[z3(Context::thread_local)]
 impl DatatypeBuilder {
-
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S) -> Self {
         Self {
             ctx: ctx.clone(),

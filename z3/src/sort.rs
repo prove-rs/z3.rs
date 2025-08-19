@@ -23,7 +23,6 @@ impl Sort {
         self.z3_sort
     }
 
-
     pub fn uninterpreted(ctx: &Context, name: Symbol) -> Sort {
         unsafe {
             Self::wrap(
@@ -33,41 +32,33 @@ impl Sort {
         }
     }
 
-
     pub fn bool(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0)) }
     }
-
 
     pub fn int(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0)) }
     }
 
-
     pub fn real(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0)) }
     }
-
 
     pub fn float(ctx: &Context, ebits: u32, sbits: u32) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits)) }
     }
 
-
     pub fn float32(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24)) }
     }
-
 
     pub fn double(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53)) }
     }
 
-
     pub fn string(ctx: &Context) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0)) }
     }
-
 
     pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
         unsafe {
@@ -78,7 +69,6 @@ impl Sort {
         }
     }
 
-
     pub fn array(ctx: &Context, domain: &Sort, range: &Sort) -> Sort {
         unsafe {
             Self::wrap(
@@ -88,11 +78,9 @@ impl Sort {
         }
     }
 
-
     pub fn set(ctx: &Context, elt: &Sort) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
-
 
     pub fn seq(ctx: &Context, elt: &Sort) -> Sort {
         unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }

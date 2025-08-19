@@ -25,7 +25,6 @@ impl Pattern {
     ///
     /// - `ast::forall_const()`
     /// - `ast::exists_const()`
-
     pub fn new(ctx: &Context, terms: &[&dyn Ast]) -> Pattern {
         assert!(!terms.is_empty());
         assert!(terms.iter().all(|t| t.get_ctx().z3_ctx == ctx.z3_ctx));

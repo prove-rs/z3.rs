@@ -17,7 +17,6 @@ impl Array {
     /// values of the `range` `Sort`.
     ///
     /// All values in the `Array` will be unconstrained.
-
     pub fn new_const<S: Into<Symbol>>(
         ctx: &Context,
         name: S,
@@ -36,7 +35,6 @@ impl Array {
         }
     }
 
-
     pub fn fresh_const(ctx: &Context, prefix: &str, domain: &Sort, range: &Sort) -> Array {
         let sort = Sort::array_in_ctx(ctx, domain, range);
         unsafe {
@@ -50,7 +48,6 @@ impl Array {
 
     /// Create a "constant array", that is, an `Array` initialized so that all of the
     /// indices in the `domain` map to the given value `val`
-
     pub fn const_array<A>(ctx: &Context, domain: &Sort, val: &A) -> Array
     where
         A: Ast,

@@ -13,7 +13,6 @@ pub struct Bool {
 }
 #[z3(Context::thread_local)]
 impl Bool {
-
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Bool {
         let sort = Sort::bool_in_ctx(ctx);
         unsafe {
@@ -27,7 +26,6 @@ impl Bool {
         }
     }
 
-
     pub fn fresh_const(ctx: &Context, prefix: &str) -> Bool {
         let sort = Sort::bool_in_ctx(ctx);
         unsafe {
@@ -38,7 +36,6 @@ impl Bool {
             })
         }
     }
-
 
     pub fn from_bool(ctx: &Context, b: bool) -> Bool {
         unsafe {
@@ -91,7 +88,6 @@ impl Bool {
     unop! {
         not(Z3_mk_not, Self);
     }
-
 
     pub fn pb_le(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
         unsafe {

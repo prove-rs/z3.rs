@@ -9,7 +9,6 @@ struct Spec {
     reqs: HashMap<String, VersionReq>,
 }
 
-
 impl Spec {
     pub fn new(vers: &str, reqs: &[(&str, &str)]) -> Spec {
         let mut rs = HashMap::new();

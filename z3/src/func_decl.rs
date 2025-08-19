@@ -20,7 +20,6 @@ impl FuncDecl {
         }
     }
 
-
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);

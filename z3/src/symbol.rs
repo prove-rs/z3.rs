@@ -6,7 +6,6 @@ use crate::{Context, Symbol};
 
 #[z3(Context::thread_local)]
 impl Symbol {
-
     pub fn as_z3_symbol(&self, ctx: &Context) -> Z3_symbol {
         match self {
             Symbol::Int(i) => unsafe {

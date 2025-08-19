@@ -13,7 +13,6 @@ pub struct Seq {
 }
 #[z3(Context::thread_local)]
 impl Seq {
-
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Self {
         let sort = Sort::seq_in_ctx(ctx, eltype);
         unsafe {
@@ -26,7 +25,6 @@ impl Seq {
             })
         }
     }
-
 
     pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Self {
         let sort = Sort::seq_in_ctx(ctx, eltype);
@@ -52,15 +50,12 @@ impl Seq {
     /// solver.assert(&concatenated._eq(&any_seq));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-
     pub fn empty(ctx: &Context, eltype: &Sort) -> Self {
         let sort = Sort::seq_in_ctx(ctx, eltype);
         unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.0, sort.z3_sort)) }
     }
 
     /// Create a unit sequence of `a`.
-
-
     pub fn unit<A: Ast>(ctx: &Context, a: &A) -> Self {
         unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.0, a.get_z3_ast())) }
     }

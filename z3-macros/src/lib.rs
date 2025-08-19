@@ -1,8 +1,8 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, format_ident, quote};
 use syn::{
-    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemImpl, Pat, PatType, Path, Signature,
-    Type, parse_macro_input, spanned::Spanned,
+    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemImpl, Pat, PatType, Path, Signature, Type,
+    parse_macro_input, spanned::Spanned,
 };
 
 /// This macro is used to transform methods in an impl block (or individual function) to

@@ -12,7 +12,6 @@ pub struct Datatype {
 
 #[z3(Context::thread_local)]
 impl Datatype {
-
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sort: &Sort) -> Self {
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
@@ -27,7 +26,6 @@ impl Datatype {
             })
         }
     }
-
 
     pub fn fresh_const(ctx: &Context, prefix: &str, sort: &Sort) -> Self {
         assert_eq!(ctx, &sort.ctx);

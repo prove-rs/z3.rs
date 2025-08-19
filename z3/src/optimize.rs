@@ -28,7 +28,6 @@ impl Optimize {
     }
 
     /// Create a new optimize context.
-
     pub fn new(ctx: &Context) -> Optimize {
         unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.0)) }
     }

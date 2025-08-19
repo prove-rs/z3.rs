@@ -15,7 +15,6 @@ pub struct String {
 #[z3(Context::thread_local)]
 impl String {
     /// Creates a new constant using the built-in string sort
-
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> String {
         let sort = Sort::string_in_ctx(ctx);
         unsafe {
@@ -30,7 +29,6 @@ impl String {
     }
 
     /// Creates a fresh constant using the built-in string sort
-
     pub fn fresh_const(ctx: &Context, prefix: &str) -> String {
         let sort = Sort::string_in_ctx(ctx);
         unsafe {
@@ -43,7 +41,6 @@ impl String {
     }
 
     /// Creates a Z3 constant string from a `&str`
-
     pub fn from_str(ctx: &Context, string: &str) -> Result<String, std::ffi::NulError> {
         let string = CString::new(string)?;
         Ok(unsafe {
