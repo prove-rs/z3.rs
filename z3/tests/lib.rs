@@ -642,6 +642,7 @@ fn test_solver_unknown() {
 
     assert_eq!(solver.check(), SatResult::Unknown);
     assert!(solver.get_reason_unknown().is_some());
+    Context::set_thread_local_from_config(&Config::default());
 }
 
 #[test]
@@ -671,6 +672,7 @@ fn test_optimize_unknown() {
 
     assert_eq!(optimize.check(&[]), SatResult::Unknown);
     assert!(optimize.get_reason_unknown().is_some());
+    Context::set_thread_local_from_config(&Config::default());
 }
 
 #[test]
