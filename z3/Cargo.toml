@@ -26,6 +26,7 @@ static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]
 
 [dependencies]
 log = "0.4"
+z3-macros = { path = "../z3-macros"}
 
 # optional dependencies
 num = "0.4"
@@ -38,3 +39,4 @@ rayon = "1.10.0"
 [dependencies.z3-sys]
 path = "../z3-sys"
 version = "0.9"
+

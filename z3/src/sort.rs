@@ -5,8 +5,10 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
+use z3_macros::z3;
 
 impl Sort {
+    #[z3(Context::thread_local)]
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
         unsafe {
             Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
@@ -23,7 +25,7 @@ impl Sort {
 
     pub fn uninterpreted(ctx: &Context, name: Symbol) -> Sort {
         unsafe {
-            Self::wrap(
+            Self::wrap_in_ctx(
                 ctx,
                 Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol(ctx)),
             )
