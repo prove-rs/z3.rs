@@ -360,12 +360,18 @@ pub trait Ast: fmt::Debug {
 
 /// Turns a piece of data into a Z3 [`Ast`], with an existing piece
 /// of data also of that [`Ast`] provided as context
+///
+/// This is used in "binops" and "trinops" to allow seamless conversion
+/// of right-hand-side operands into the left-hand-side's [`Ast`] type.
+/// The whole [`Ast`] is used other than just the [`Context`] because
+/// some Sorts (e.g. [`BV`]) require extra context from the source data
+/// to ensure the correct [`Sort`] is used in the resulting [`Ast`].
 pub trait IntoAst<T: Ast> {
     fn into_ast(self, a: &T) -> T;
 }
 
 /// Turns a piece of data into a Z3 [`Ast`], associated with the
-/// given [`Context`].
+/// given [`Context`]. This is used in "varop" operations.
 pub trait IntoAstFromCtx<T: Ast>: Clone + IntoAst<T> {
     fn into_ast_ctx(self, ctx: &Context) -> T;
 }
