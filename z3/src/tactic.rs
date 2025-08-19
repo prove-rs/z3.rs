@@ -82,7 +82,7 @@ impl Tactic {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let tactic = Tactic::new(&ctx, "nlsat");
+    /// let tactic = Tactic::new( "nlsat");
     /// ```
     ///
     /// # See also
@@ -230,11 +230,11 @@ impl Tactic {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let tactic = Tactic::new(&ctx, "qfnra");
+    /// let tactic = Tactic::new( "qfnra");
     /// let solver = tactic.solver();
     ///
-    /// let x = ast::Int::new_const(&ctx, "x");
-    /// let y = ast::Int::new_const(&ctx, "y");
+    /// let x = ast::Int::new_const( "x");
+    /// let y = ast::Int::new_const( "y");
     ///
     /// solver.assert(&x.gt(&y));
     /// assert_eq!(solver.check(), SatResult::Sat);

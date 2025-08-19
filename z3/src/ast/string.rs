@@ -55,7 +55,7 @@ impl String {
     ///
     /// Note that `to_string()` provided by `std::string::ToString` (which uses
     /// `std::fmt::Display`) returns an escaped string. In contrast,
-    /// `z3::ast::String::from_str(&ctx, s).unwrap().as_string()` returns a
+    /// `z3::ast::String::from_str( s).unwrap().as_string()` returns a
     /// `String` equal to the original value.
     pub fn as_string(&self) -> Option<std::string::String> {
         let z3_ctx = self.get_ctx().z3_ctx.0;

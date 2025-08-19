@@ -55,7 +55,7 @@ impl Float {
     /// use z3::ast::{Ast, Float};
     ///
     /// let ctx = Context::default();
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     ///
     /// let nan_32 = Float::nan32(&ctx);
     /// let nan_64 = Float::nan64(&ctx);
@@ -80,7 +80,7 @@ impl Float {
     /// use z3::ast::{Ast, Float};
     ///
     /// let ctx = Context::default();
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     ///
     /// let nan_32 = Float::nan32(&ctx);
     /// let nan_64 = Float::nan64(&ctx);
@@ -265,7 +265,7 @@ impl_into_ast!(f64, from_f64_in_ctx);
 #[cfg(test)]
 mod tests {
     use crate::ast::{Ast, Float};
-    use crate::{Context, Solver};
+    use crate::Solver;
 
     #[test]
     fn test_nonstandard_float() {

@@ -181,7 +181,7 @@ mod thread_tests {
 #[cfg(test)]
 mod rayon_tests {
     use crate::ast::{Ast, Int};
-    use crate::{Context, PrepareSynchronized, Solver};
+    use crate::{PrepareSynchronized, Solver};
     use std::ops::Add;
 
     #[test]

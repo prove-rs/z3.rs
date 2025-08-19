@@ -109,6 +109,7 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
+            #[z3(Context::thread_local)]
             pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
                 unsafe {
                     <$retty>::wrap(ctx, {
@@ -612,12 +613,12 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
-/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+/// # let solver = Solver::new();
+/// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const(&ctx, "x");
+/// let x = ast::Int::new_const( "x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
 ///     &ctx,
 ///     &[&x],
@@ -629,7 +630,7 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64( 3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn forall_const(
@@ -673,12 +674,12 @@ pub fn forall_const(
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
-/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+/// # let solver = Solver::new();
+/// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const(&ctx, "x");
+/// let x = ast::Int::new_const( "x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
 ///     &ctx,
 ///     &[&x],
@@ -690,7 +691,7 @@ pub fn forall_const(
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64( 3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn exists_const(
@@ -744,12 +745,12 @@ pub fn exists_const(
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
-/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+/// # let solver = Solver::new();
+/// let f = FuncDecl::new( "f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const(&ctx, "x");
+/// let x = ast::Int::new_const( "x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new( &[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
 ///     &ctx,
 ///     true,
@@ -766,7 +767,7 @@ pub fn exists_const(
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64( 3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 #[allow(clippy::too_many_arguments)]
@@ -830,25 +831,25 @@ pub fn quantifier_const(
 /// #
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
+/// # let solver = Solver::new();
 /// #
-/// let input = Int::fresh_const(&ctx, "");
+/// let input = Int::fresh_const( "");
 /// let lambda = lambda_const(
 ///     &ctx,
 ///     &[&input],
-///     &Dynamic::from_ast(&Int::add(&ctx, &[&input, &Int::from_i64(&ctx, 2)])),
+///     &Dynamic::from_ast(&Int::add(&ctx, &[&input, &Int::from_i64( 2)])),
 /// );
 ///
 /// solver.assert(
-///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
-///         ._eq(&Int::from_i64(&ctx, 3))
+///     &lambda.select_n(&[&Int::from_i64( 1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64( 3))
 /// );
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
 ///
 /// solver.assert(
-///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
-///         ._eq(&Int::from_i64(&ctx, 2))
+///     &lambda.select_n(&[&Int::from_i64( 1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64( 2))
 /// );
 ///
 /// assert_eq!(solver.check(), SatResult::Unsat);

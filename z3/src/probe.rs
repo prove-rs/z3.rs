@@ -82,7 +82,7 @@ impl Probe {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::constant(&ctx, 1.0);
+    /// let probe = Probe::constant( 1.0);
     /// ```
     #[z3(Context::thread_local)]
     pub fn constant(ctx: &Context, val: f64) -> Probe {

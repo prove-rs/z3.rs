@@ -13,8 +13,8 @@ use z3_sys::*;
 ///
 /// let cfg = Config::new();
 /// let ctx = &Context::new(&cfg);
-/// let solver = Solver::new(&ctx);
-/// let s = ast::String::new_const(ctx, "s");
+/// let solver = Solver::new();
+/// let s = ast::String::new_const( "s");
 ///
 /// // the regexp representing foo[a-c]*
 /// let a = ast::Regexp::concat(ctx, &[

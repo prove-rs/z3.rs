@@ -52,17 +52,17 @@ impl RecFuncDecl {
     /// let mut f = RecFuncDecl::new(
     ///     &ctx,
     ///     "f",
-    ///     &[&Sort::int(&ctx)],
-    ///     &Sort::int(&ctx));
-    /// let n = Int::new_const(&ctx, "n");
+    ///     &[&Sort::int()],
+    ///     &Sort::int());
+    /// let n = Int::new_const( "n");
     /// f.add_def(
     ///     &[&n],
-    ///     &Int::add(&ctx, &[&n, &Int::from_i64(&ctx, 1)])
+    ///     &Int::add(&ctx, &[&n, &Int::from_i64( 1)])
     /// );
     ///
     /// let f_of_n = &f.apply(&[&n.clone()]);
     ///
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
     ///         &ctx,
     ///         &[&n],

@@ -51,8 +51,8 @@ impl FuncDecl {
     /// let f = FuncDecl::new(
     ///     &ctx,
     ///     "f",
-    ///     &[&Sort::int(&ctx), &Sort::real(&ctx)],
-    ///     &Sort::int(&ctx));
+    ///     &[&Sort::int(), &Sort::real(&ctx)],
+    ///     &Sort::int());
     /// assert_eq!(f.arity(), 2);
     /// ```
     pub fn arity(&self) -> usize {

@@ -177,23 +177,23 @@ pub use z3_sys::DeclKind;
 /// # use z3::{ Config, Context, DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
+/// # let solver = Solver::new();
 /// // Like Rust's Option<int> type
-/// let option_int = DatatypeBuilder::new(&ctx, "OptionInt")
+/// let option_int = DatatypeBuilder::new( "OptionInt")
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+///     vec![("value", DatatypeAccessor::Sort(Sort::int()))],
 /// )
 /// .finish();
 ///
 /// // Assert x.is_none()
-/// let x = Datatype::new_const(&ctx, "x", &option_int.sort);
+/// let x = Datatype::new_const( "x", &option_int.sort);
 /// solver.assert(&option_int.variants[0].tester.apply(&[&x]).as_bool().unwrap());
 ///
 /// // Assert y == Some(3)
-/// let y = Datatype::new_const(&ctx, "y", &option_int.sort);
-/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(&ctx, 3)]);
+/// let y = Datatype::new_const( "y", &option_int.sort);
+/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64( 3)]);
 /// solver.assert(&y._eq(&value.as_datatype().unwrap()));
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);

@@ -49,8 +49,14 @@ pub struct Context {
     pub(crate) z3_ctx: Rc<ContextInternal>,
 }
 impl Context {
-    pub(crate) fn thread_local() -> Context {
+    pub fn thread_local() -> Context {
         DEFAULT_CONTEXT.with(|f| f.borrow().clone())
+    }
+
+    pub fn set_thread_local_from_config(cfg: &Config) {
+        DEFAULT_CONTEXT.with(|f| {
+            *f.borrow_mut() = Context::new(cfg);
+        });
     }
 
     pub fn new(cfg: &Config) -> Context {
@@ -85,7 +91,7 @@ impl Context {
     /// let ctx = unsafe { Context::from_raw(raw_ctx) };
     /// // Use `ctx` as usual...
     /// unsafe { Z3_del_config(cfg) };
-    /// let b = Bool::from_bool(&ctx, true);
+    /// let b = Bool::from_bool( true);
     /// assert_eq!(b.as_bool(), Some(true));
     /// ```
     pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {

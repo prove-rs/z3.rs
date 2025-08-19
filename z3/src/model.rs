@@ -225,7 +225,7 @@ unsafe impl Translate for Model {
 
 #[test]
 fn test_unsat() {
-    use crate::{Config, SatResult};
+    use crate::SatResult;
     let solver = Solver::new();
     solver.assert(false);
     assert_eq!(solver.check(), SatResult::Unsat);

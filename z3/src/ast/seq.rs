@@ -80,8 +80,8 @@ impl Seq {
     /// # use z3::ast::{Ast, Bool, Int, Seq};
     /// # let cfg = Config::new();
     /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
-    /// let seq = Seq::fresh_const(&ctx, "", &Sort::bool(&ctx));
+    /// # let solver = Solver::new();
+    /// let seq = Seq::fresh_const( "", &Sort::bool(&ctx));
     ///
     /// solver.assert(
     ///     &seq.nth(0)
