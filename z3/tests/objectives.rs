@@ -27,12 +27,12 @@ fn test_optimize_assert_soft_and_get_objectives() {
                     .apply(&[&ast::Int::from_u64(&ctx, i)])
                     .as_int()
                     .unwrap()
-                    .lt(&ast::Int::from_u64(&ctx, COUNT)),
+                    .lt(COUNT),
                 &well_ordered_fn
                     .apply(&[&ast::Int::from_u64(&ctx, i)])
                     .as_int()
                     .unwrap()
-                    .ge(&ast::Int::from_u64(&ctx, 0)),
+                    .ge(0),
             ],
         ));
         for j in 0..i {
@@ -41,7 +41,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
                     .apply(&[&ast::Int::from_u64(&ctx, i)])
                     .as_int()
                     .unwrap()
-                    .lt(&well_ordered_fn
+                    .lt(well_ordered_fn
                         .apply(&[&ast::Int::from_u64(&ctx, j)])
                         .as_int()
                         .unwrap()),
@@ -57,7 +57,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
             .apply(&[&ast::Int::from_u64(&ctx, 0)])
             .as_int()
             .unwrap()
-            .lt(&well_ordered_fn
+            .lt(well_ordered_fn
                 .apply(&[&ast::Int::from_u64(&ctx, COUNT - 1)])
                 .as_int()
                 .unwrap()),

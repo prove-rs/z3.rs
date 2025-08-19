@@ -1,6 +1,7 @@
 use crate::Context;
-use crate::ast::Borrow;
-use crate::ast::{Ast, binop, unop, varop};
+use crate::ast::IntoAstCtx;
+use crate::ast::{Ast, binop, varop};
+use crate::ast::{IntoAst, unop};
 use std::ffi::CString;
 use z3_sys::*;
 

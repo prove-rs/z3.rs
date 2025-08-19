@@ -1,4 +1,4 @@
-use crate::ast::{Ast, Dynamic, bool};
+use crate::ast::{Ast, Dynamic};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;

@@ -1,5 +1,6 @@
-use crate::ast::Borrow;
-use crate::ast::{Ast, Bool, Int, binop, unop, varop};
+use crate::ast::IntoAstCtx;
+use crate::ast::{Ast, IntoAst};
+use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
 use std::ffi::{CStr, CString};
@@ -124,5 +125,11 @@ impl Real {
         le(Z3_mk_le, Bool);
         gt(Z3_mk_gt, Bool);
         ge(Z3_mk_ge, Bool);
+    }
+}
+
+impl IntoAst<Real> for BigRational {
+    fn into_ast(self, a: &Real) -> Real {
+        Real::from_big_rational(a.get_ctx(), &self)
     }
 }

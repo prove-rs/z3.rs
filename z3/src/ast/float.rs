@@ -1,4 +1,6 @@
-use crate::ast::{Ast, BV, Bool, binop, trinop, unop};
+use crate::ast::rounding_mode::RoundingMode;
+use crate::ast::{Ast, BV, Bool, binop, unop};
+use crate::ast::{IntoAst, IntoAstCtx};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -152,39 +154,48 @@ impl Float {
         }
     }
 
-    // returns RoundingMode towards zero
-    pub fn round_towards_zero(ctx: &Context) -> Float {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_zero(ctx.z3_ctx.0)) }
+    /// Add with the provided [`RoundingMode`]
+    pub fn add_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
+        let other = other.into_ast(self);
+        r.add(self, other)
     }
 
-    // returns RoundingMode towards negative
-    pub fn round_towards_negative(ctx: &Context) -> Float {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_negative(ctx.z3_ctx.0)) }
+    /// Subtract with the provided [`RoundingMode`]
+    pub fn sub_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
+        let other = other.into_ast(self);
+        r.sub(self, other)
     }
 
-    // returns RoundingMode towards positive
-    pub fn round_towards_positive(ctx: &Context) -> Float {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.0)) }
+    /// Multiply with the provided [`RoundingMode`]
+    pub fn mul_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
+        let other = other.into_ast(self);
+        r.mul(self, other)
+    }
+
+    /// Divide with the provided [`RoundingMode`]
+    pub fn div_with_rounding_mode<T: IntoAst<Self>>(&self, other: T, r: &RoundingMode) -> Float {
+        let other = other.into_ast(self);
+        r.div(self, other)
     }
 
     // Add two floats of the same size, rounding towards zero
-    pub fn add_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).add(self, other)
+    pub fn add_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
+        self.add_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Subtract two floats of the same size, rounding towards zero
-    pub fn sub_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).sub(self, other)
+    pub fn sub_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
+        self.sub_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Multiply two floats of the same size, rounding towards zero
-    pub fn mul_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).mul(self, other)
+    pub fn mul_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
+        self.mul_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Divide two floats of the same size, rounding towards zero
-    pub fn div_towards_zero(&self, other: &Self) -> Float {
-        Self::round_towards_zero(&self.ctx).div(self, other)
+    pub fn div_towards_zero<T: IntoAst<Self>>(&self, other: T) -> Float {
+        self.div_with_rounding_mode(other, &RoundingMode::round_towards_zero(&self.ctx))
     }
 
     // Convert to IEEE-754 bit-vector
@@ -212,10 +223,50 @@ impl Float {
         gt(Z3_mk_fpa_gt, Bool);
         ge(Z3_mk_fpa_geq, Bool);
     }
-    trinop! {
-        add(Z3_mk_fpa_add, Self);
-        sub(Z3_mk_fpa_sub, Self);
-        mul(Z3_mk_fpa_mul, Self);
-        div(Z3_mk_fpa_div, Self);
+}
+
+macro_rules! impl_into_ast {
+    ($t:ty, $op:ident) => {
+        impl IntoAst<Float> for $t {
+            fn into_ast(self, a: &Float) -> Float {
+                let sort = a.get_sort();
+                let value = self as f64;
+                let ctx = a.get_ctx();
+                unsafe {
+                    Float::wrap(ctx, {
+                        Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort)
+                    })
+                }
+            }
+        }
+        impl IntoAstCtx<Float> for $t {
+            fn into_ast_ctx(self, ctx: &Context) -> Float {
+                Float::$op(ctx, self)
+            }
+        }
+    };
+}
+
+impl_into_ast!(f32, from_f32);
+impl_into_ast!(f64, from_f64);
+
+#[cfg(test)]
+mod tests {
+    use crate::ast::{Ast, Float};
+    use crate::{Context, Solver};
+
+    #[test]
+    fn test_nonstandard_float() {
+        let ctx = Context::default();
+        // this float has a nonstandard size
+        let f1 = Float::new_const(&ctx, "weird", 15, 53);
+        let solver = Solver::new(&ctx);
+        // but we can make compatible symbolic floats out of a f64!
+        solver.assert(f1._eq(300.0));
+        solver.check();
+        let model = solver.get_model().unwrap();
+        let f1_value = model.eval(&f1, false).unwrap();
+        // and we can also use compare models to floats
+        assert!(f1_value._eq(300.0).simplify().eq(&true));
     }
 }

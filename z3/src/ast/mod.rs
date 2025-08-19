@@ -22,6 +22,7 @@ mod float;
 mod int;
 mod real;
 mod regexp;
+mod rounding_mode;
 mod seq;
 mod set;
 mod string;
@@ -35,6 +36,7 @@ pub use float::Float;
 pub use int::Int;
 pub use real::Real;
 pub use regexp::Regexp;
+pub use rounding_mode::RoundingMode;
 pub use seq::Seq;
 pub use set::Set;
 pub use string::String;
@@ -66,11 +68,11 @@ macro_rules! binop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(&self, other: &Self) -> $retty {
-                assert!(self.ctx == other.ctx);
+            pub fn $f<T: IntoAst<Self>>(&self, other: T) -> $retty {
+                let ast = other.into_ast(self);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
-                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast)
+                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, ast.z3_ast)
                     })
                 }
             }
@@ -86,8 +88,9 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(&self, a: &Self, b: &Self) -> $retty {
-                assert!((self.ctx == a.ctx) && (a.ctx == b.ctx));
+            pub fn $f<A: IntoAstCtx<$retty>, B: IntoAstCtx<$retty>>(&self, a: A, b: B) -> $retty {
+                let a = a.into_ast_ctx(&self.ctx);
+                let b = b.into_ast_ctx(&self.ctx);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
                         $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast)
@@ -106,13 +109,13 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f(ctx: &Context, values: &[impl Borrow<Self>]) -> $retty {
-                assert!(values.iter().all(|v| v.borrow().get_ctx().z3_ctx == ctx.z3_ctx));
+            pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
                 unsafe {
                     <$retty>::wrap(ctx, {
-                        let tmp: Vec<_> = values.iter().map(|x| x.borrow().z3_ast).collect();
+                        let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
+                        let tmp2: Vec<_> = tmp.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
-                        $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp.as_ptr())
+                        $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr())
                     })
                 }
             }
@@ -159,7 +162,7 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must be the same type.
     //
     // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq(&self, other: &Self) -> Bool
+    fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
     where
         Self: Sized,
     {
@@ -168,11 +171,11 @@ pub trait Ast: fmt::Debug {
 
     /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
     /// match for the two values.
-    fn _safe_eq(&self, other: &Self) -> Result<Bool, SortDiffers>
+    fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
     where
         Self: Sized,
     {
-        assert_eq!(self.get_ctx(), other.get_ctx());
+        let other = other.into_ast(self);
 
         let left_sort = self.get_sort();
         let right_sort = other.get_sort();
@@ -343,6 +346,66 @@ pub trait Ast: fmt::Debug {
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
         }
     }
+
+    fn check_ctx(&self, ctx: &Context) {
+        if self.get_ctx() != ctx {
+            let s_ctx = self.get_ctx();
+            panic!(
+                "Attempted to build an expression from asts of multiple contexts ({s_ctx:?} and {ctx:?})!\
+            If this was intentional, you need to `translate` one of the asts into the context of the other."
+            );
+        }
+    }
+}
+
+/// Turns a piece of data into a Z3 [`Ast`], with an existing piece
+/// of data also of that [`Ast`] provided as context
+///
+/// This is used in "binops" and "trinops" to allow seamless conversion
+/// of right-hand-side operands into the left-hand-side's [`Ast`] type.
+/// The whole [`Ast`] is used other than just the [`Context`] because
+/// some Sorts (e.g. [`BV`]) require extra context from the source data
+/// to ensure the correct [`Sort`] is used in the resulting [`Ast`].
+pub trait IntoAst<T: Ast> {
+    fn into_ast(self, a: &T) -> T;
+}
+
+/// Turns a piece of data into a Z3 [`Ast`], associated with the
+/// given [`Context`]. This is used in "varop" operations.
+pub trait IntoAstCtx<T: Ast>: Clone + IntoAst<T> {
+    fn into_ast_ctx(self, ctx: &Context) -> T;
+}
+
+/// This is trivially implemented for Asts. It also
+/// serves as a unified place to check for [`Context`] mismatches.
+impl<T: Ast + Clone> IntoAstCtx<T> for T {
+    fn into_ast_ctx(self, ctx: &Context) -> T {
+        self.check_ctx(ctx);
+        self
+    }
+}
+
+/// Implemented for [`Ast`] references for ease.
+impl<T: IntoAstCtx<T> + Ast> IntoAstCtx<T> for &T {
+    fn into_ast_ctx(self, a: &Context) -> T {
+        self.clone().into_ast_ctx(a)
+    }
+}
+
+/// Implemented for [`Ast`] references for ease.
+impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
+    fn into_ast(self, a: &T) -> T {
+        self.clone().into_ast(a)
+    }
+}
+
+/// This is trivially implemented for [`Ast`]s. It also
+/// serves as a unified place to check for context mismatches.
+impl<T: Ast> IntoAst<T> for T {
+    fn into_ast(self, a: &T) -> T {
+        self.check_ctx(a.get_ctx());
+        self
+    }
 }
 
 macro_rules! impl_ast {
@@ -381,9 +444,9 @@ macro_rules! impl_ast {
             }
         }
 
-        impl PartialEq for $ast {
-            fn eq(&self, other: &$ast) -> bool {
-                assert_eq!(self.ctx, other.ctx);
+        impl<T: IntoAst<$ast> + Clone> PartialEq<T> for $ast {
+            fn eq(&self, other: &T) -> bool {
+                let other = other.clone().into_ast(self);
                 unsafe { Z3_is_eq_ast(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast) }
             }
         }
@@ -465,6 +528,13 @@ macro_rules! impl_from_try_into_dynamic {
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
         }
+
+        impl IntoAst<Dynamic> for $ast {
+            fn into_ast(self, d: &Dynamic) -> Dynamic {
+                self.check_ctx(d.get_ctx());
+                Dynamic::from_ast(&self)
+            }
+        }
     };
 }
 
@@ -492,7 +562,7 @@ impl_ast!(Datatype);
 impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
-
+impl_ast!(RoundingMode);
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atmost(ctx, args.as_ref(), k)

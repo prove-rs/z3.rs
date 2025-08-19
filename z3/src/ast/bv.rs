@@ -1,4 +1,5 @@
-use crate::ast::{Ast, Bool, Int, binop, bool, unop};
+use crate::ast::IntoAst;
+use crate::ast::{Ast, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -27,6 +28,7 @@ macro_rules! bv_overflow_check_signed {
         )*
     };
 }
+
 impl BV {
     pub fn from_str(ctx: &Context, sz: u32, value: &str) -> Option<BV> {
         let sort = Sort::bitvector(ctx, sz);
@@ -294,3 +296,33 @@ impl BV {
         }
     }
 }
+
+macro_rules! into_bv {
+    ($t:ty) => {
+        impl IntoAst<BV> for $t {
+            fn into_ast(self, a: &BV) -> BV {
+                BV::from_u64(&a.ctx, self as u64, a.get_size())
+            }
+        }
+    };
+}
+
+macro_rules! into_bv_signed {
+    ($t:ty) => {
+        impl IntoAst<BV> for $t {
+            fn into_ast(self, a: &BV) -> BV {
+                BV::from_i64(&a.ctx, self as i64, a.get_size())
+            }
+        }
+    };
+}
+
+into_bv!(u8);
+into_bv!(u16);
+into_bv!(u32);
+into_bv!(u64);
+
+into_bv_signed!(i8);
+into_bv_signed!(i16);
+into_bv_signed!(i32);
+into_bv_signed!(i64);

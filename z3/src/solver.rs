@@ -6,6 +6,7 @@ use z3_sys::*;
 
 use std::ops::AddAssign;
 
+use crate::ast::{Bool, IntoAstCtx};
 use crate::{
     Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast, ast::Ast,
 };
@@ -96,7 +97,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert_and_track()`]
-    pub fn assert(&self, ast: &ast::Bool) {
+    pub fn assert<T: IntoAstCtx<Bool>>(&self, ast: T) {
+        let ast = ast.into_ast_ctx(&self.ctx);
         debug!("assert: {ast:?}");
         unsafe { Z3_solver_assert(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast) };
     }
@@ -115,7 +117,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert()`]
-    pub fn assert_and_track(&self, ast: &ast::Bool, p: &ast::Bool) {
+    pub fn assert_and_track<T: IntoAstCtx<Bool>>(&self, ast: T, p: &Bool) {
+        let ast = ast.into_ast_ctx(&self.ctx);
         debug!("assert_and_track: {ast:?}");
         unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast, p.z3_ast) };
     }

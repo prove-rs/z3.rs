@@ -1,5 +1,6 @@
+use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Dynamic, Int, varop};
-use crate::ast::{Bool, Borrow};
+use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -79,14 +80,15 @@ impl Seq {
     /// let seq = Seq::fresh_const(&ctx, "", &Sort::bool(&ctx));
     ///
     /// solver.assert(
-    ///     &seq.nth(&Int::from_u64(&ctx, 0))
+    ///     &seq.nth(0)
     ///         .simplify()
     ///         .as_bool()
     ///         .unwrap()
-    ///         ._eq(&Bool::from_bool(&ctx, true))
+    ///         ._eq(true)
     /// );
     /// ```
-    pub fn nth(&self, index: &Int) -> Dynamic {
+    pub fn nth<T: IntoAstCtx<Int>>(&self, index: T) -> Dynamic {
+        let index = index.into_ast_ctx(&self.ctx);
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
@@ -113,7 +115,8 @@ impl Seq {
     /// solver.assert(&Bool::and(&ctx, &[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn contains(&self, containee: &Self) -> Bool {
+    pub fn contains<T: IntoAst<Self>>(&self, containee: T) -> Bool {
+        let containee = containee.into_ast(self);
         unsafe {
             Bool::wrap(
                 &self.ctx,

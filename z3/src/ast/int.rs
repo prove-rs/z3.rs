@@ -1,6 +1,6 @@
-use crate::ast::Borrow;
-use crate::ast::real::Real;
-use crate::ast::{Ast, BV, Bool, binop, bool, unop, varop};
+use crate::ast::IntoAstCtx;
+use crate::ast::{Ast, BV, Real, binop};
+use crate::ast::{Bool, IntoAst, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;
@@ -163,4 +163,52 @@ impl Int {
     // and
     //   Real::add_int(&self, other: &Int) -> Real
     // This might be cleaner because we know exactly what the output type will be for these methods.
+}
+
+macro_rules! into_int {
+    ($t:ty) => {
+        impl IntoAst<Int> for $t {
+            fn into_ast(self, a: &Int) -> Int {
+                Int::from_u64(&a.ctx, self as u64)
+            }
+        }
+
+        impl IntoAstCtx<Int> for $t {
+            fn into_ast_ctx(self, a: &Context) -> Int {
+                Int::from_u64(&a, self as u64)
+            }
+        }
+    };
+}
+
+macro_rules! into_int_signed {
+    ($t:ty) => {
+        impl IntoAst<Int> for $t {
+            fn into_ast(self, a: &Int) -> Int {
+                Int::from_i64(&a.ctx, self as i64)
+            }
+        }
+
+        impl IntoAstCtx<Int> for $t {
+            fn into_ast_ctx(self, a: &Context) -> Int {
+                Int::from_i64(&a, self as i64)
+            }
+        }
+    };
+}
+
+into_int!(u8);
+into_int!(u16);
+into_int!(u32);
+into_int!(u64);
+
+into_int_signed!(i8);
+into_int_signed!(i16);
+into_int_signed!(i32);
+into_int_signed!(i64);
+
+impl IntoAst<Int> for BigInt {
+    fn into_ast(self, a: &Int) -> Int {
+        Int::from_big_int(&a.ctx, &self)
+    }
 }

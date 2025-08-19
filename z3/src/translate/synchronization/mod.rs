@@ -13,7 +13,7 @@ use std::sync::Mutex;
 ///
 /// [`Synchronized`] handles can be _moved_ to another thread.
 /// ```
-/// use z3::ast::{Ast, Bool, Int};
+/// use z3::ast::{Bool, Int};
 /// use z3::{Context, PrepareSynchronized, Solver, Translate};
 ///
 /// // Creating a Synchronized<BV> and moving it to another thread.
@@ -172,7 +172,7 @@ mod thread_tests {
             let thread_ctx = Context::default();
             let moved = sendable.recover(&thread_ctx);
             let solver = Solver::new(&thread_ctx);
-            solver.assert(&moved._eq(&Bool::from_bool(&thread_ctx, true)));
+            solver.assert(moved._eq(true));
             solver.check();
             let model = solver.get_model().unwrap();
             model.synchronized()
@@ -200,10 +200,10 @@ mod rayon_tests {
             let ctx = Context::default();
             let moved = sendable.recover(&ctx);
             let solver = Solver::new(&ctx);
-            solver.assert(&moved._eq(&Int::from_i64(&ctx, i)));
+            solver.assert(moved._eq(i));
             assert_eq!(solver.check(), crate::SatResult::Sat);
             let model = solver.get_model().unwrap();
-            assert_eq!(model.eval(&moved, true), Some(Int::from_i64(&ctx, i)));
+            assert_eq!(model.eval(&moved, true).unwrap(), i);
         })
     }
 }
