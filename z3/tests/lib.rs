@@ -1998,8 +1998,8 @@ fn test_round_towards_nearest_away() {
     let x = z3::ast::Float::from_f64(&ctx, 1.0);
     let y = z3::ast::Float::from_f64(&ctx, 0.5 * eps);
 
-    let rtna = z3::ast::Float::round_towards_nearest_away(&ctx);
-    let res_rtna = rtna.add(&x, &y);
+    let rtna = z3::ast::RoundingMode::round_nearest_ties_to_away(&ctx);
+    let res_rtna = x.add_with_rounding_mode(y, &rtna);
 
     let expected = z3::ast::Float::from_f64(&ctx, 1.0000000000000002);
     solver.assert(&res_rtna._eq(&expected));
@@ -2017,8 +2017,8 @@ fn test_round_towards_nearest_even() {
     let x = z3::ast::Float::from_f64(&ctx, 1.0);
     let y = z3::ast::Float::from_f64(&ctx, 0.5 * eps);
 
-    let rtne = z3::ast::Float::round_towards_nearest_even(&ctx);
-    let res_rtne = rtne.add(&x, &y);
+    let rtne = z3::ast::RoundingMode::round_nearest_ties_to_even(&ctx);
+    let res_rtne = x.add_with_rounding_mode(y, &rtne);
 
     let expected = z3::ast::Float::from_f64(&ctx, 1.0);
     solver.assert(&res_rtne._eq(&expected));
