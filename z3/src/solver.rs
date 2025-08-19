@@ -297,7 +297,7 @@ impl Solver {
     /// or [`Solver::check_assumptions()`] if the
     /// assertions is satisfiable (i.e., the result is
     /// `SatResult::Sat`) and [model construction is enabled].
-    /// 
+    ///
     /// It can also be used
     /// if the result is `SatResult::Unknown`, but the returned model
     /// is not guaranteed to satisfy quantified assertions.
