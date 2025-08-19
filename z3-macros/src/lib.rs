@@ -99,7 +99,7 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
     let orig_ident = m.sig.ident.clone();
     let renamed_ident = format_ident!("{}_in_ctx", orig_ident, span = orig_ident.span());
 
-    let (attrs_for_inner, attrs_for_outer) = split_attrs(&m.attrs, "z3");
+    let attrs = strip_attrs(&m.attrs, "z3");
 
     // We find the first context argument and use that. Our API is highly regular so there
     // are no cases where there are multiple context arguments.
@@ -112,8 +112,8 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
     let mut outer_sig = m.sig.clone();
     remove_nth_nonreceiver_arg(&mut outer_sig, ctx_index);
 
-    let has_receiver = has_receiver(&m.sig);
-    let call_target = if has_receiver {
+    let call_target = if has_receiver(&m.sig) {
+        // don't think this ever happens but just in case
         quote!(self.#renamed_ident)
     } else {
         quote!(Self::#renamed_ident)
@@ -121,11 +121,10 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
     let call_args = build_call_args_calling_fn(&m.sig, ctx_index, &default_ctx_fn);
 
-    let vis = &m.vis;
     // construct the inner method syntax, with the changed signature
     let inner_method = ImplItem::Fn(ImplItemFn {
-        attrs: attrs_for_inner,
-        vis: vis.clone(),
+        attrs: attrs.clone(),
+        vis: m.vis.clone(),
         defaultness: m.defaultness,
         sig: inner_sig,
         block: m.block,
@@ -135,8 +134,8 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
     let outer_block = quote!({ #call_target(#(#call_args),*) });
     // construct the full outer method syntax
     let outer_method = ImplItem::Fn(ImplItemFn {
-        attrs: attrs_for_outer,
-        vis: vis.clone(),
+        attrs: attrs.clone(),
+        vis: m.vis.clone(),
         defaultness: m.defaultness,
         sig: outer_sig,
         block: syn::parse_quote!(#outer_block),
@@ -146,18 +145,12 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
 // ---------------- utilities ----------------
 
-fn split_attrs(attrs: &[Attribute], name: &str) -> (Vec<Attribute>, Vec<Attribute>) {
-    let mut inner = Vec::new();
-    let mut outer = Vec::new();
-    for a in attrs {
-        if a.path().is_ident(name) {
-            // drop our own attr
-        } else {
-            inner.push(a.clone());
-            outer.push(a.clone());
-        }
-    }
-    (inner, outer)
+fn strip_attrs(attrs: &[Attribute], name: &str) -> Vec<Attribute> {
+    attrs
+        .iter()
+        .filter(|a| a.path().is_ident(name))
+        .cloned()
+        .collect()
 }
 
 fn has_receiver(sig: &Signature) -> bool {
