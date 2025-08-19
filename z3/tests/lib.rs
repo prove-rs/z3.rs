@@ -2002,7 +2002,7 @@ fn test_round_towards_nearest_away() {
     let res_rtna = x.add_with_rounding_mode(y, &rtna);
 
     let expected = z3::ast::Float::from_f64(&ctx, 1.0000000000000002);
-    solver.assert(&res_rtna._eq(&expected));
+    solver.assert(res_rtna._eq(&expected));
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -2021,7 +2021,7 @@ fn test_round_towards_nearest_even() {
     let res_rtne = x.add_with_rounding_mode(y, &rtne);
 
     let expected = z3::ast::Float::from_f64(&ctx, 1.0);
-    solver.assert(&res_rtne._eq(&expected));
+    solver.assert(res_rtne._eq(&expected));
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
