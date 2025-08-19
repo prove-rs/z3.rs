@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.15.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.4...z3-v0.15.0) - 2025-08-19
+
+### Added
+
+- [**breaking**] trait-based conversions and operations ([#410](https://github.com/prove-rs/z3.rs/pull/410)) (by @toolCHAINZ) - #410
+
+### Other
+
+- add unit tests for rounding modes ([#389](https://github.com/prove-rs/z3.rs/pull/389)) (by @mehrad31415) - #389
+
+### Contributors
+
+* @mehrad31415
+* @toolCHAINZ
+
 ## [0.14.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.3...z3-v0.14.4) - 2025-08-19
 
 ### Added
