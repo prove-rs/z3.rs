@@ -1,7 +1,8 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, format_ident, quote};
+use syn::punctuated::Punctuated;
 use syn::{
-    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemImpl, Pat, PatType, Path, Signature, Type,
+    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemImpl, PatType, Path, Signature, Type,
     parse_macro_input, spanned::Spanned,
 };
 
@@ -68,7 +69,7 @@ fn handle_impl(default_ctx_fn: Path, block: ItemImpl) -> TokenStream {
     };
     for x in block.items.iter() {
         if let Ok(f) = syn::parse::<ImplItemFn>(TokenStream::from(x.to_token_stream())) {
-            if f.sig.ident != "wrap" && extract_ctx_and_args(&f.sig).is_ok() {
+            if f.sig.ident != "wrap" && f.sig.inputs.iter().any(is_fn_arg_context) {
                 let (a, b) = transform_impl_method(default_ctx_fn.clone(), f);
                 i.items.push(a);
                 i.items.push(b);
@@ -103,23 +104,21 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
     // We find the first context argument and use that. Our API is highly regular so there
     // are no cases where there are multiple context arguments.
-    let (ctx_index, _ctx_pat, _rest_args) =
-        extract_ctx_and_args(&m.sig).unwrap_or_else(|e| abort(m.sig.span(), &e));
 
     let mut inner_sig = m.sig.clone();
     inner_sig.ident = renamed_ident.clone();
 
     let mut outer_sig = m.sig.clone();
-    remove_nth_nonreceiver_arg(&mut outer_sig, ctx_index);
+    filter_ctx_args(&mut outer_sig);
 
-    let call_target = if has_receiver(&m.sig) {
+    let call_target = if m.sig.receiver().is_some() {
         // don't think this ever happens but just in case
         quote!(self.#renamed_ident)
     } else {
         quote!(Self::#renamed_ident)
     };
 
-    let call_args = build_call_args_calling_fn(&m.sig, ctx_index, &default_ctx_fn);
+    let call_args = build_call_args_calling_fn(&m.sig, &default_ctx_fn);
 
     // construct the inner method syntax, with the changed signature
     let inner_method = ImplItem::Fn(ImplItemFn {
@@ -145,6 +144,8 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
 // ---------------- utilities ----------------
 
+/// Collects the attributes applied to a function and strips out the one
+/// specified by `name`
 fn strip_attrs(attrs: &[Attribute], name: &str) -> Vec<Attribute> {
     attrs
         .iter()
@@ -153,91 +154,28 @@ fn strip_attrs(attrs: &[Attribute], name: &str) -> Vec<Attribute> {
         .collect()
 }
 
-fn has_receiver(sig: &Signature) -> bool {
-    sig.receiver().is_some()
+/// Checks if the provided `arg` is of type `&Context`
+fn is_fn_arg_context(arg: &FnArg) -> bool {
+    if matches!(arg, FnArg::Receiver(_)) {
+        return false;
+    }
+    if let FnArg::Typed(PatType { ty, .. }) = arg
+        && let Type::Reference(r) = ty.as_ref().clone()
+        && r.elem.to_token_stream().to_string() == "Context"
+    {
+        return true;
+    }
+    false
 }
 
-/// Given a function signature, find the index of the &Context argument, if one exists,
-/// along with a handle to its syntax and the rest of the
-fn extract_ctx_and_args(sig: &Signature) -> Result<(usize, Pat, Vec<Pat>), String> {
-    for (i, arg) in sig.inputs.iter().enumerate() {
-        if matches!(arg, FnArg::Receiver(_)) {
-            continue;
-        }
-        if let FnArg::Typed(PatType { pat, ty, .. }) = arg {
-            if let Type::Reference(r) = ty.as_ref().clone() {
-                if r.elem.to_token_stream().to_string() != "Context" {
-                    continue;
-                }
-            } else {
-                continue;
-            }
-            return Ok((
-                index_of_nonreceiver(sig, i),
-                (*pat.as_ref()).clone(),
-                collect_pats(sig),
-            ));
-        } else {
-            continue;
-        }
-    }
-    Err("Expected at least one non-receiver argument for context".into())
-}
-
-fn index_of_nonreceiver(sig: &Signature, abs_idx: usize) -> usize {
-    let mut count = 0usize;
-    for (i, arg) in sig.inputs.iter().enumerate() {
-        if matches!(arg, FnArg::Receiver(_)) {
-            continue;
-        }
-        if i == abs_idx {
-            return count;
-        }
-        count += 1;
-    }
-    0
-}
-
-/// Get all patterns in a function signature, excluding the receiver.
-fn collect_pats(sig: &Signature) -> Vec<Pat> {
-    sig.inputs
-        .iter()
-        .filter_map(|a| match a {
-            FnArg::Receiver(_) => None,
-            FnArg::Typed(PatType { pat, .. }) => Some((**pat).clone()),
-        })
-        .collect()
-}
-
-/// Remove the nth argument from a function signature (not counting the receiver)
-fn remove_nth_nonreceiver_arg(sig: &mut Signature, n: usize) {
-    let mut k = 0usize;
-    let mut to_remove: Option<usize> = None;
-    // this stuff skips the receiver and counts up to the nth argument
-    for (i, arg) in sig.inputs.iter().enumerate() {
-        if matches!(arg, FnArg::Receiver(_)) {
-            continue;
-        }
-        if k == n {
-            to_remove = Some(i);
-            break;
-        }
-        k += 1;
-    }
-
-    // now that we have the argument in hand, we build a new signature using Punctuated,
-    // creating pairs of args and commas, which we use to build a new function signature
-    if let Some(i) = to_remove {
-        let mut new_inputs = syn::punctuated::Punctuated::<FnArg, syn::token::Comma>::new();
-        for (j, pair) in sig.inputs.clone().into_pairs().enumerate() {
-            if j == i {
-                continue;
-            }
-            // this pushes both the argument and the punctuation, should another arg be added
-            new_inputs.push(pair.into_value())
-        }
-        sig.inputs = new_inputs;
-    }
+/// Filter in place a fn [`Signature`] to not include a `&Context` argument
+fn filter_ctx_args(sig: &mut Signature) {
+    let pairs = sig
+        .inputs
+        .pairs()
+        .filter(|pair| !is_fn_arg_context(pair.value()))
+        .map(|a| a.cloned());
+    sig.inputs = Punctuated::<FnArg, syn::token::Comma>::from_iter(pairs);
 }
 
 /// Given a function signature and the index of the context argument inside it,
@@ -245,30 +183,21 @@ fn remove_nth_nonreceiver_arg(sig: &mut Signature, n: usize) {
 /// the context argument replaced by a call to the provided `default_ctx_fn`.
 fn build_call_args_calling_fn(
     sig: &Signature,
-    ctx_index: usize,
     default_ctx_fn: &Path,
 ) -> Vec<proc_macro2::TokenStream> {
-    // Pass all non-receiver args, but at the ctx slot, call the provided function.
-    let mut args: Vec<proc_macro2::TokenStream> = Vec::new();
-    let mut k = 0usize;
-    for arg in sig.inputs.iter() {
-        match arg {
-            // we're doing self. or Self:: so we don't need to write the receiver
-            FnArg::Receiver(_) => {}
-            FnArg::Typed(PatType { pat, .. }) => {
-                if k == ctx_index {
-                    // if it's the context index, we replace it with a
-                    // call to the default context function
-                    args.push(quote!(&#default_ctx_fn()));
-                } else {
-                    // otherwise, copy as is
-                    args.push(pat.to_token_stream());
-                }
-                k += 1;
+    // Pass all non-receiver args, replacing any Ctx with the given default-ctx getter.
+    sig.inputs
+        .iter()
+        .flat_map(|arg| {
+            if is_fn_arg_context(arg) {
+                Some(quote! {&#default_ctx_fn()})
+            } else if let FnArg::Typed(PatType { pat, .. }) = arg {
+                Some(pat.to_token_stream())
+            } else {
+                None
             }
-        }
-    }
-    args
+        })
+        .collect()
 }
 
 fn abort<T: Spanned>(span: T, msg: &str) -> ! {
