@@ -3,7 +3,7 @@ use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a boolean value.
@@ -11,7 +11,7 @@ pub struct Bool {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Bool {
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Bool {
         let sort = Sort::bool_in_ctx(ctx);

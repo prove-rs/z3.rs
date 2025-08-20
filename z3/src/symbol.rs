@@ -1,10 +1,10 @@
 use std::ffi::CString;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, Symbol};
 
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Symbol {
     pub fn as_z3_symbol(&self, ctx: &Context) -> Z3_symbol {
         match self {

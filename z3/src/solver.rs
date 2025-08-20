@@ -9,8 +9,8 @@ use crate::{
     Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast, ast::Ast,
 };
 use std::ops::AddAssign;
-use z3_macros::z3;
-#[z3(Context::thread_local)]
+use z3_macros::z3_ctx;
+#[z3_ctx(Context::thread_local)]
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
         unsafe {

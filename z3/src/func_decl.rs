@@ -1,11 +1,11 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast};
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl FuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {

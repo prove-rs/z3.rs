@@ -3,7 +3,7 @@ use crate::ast::{Ast, BV, Bool, binop, unop};
 use crate::ast::{IntoAst, IntoAstCtx};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a float value.
@@ -11,7 +11,7 @@ pub struct Float {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Float {
     // Create a 32-bit (IEEE-754) Float [`Ast`] from a rust f32
 
@@ -93,7 +93,7 @@ impl Float {
         Self::nan_in_ctx(ctx, &s)
     }
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Float {
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, ebits: u32, sbits: u32) -> Float {
         let sort = Sort::float_in_ctx(ctx, ebits, sbits);

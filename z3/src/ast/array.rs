@@ -1,7 +1,7 @@
 use crate::ast::{Ast, Dynamic};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing an array value.
@@ -11,7 +11,7 @@ pub struct Array {
     pub(crate) z3_ast: Z3_ast,
 }
 
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Array {
     /// Create an `Array` which maps from indices of the `domain` `Sort` to
     /// values of the `range` `Sort`.

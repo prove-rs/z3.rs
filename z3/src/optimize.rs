@@ -14,8 +14,8 @@ use num::{
     bigint::{BigInt, BigUint, Sign},
     rational::BigRational,
 };
-use z3_macros::z3;
-#[z3(Context::thread_local)]
+use z3_macros::z3_ctx;
+#[z3_ctx(Context::thread_local)]
 impl Optimize {
     unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {

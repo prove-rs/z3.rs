@@ -4,7 +4,7 @@ use crate::ast::{Bool, IntoAst, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing an integer value.
@@ -12,7 +12,7 @@ pub struct Int {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Int {
     pub fn from_big_int(ctx: &Context, value: &BigInt) -> Int {
         Int::from_str_in_ctx(ctx, &value.to_str_radix(10)).unwrap()
@@ -33,7 +33,7 @@ impl Int {
     }
 }
 
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Int {
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Int {
         let sort = Sort::int_in_ctx(ctx);
