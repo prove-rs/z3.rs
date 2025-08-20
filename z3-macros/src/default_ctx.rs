@@ -87,9 +87,19 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
     // construct the outer method call
     let outer_block = quote!({ #call_target(#(#call_args),*) });
+
+    let mut outer_attrs = m.attrs.clone();
+    let msg = format!(
+        "This method is a macro-generated wrapper around [`Self::{renamed_ident}`] which automatically provides a default thread_local [`Context`].",
+    );
+    outer_attrs.push(syn::parse_quote!(#[doc = ""]));
+    outer_attrs.push(syn::parse_quote!(
+        #[doc = #msg]
+    ));
+
     // construct the full outer method syntax
     let outer_method = ImplItem::Fn(ImplItemFn {
-        attrs: m.attrs.clone(),
+        attrs: outer_attrs.clone(),
         vis: m.vis.clone(),
         defaultness: m.defaultness,
         sig: outer_sig,
