@@ -64,6 +64,7 @@ impl<T: Translate> Synchronized<T> {
         Self(Mutex::new(data))
     }
 }
+
 #[z3(Context::thread_local)]
 impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
