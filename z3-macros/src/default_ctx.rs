@@ -90,7 +90,7 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
     let mut outer_attrs = m.attrs.clone();
     let msg = format!(
-        "This method is a macro-generated wrapper around [`Self::{renamed_ident}`] which automatically provides a default thread_local [`Context`].",
+        "This method is a macro-generated wrapper providing [`Context::thread_local`] to [`{renamed_ident}`](Self::{renamed_ident}).",
     );
     outer_attrs.push(syn::parse_quote!(#[doc = ""]));
     outer_attrs.push(syn::parse_quote!(
