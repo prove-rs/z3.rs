@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, format_ident, quote};
 use syn::punctuated::Punctuated;
-use syn::{Attribute, FnArg, ImplItem, ImplItemFn, ItemImpl, PatType, Path, Signature, Type};
+use syn::{FnArg, ImplItem, ImplItemFn, ItemImpl, PatType, Path, Signature, Type};
 
 /// To handle an impl block, we:
 /// * Copy all the existing things about the block except for its items
@@ -57,8 +57,7 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
     let orig_ident = m.sig.ident.clone();
     let renamed_ident = format_ident!("{}_in_ctx", orig_ident, span = orig_ident.span());
 
-    let attrs = strip_attrs(&m.attrs, "z3");
-
+    // We need to copy the attributes of the original method, so we can use them on both
     // We find the first context argument and use that. Our API is highly regular so there
     // are no cases where there are multiple context arguments.
 
@@ -79,7 +78,7 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 
     // construct the inner method syntax, with the changed signature
     let inner_method = ImplItem::Fn(ImplItemFn {
-        attrs: attrs.clone(),
+        attrs: m.attrs.clone(),
         vis: m.vis.clone(),
         defaultness: m.defaultness,
         sig: inner_sig,
@@ -90,23 +89,13 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
     let outer_block = quote!({ #call_target(#(#call_args),*) });
     // construct the full outer method syntax
     let outer_method = ImplItem::Fn(ImplItemFn {
-        attrs: attrs.clone(),
+        attrs: m.attrs.clone(),
         vis: m.vis.clone(),
         defaultness: m.defaultness,
         sig: outer_sig,
         block: syn::parse_quote!(#outer_block),
     });
     (inner_method, outer_method)
-}
-
-/// Collects the attributes applied to a function and strips out the one
-/// specified by `name`
-fn strip_attrs(attrs: &[Attribute], name: &str) -> Vec<Attribute> {
-    attrs
-        .iter()
-        .filter(|a| a.path().is_ident(name))
-        .cloned()
-        .collect()
 }
 
 /// Checks if the provided `arg` is of type `&Context`
