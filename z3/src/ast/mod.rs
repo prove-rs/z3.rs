@@ -109,7 +109,7 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            #[z3(Context::thread_local)]
+            #[z3_ctx(Context::thread_local)]
             pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
                 unsafe {
                     <$retty>::wrap(ctx, {

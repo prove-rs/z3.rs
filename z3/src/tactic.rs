@@ -5,7 +5,7 @@ use std::os::raw::c_uint;
 use std::result::Result;
 use std::str::Utf8Error;
 use std::time::Duration;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
@@ -41,7 +41,7 @@ impl Drop for ApplyResult {
     }
 }
 
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Tactic {
     /// Iterate through the valid tactic names.
     ///

@@ -1,14 +1,14 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
 
 use std::{convert::TryInto, ptr::null_mut};
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{
     Context, DatatypeAccessor, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort,
     Symbol,
 };
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl DatatypeBuilder {
     pub fn new<S: Into<Symbol>>(ctx: &Context, name: S) -> Self {
         Self {

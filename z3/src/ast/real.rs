@@ -4,7 +4,7 @@ use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
 use std::ffi::{CStr, CString};
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
@@ -12,7 +12,7 @@ pub struct Real {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Real {
     pub fn from_big_rational(ctx: &Context, value: &BigRational) -> Real {
         let num = value.numer();
@@ -34,7 +34,7 @@ impl Real {
         Some(unsafe { Real::wrap(ctx, ast) })
     }
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Real {
     pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Real {
         let sort = Sort::real_in_ctx(ctx);

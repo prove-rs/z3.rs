@@ -1,11 +1,11 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, Pattern, ast::Ast};
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Pattern {
     /// Create a pattern for quantifier instantiation.
     ///

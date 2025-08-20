@@ -2,7 +2,7 @@ use crate::ast::IntoAst;
 use crate::ast::{Ast, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a bitvector value.
@@ -30,7 +30,7 @@ macro_rules! bv_overflow_check_signed {
     };
 }
 
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl BV {
     pub fn from_str(ctx: &Context, sz: u32, value: &str) -> Option<BV> {
         let sort = Sort::bitvector_in_ctx(ctx, sz);

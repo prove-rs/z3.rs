@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 use std::fmt;
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, Goal, Translate, ast, ast::Ast};
@@ -14,7 +14,7 @@ impl Clone for Goal {
         }
     }
 }
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Goal {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal) -> Goal {
         unsafe {

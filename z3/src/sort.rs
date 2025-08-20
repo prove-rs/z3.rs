@@ -5,9 +5,9 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
-use z3_macros::z3;
+use z3_macros::z3_ctx;
 
-#[z3(Context::thread_local)]
+#[z3_ctx(Context::thread_local)]
 impl Sort {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
         unsafe {
