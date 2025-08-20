@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, format_ident, quote};
 use syn::{
-    Attribute, FnArg, ImplItem, ImplItemFn, Item, ItemImpl, Pat, PatType, Path, Signature, Type,
+    FnArg, ImplItem, ImplItemFn, Item, ItemImpl, Pat, PatType, Path, Signature, Type,
     parse_macro_input, spanned::Spanned,
 };
 
@@ -142,7 +142,6 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
 }
 
 // ---------------- utilities ----------------
-
 
 fn has_receiver(sig: &Signature) -> bool {
     sig.receiver().is_some()
