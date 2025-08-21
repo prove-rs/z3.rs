@@ -50,11 +50,14 @@ pub struct Context {
 }
 impl Context {
     /// Returns a handle to the default thread-local [`Context`].
-    /// This [`Context`] is used by default in any API that does not
-    /// act on an existing [`Ast`] and does not have a [`Context`] argument.
+    ///
+    /// This [`Context`] is used in all z3 operations.
+    /// Custom [`Context`]s are supported through [`with_z3_context`] or [`with_z3_config`],
+    /// which allow for running a closure inside an environment with the provided [`Context`]
     ///
     /// # See also:
-    /// - [`Context::set_thread_local_from_config()`]
+    /// - [`with_z3_context`]
+    /// - [`with_z3_config`]
     pub fn thread_local() -> Context {
         DEFAULT_CONTEXT.with(|f| f.borrow().clone())
     }
@@ -70,9 +73,9 @@ impl Context {
     ///
     /// # See also:
     /// /// - [`Context::thread_local()`]
-    pub fn set_thread_local_from_config(cfg: &Config) {
+    pub(crate) fn set_thread_local(ctx: &Context) {
         DEFAULT_CONTEXT.with(|f| {
-            *f.borrow_mut() = Context::new(cfg);
+            *f.borrow_mut() = ctx.clone();
         });
     }
 

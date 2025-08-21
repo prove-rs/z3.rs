@@ -4,9 +4,9 @@ use z3_sys::*;
 
 use crate::{Context, Symbol};
 
-#[z3_ctx(Context::thread_local)]
 impl Symbol {
-    pub fn as_z3_symbol(&self, ctx: &Context) -> Z3_symbol {
+    pub fn as_z3_symbol(&self) -> Z3_symbol {
+        let ctx = &Context::thread_local();
         match self {
             Symbol::Int(i) => unsafe {
                 Z3_mk_int_symbol(ctx.z3_ctx.0, *i as ::std::os::raw::c_int)

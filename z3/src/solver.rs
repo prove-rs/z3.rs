@@ -10,7 +10,7 @@ use crate::{
 };
 use std::ops::AddAssign;
 use z3_macros::z3_ctx;
-#[z3_ctx(Context::thread_local)]
+
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
         unsafe {
@@ -44,7 +44,8 @@ impl Solver {
     /// Note however it is possible to set the `solver2_timeout`,
     /// `solver2_unknown`, and `ignore_solver1` parameters of the combined
     /// solver to change its behaviour.
-    pub fn new(ctx: &Context) -> Solver {
+    pub fn new() -> Solver {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0)) }
     }
 
@@ -61,7 +62,7 @@ impl Solver {
     /// It returns `None` if the logic is unknown or unsupported.
     pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
         unsafe {
-            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol_in_ctx(ctx));
+            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol());
             if s.is_null() {
                 None
             } else {
@@ -376,7 +377,7 @@ impl Solver {
             num_assumptions -= 1;
             assumptions[num_assumptions as usize].z3_ast
         } else {
-            ast::Bool::from_bool_in_ctx(&self.ctx, true).z3_ast
+            ast::Bool::from_bool( true).z3_ast
         };
         let z3_assumptions = assumptions.iter().map(|a| a.z3_ast).collect::<Vec<_>>();
 
@@ -431,7 +432,7 @@ impl Drop for Solver {
 impl Clone for Solver {
     // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
     fn clone(self: &Solver) -> Self {
-        let new_solver = Solver::new_in_ctx(&self.ctx);
+        let new_solver = Solver::new();
 
         self.get_assertions().iter().for_each(|a| {
             new_solver.assert(a);

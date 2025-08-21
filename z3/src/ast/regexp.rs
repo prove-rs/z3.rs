@@ -31,10 +31,10 @@ pub struct Regexp {
     pub(crate) z3_ast: Z3_ast,
 }
 
-#[z3_ctx(Context::thread_local)]
 impl Regexp {
     /// Creates a regular expression that recognizes the string given as parameter
-    pub fn literal(ctx: &Context, s: &str) -> Self {
+    pub fn literal(s: &str) -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 let c_str = CString::new(s).unwrap();
@@ -45,7 +45,8 @@ impl Regexp {
 
     /// Creates a regular expression that recognizes a character in the specified range (e.g.
     /// `[a-z]`)
-    pub fn range(ctx: &Context, lo: &char, hi: &char) -> Self {
+    pub fn range(lo: &char, hi: &char) -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 let lo_cs = CString::new(lo.to_string()).unwrap();

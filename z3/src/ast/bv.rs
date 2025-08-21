@@ -2,7 +2,6 @@ use crate::ast::IntoAst;
 use crate::ast::{Ast, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a bitvector value.
@@ -30,10 +29,10 @@ macro_rules! bv_overflow_check_signed {
     };
 }
 
-#[z3_ctx(Context::thread_local)]
 impl BV {
-    pub fn from_str(ctx: &Context, sz: u32, value: &str) -> Option<BV> {
-        let sort = Sort::bitvector_in_ctx(ctx, sz);
+    pub fn from_str(sz: u32, value: &str) -> Option<BV> {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         let ast = unsafe {
             let bv_cstring = CString::new(value).unwrap();
             let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, bv_cstring.as_ptr(), sort.z3_sort);
@@ -57,7 +56,8 @@ impl BV {
     /// assert_eq!(bv, 2);
     /// assert_eq!(bv_none, None);
     /// ```
-    pub fn from_bits(ctx: &Context, bits: &[bool]) -> Option<BV> {
+    pub fn from_bits(bits: &[bool]) -> Option<BV> {
+        let ctx = &Context::thread_local();
         let ast = unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.0, bits.len() as u32, bits.as_ptr()) };
         if ast.is_null() {
             None
@@ -66,21 +66,18 @@ impl BV {
         }
     }
 
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sz: u32) -> BV {
-        let sort = Sort::bitvector_in_ctx(ctx, sz);
+    pub fn new_const<S: Into<Symbol>>(name: S, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
     pub fn fresh_const(ctx: &Context, prefix: &str, sz: u32) -> BV {
-        let sort = Sort::bitvector_in_ctx(ctx, sz);
+        let sort = Sort::bitvector(sz);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -90,13 +87,15 @@ impl BV {
         }
     }
 
-    pub fn from_i64(ctx: &Context, i: i64, sz: u32) -> BV {
-        let sort = Sort::bitvector_in_ctx(ctx, sz);
+    pub fn from_i64(i: i64, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort)) }
     }
 
-    pub fn from_u64(ctx: &Context, u: u64, sz: u32) -> BV {
-        let sort = Sort::bitvector_in_ctx(ctx, sz);
+    pub fn from_u64(u: u64, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort)) }
     }
 
@@ -303,7 +302,7 @@ macro_rules! into_bv {
     ($t:ty) => {
         impl IntoAst<BV> for $t {
             fn into_ast(self, a: &BV) -> BV {
-                BV::from_u64_in_ctx(&a.ctx, self as u64, a.get_size())
+                BV::from_u64(self as u64, a.get_size())
             }
         }
     };
@@ -313,7 +312,7 @@ macro_rules! into_bv_signed {
     ($t:ty) => {
         impl IntoAst<BV> for $t {
             fn into_ast(self, a: &BV) -> BV {
-                BV::from_i64_in_ctx(&a.ctx, self as i64, a.get_size())
+                BV::from_i64(self as i64, a.get_size())
             }
         }
     };

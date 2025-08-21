@@ -11,23 +11,20 @@ pub struct Seq {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3_ctx(Context::thread_local)]
 impl Seq {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Self {
-        let sort = Sort::seq_in_ctx(ctx, eltype);
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Self {
+        let ctx = &Context::thread_local();
+        let sort = Sort::seq(eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Self {
-        let sort = Sort::seq_in_ctx(ctx, eltype);
+    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Self {
+        let ctx = &Context::thread_local();
+        let sort = Sort::seq(eltype);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -50,13 +47,14 @@ impl Seq {
     /// solver.assert(&concatenated._eq(&any_seq));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn empty(ctx: &Context, eltype: &Sort) -> Self {
-        let sort = Sort::seq_in_ctx(ctx, eltype);
+    pub fn empty(eltype: &Sort) -> Self {
+        let ctx = &Context::thread_local();
+        let sort = Sort::seq(eltype);
         unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.0, sort.z3_sort)) }
     }
 
     /// Create a unit sequence of `a`.
-    pub fn unit<A: Ast>(ctx: &Context, a: &A) -> Self {
+    pub fn unit<A: Ast>( a: &A) -> Self {let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.0, a.get_z3_ast())) }
     }
 

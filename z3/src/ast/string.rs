@@ -12,25 +12,22 @@ pub struct String {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3_ctx(Context::thread_local)]
 impl String {
     /// Creates a new constant using the built-in string sort
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> String {
-        let sort = Sort::string_in_ctx(ctx);
+    pub fn new_const<S: Into<Symbol>>(name: S) -> String {
+        let ctx = &Context::thread_local();
+        let sort = Sort::string();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
     /// Creates a fresh constant using the built-in string sort
-    pub fn fresh_const(ctx: &Context, prefix: &str) -> String {
-        let sort = Sort::string_in_ctx(ctx);
+    pub fn fresh_const(prefix: &str) -> String {
+        let ctx = &Context::thread_local();
+        let sort = Sort::string();
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -41,7 +38,8 @@ impl String {
     }
 
     /// Creates a Z3 constant string from a `&str`
-    pub fn from_str(ctx: &Context, string: &str) -> Result<String, std::ffi::NulError> {
+    pub fn from_str(string: &str) -> Result<String, std::ffi::NulError> {
+        let ctx = &Context::thread_local();
         let string = CString::new(string)?;
         Ok(unsafe {
             Self::wrap(ctx, {
@@ -218,12 +216,12 @@ impl String {
 
 impl<T: AsRef<str>> IntoAst<String> for T {
     fn into_ast(self, a: &String) -> String {
-        String::from_str_in_ctx(&a.ctx, self.as_ref()).unwrap()
+        String::from_str(self.as_ref()).unwrap()
     }
 }
 
 impl<T: AsRef<str> + Clone> IntoAstCtx<String> for T {
     fn into_ast_ctx(self, ctx: &Context) -> String {
-        String::from_str_in_ctx(ctx, self.as_ref()).unwrap()
+        String::from_str(self.as_ref()).unwrap()
     }
 }

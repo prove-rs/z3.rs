@@ -109,8 +109,8 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            #[z3_ctx(Context::thread_local)]
-            pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
+            pub fn $f<T: IntoAstCtx<Self>>(values: &[T]) -> $retty {
+                let ctx = &Context::thread_local();
                 unsafe {
                     <$retty>::wrap(ctx, {
                         let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
@@ -795,8 +795,8 @@ pub fn quantifier_const(
                 ctx.z3_ctx.0,
                 is_forall,
                 weight,
-                quantifier_id.into().as_z3_symbol_in_ctx(ctx),
-                skolem_id.into().as_z3_symbol_in_ctx(ctx),
+                quantifier_id.into().as_z3_symbol(),
+                skolem_id.into().as_z3_symbol(),
                 bounds.len().try_into().unwrap(),
                 bounds.as_ptr() as *const Z3_app,
                 patterns.len().try_into().unwrap(),

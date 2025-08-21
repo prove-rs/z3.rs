@@ -14,7 +14,7 @@ impl Clone for Goal {
         }
     }
 }
-#[z3_ctx(Context::thread_local)]
+
 impl Goal {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal) -> Goal {
         unsafe {
@@ -26,7 +26,8 @@ impl Goal {
         }
     }
 
-    pub fn new(ctx: &Context, models: bool, unsat_cores: bool, proofs: bool) -> Goal {
+    pub fn new(models: bool, unsat_cores: bool, proofs: bool) -> Goal {
+        let ctx = &Context::thread_local();
         // NOTE: The Z3 context ctx must have been created with proof generation support.
         unsafe { Self::wrap(ctx, Z3_mk_goal(ctx.z3_ctx.0, models, unsat_cores, proofs)) }
     }

@@ -1,7 +1,7 @@
 use proc_macro::TokenStream;
 use quote::{ToTokens, format_ident, quote};
 use syn::punctuated::Punctuated;
-use syn::{FnArg, ImplItem, ImplItemFn, ItemImpl, PatType, Path, Signature, Type};
+use syn::{FnArg, ImplItem, ImplItemFn, ItemImpl, PatType, Path, Signature, Stmt, Type};
 
 /// To handle an impl block, we:
 /// * Copy all the existing things about the block except for its items
@@ -27,9 +27,9 @@ pub(crate) fn handle_impl(default_ctx_fn: Path, block: ItemImpl) -> TokenStream 
     for x in block.items.iter() {
         if let Ok(f) = syn::parse::<ImplItemFn>(TokenStream::from(x.to_token_stream())) {
             if f.sig.ident != "wrap" && f.sig.inputs.iter().any(is_fn_arg_context) {
-                let (a, b) = transform_impl_method(default_ctx_fn.clone(), f);
+                let (a, _b) = transform_impl_method(default_ctx_fn.clone(), f);
                 i.items.push(a);
-                i.items.push(b);
+                //i.items.push(b);
             } else {
                 i.items.push(ImplItem::Fn(f.clone()))
             }
@@ -48,14 +48,14 @@ pub(crate) fn handle_fn(default_ctx_fn: Path, i: ImplItemFn) -> TokenStream {
 }
 
 /// Transforms an impl method that takes a context argument into two methods:
-/// * The inner method, which is renamed to `<original_name>_in_ctx` and keeps its original signature.
+/// * The inner method, which is renamed to `<original_name>` and keeps its original signature.
 /// * The outer method, which is named `<original_name>` and has the context argument removed.
 ///   The implementation of the outer method calls the inner method, passing
 ///   the context argument as a call to the provided `default_ctx_fn`.
 fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, ImplItem) {
     // original and renamed names
     let orig_ident = m.sig.ident.clone();
-    let renamed_ident = format_ident!("{}_in_ctx", orig_ident, span = orig_ident.span());
+    let renamed_ident = format_ident!("{}", orig_ident, span = orig_ident.span());
 
     // We need to copy the attributes of the original method, so we can use them on both
     // We find the first context argument and use that. Our API is highly regular so there
@@ -75,14 +75,18 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
     };
 
     let call_args = build_call_args_calling_fn(&m.sig, &default_ctx_fn);
-
+    let stmt: Stmt = syn::parse_str("let ctx = &Context::thread_local();").unwrap();
+    let mut stmts = m.block.stmts.clone();
+    stmts.insert(0, stmt);
+    let mut block = m.block.clone();
+    block.stmts = stmts;
     // construct the inner method syntax, with the changed signature
     let inner_method = ImplItem::Fn(ImplItemFn {
         attrs: m.attrs.clone(),
         vis: m.vis.clone(),
         defaultness: m.defaultness,
-        sig: inner_sig,
-        block: m.block,
+        sig: outer_sig.clone(),
+        block: block,
     });
 
     // construct the outer method call

@@ -9,30 +9,34 @@ pub struct RoundingMode {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3_ctx(Context::thread_local)]
 impl RoundingMode {
     /// Create a numeral of [`RoundingMode`] sort which represents the `TowardZero` rounding mode.
-    pub fn round_towards_zero(ctx: &Context) -> RoundingMode {
+    pub fn round_towards_zero() -> RoundingMode {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_zero(ctx.z3_ctx.0)) }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `TowardNegative` rounding mode.
-    pub fn round_towards_negative(ctx: &Context) -> RoundingMode {
+    pub fn round_towards_negative() -> RoundingMode {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_negative(ctx.z3_ctx.0)) }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `TowardPositive` rounding mode.
-    pub fn round_towards_positive(ctx: &Context) -> RoundingMode {
+    pub fn round_towards_positive() -> RoundingMode {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.0)) }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `NearestTiesToAway` rounding mode.
-    pub fn round_nearest_ties_to_away(ctx: &Context) -> RoundingMode {
+    pub fn round_nearest_ties_to_away() -> RoundingMode {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_round_nearest_ties_to_away(ctx.z3_ctx.0)) }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `NearestTiesToEven` rounding mode.
-    pub fn round_nearest_ties_to_even(ctx: &Context) -> RoundingMode {
+    pub fn round_nearest_ties_to_even() -> RoundingMode {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_fpa_round_nearest_ties_to_even(ctx.z3_ctx.0)) }
     }
 

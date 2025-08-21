@@ -216,19 +216,18 @@ fn test_floating_point_bits() {
 
 #[test]
 fn test_ast_translate() {
-    let cfg = Config::new();
-    let source = Context::new(&cfg);
-    let a = ast::Int::new_const_in_ctx(&source, "a");
+    let a = ast::Int::new_const("a");
 
-    let destination = Context::new(&cfg);
-    let translated_a = a.translate(&destination);
-
-    let slv = Solver::new_in_ctx(&destination);
-    slv.assert(translated_a._eq(2));
-    assert_eq!(slv.check(), SatResult::Sat);
-
-    slv.assert(translated_a._eq(3));
-    assert_eq!(slv.check(), SatResult::Unsat);
+    let destination = Context::default();
+    let sync = a.synchronized();
+    with_z3_context(&destination, move || {
+        let translated_a = sync.recover();
+        let slv = Solver::new();
+        slv.assert(translated_a._eq(2));
+        assert_eq!(slv.check(), SatResult::Sat);
+        slv.assert(translated_a._eq(3));
+        assert_eq!(slv.check(), SatResult::Unsat);
+    });
 }
 
 #[test]
@@ -259,48 +258,32 @@ fn test_solver_to_smtlib2() {
 
 #[test]
 fn test_solver_translate() {
-    let cfg = Config::new();
-    let source = Context::new(&cfg);
-    let a = ast::Int::new_const_in_ctx(&source, "a");
+    let a = ast::Int::new_const("a");
+    let s = a.synchronized();
+    let slv = with_z3_config(&Config::new(), || {
+        let a = s.recover();
+        let slv = Solver::new();
+        slv.assert(a._eq(2));
+        assert_eq!(slv.check(), SatResult::Sat);
+        slv.synchronized()
+    })
+    .recover();
 
-    let destination = Context::new(&cfg);
-    let translated_a = a.translate(&destination);
-
-    let slv = Solver::new_in_ctx(&destination);
-    slv.assert(translated_a._eq(2));
-    assert_eq!(slv.check(), SatResult::Sat);
-
-    let translated_slv = slv.translate(&source);
     // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
-    slv.assert(translated_a._eq(3));
-    assert_eq!(slv.check(), SatResult::Unsat);
-    assert_eq!(translated_slv.check(), SatResult::Sat);
-}
 
-#[test]
-fn test_translate_lifetimes() {
-    let cfg = Config::new();
-    let ctx1 = Context::new(&cfg);
-    let bv1;
-    {
-        let ctx2 = Context::new(&cfg);
-        let bv2 = BV::from_u64_in_ctx(&ctx2, 0, 8);
-        bv1 = bv2.translate(&ctx1);
-    }
-    // The actual test here is that this test even compiles.
-    assert_eq!(bv1.as_u64(), Some(0));
+    slv.assert(a._eq(3));
+    assert_eq!(slv.check(), SatResult::Unsat);
 }
 
 #[test]
 fn test_model_translate() {
     let cfg = Config::new();
-    let source = Context::new(&cfg);
-    let a = ast::Int::new_const_in_ctx(&source, "a");
+    let a = ast::Int::new_const("a");
 
     let destination = Context::new(&cfg);
     let translated_a = a.translate(&destination);
 
-    let slv = Solver::new_in_ctx(&source);
+    let slv = Solver::new();
     slv.assert(a._eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
@@ -621,28 +604,24 @@ fn test_solver_unknown() {
     let mut cfg = Config::new();
     // Use a very short timeout to quickly return "unknown"
     cfg.set_timeout_msec(1);
-    let old = Context::thread_local().get_z3_context();
-    Context::set_thread_local_from_config(&cfg);
-    let new = Context::thread_local().get_z3_context();
-    assert_ne!(old, new);
+    with_z3_config(&cfg, || {
+        // An open problem: find a model for x^3 + y^3 + z^3 == 42
+        // See: https://en.wikipedia.org/wiki/Sums_of_three_cubes
+        let x = ast::Int::new_const("x");
+        let y = ast::Int::new_const("y");
+        let z = ast::Int::new_const("z");
+        let x_cube = ast::Int::mul(&[&x, &x, &x]);
+        let y_cube = ast::Int::mul(&[&y, &y, &y]);
+        let z_cube = ast::Int::mul(&[&z, &z, &z]);
+        let sum_of_cubes = x_cube + y_cube + z_cube;
+        let sum_of_cubes_is_42 = sum_of_cubes._eq(42);
 
-    // An open problem: find a model for x^3 + y^3 + z^3 == 42
-    // See: https://en.wikipedia.org/wiki/Sums_of_three_cubes
-    let x = ast::Int::new_const("x");
-    let y = ast::Int::new_const("y");
-    let z = ast::Int::new_const("z");
-    let x_cube = ast::Int::mul(&[&x, &x, &x]);
-    let y_cube = ast::Int::mul(&[&y, &y, &y]);
-    let z_cube = ast::Int::mul(&[&z, &z, &z]);
-    let sum_of_cubes = x_cube + y_cube + z_cube;
-    let sum_of_cubes_is_42 = sum_of_cubes._eq(42);
+        let solver = Solver::new();
+        solver.assert(&sum_of_cubes_is_42);
 
-    let solver = Solver::new();
-    solver.assert(&sum_of_cubes_is_42);
-
-    assert_eq!(solver.check(), SatResult::Unknown);
-    assert!(solver.get_reason_unknown().is_some());
-    Context::set_thread_local_from_config(&Config::default());
+        assert_eq!(solver.check(), SatResult::Unknown);
+        assert!(solver.get_reason_unknown().is_some());
+    });
 }
 
 #[test]
@@ -651,28 +630,25 @@ fn test_optimize_unknown() {
     let mut cfg = Config::new();
     // Use a very short timeout to quickly return "unknown"
     cfg.set_timeout_msec(1);
-    let old = Context::thread_local().get_z3_context();
-    Context::set_thread_local_from_config(&cfg);
-    let new = Context::thread_local().get_z3_context();
-    assert_ne!(old, new);
 
-    // An open problem: find a model for x^3 + y^3 + z^3 == 42
-    // See: https://en.wikipedia.org/wiki/Sums_of_three_cubes
-    let x = ast::Int::new_const("x");
-    let y = ast::Int::new_const("y");
-    let z = ast::Int::new_const("z");
-    let x_cube = ast::Int::mul(&[&x, &x, &x]);
-    let y_cube = ast::Int::mul(&[&y, &y, &y]);
-    let z_cube = ast::Int::mul(&[&z, &z, &z]);
-    let sum_of_cubes = x_cube + y_cube + z_cube;
-    let sum_of_cubes_is_42 = sum_of_cubes._eq(42);
+    with_z3_config(&cfg, || {
+        // An open problem: find a model for x^3 + y^3 + z^3 == 42
+        // See: https://en.wikipedia.org/wiki/Sums_of_three_cubes
+        let x = ast::Int::new_const("x");
+        let y = ast::Int::new_const("y");
+        let z = ast::Int::new_const("z");
+        let x_cube = ast::Int::mul(&[&x, &x, &x]);
+        let y_cube = ast::Int::mul(&[&y, &y, &y]);
+        let z_cube = ast::Int::mul(&[&z, &z, &z]);
+        let sum_of_cubes = x_cube + y_cube + z_cube;
+        let sum_of_cubes_is_42 = sum_of_cubes._eq(42);
 
-    let optimize = Optimize::new();
-    optimize.assert(&sum_of_cubes_is_42);
+        let optimize = Optimize::new();
+        optimize.assert(&sum_of_cubes_is_42);
 
-    assert_eq!(optimize.check(&[]), SatResult::Unknown);
-    assert!(optimize.get_reason_unknown().is_some());
-    Context::set_thread_local_from_config(&Config::default());
+        assert_eq!(optimize.check(&[]), SatResult::Unknown);
+        assert!(optimize.get_reason_unknown().is_some());
+    });
 }
 
 #[test]
@@ -1463,17 +1439,6 @@ fn test_probe_ne() {
     g.assert(&x.gt(0));
     g.assert(&x.lt(10));
     assert_eq!(0.0, ne_two_probe.apply(&g));
-}
-
-#[test]
-#[should_panic]
-fn test_issue_94() {
-    let cfg = Config::new();
-    let ctx0 = Context::new(&cfg);
-    let ctx1 = Context::new(&cfg);
-    let i0 = ast::Int::fresh_const_in_ctx(&ctx0, "a");
-    let i1 = ast::Int::fresh_const_in_ctx(&ctx1, "b");
-    ast::Int::add(&[&i0, &i1]);
 }
 
 #[test]

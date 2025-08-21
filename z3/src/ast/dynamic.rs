@@ -15,13 +15,13 @@ impl Dynamic {
     }
 
     pub fn new_const<S: Into<Symbol>>(name: S, sort: &Sort) -> Self {
-        let ctx = sort.ctx.clone();
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(
                 &ctx,
                 Z3_mk_const(
                     ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(&ctx),
+                    name.into().as_z3_symbol(),
                     sort.z3_sort,
                 ),
             )

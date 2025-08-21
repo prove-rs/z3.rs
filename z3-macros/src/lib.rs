@@ -8,7 +8,7 @@ mod default_ctx;
 /// This macro is used to transform methods in an impl block (or individual function) to
 /// rewrite functions that take a `&Context` argument
 /// into two functions:
-/// * The original, which is renamed to `<original_name>_in_ctx` and keeps its original signature.
+/// * The original, which is renamed to `<original_name>` and keeps its original signature.
 /// * A new function, which is named `<original_name>` and has the context argument removed.
 ///   The implementation of the new method calls the original function, passing
 ///   the context argument as a call to the provided `default_ctx_fn`.

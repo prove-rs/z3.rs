@@ -312,3 +312,33 @@ pub struct Statistics {
     ctx: Context,
     z3_stats: Z3_stats,
 }
+
+/// Runs the provided callback with all inner Z3 calls using the provided [`Context`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`Synchronized::synchronized()`].
+/// # See also
+///
+/// [`with_z3_config`]
+pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(ctx: &Context, callback: T) -> R {
+    let old = Context::thread_local();
+    Context::set_thread_local(ctx);
+    let res = callback();
+    Context::set_thread_local(&old);
+    res
+}
+
+/// Runs the provided callback with all inner Z3 calls using a [`Context`] derived
+/// from the provided [`Config`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`Synchronized::synchronized()`].
+///
+/// # See also
+///
+/// [`with_z3_context`]
+pub fn with_z3_config<T: Fn() -> R + Send + Sync, R: Send + Sync>(cfg: &Config, callback: T) -> R {
+    with_z3_context(&Context::new(cfg), callback)
+}

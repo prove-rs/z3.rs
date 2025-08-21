@@ -65,11 +65,11 @@ impl<T: Translate> Synchronized<T> {
     }
 }
 
-#[z3_ctx(Context::thread_local)]
 impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
     /// and return the inner data.
-    pub fn recover(&self, ctx: &Context) -> T {
+    pub fn recover(&self) -> T {
+        let ctx = &Context::thread_local();
         self.0.lock().unwrap().translate(ctx)
     }
 }
