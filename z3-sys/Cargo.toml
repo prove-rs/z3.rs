@@ -16,6 +16,9 @@ documentation = "https://docs.rs/z3-sys/"
 homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
+[dependencies]
+z3-macros = { path = "../z3-macros"}
+
 [build-dependencies]
 bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
 cmake = { version = "0.1.54", optional = true }

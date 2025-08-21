@@ -9,7 +9,8 @@ use z3_macros::z3_ctx;
 
 #[z3_ctx(Context::thread_local)]
 impl Sort {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Option<Z3_sort>) -> Sort {
+        let z3_sort = z3_sort.unwrap();
         unsafe {
             Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
         }

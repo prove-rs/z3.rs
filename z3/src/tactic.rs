@@ -65,7 +65,8 @@ impl Tactic {
             .collect()
     }
 
-    unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
+    unsafe fn wrap(ctx: &Context, z3_tactic: Option<Z3_tactic>) -> Tactic {
+        let z3_tactic = z3_tactic.unwrap();
         unsafe {
             Z3_tactic_inc_ref(ctx.z3_ctx.0, z3_tactic);
         }

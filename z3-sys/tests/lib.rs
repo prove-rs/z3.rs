@@ -4,8 +4,8 @@ use z3_sys::*;
 #[test]
 fn smoketest() {
     unsafe {
-        let cfg = Z3_mk_config();
-        let ctx = Z3_mk_context(cfg);
+        let cfg = Z3_mk_config().unwrap();
+        let ctx = Z3_mk_context(cfg).unwrap();
 
         let str_x = CString::new("x").unwrap();
         let str_y = CString::new("y").unwrap();

@@ -14,13 +14,13 @@
 //! use z3_sys::*;
 //!
 //! unsafe {
-//!     let cfg = Z3_mk_config();
-//!     let ctx = Z3_mk_context(cfg);
+//!     let cfg = Z3_mk_config().unwrap();
+//!     let ctx = Z3_mk_context(cfg).unwrap();
 //!
-//!     let a = Z3_mk_not(ctx, Z3_mk_eq(ctx, Z3_mk_false(ctx), Z3_mk_true(ctx)));
-//!     let b = Z3_mk_not(ctx, Z3_mk_iff(ctx, Z3_mk_false(ctx), Z3_mk_true(ctx)));
-//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, a));
-//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, b));
+//!     let a = Z3_mk_not(ctx, Z3_mk_eq(ctx, Z3_mk_false(ctx).unwrap(), Z3_mk_true(ctx).unwrap()).unwrap()).unwrap();
+//!     let b = Z3_mk_not(ctx, Z3_mk_iff(ctx, Z3_mk_false(ctx).unwrap(), Z3_mk_true(ctx).unwrap()).unwrap()).unwrap();
+//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, a).unwrap());
+//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, b).unwrap());
 //!
 //!     Z3_del_config(cfg);
 //!     Z3_del_context(ctx);
@@ -30,6 +30,9 @@
 #![allow(non_camel_case_types)]
 #![allow(clippy::unreadable_literal)]
 #![warn(clippy::doc_markdown)]
+
+use std::ptr::NonNull;
+use z3_macros::z3_non_null;
 
 mod generated;
 
@@ -49,7 +52,7 @@ pub struct _Z3_symbol {
 /// - [`Z3_get_symbol_string`]
 /// - [`Z3_mk_int_symbol`]
 /// - [`Z3_mk_string_symbol`]
-pub type Z3_symbol = *mut _Z3_symbol;
+pub type Z3_symbol = NonNull<_Z3_symbol>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -57,7 +60,8 @@ pub type Z3_symbol = *mut _Z3_symbol;
 pub struct _Z3_literals {
     _unused: [u8; 0],
 }
-pub type Z3_literals = *mut _Z3_literals;
+
+pub type Z3_literals = NonNull<_Z3_literals>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -66,7 +70,7 @@ pub struct _Z3_config {
     _unused: [u8; 0],
 }
 /// Configuration object used to initialize logical contexts.
-pub type Z3_config = *mut _Z3_config;
+pub type Z3_config = NonNull<_Z3_config>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -75,7 +79,7 @@ pub struct _Z3_context {
     _unused: [u8; 0],
 }
 /// Manager of all other Z3 objects, global configuration options, etc.
-pub type Z3_context = *mut _Z3_context;
+pub type Z3_context = NonNull<_Z3_context>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -84,7 +88,7 @@ pub struct _Z3_sort {
     _unused: [u8; 0],
 }
 /// Kind of AST used to represent types.
-pub type Z3_sort = *mut _Z3_sort;
+pub type Z3_sort = NonNull<_Z3_sort>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -93,7 +97,7 @@ pub struct _Z3_func_decl {
     _unused: [u8; 0],
 }
 /// Kind of AST used to represent function symbols.
-pub type Z3_func_decl = *mut _Z3_func_decl;
+pub type Z3_func_decl = NonNull<_Z3_func_decl>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -103,7 +107,7 @@ pub struct _Z3_ast {
 }
 /// Abstract Syntax Tree node. That is, the data structure used in Z3
 /// to represent terms, formulas, and types.
-pub type Z3_ast = *mut _Z3_ast;
+pub type Z3_ast = NonNull<_Z3_ast>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -112,7 +116,7 @@ pub struct _Z3_app {
     _unused: [u8; 0],
 }
 /// Kind of AST used to represent function applications.
-pub type Z3_app = *mut _Z3_app;
+pub type Z3_app = NonNull<_Z3_app>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -122,7 +126,7 @@ pub struct _Z3_pattern {
 }
 /// Kind of AST used to represent pattern and multi-patterns used
 /// to guide quantifier instantiation.
-pub type Z3_pattern = *mut _Z3_pattern;
+pub type Z3_pattern = NonNull<_Z3_pattern>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -131,7 +135,7 @@ pub struct _Z3_model {
     _unused: [u8; 0],
 }
 /// Model for the constraints inserted into the logical context.
-pub type Z3_model = *mut _Z3_model;
+pub type Z3_model = NonNull<_Z3_model>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -140,7 +144,7 @@ pub struct _Z3_constructor {
     _unused: [u8; 0],
 }
 /// Type constructor for a (recursive) datatype.
-pub type Z3_constructor = *mut _Z3_constructor;
+pub type Z3_constructor = NonNull<_Z3_constructor>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -149,7 +153,7 @@ pub struct _Z3_constructor_list {
     _unused: [u8; 0],
 }
 /// List of constructors for a (recursive) datatype.
-pub type Z3_constructor_list = *mut _Z3_constructor_list;
+pub type Z3_constructor_list = NonNull<_Z3_constructor_list>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -159,7 +163,7 @@ pub struct _Z3_params {
 }
 /// Parameter set used to configure many components such as:
 /// simplifiers, tactics, solvers, etc.
-pub type Z3_params = *mut _Z3_params;
+pub type Z3_params = NonNull<_Z3_params>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -170,7 +174,7 @@ pub struct _Z3_param_descrs {
 /// Provides a collection of parameter names, their types,
 /// default values and documentation strings. Solvers, tactics,
 /// and other objects accept different collection of parameters.
-pub type Z3_param_descrs = *mut _Z3_param_descrs;
+pub type Z3_param_descrs = NonNull<_Z3_param_descrs>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -180,7 +184,7 @@ pub struct _Z3_goal {
 }
 /// Set of formulas that can be solved and/or transformed using
 /// tactics and solvers.
-pub type Z3_goal = *mut _Z3_goal;
+pub type Z3_goal = NonNull<_Z3_goal>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -190,7 +194,7 @@ pub struct _Z3_tactic {
 }
 /// Basic building block for creating custom solvers for specific
 /// problem domains.
-pub type Z3_tactic = *mut _Z3_tactic;
+pub type Z3_tactic = NonNull<_Z3_tactic>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -201,7 +205,7 @@ pub struct _Z3_probe {
 /// Function/predicate used to inspect a goal and collect information
 /// that may be used to decide which solver and/or preprocessing step
 /// will be used.
-pub type Z3_probe = *mut _Z3_probe;
+pub type Z3_probe = NonNull<_Z3_probe>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -210,7 +214,7 @@ pub struct _Z3_stats {
     _unused: [u8; 0],
 }
 /// Statistical data for a solver.
-pub type Z3_stats = *mut _Z3_stats;
+pub type Z3_stats = NonNull<_Z3_stats>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -220,7 +224,7 @@ pub struct _Z3_solver {
 }
 /// (Incremental) solver, possibly specialized by a particular
 /// tactic or logic.
-pub type Z3_solver = *mut _Z3_solver;
+pub type Z3_solver = NonNull<_Z3_solver>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -229,7 +233,7 @@ pub struct _Z3_ast_vector {
     _unused: [u8; 0],
 }
 /// Vector of [`Z3_ast`] objects.
-pub type Z3_ast_vector = *mut _Z3_ast_vector;
+pub type Z3_ast_vector = NonNull<_Z3_ast_vector>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -238,7 +242,7 @@ pub struct _Z3_ast_map {
     _unused: [u8; 0],
 }
 /// Mapping from [`Z3_ast`] to [`Z3_ast`] objects.
-pub type Z3_ast_map = *mut _Z3_ast_map;
+pub type Z3_ast_map = NonNull<_Z3_ast_map>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -248,7 +252,7 @@ pub struct _Z3_apply_result {
 }
 /// Collection of subgoals resulting from applying of a tactic
 /// to a goal.
-pub type Z3_apply_result = *mut _Z3_apply_result;
+pub type Z3_apply_result = NonNull<_Z3_apply_result>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -257,7 +261,7 @@ pub struct _Z3_func_interp {
     _unused: [u8; 0],
 }
 /// Interpretation of a function in a model.
-pub type Z3_func_interp = *mut _Z3_func_interp;
+pub type Z3_func_interp = NonNull<_Z3_func_interp>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -267,7 +271,7 @@ pub struct _Z3_func_entry {
 }
 /// Representation of the value of a [`Z3_func_interp`]
 /// at a particular point.
-pub type Z3_func_entry = *mut _Z3_func_entry;
+pub type Z3_func_entry = NonNull<_Z3_func_entry>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -276,7 +280,7 @@ pub struct _Z3_fixedpoint {
     _unused: [u8; 0],
 }
 /// Context for the recursive predicate solver.
-pub type Z3_fixedpoint = *mut _Z3_fixedpoint;
+pub type Z3_fixedpoint = NonNull<_Z3_fixedpoint>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -285,7 +289,7 @@ pub struct _Z3_optimize {
     _unused: [u8; 0],
 }
 /// Context for solving optimization queries.
-pub type Z3_optimize = *mut _Z3_optimize;
+pub type Z3_optimize = NonNull<_Z3_optimize>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -293,7 +297,7 @@ pub type Z3_optimize = *mut _Z3_optimize;
 pub struct _Z3_rcf_num {
     _unused: [u8; 0],
 }
-pub type Z3_rcf_num = *mut _Z3_rcf_num;
+pub type Z3_rcf_num = NonNull<_Z3_rcf_num>;
 
 /// Z3 string type. It is just an alias for `const char *`.
 pub type Z3_string = *const ::std::os::raw::c_char;
@@ -1578,6 +1582,7 @@ pub enum GoalPrec {
     UnderOver = generated::Z3_goal_prec::Z3_GOAL_UNDER_OVER as u32,
 }
 
+#[z3_non_null]
 unsafe extern "C" {
     /// Set a global (or module) parameter.
     /// This setting is shared by all Z3 contexts.

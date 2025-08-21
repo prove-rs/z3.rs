@@ -37,7 +37,7 @@ impl BV {
         let ast = unsafe {
             let bv_cstring = CString::new(value).unwrap();
             let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, bv_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
+            if numeral_ptr.is_none() {
                 return None;
             }
 
@@ -59,7 +59,7 @@ impl BV {
     /// ```
     pub fn from_bits(ctx: &Context, bits: &[bool]) -> Option<BV> {
         let ast = unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.0, bits.len() as u32, bits.as_ptr()) };
-        if ast.is_null() {
+        if ast.is_none() {
             None
         } else {
             Some(unsafe { Self::wrap(ctx, ast) })

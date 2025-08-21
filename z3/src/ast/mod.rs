@@ -152,7 +152,7 @@ pub trait Ast: fmt::Debug {
     /// # Safety
     ///
     /// The `ast` must be a valid pointer to a [`Z3_ast`].
-    unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self
+    unsafe fn wrap(ctx: &Context, ast: Option<Z3_ast>) -> Self
     where
         Self: Sized;
 
@@ -412,14 +412,15 @@ impl<T: Ast> IntoAst<T> for T {
 macro_rules! impl_ast {
     ($ast:ident) => {
         impl Ast for $ast {
-            unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self {
-                assert!(!ast.is_null());
+            unsafe fn wrap(ctx: &Context, ast: Option<Z3_ast>) -> Self {
+                assert!(!ast.is_none());
+                let ast = ast.unwrap();
                 Self {
                     ctx: ctx.clone(),
                     z3_ast: {
                         debug!(
                             "new ast: id = {}, pointer = {:p}",
-                            unsafe { Z3_get_ast_id(ctx.z3_ctx.0, ast) },
+                            unsafe { Z3_get_ast_id(ctx.z3_ctx.0, ast) }.unwrap(),
                             ast
                         );
                         unsafe {
@@ -490,9 +491,10 @@ macro_rules! impl_ast {
         impl fmt::Debug for $ast {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 let p = unsafe { Z3_ast_to_string(self.ctx.z3_ctx.0, self.z3_ast) };
-                if p.is_null() {
+                if p.is_none() {
                     return Result::Err(fmt::Error);
                 }
+                let p = p.unwrap();
                 match unsafe { CStr::from_ptr(p) }.to_str() {
                     Ok(s) => write!(f, "{}", s),
                     Err(_) => Result::Err(fmt::Error),

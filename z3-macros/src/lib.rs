@@ -1,9 +1,10 @@
 use proc_macro::TokenStream;
 use quote::quote;
 use syn::spanned::Spanned;
-use syn::{ImplItemFn, Item, ItemImpl, Path, parse_macro_input};
+use syn::{Block, ImplItemFn, Item, ItemImpl, Path, parse_macro_input, ImplItem, ItemForeignMod};
 
 mod default_ctx;
+mod non_null;
 
 /// This macro is used to transform methods in an impl block (or individual function) to
 /// rewrite functions that take a `&Context` argument
@@ -45,6 +46,34 @@ pub fn z3_ctx(attr: TokenStream, item: TokenStream) -> TokenStream {
     abort(quote! {compile_error!()}, "Unable to parse provided item");
 }
 
+/// This macro is used to transform methods in an impl block (or individual function) to
+/// rewrite functions that take a `&Context` argument
+/// into two functions:
+/// * The original, which is renamed to `<original_name>_in_ctx` and keeps its original signature.
+/// * A new function, which is named `<original_name>` and has the context argument removed.
+///   The implementation of the new method calls the original function, passing
+///   the context argument as a call to the provided `default_ctx_fn`.
+///
+/// In all usage in the z3 crate, the `default_ctx_fn` is `Context::default_ctx`, so you will
+/// see [z3_ctx(Context::default_ctx)] on many impl blocks and functions.
+#[proc_macro_attribute]
+pub fn z3_non_null(_: TokenStream, item: TokenStream) -> TokenStream {
+    let ts = item.clone();
+    if let Ok(block) = syn::parse::<ItemForeignMod>(ts.clone()) {
+        // we successfully parsed an impl block, so process
+        // all the fns inside it
+        return non_null::handle_impl(block);
+    } else if let Ok(item) = syn::parse::<Item>(ts.clone()) {
+        // we parsed anythign else, so tell the user not to use the macro
+        // on that.
+        abort(
+            item.span(),
+            "This macro can only be applied to impl blocks or methods",
+        );
+    }
+    // We shouldn't reach here.
+    abort(quote! {compile_error!()}, "Unable to parse provided item");
+}
 // ---------------- utilities ----------------
 
 fn abort<T: Spanned>(span: T, msg: &str) -> ! {
