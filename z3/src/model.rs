@@ -1,6 +1,5 @@
 use std::ffi::CStr;
 use std::fmt;
-
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Translate, ast::Ast};
@@ -225,10 +224,8 @@ unsafe impl Translate for Model {
 
 #[test]
 fn test_unsat() {
-    use crate::{Config, SatResult};
-    let cfg = Config::new();
-    let ctx = Context::new(&cfg);
-    let solver = Solver::new(&ctx);
+    use crate::SatResult;
+    let solver = Solver::new();
     solver.assert(false);
     assert_eq!(solver.check(), SatResult::Unsat);
     assert!(solver.get_model().is_none());

@@ -1,11 +1,9 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast};
-
 impl FuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
@@ -20,7 +18,8 @@ impl FuncDecl {
         }
     }
 
-    pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
+    pub fn new<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
+        let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
 
@@ -30,7 +29,7 @@ impl FuncDecl {
                 ctx,
                 Z3_mk_func_decl(
                     ctx.z3_ctx.0,
-                    name.into().as_z3_symbol(ctx),
+                    name.into().as_z3_symbol(),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
@@ -45,13 +44,10 @@ impl FuncDecl {
     ///
     /// ```
     /// # use z3::{Config, Context, FuncDecl, Solver, Sort, Symbol};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
     /// let f = FuncDecl::new(
-    ///     &ctx,
     ///     "f",
-    ///     &[&Sort::int(&ctx), &Sort::real(&ctx)],
-    ///     &Sort::int(&ctx));
+    ///     &[&Sort::int(), &Sort::real()],
+    ///     &Sort::int());
     /// assert_eq!(f.arity(), 2);
     /// ```
     pub fn arity(&self) -> usize {

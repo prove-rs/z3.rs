@@ -1,5 +1,4 @@
 use crate::Context;
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, varop};
 use crate::ast::{IntoAst, unop};
 use std::ffi::CString;
@@ -10,20 +9,18 @@ use z3_sys::*;
 /// use z3::ast;
 /// use z3::{Config, Context, Solver, SatResult};
 ///
-/// let cfg = Config::new();
-/// let ctx = &Context::new(&cfg);
-/// let solver = Solver::new(&ctx);
-/// let s = ast::String::new_const(ctx, "s");
+/// let solver = Solver::new();
+/// let s = ast::String::new_const("s");
 ///
 /// // the regexp representing foo[a-c]*
-/// let a = ast::Regexp::concat(ctx, &[
-///     &ast::Regexp::literal(ctx, "foo"),
-///     &ast::Regexp::range(ctx, &'a', &'c').star()
+/// let a = ast::Regexp::concat(&[
+///     &ast::Regexp::literal("foo"),
+///     &ast::Regexp::range(&'a', &'c').star()
 /// ]);
 /// // the regexp representing [a-z]+
-/// let b = ast::Regexp::range(ctx, &'a', &'z').plus();
+/// let b = ast::Regexp::range(&'a', &'z').plus();
 /// // intersection of a and b is non-empty
-/// let intersect = ast::Regexp::intersect(ctx, &[&a, &b]);
+/// let intersect = ast::Regexp::intersect(&[&a, &b]);
 /// solver.assert(&s.regex_matches(&intersect));
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// ```
@@ -34,7 +31,8 @@ pub struct Regexp {
 
 impl Regexp {
     /// Creates a regular expression that recognizes the string given as parameter
-    pub fn literal(ctx: &Context, s: &str) -> Self {
+    pub fn literal(s: &str) -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 let c_str = CString::new(s).unwrap();
@@ -45,7 +43,8 @@ impl Regexp {
 
     /// Creates a regular expression that recognizes a character in the specified range (e.g.
     /// `[a-z]`)
-    pub fn range(ctx: &Context, lo: &char, hi: &char) -> Self {
+    pub fn range(lo: &char, hi: &char) -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 let lo_cs = CString::new(lo.to_string()).unwrap();
@@ -84,7 +83,8 @@ impl Regexp {
     }
 
     /// Creates a regular expression that recognizes all sequences
-    pub fn full(ctx: &Context) -> Self {
+    pub fn full() -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_full(
@@ -97,7 +97,8 @@ impl Regexp {
 
     /// Creates a regular expression that accepts all singleton sequences of the characters
     /// Requires Z3 4.8.13 or later.
-    pub fn allchar(ctx: &Context) -> Self {
+    pub fn allchar() -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_allchar(
@@ -109,7 +110,8 @@ impl Regexp {
     }
 
     /// Creates a regular expression that doesn't recognize any sequences
-    pub fn empty(ctx: &Context) -> Self {
+    pub fn empty() -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_empty(

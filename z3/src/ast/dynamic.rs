@@ -14,18 +14,20 @@ impl Dynamic {
         unsafe { Self::wrap(ast.get_ctx(), ast.get_z3_ast()) }
     }
 
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sort: &Sort) -> Self {
+    pub fn new_const<S: Into<Symbol>>(name: S, sort: &Sort) -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort),
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort),
             )
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, sort: &Sort) -> Self {
+    pub fn fresh_const(prefix: &str, sort: &Sort) -> Self {
+        let ctx = sort.ctx.clone();
         unsafe {
-            Self::wrap(ctx, {
+            Self::wrap(&ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
                 Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)

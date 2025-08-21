@@ -4,12 +4,11 @@ use std::fmt;
 
 use z3_sys::*;
 
-use std::ops::AddAssign;
-
-use crate::ast::{Bool, IntoAstCtx};
+use crate::ast::Bool;
 use crate::{
     Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast, ast::Ast,
 };
+use std::ops::AddAssign;
 
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
@@ -44,7 +43,8 @@ impl Solver {
     /// Note however it is possible to set the `solver2_timeout`,
     /// `solver2_unknown`, and `ignore_solver1` parameters of the combined
     /// solver to change its behaviour.
-    pub fn new(ctx: &Context) -> Solver {
+    pub fn new() -> Solver {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0)) }
     }
 
@@ -59,9 +59,10 @@ impl Solver {
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
-    pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
+    pub fn new_for_logic<S: Into<Symbol>>(logic: S) -> Option<Solver> {
+        let ctx = &Context::thread_local();
         unsafe {
-            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol(ctx));
+            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol());
             if s.is_null() {
                 None
             } else {
@@ -82,14 +83,12 @@ impl Solver {
     /// or not.
     ///
     /// ```rust
-    /// use z3::{Config, Context, Solver, ast, SatResult, ast::Bool};
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let mut solver = Solver::new(&ctx);
+    /// # use z3::{Config, Context, Solver, ast, SatResult, ast::Bool};
+    /// let mut solver = Solver::new();
     ///
-    /// solver.assert(&Bool::from_bool(&ctx, true));
-    /// solver += &Bool::from_bool(&ctx, false);
-    /// solver += Bool::fresh_const(&ctx, "");
+    /// solver.assert(&Bool::from_bool(true));
+    /// solver += &Bool::from_bool(false);
+    /// solver += Bool::fresh_const("");
     ///
     /// assert_eq!(solver.check(), SatResult::Unsat);
     /// ````
@@ -97,8 +96,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert_and_track()`]
-    pub fn assert<T: IntoAstCtx<Bool>>(&self, ast: T) {
-        let ast = ast.into_ast_ctx(&self.ctx);
+    pub fn assert<T: Into<Bool>>(&self, ast: T) {
+        let ast = ast.into();
         debug!("assert: {ast:?}");
         unsafe { Z3_solver_assert(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast) };
     }
@@ -117,8 +116,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert()`]
-    pub fn assert_and_track<T: IntoAstCtx<Bool>>(&self, ast: T, p: &Bool) {
-        let ast = ast.into_ast_ctx(&self.ctx);
+    pub fn assert_and_track<T: Into<Bool>>(&self, ast: T, p: &Bool) {
+        let ast = ast.into();
         debug!("assert_and_track: {ast:?}");
         unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast, p.z3_ast) };
     }
@@ -378,7 +377,7 @@ impl Solver {
             num_assumptions -= 1;
             assumptions[num_assumptions as usize].z3_ast
         } else {
-            ast::Bool::from_bool(&self.ctx, true).z3_ast
+            ast::Bool::from_bool(true).z3_ast
         };
         let z3_assumptions = assumptions.iter().map(|a| a.z3_ast).collect::<Vec<_>>();
 
@@ -433,7 +432,7 @@ impl Drop for Solver {
 impl Clone for Solver {
     // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
     fn clone(self: &Solver) -> Self {
-        let new_solver = Solver::new(&self.ctx);
+        let new_solver = Solver::new();
 
         self.get_assertions().iter().for_each(|a| {
             new_solver.assert(a);

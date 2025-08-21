@@ -5,7 +5,6 @@ use std::os::raw::c_uint;
 use std::result::Result;
 use std::str::Utf8Error;
 use std::time::Duration;
-
 use z3_sys::*;
 
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
@@ -51,15 +50,18 @@ impl Tactic {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let tactics: Vec<_> = Tactic::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(tactics.contains(&"ufbv"));
+    /// let tactics: Vec<_> = Tactic::list_all().into_iter().filter_map(|r| r.ok()).collect();
+    /// assert!(tactics.contains(&"ufbv".to_string()));
     /// ```
-    pub fn list_all(ctx: &Context) -> impl Iterator<Item = std::result::Result<&str, Utf8Error>> {
+    pub fn list_all() -> Vec<Result<String, Utf8Error>> {
+        let ctx = &Context::thread_local();
         let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.0) };
-        (0..p).map(move |n| {
-            let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.0, n) };
-            unsafe { CStr::from_ptr(t) }.to_str()
-        })
+        (0..p)
+            .map(move |n| {
+                let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.0, n) };
+                unsafe { CStr::from_ptr(t) }.to_str().map(String::from)
+            })
+            .collect()
     }
 
     unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
@@ -81,13 +83,14 @@ impl Tactic {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let tactic = Tactic::new(&ctx, "nlsat");
+    /// let tactic = Tactic::new("nlsat");
     /// ```
     ///
     /// # See also
     ///
     /// - [`Tactic::list_all()`]
-    pub fn new(ctx: &Context, name: &str) -> Tactic {
+    pub fn new(name: &str) -> Tactic {
+        let ctx = &Context::thread_local();
         let tactic_name = CString::new(name).unwrap();
 
         unsafe {
@@ -101,18 +104,21 @@ impl Tactic {
     }
 
     /// Return a tactic that just return the given goal.
-    pub fn create_skip(ctx: &Context) -> Tactic {
+    pub fn create_skip() -> Tactic {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that always fails.
-    pub fn create_fail(ctx: &Context) -> Tactic {
+    pub fn create_fail() -> Tactic {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
-    pub fn repeat(ctx: &Context, t: &Tactic, max: u32) -> Tactic {
+    pub fn repeat(t: &Tactic, max: u32) -> Tactic {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max)) }
     }
 
@@ -174,18 +180,20 @@ impl Tactic {
 
     /// Return a tactic that applies `t1` to a given goal if the probe `p` evaluates to true,
     /// and `t2` if `p` evaluates to false.
-    pub fn cond(ctx: &Context, p: &Probe, t1: &Tactic, t2: &Tactic) -> Tactic {
+    pub fn cond(p: &Probe, t1: &Tactic, t2: &Tactic) -> Tactic {
+        assert_eq!(p.ctx, t1.ctx);
+        assert_eq!(t1.ctx, t2.ctx);
         unsafe {
             Self::wrap(
-                ctx,
-                Z3_tactic_cond(ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic),
+                &p.ctx,
+                Z3_tactic_cond(p.ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic),
             )
         }
     }
 
     /// Return a tactic that fails if the probe `p` evaluates to false.
-    pub fn fail_if(ctx: &Context, p: &Probe) -> Tactic {
-        unsafe { Self::wrap(ctx, Z3_tactic_fail_if(ctx.z3_ctx.0, p.z3_probe)) }
+    pub fn fail_if(p: &Probe) -> Tactic {
+        unsafe { Self::wrap(&p.ctx, Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe)) }
     }
 
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns
@@ -223,11 +231,11 @@ impl Tactic {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let tactic = Tactic::new(&ctx, "qfnra");
+    /// let tactic = Tactic::new("qfnra");
     /// let solver = tactic.solver();
     ///
-    /// let x = ast::Int::new_const(&ctx, "x");
-    /// let y = ast::Int::new_const(&ctx, "y");
+    /// let x = ast::Int::new_const("x");
+    /// let y = ast::Int::new_const("y");
     ///
     /// solver.assert(&x.gt(&y));
     /// assert_eq!(solver.check(), SatResult::Sat);

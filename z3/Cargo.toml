@@ -38,3 +38,4 @@ rayon = "1.10.0"
 [dependencies.z3-sys]
 path = "../z3-sys"
 version = "0.9"
+

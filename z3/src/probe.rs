@@ -2,11 +2,9 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::result::Result;
 use std::str::Utf8Error;
-
 use z3_sys::*;
 
 use crate::{Context, Goal, Probe};
-
 impl Probe {
     unsafe fn wrap(ctx: &Context, z3_probe: Z3_probe) -> Probe {
         unsafe {
@@ -27,22 +25,30 @@ impl Probe {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let probes: Vec<_> = Probe::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(probes.contains(&"is-quasi-pb"));
+    /// let probes: Vec<_> = Probe::list_all().into_iter().filter_map(|r| r.ok()).collect();
+    /// assert!(probes.contains(&"is-quasi-pb".to_string()));
     /// ```
-    pub fn list_all(ctx: &Context) -> impl Iterator<Item = std::result::Result<&str, Utf8Error>> {
+    pub fn list_all() -> Vec<Result<String, Utf8Error>> {
+        let ctx = &Context::thread_local();
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.0) };
-        (0..p).map(move |n| {
-            let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.0, n) };
-            unsafe { CStr::from_ptr(t) }.to_str()
-        })
+        (0..p)
+            .map(move |n| {
+                let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.0, n) };
+                unsafe { CStr::from_ptr(t).to_str().map(String::from) }
+            })
+            .collect()
     }
 
     /// Return a string containing a description of the probe with
     /// the given `name`.
-    pub fn describe<'a>(ctx: &'a Context, name: &str) -> std::result::Result<&'a str, Utf8Error> {
+    pub fn describe(name: &str) -> std::result::Result<String, Utf8Error> {
+        let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
-        unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr())).to_str() }
+        unsafe {
+            CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr()))
+                .to_str()
+                .map(|s| s.to_string())
+        }
     }
 
     /// Return a probe associated with the given `name`.
@@ -50,13 +56,12 @@ impl Probe {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Probe};
+    /// # use z3::{Config, Context, Probe};
     ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::new(&ctx, "is-qfbv");
+    /// let probe = Probe::new("is-qfbv");
     /// ```
-    pub fn new(ctx: &Context, name: &str) -> Probe {
+    pub fn new(name: &str) -> Probe {
+        let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr())) }
     }
@@ -75,9 +80,10 @@ impl Probe {
     ///
     /// let cfg = Config::new();
     /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::constant(&ctx, 1.0);
+    /// let probe = Probe::constant(1.0);
     /// ```
-    pub fn constant(ctx: &Context, val: f64) -> Probe {
+    pub fn constant(val: f64) -> Probe {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }
     }
 

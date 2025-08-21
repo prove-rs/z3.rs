@@ -65,7 +65,7 @@ macro_rules! impl_var_trait {
             type Output = $t;
             fn $trop(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into_ast(&self);
-                <$t>::$op(&self.ctx, &[self.clone(), rhs])
+                <$t>::$op(&[self.clone(), rhs])
             }
         }
 
@@ -73,7 +73,7 @@ macro_rules! impl_var_trait {
             type Output = $t;
             fn $trop(self, rhs: T) -> Self::Output {
                 let rhs = rhs.into_ast(&self);
-                <$t>::$op(&self.ctx, &[self.clone(), rhs])
+                <$t>::$op(&[self.clone(), rhs])
             }
         }
     };

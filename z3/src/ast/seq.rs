@@ -1,4 +1,3 @@
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Dynamic, Int, varop};
 use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
@@ -10,19 +9,20 @@ pub struct Seq {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
 impl Seq {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Self {
-        let sort = Sort::seq(ctx, eltype);
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Self {
+        let ctx = &Context::thread_local();
+        let sort = Sort::seq(eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Self {
-        let sort = Sort::seq(ctx, eltype);
+    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Self {
+        let ctx = &Context::thread_local();
+        let sort = Sort::seq(eltype);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -37,23 +37,23 @@ impl Seq {
     /// ```
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, Seq};
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let solver = Solver::new(&ctx);
-    /// let empty_seq = Seq::empty(&ctx, &Sort::int(&ctx));
-    /// let any_seq = Seq::new_const(&ctx, "any_seq", &Sort::int(&ctx));
-    /// let concatenated = Seq::concat(&ctx, &[&empty_seq, &any_seq]);
+    /// let solver = Solver::new();
+    /// let empty_seq = Seq::empty(&Sort::int());
+    /// let any_seq = Seq::new_const("any_seq", &Sort::int());
+    /// let concatenated = Seq::concat(&[&empty_seq, &any_seq]);
     ///
     /// solver.assert(&concatenated._eq(&any_seq));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn empty(ctx: &Context, eltype: &Sort) -> Self {
-        let sort = Sort::seq(ctx, eltype);
+    pub fn empty(eltype: &Sort) -> Self {
+        let ctx = &Context::thread_local();
+        let sort = Sort::seq(eltype);
         unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.0, sort.z3_sort)) }
     }
 
     /// Create a unit sequence of `a`.
-    pub fn unit<A: Ast>(ctx: &Context, a: &A) -> Self {
+    pub fn unit<A: Ast>(a: &A) -> Self {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.0, a.get_z3_ast())) }
     }
 
@@ -74,10 +74,8 @@ impl Seq {
     /// ```
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Int, Seq};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
-    /// let seq = Seq::fresh_const(&ctx, "", &Sort::bool(&ctx));
+    /// # let solver = Solver::new();
+    /// let seq = Seq::fresh_const("", &Sort::bool());
     ///
     /// solver.assert(
     ///     &seq.nth(0)
@@ -87,8 +85,8 @@ impl Seq {
     ///         ._eq(true)
     /// );
     /// ```
-    pub fn nth<T: IntoAstCtx<Int>>(&self, index: T) -> Dynamic {
-        let index = index.into_ast_ctx(&self.ctx);
+    pub fn nth<T: Into<Int>>(&self, index: T) -> Dynamic {
+        let index = index.into();
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
@@ -106,13 +104,12 @@ impl Seq {
     /// ```
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Seq};
-    /// let ctx = Context::default();
-    /// let solver = Solver::new(&ctx);
-    /// let seq1 = Seq::unit(&ctx, &ast::Int::from_u64(&ctx, 0));
-    /// let seq2 = Seq::unit(&ctx, &ast::Int::from_u64(&ctx, 1));
-    /// let concatenated = Seq::concat(&ctx, &[&seq1, &seq2]);
+    /// let solver = Solver::new();
+    /// let seq1 = Seq::unit(&ast::Int::from_u64(0));
+    /// let seq2 = Seq::unit(&ast::Int::from_u64(1));
+    /// let concatenated = Seq::concat(&[&seq1, &seq2]);
     ///
-    /// solver.assert(&Bool::and(&ctx, &[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));
+    /// solver.assert(&Bool::and(&[&concatenated.contains(&seq1), &concatenated.contains(&seq2)]));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
     pub fn contains<T: IntoAst<Self>>(&self, containee: T) -> Bool {

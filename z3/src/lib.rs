@@ -177,23 +177,23 @@ pub use z3_sys::DeclKind;
 /// # use z3::{ Config, Context, DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
 /// # let cfg = Config::new();
 /// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
+/// # let solver = Solver::new();
 /// // Like Rust's Option<int> type
-/// let option_int = DatatypeBuilder::new(&ctx, "OptionInt")
+/// let option_int = DatatypeBuilder::new("OptionInt")
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+///     vec![("value", DatatypeAccessor::Sort(Sort::int()))],
 /// )
 /// .finish();
 ///
 /// // Assert x.is_none()
-/// let x = Datatype::new_const(&ctx, "x", &option_int.sort);
+/// let x = Datatype::new_const("x", &option_int.sort);
 /// solver.assert(&option_int.variants[0].tester.apply(&[&x]).as_bool().unwrap());
 ///
 /// // Assert y == Some(3)
-/// let y = Datatype::new_const(&ctx, "y", &option_int.sort);
-/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(&ctx, 3)]);
+/// let y = Datatype::new_const("y", &option_int.sort);
+/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(3)]);
 /// solver.assert(&y._eq(&value.as_datatype().unwrap()));
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
@@ -311,4 +311,37 @@ pub struct Probe {
 pub struct Statistics {
     ctx: Context,
     z3_stats: Z3_stats,
+}
+
+/// Runs the provided callback with all inner Z3 calls using the provided [`Context`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`Synchronized::synchronized()`].
+/// # See also
+///
+/// [`with_z3_config`]
+pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
+    ctx: &Context,
+    callback: T,
+) -> R {
+    let old = Context::thread_local();
+    Context::set_thread_local(ctx);
+    let res = callback();
+    Context::set_thread_local(&old);
+    res
+}
+
+/// Runs the provided callback with all inner Z3 calls using a [`Context`] derived
+/// from the provided [`Config`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`Synchronized::synchronized()`].
+///
+/// # See also
+///
+/// [`with_z3_context`]
+pub fn with_z3_config<T: Fn() -> R + Send + Sync, R: Send + Sync>(cfg: &Config, callback: T) -> R {
+    with_z3_context(&Context::new(cfg), callback)
 }

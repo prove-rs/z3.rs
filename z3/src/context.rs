@@ -1,4 +1,6 @@
 use log::debug;
+use std::cell::RefCell;
+use std::clone::Clone;
 use std::ffi::CString;
 use std::rc::Rc;
 use z3_sys::*;
@@ -47,6 +49,36 @@ pub struct Context {
     pub(crate) z3_ctx: Rc<ContextInternal>,
 }
 impl Context {
+    /// Returns a handle to the default thread-local [`Context`].
+    ///
+    /// This [`Context`] is used in all z3 operations.
+    /// Custom [`Context`]s are supported through [`with_z3_context`] or [`with_z3_config`],
+    /// which allow for running a closure inside an environment with the provided [`Context`]
+    ///
+    /// # See also:
+    /// - [`with_z3_context`]
+    /// - [`with_z3_config`]
+    pub fn thread_local() -> Context {
+        DEFAULT_CONTEXT.with(|f| f.borrow().clone())
+    }
+
+    /// _Replaces_ the thread-local [`Context`] with a new one created from the given [`Config`].
+    /// This is useful if you want to use a specific configuration, but also want
+    /// to use the default thread-local context. Note that calling this function will
+    /// _replace_ the existing thread-local context. All existing [`Ast`]s and other Z3 objects
+    /// that were created using the previous thread-local context will still be valid, but cannot
+    /// be used with the new context without translation. You will generally want to call this
+    /// before you create any [`Ast`]s or other Z3 objects to avoid confusion. Also note that
+    /// since the [`Context`] is thread-local, this will only affect the current thread.
+    ///
+    /// # See also:
+    /// /// - [`Context::thread_local()`]
+    pub(crate) fn set_thread_local(ctx: &Context) {
+        DEFAULT_CONTEXT.with(|f| {
+            *f.borrow_mut() = ctx.clone();
+        });
+    }
+
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
@@ -79,7 +111,7 @@ impl Context {
     /// let ctx = unsafe { Context::from_raw(raw_ctx) };
     /// // Use `ctx` as usual...
     /// unsafe { Z3_del_config(cfg) };
-    /// let b = Bool::from_bool(&ctx, true);
+    /// let b = Bool::from_bool(true);
     /// assert_eq!(b.as_bool(), Some(true));
     /// ```
     pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {
@@ -150,3 +182,7 @@ impl ContextHandle<'_> {
 
 unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
+
+thread_local! {
+    static DEFAULT_CONTEXT: RefCell<Context> = RefCell::new(Context::default());
+}

@@ -2,7 +2,6 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::ops::Deref;
-
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
@@ -21,7 +20,8 @@ impl RecFuncDecl {
         }
     }
 
-    pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
+    pub fn new<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
+        let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx.0, range.ctx.z3_ctx.0);
 
@@ -32,7 +32,7 @@ impl RecFuncDecl {
                 ctx,
                 Z3_mk_rec_func_decl(
                     ctx.z3_ctx.0,
-                    name.into().as_z3_symbol(ctx),
+                    name.into().as_z3_symbol(),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
@@ -46,24 +46,20 @@ impl RecFuncDecl {
     /// ```
     /// # use z3::{Config, Context, RecFuncDecl, Solver, Sort, Symbol, ast::Int, SatResult};
     /// # use std::convert::TryInto;
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
     /// let mut f = RecFuncDecl::new(
-    ///     &ctx,
     ///     "f",
-    ///     &[&Sort::int(&ctx)],
-    ///     &Sort::int(&ctx));
-    /// let n = Int::new_const(&ctx, "n");
+    ///     &[&Sort::int()],
+    ///     &Sort::int());
+    /// let n = Int::new_const("n");
     /// f.add_def(
     ///     &[&n],
-    ///     &Int::add(&ctx, &[&n, &Int::from_i64(&ctx, 1)])
+    ///     &Int::add(&[&n, &Int::from_i64(1)])
     /// );
     ///
     /// let f_of_n = &f.apply(&[&n.clone()]);
     ///
-    /// let solver = Solver::new(&ctx);
+    /// let solver = Solver::new();
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
-    ///         &ctx,
     ///         &[&n],
     ///         &[],
     ///         &n.lt(&f_of_n.as_int().unwrap())

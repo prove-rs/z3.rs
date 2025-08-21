@@ -1,6 +1,5 @@
 use std::ffi::CStr;
 use std::fmt;
-
 use z3_sys::*;
 
 use crate::{Context, Goal, Translate, ast, ast::Ast};
@@ -26,7 +25,8 @@ impl Goal {
         }
     }
 
-    pub fn new(ctx: &Context, models: bool, unsat_cores: bool, proofs: bool) -> Goal {
+    pub fn new(models: bool, unsat_cores: bool, proofs: bool) -> Goal {
+        let ctx = &Context::thread_local();
         // NOTE: The Z3 context ctx must have been created with proof generation support.
         unsafe { Self::wrap(ctx, Z3_mk_goal(ctx.z3_ctx.0, models, unsat_cores, proofs)) }
     }

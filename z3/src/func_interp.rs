@@ -1,5 +1,4 @@
 use std::fmt;
-
 use z3_sys::*;
 
 use crate::{

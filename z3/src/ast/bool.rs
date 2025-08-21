@@ -1,5 +1,4 @@
 use crate::ast::IntoAst;
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
@@ -10,19 +9,20 @@ pub struct Bool {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
 impl Bool {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Bool {
-        let sort = Sort::bool(ctx);
+    pub fn new_const<S: Into<Symbol>>(name: S) -> Bool {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bool();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str) -> Bool {
-        let sort = Sort::bool(ctx);
+    pub fn fresh_const(prefix: &str) -> Bool {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bool();
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -32,7 +32,8 @@ impl Bool {
         }
     }
 
-    pub fn from_bool(ctx: &Context, b: bool) -> Bool {
+    pub fn from_bool(b: bool) -> Bool {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 if b {
@@ -84,7 +85,8 @@ impl Bool {
         not(Z3_mk_not, Self);
     }
 
-    pub fn pb_le(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
+    pub fn pb_le(values: &[(&Bool, i32)], k: i32) -> Bool {
+        let ctx = &Context::thread_local();
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
@@ -102,7 +104,9 @@ impl Bool {
             })
         }
     }
-    pub fn pb_ge(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
+
+    pub fn pb_ge(values: &[(&Bool, i32)], k: i32) -> Bool {
+        let ctx = &Context::thread_local();
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
@@ -120,7 +124,9 @@ impl Bool {
             })
         }
     }
-    pub fn pb_eq(ctx: &Context, values: &[(&Bool, i32)], k: i32) -> Bool {
+
+    pub fn pb_eq(values: &[(&Bool, i32)], k: i32) -> Bool {
+        let ctx = &Context::thread_local();
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
@@ -140,14 +146,8 @@ impl Bool {
     }
 }
 
-impl IntoAst<Bool> for bool {
-    fn into_ast(self, a: &Bool) -> Bool {
-        Bool::from_bool(&a.ctx, self)
-    }
-}
-
-impl IntoAstCtx<Bool> for bool {
-    fn into_ast_ctx(self, ctx: &Context) -> Bool {
-        Bool::from_bool(ctx, self)
+impl From<bool> for Bool {
+    fn from(value: bool) -> Self {
+        Bool::from_bool(value)
     }
 }

@@ -27,7 +27,8 @@ impl Optimize {
     }
 
     /// Create a new optimize context.
-    pub fn new(ctx: &Context) -> Optimize {
+    pub fn new() -> Optimize {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.0)) }
     }
 
@@ -91,7 +92,7 @@ impl Optimize {
         let weight_string = weight.to_string();
         let weight_cstring = CString::new(weight_string).unwrap();
         let group = group
-            .map(|g| g.as_z3_symbol(&self.ctx))
+            .map(|g| g.as_z3_symbol())
             .unwrap_or_else(std::ptr::null_mut);
         unsafe {
             Z3_optimize_assert_soft(

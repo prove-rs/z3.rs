@@ -88,9 +88,9 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: IntoAstCtx<$retty>, B: IntoAstCtx<$retty>>(&self, a: A, b: B) -> $retty {
-                let a = a.into_ast_ctx(&self.ctx);
-                let b = b.into_ast_ctx(&self.ctx);
+            pub fn $f<A: Into<$retty>, B: IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
+                let a = a.into();
+                let b = b.into_ast(&a);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
                         $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast)
@@ -109,10 +109,11 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
+            pub fn $f<T: Into<Self> + Clone>(values: &[T]) -> $retty {
+                let ctx = &Context::thread_local();
                 unsafe {
                     <$retty>::wrap(ctx, {
-                        let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
+                        let tmp: Vec<Self> = values.iter().cloned().map(|x| x.into()).collect();
                         let tmp2: Vec<_> = tmp.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
                         $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr())
@@ -200,10 +201,11 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(ctx: &Context, values: &[impl Borrow<Self>]) -> Bool
+    fn distinct(values: &[impl Borrow<Self>]) -> Bool
     where
         Self: Sized,
     {
+        let ctx = &Context::thread_local();
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
@@ -363,48 +365,18 @@ pub trait Ast: fmt::Debug {
 ///
 /// This is used in "binops" and "trinops" to allow seamless conversion
 /// of right-hand-side operands into the left-hand-side's [`Ast`] type.
-/// The whole [`Ast`] is used other than just the [`Context`] because
-/// some Sorts (e.g. [`BV`]) require extra context from the source data
-/// to ensure the correct [`Sort`] is used in the resulting [`Ast`].
+/// The [`Ast`] argument is necessary because
+/// some Sorts (e.g. [`BV`], [`Float`]) are parameterized (not captured by these bindings),
+/// and many operations can only be applied to objects with the same parameterization.
 pub trait IntoAst<T: Ast> {
     fn into_ast(self, a: &T) -> T;
 }
 
-/// Turns a piece of data into a Z3 [`Ast`], associated with the
-/// given [`Context`]. This is used in "varop" operations.
-pub trait IntoAstCtx<T: Ast>: Clone + IntoAst<T> {
-    fn into_ast_ctx(self, ctx: &Context) -> T;
-}
-
-/// This is trivially implemented for Asts. It also
-/// serves as a unified place to check for [`Context`] mismatches.
-impl<T: Ast + Clone> IntoAstCtx<T> for T {
-    fn into_ast_ctx(self, ctx: &Context) -> T {
-        self.check_ctx(ctx);
-        self
-    }
-}
-
-/// Implemented for [`Ast`] references for ease.
-impl<T: IntoAstCtx<T> + Ast> IntoAstCtx<T> for &T {
-    fn into_ast_ctx(self, a: &Context) -> T {
-        self.clone().into_ast_ctx(a)
-    }
-}
-
-/// Implemented for [`Ast`] references for ease.
-impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
-    fn into_ast(self, a: &T) -> T {
-        self.clone().into_ast(a)
-    }
-}
-
-/// This is trivially implemented for [`Ast`]s. It also
-/// serves as a unified place to check for context mismatches.
-impl<T: Ast> IntoAst<T> for T {
-    fn into_ast(self, a: &T) -> T {
-        self.check_ctx(a.get_ctx());
-        self
+/// Blanket impl to say that anything with a [`From`] impl
+/// is also [`IntoAst`], similar to how [`Into`] is done.
+impl<T: Into<A>, A: Ast> IntoAst<A> for T {
+    fn into_ast(self, _a: &A) -> A {
+        self.into()
     }
 }
 
@@ -504,6 +476,12 @@ macro_rules! impl_ast {
                 <Self as fmt::Debug>::fmt(self, f)
             }
         }
+
+        impl From<&$ast> for $ast {
+            fn from(value: &Self) -> Self {
+                value.clone()
+            }
+        }
     };
 }
 
@@ -526,13 +504,6 @@ macro_rules! impl_from_try_into_dynamic {
             fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
                 ast.$as_ast()
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
-            }
-        }
-
-        impl IntoAst<Dynamic> for $ast {
-            fn into_ast(self, d: &Dynamic) -> Dynamic {
-                self.check_ctx(d.get_ctx());
-                Dynamic::from_ast(&self)
             }
         }
     };
@@ -563,12 +534,14 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
-pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
+
+pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
-    _atmost(ctx, args.as_ref(), k)
+    _atmost(args.as_ref(), k)
 }
 
-fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
+fn _atmost(args: &[Z3_ast], k: u32) -> Bool {
+    let ctx = &Context::thread_local();
     unsafe {
         Bool::wrap(
             ctx,
@@ -582,12 +555,13 @@ fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
     }
 }
 
-pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
+pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
-    _atleast(ctx, args.as_ref(), k)
+    _atleast(args.as_ref(), k)
 }
 
-fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
+fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
+    let ctx = &Context::thread_local();
     unsafe {
         Bool::wrap(
             ctx,
@@ -608,16 +582,13 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
-/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+/// # let solver = Solver::new();
+/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const(&ctx, "x");
+/// let x = ast::Int::new_const("x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
-///     &ctx,
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x)
@@ -627,15 +598,11 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn forall_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    patterns: &[&Pattern],
-    body: &Bool,
-) -> Bool {
+pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
@@ -670,15 +637,13 @@ pub fn forall_const(
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
-/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+/// # let solver = Solver::new();
+/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const(&ctx, "x");
+/// let x = ast::Int::new_const("x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
-///     &ctx,
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x).not()
@@ -688,15 +653,11 @@ pub fn forall_const(
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn exists_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    patterns: &[&Pattern],
-    body: &Bool,
-) -> Bool {
+pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
@@ -740,16 +701,13 @@ pub fn exists_const(
 /// # use z3::{ast, Config, Context, FuncDecl, Pattern, SatResult, Solver, Sort, Symbol};
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
-/// let f = FuncDecl::new(&ctx, "f", &[&Sort::int(&ctx)], &Sort::int(&ctx));
+/// # let solver = Solver::new();
+/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
 ///
-/// let x = ast::Int::new_const(&ctx, "x");
+/// let x = ast::Int::new_const("x");
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
-/// let f_x_pattern: Pattern = Pattern::new(&ctx, &[ &f_x ]);
+/// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
-///     &ctx,
 ///     true,
 ///     0,
 ///     "def_f",
@@ -764,12 +722,11 @@ pub fn exists_const(
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(&ctx, 3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 #[allow(clippy::too_many_arguments)]
 pub fn quantifier_const(
-    ctx: &Context,
     is_forall: bool,
     weight: u32,
     quantifier_id: impl Into<Symbol>,
@@ -779,6 +736,7 @@ pub fn quantifier_const(
     no_patterns: &[&dyn Ast],
     body: &Bool,
 ) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert!(no_patterns.iter().all(|p| p.get_ctx() == ctx));
@@ -798,8 +756,8 @@ pub fn quantifier_const(
                 ctx.z3_ctx.0,
                 is_forall,
                 weight,
-                quantifier_id.into().as_z3_symbol(ctx),
-                skolem_id.into().as_z3_symbol(ctx),
+                quantifier_id.into().as_z3_symbol(),
+                skolem_id.into().as_z3_symbol(),
                 bounds.len().try_into().unwrap(),
                 bounds.as_ptr() as *const Z3_app,
                 patterns.len().try_into().unwrap(),
@@ -826,32 +784,30 @@ pub fn quantifier_const(
 /// #     Config, Context, Solver, SatResult,
 /// # };
 /// #
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
+/// # let solver = Solver::new();
 /// #
-/// let input = Int::fresh_const(&ctx, "");
+/// let input = Int::fresh_const("");
 /// let lambda = lambda_const(
-///     &ctx,
 ///     &[&input],
-///     &Dynamic::from_ast(&Int::add(&ctx, &[&input, &Int::from_i64(&ctx, 2)])),
+///     &Dynamic::from_ast(&Int::add(&[&input, &Int::from_i64(2)])),
 /// );
 ///
 /// solver.assert(
-///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
-///         ._eq(&Int::from_i64(&ctx, 3))
+///     &lambda.select_n(&[&Int::from_i64(1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(3))
 /// );
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
 ///
 /// solver.assert(
-///     &lambda.select_n(&[&Int::from_i64(&ctx, 1)]).as_int().unwrap()
-///         ._eq(&Int::from_i64(&ctx, 2))
+///     &lambda.select_n(&[&Int::from_i64(1)]).as_int().unwrap()
+///         ._eq(&Int::from_i64(2))
 /// );
 ///
 /// assert_eq!(solver.check(), SatResult::Unsat);
 /// ```
-pub fn lambda_const(ctx: &Context, bounds: &[&dyn Ast], body: &Dynamic) -> Array {
+pub fn lambda_const(bounds: &[&dyn Ast], body: &Dynamic) -> Array {
+    let ctx = &Context::thread_local();
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
 
     unsafe {

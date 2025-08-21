@@ -10,18 +10,20 @@ pub struct Datatype {
 }
 
 impl Datatype {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sort: &Sort) -> Self {
+    pub fn new_const<S: Into<Symbol>>(name: S, sort: &Sort) -> Self {
+        let ctx = &Context::thread_local();
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, sort: &Sort) -> Self {
+    pub fn fresh_const(prefix: &str, sort: &Sort) -> Self {
+        let ctx = &Context::thread_local();
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
 
