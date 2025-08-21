@@ -321,7 +321,10 @@ pub struct Statistics {
 /// # See also
 ///
 /// [`with_z3_config`]
-pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(ctx: &Context, callback: T) -> R {
+pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
+    ctx: &Context,
+    callback: T,
+) -> R {
     let old = Context::thread_local();
     Context::set_thread_local(ctx);
     let res = callback();

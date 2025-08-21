@@ -477,11 +477,10 @@ macro_rules! impl_ast {
         }
 
         impl From<&$ast> for $ast {
-             fn from(value: &Self) -> Self {
-                 value.clone()
-             }
+            fn from(value: &Self) -> Self {
+                value.clone()
+            }
         }
-
     };
 }
 
@@ -506,7 +505,6 @@ macro_rules! impl_from_try_into_dynamic {
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
         }
-
     };
 }
 

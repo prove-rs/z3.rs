@@ -15,20 +15,12 @@ impl Array {
     /// values of the `range` `Sort`.
     ///
     /// All values in the `Array` will be unconstrained.
-    pub fn new_const<S: Into<Symbol>>(
-        name: S,
-        domain: &Sort,
-        range: &Sort,
-    ) -> Array {
+    pub fn new_const<S: Into<Symbol>>(name: S, domain: &Sort, range: &Sort) -> Array {
         let ctx = &Context::thread_local();
         let sort = Sort::array(domain, range);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol(),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }

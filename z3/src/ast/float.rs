@@ -1,6 +1,6 @@
+use crate::ast::IntoAst;
 use crate::ast::rounding_mode::RoundingMode;
 use crate::ast::{Ast, BV, Bool, binop, unop};
-use crate::ast::IntoAst;
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;

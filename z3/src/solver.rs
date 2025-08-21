@@ -376,7 +376,7 @@ impl Solver {
             num_assumptions -= 1;
             assumptions[num_assumptions as usize].z3_ast
         } else {
-            ast::Bool::from_bool( true).z3_ast
+            ast::Bool::from_bool(true).z3_ast
         };
         let z3_assumptions = assumptions.iter().map(|a| a.z3_ast).collect::<Vec<_>>();
 

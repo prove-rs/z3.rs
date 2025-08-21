@@ -1,5 +1,5 @@
-use crate::ast::IntoAst;
 use crate::Context;
+use crate::ast::IntoAst;
 use crate::ast::{Ast, Float, trinop};
 use z3_sys::*;
 

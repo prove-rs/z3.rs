@@ -3,6 +3,7 @@ use crate::ast::{Bool, IntoAst, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;
+use std::str::FromStr;
 use z3_sys::*;
 
 /// [`Ast`] node representing an integer value.
@@ -13,21 +14,6 @@ pub struct Int {
 impl Int {
     pub fn from_big_int(value: &BigInt) -> Int {
         Int::from_str(&value.to_str_radix(10)).unwrap()
-    }
-
-    pub fn from_str(value: &str) -> Option<Int> {
-        let ctx = &Context::thread_local();
-        let sort = Sort::int();
-        let ast = unsafe {
-            let int_cstring = CString::new(value).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, int_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
-                return None;
-            }
-
-            numeral_ptr
-        };
-        Some(unsafe { Int::wrap(ctx, ast) })
     }
 }
 
@@ -196,9 +182,27 @@ into_int_signed!(i16);
 into_int_signed!(i32);
 into_int_signed!(i64);
 
-
 impl From<BigInt> for Int {
     fn from(value: BigInt) -> Self {
         Int::from_big_int(&value)
+    }
+}
+
+// todo: when we add a proper error type return that instead
+impl FromStr for Int {
+    type Err = ();
+    fn from_str(value: &str) -> Result<Int, Self::Err> {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
+        let ast = unsafe {
+            let int_cstring = CString::new(value).map_err(|_| ())?;
+            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, int_cstring.as_ptr(), sort.z3_sort);
+            if numeral_ptr.is_null() {
+                return Err(());
+            }
+
+            numeral_ptr
+        };
+        Ok(unsafe { Int::wrap(ctx, ast) })
     }
 }

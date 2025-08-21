@@ -15,7 +15,8 @@ impl Params {
         }
     }
 
-    pub fn new() -> Params {let ctx = &Context::thread_local();
+    pub fn new() -> Params {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
     }
 

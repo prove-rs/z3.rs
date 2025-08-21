@@ -17,11 +17,7 @@ impl Datatype {
 
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol(),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }

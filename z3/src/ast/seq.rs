@@ -52,7 +52,8 @@ impl Seq {
     }
 
     /// Create a unit sequence of `a`.
-    pub fn unit<A: Ast>( a: &A) -> Self {let ctx = &Context::thread_local();
+    pub fn unit<A: Ast>(a: &A) -> Self {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.0, a.get_z3_ast())) }
     }
 
