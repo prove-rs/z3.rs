@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.16.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.15.0...z3-v0.16.0) - 2025-08-21
+
+### Added
+
+- [**breaking**] Use an implicit thread-local z3 context by default ([#417](https://github.com/prove-rs/z3.rs/pull/417)) (by @toolCHAINZ) - #417
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.15.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.4...z3-v0.15.0) - 2025-08-19
 
 ### Added
