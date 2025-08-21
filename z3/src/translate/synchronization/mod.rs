@@ -17,11 +17,9 @@ use std::sync::Mutex;
 /// use z3::{Context, PrepareSynchronized, Solver, Translate};
 ///
 /// // Creating a Synchronized<BV> and moving it to another thread.
-/// let ctx = Context::default();
 /// let bv = Bool::from_bool(true);
 /// let sendable = bv.synchronized();
 /// std::thread::spawn(move || {
-///     let thread_ctx = Context::default();
 ///     let moved = sendable.recover();
 ///     assert_eq!(moved.as_bool(), Some(true));
 /// }).join().expect("Thread panicked");
@@ -38,7 +36,6 @@ use std::sync::Mutex;
 /// // and moving the resulting model back out for inspection.
 /// use z3::ast::{Ast, Bool};
 /// use z3::{Context, PrepareSynchronized, Solver};
-/// let ctx = Context::default();
 /// let bool = Bool::new_const("hello");
 /// let sendable_solver = {
 ///     let solver = Solver::new();
@@ -79,7 +76,6 @@ use std::sync::Mutex;
 ///     }
 /// }
 ///
-/// let ctx = Context::default();
 /// let my_struct = MyStruct {
 ///     bv: Bool::from_bool(true),
 ///     int: Int::from_i64(42),

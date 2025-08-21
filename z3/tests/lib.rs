@@ -268,9 +268,6 @@ fn test_solver_translate() {
         slv.synchronized()
     })
     .recover();
-
-    // Add a new constraint, make the old one unsatisfiable, while the copy remains satisfiable.
-
     slv.assert(a._eq(3));
     assert_eq!(slv.check(), SatResult::Unsat);
 }

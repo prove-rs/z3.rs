@@ -55,7 +55,6 @@ impl Float {
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, Float};
     ///
-    /// let ctx = Context::default();
     /// let solver = Solver::new();
     ///
     /// let nan_32 = Float::nan32();
@@ -79,7 +78,6 @@ impl Float {
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, Float};
     ///
-    /// let ctx = Context::default();
     /// let solver = Solver::new();
     ///
     /// let nan_32 = Float::nan32();
