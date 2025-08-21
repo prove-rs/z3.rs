@@ -86,7 +86,7 @@ fn transform_impl_method(default_ctx_fn: Path, m: ImplItemFn) -> (ImplItem, Impl
         vis: m.vis.clone(),
         defaultness: m.defaultness,
         sig: outer_sig.clone(),
-        block: block,
+        block,
     });
 
     // construct the outer method call

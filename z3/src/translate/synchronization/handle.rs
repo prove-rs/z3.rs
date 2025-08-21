@@ -2,7 +2,6 @@ use crate::Context;
 use crate::translate::Translate;
 use std::fmt::{Debug, Formatter};
 use std::sync::Mutex;
-use z3_macros::z3_ctx;
 
 /// A [`Send`] and [`Sync`] wrapper for Z3 structures associated with a [`Context`].
 ///

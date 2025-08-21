@@ -1,10 +1,8 @@
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, BV, Real, binop};
 use crate::ast::{Bool, IntoAst, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing an integer value.
@@ -170,15 +168,9 @@ impl Int {
 
 macro_rules! into_int {
     ($t:ty) => {
-        impl IntoAst<Int> for $t {
-            fn into_ast(self, a: &Int) -> Int {
-                Int::from_u64(self as u64)
-            }
-        }
-
-        impl IntoAstCtx<Int> for $t {
-            fn into_ast_ctx(self, a: &Context) -> Int {
-                Int::from_u64(self as u64)
+        impl From<$t> for Int {
+            fn from(value: $t) -> Self {
+                Int::from_u64(value as u64)
             }
         }
     };
@@ -186,15 +178,9 @@ macro_rules! into_int {
 
 macro_rules! into_int_signed {
     ($t:ty) => {
-        impl IntoAst<Int> for $t {
-            fn into_ast(self, _a: &Int) -> Int {
-                Int::from_i64(self as i64)
-            }
-        }
-
-        impl IntoAstCtx<Int> for $t {
-            fn into_ast_ctx(self, _a: &Context) -> Int {
-                Int::from_i64(self as i64)
+        impl From<$t> for Int {
+            fn from(value: $t) -> Self {
+                Int::from_i64(value as i64)
             }
         }
     };
@@ -210,8 +196,9 @@ into_int_signed!(i16);
 into_int_signed!(i32);
 into_int_signed!(i64);
 
-impl IntoAst<Int> for BigInt {
-    fn into_ast(self, a: &Int) -> Int {
-        Int::from_big_int(&self)
+
+impl From<BigInt> for Int {
+    fn from(value: BigInt) -> Self {
+        Int::from_big_int(&value)
     }
 }

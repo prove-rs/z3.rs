@@ -18,7 +18,7 @@ impl Dynamic {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(
-                &ctx,
+                ctx,
                 Z3_mk_const(
                     ctx.z3_ctx.0,
                     name.into().as_z3_symbol(),

@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast};

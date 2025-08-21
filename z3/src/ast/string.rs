@@ -1,10 +1,9 @@
 use crate::ast::IntoAst;
-use crate::ast::IntoAstCtx;
 use crate::ast::regexp::Regexp;
 use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
-use std::ffi::{CStr, CString};
-use z3_macros::z3_ctx;
+use std::ffi::{CStr, CString, NulError};
+use std::str::FromStr;
 use z3_sys::*;
 
 /// [`Ast`] node representing a string value.
@@ -35,17 +34,6 @@ impl String {
                 Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
             })
         }
-    }
-
-    /// Creates a Z3 constant string from a `&str`
-    pub fn from_str(string: &str) -> Result<String, std::ffi::NulError> {
-        let ctx = &Context::thread_local();
-        let string = CString::new(string)?;
-        Ok(unsafe {
-            Self::wrap(ctx, {
-                Z3_mk_string(ctx.z3_ctx.0, string.as_c_str().as_ptr())
-            })
-        })
     }
 
     /// Retrieves the underlying `std::string::String`
@@ -84,8 +72,8 @@ impl String {
     /// );
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn at<T: IntoAstCtx<Int>>(&self, index: T) -> Self {
-        let index = index.into_ast_ctx(&self.ctx);
+    pub fn at<T: Into<Int>>(&self, index: T) -> Self {
+        let index = index.into();
         unsafe {
             Self::wrap(
                 &self.ctx,
@@ -98,7 +86,8 @@ impl String {
     ///
     /// # Examples
     /// ```
-    /// # use z3::{Config, Context, Solver, SatResult};
+    /// # use std::str::FromStr;
+    /// use z3::{Config, Context, Solver, SatResult};
     /// # use z3::ast::{Ast as _, Int, String};
     /// #
     /// # let solver = Solver::new();
@@ -125,9 +114,9 @@ impl String {
     ///     "bc",
     /// );
     /// ```
-    pub fn substr<T: IntoAstCtx<Int>, R: IntoAstCtx<Int>>(&self, offset: T, length: R) -> Self {
-        let offset = offset.into_ast_ctx(&self.ctx);
-        let length = length.into_ast_ctx(&self.ctx);
+    pub fn substr<T: Into<Int>, R: Into<Int>>(&self, offset: T, length: R) -> Self {
+        let offset = offset.into();
+        let length = length.into();
         unsafe {
             Self::wrap(
                 &self.ctx,
@@ -150,6 +139,7 @@ impl String {
     /// Greater than in lexicographic order (str.>  s1 s2)
     /// # Example
     /// ```
+    /// use std::str::FromStr;
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, String};
     ///
@@ -174,6 +164,7 @@ impl String {
     /// Anything is greater or equal than itself (or less than equal itself).
     /// # Example
     /// ```
+    /// use std::str::FromStr;
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, String};
     ///
@@ -214,14 +205,28 @@ impl String {
     }
 }
 
-impl<T: AsRef<str>> IntoAst<String> for T {
-    fn into_ast(self, a: &String) -> String {
-        String::from_str(self.as_ref()).unwrap()
+impl FromStr for String {
+    type Err = NulError;
+
+    fn from_str(string: &str) -> Result<Self, Self::Err> {
+        let ctx = &Context::thread_local();
+        let string = CString::new(string)?;
+        Ok(unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_string(ctx.z3_ctx.0, string.as_c_str().as_ptr())
+            })
+        })
     }
 }
 
-impl<T: AsRef<str> + Clone> IntoAstCtx<String> for T {
-    fn into_ast_ctx(self, ctx: &Context) -> String {
-        String::from_str(self.as_ref()).unwrap()
+impl From<&str> for String {
+    fn from(value: &str) -> Self {
+        Self::from_str(value).unwrap()
+    }
+}
+
+impl From<std::string::String> for String {
+    fn from(value: std::string::String) -> Self {
+        Self::from_str(value.as_str()).unwrap()
     }
 }

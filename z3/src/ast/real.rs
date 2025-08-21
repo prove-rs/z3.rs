@@ -1,10 +1,8 @@
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, IntoAst};
 use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
 use std::ffi::{CStr, CString};
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
@@ -131,8 +129,8 @@ impl Real {
     }
 }
 
-impl IntoAst<Real> for BigRational {
-    fn into_ast(self, a: &Real) -> Real {
-        Real::from_big_rational(&self)
+impl From<BigRational> for Real {
+    fn from(v: BigRational) -> Real {
+        Real::from_big_rational(&v)
     }
 }

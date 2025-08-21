@@ -1,9 +1,7 @@
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Dynamic, Int, varop};
 use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a sequence value.
@@ -86,8 +84,8 @@ impl Seq {
     ///         ._eq(true)
     /// );
     /// ```
-    pub fn nth<T: IntoAstCtx<Int>>(&self, index: T) -> Dynamic {
-        let index = index.into_ast_ctx(&self.ctx);
+    pub fn nth<T: Into<Int>>(&self, index: T) -> Dynamic {
+        let index = index.into();
         unsafe {
             Dynamic::wrap(
                 &self.ctx,

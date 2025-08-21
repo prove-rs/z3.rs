@@ -1,7 +1,6 @@
+use crate::ast::IntoAst;
 use crate::Context;
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Float, trinop};
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a rounding mode for [`Float`] operations.

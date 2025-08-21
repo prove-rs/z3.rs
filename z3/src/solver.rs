@@ -4,12 +4,11 @@ use std::fmt;
 
 use z3_sys::*;
 
-use crate::ast::{Bool, IntoAstCtx};
+use crate::ast::Bool;
 use crate::{
     Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast, ast::Ast,
 };
 use std::ops::AddAssign;
-use z3_macros::z3_ctx;
 
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
@@ -96,8 +95,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert_and_track()`]
-    pub fn assert<T: IntoAstCtx<Bool>>(&self, ast: T) {
-        let ast = ast.into_ast_ctx(&self.ctx);
+    pub fn assert<T: Into<Bool>>(&self, ast: T) {
+        let ast = ast.into();
         debug!("assert: {ast:?}");
         unsafe { Z3_solver_assert(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast) };
     }
@@ -116,8 +115,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert()`]
-    pub fn assert_and_track<T: IntoAstCtx<Bool>>(&self, ast: T, p: &Bool) {
-        let ast = ast.into_ast_ctx(&self.ctx);
+    pub fn assert_and_track<T: Into<Bool>>(&self, ast: T, p: &Bool) {
+        let ast = ast.into();
         debug!("assert_and_track: {ast:?}");
         unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast, p.z3_ast) };
     }

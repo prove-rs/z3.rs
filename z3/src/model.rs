@@ -1,6 +1,5 @@
 use std::ffi::CStr;
 use std::fmt;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Translate, ast::Ast};

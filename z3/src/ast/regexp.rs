@@ -1,9 +1,7 @@
 use crate::Context;
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, binop, varop};
 use crate::ast::{IntoAst, unop};
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a regular expression.

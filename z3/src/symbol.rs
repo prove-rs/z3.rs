@@ -1,5 +1,4 @@
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, Symbol};

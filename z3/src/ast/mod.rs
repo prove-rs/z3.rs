@@ -88,9 +88,9 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: IntoAstCtx<$retty>, B: IntoAstCtx<$retty>>(&self, a: A, b: B) -> $retty {
-                let a = a.into_ast_ctx(&self.ctx);
-                let b = b.into_ast_ctx(&self.ctx);
+            pub fn $f<A: Into<$retty>, B: IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
+                let a = a.into();
+                let b = b.into_ast(&a);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
                         $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast)
@@ -109,11 +109,11 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<T: IntoAstCtx<Self>>(values: &[T]) -> $retty {
+            pub fn $f<T: Into<Self> + Clone>(values: &[T]) -> $retty {
                 let ctx = &Context::thread_local();
                 unsafe {
                     <$retty>::wrap(ctx, {
-                        let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
+                        let tmp: Vec<Self> = values.iter().cloned().map(|x| x.into()).collect();
                         let tmp2: Vec<_> = tmp.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
                         $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr())
@@ -364,48 +364,18 @@ pub trait Ast: fmt::Debug {
 ///
 /// This is used in "binops" and "trinops" to allow seamless conversion
 /// of right-hand-side operands into the left-hand-side's [`Ast`] type.
-/// The whole [`Ast`] is used other than just the [`Context`] because
-/// some Sorts (e.g. [`BV`]) require extra context from the source data
-/// to ensure the correct [`Sort`] is used in the resulting [`Ast`].
+/// The [`Ast`] argument is necessary because
+/// some Sorts (e.g. [`BV`], [`Float`]) are parameterized (not captured by these bindings),
+/// and many operations can only be applied to objects with the same parameterization.
 pub trait IntoAst<T: Ast> {
     fn into_ast(self, a: &T) -> T;
 }
 
-/// Turns a piece of data into a Z3 [`Ast`], associated with the
-/// given [`Context`]. This is used in "varop" operations.
-pub trait IntoAstCtx<T: Ast>: Clone + IntoAst<T> {
-    fn into_ast_ctx(self, ctx: &Context) -> T;
-}
-
-/// This is trivially implemented for Asts. It also
-/// serves as a unified place to check for [`Context`] mismatches.
-impl<T: Ast + Clone> IntoAstCtx<T> for T {
-    fn into_ast_ctx(self, ctx: &Context) -> T {
-        self.check_ctx(ctx);
-        self
-    }
-}
-
-/// Implemented for [`Ast`] references for ease.
-impl<T: IntoAstCtx<T> + Ast> IntoAstCtx<T> for &T {
-    fn into_ast_ctx(self, a: &Context) -> T {
-        self.clone().into_ast_ctx(a)
-    }
-}
-
-/// Implemented for [`Ast`] references for ease.
-impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
-    fn into_ast(self, a: &T) -> T {
-        self.clone().into_ast(a)
-    }
-}
-
-/// This is trivially implemented for [`Ast`]s. It also
-/// serves as a unified place to check for context mismatches.
-impl<T: Ast> IntoAst<T> for T {
-    fn into_ast(self, a: &T) -> T {
-        self.check_ctx(a.get_ctx());
-        self
+/// Blanket impl to say that anything with a [`From`] impl
+/// is also [`IntoAst`], similar to how [`Into`] is done.
+impl<T: Into<A>, A: Ast> IntoAst<A> for T {
+    fn into_ast(self, _a: &A) -> A {
+        self.into()
     }
 }
 
@@ -505,6 +475,13 @@ macro_rules! impl_ast {
                 <Self as fmt::Debug>::fmt(self, f)
             }
         }
+
+        impl From<&$ast> for $ast {
+             fn from(value: &Self) -> Self {
+                 value.clone()
+             }
+        }
+
     };
 }
 
@@ -530,12 +507,6 @@ macro_rules! impl_from_try_into_dynamic {
             }
         }
 
-        impl IntoAst<Dynamic> for $ast {
-            fn into_ast(self, d: &Dynamic) -> Dynamic {
-                self.check_ctx(d.get_ctx());
-                Dynamic::from_ast(&self)
-            }
-        }
     };
 }
 

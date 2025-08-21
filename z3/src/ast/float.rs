@@ -1,9 +1,8 @@
 use crate::ast::rounding_mode::RoundingMode;
 use crate::ast::{Ast, BV, Bool, binop, unop};
-use crate::ast::{IntoAst, IntoAstCtx};
+use crate::ast::IntoAst;
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a float value.
@@ -249,11 +248,6 @@ macro_rules! impl_into_ast {
                         Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort)
                     })
                 }
-            }
-        }
-        impl IntoAstCtx<Float> for $t {
-            fn into_ast_ctx(self, ctx: &Context) -> Float {
-                Float::$op(self)
             }
         }
     };
