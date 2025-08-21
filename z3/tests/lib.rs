@@ -403,7 +403,7 @@ fn test_real_cmp() {
     let x = ast::Real::new_const("x");
     let x_plus_1 = ast::Real::add(&[&x, &ast::Real::from_real(1, 1)]);
     // forall x, x < x + 1
-    let forall = ast::forall_const(&Context::thread_local(), &[&x], &[], &x.lt(&x_plus_1));
+    let forall = ast::forall_const(&[&x], &[], &x.lt(&x_plus_1));
 
     solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
@@ -1088,8 +1088,7 @@ fn test_set_membership() {
     solver.push();
     let x = ast::Int::new_const("x");
     // An empty set will always return false for member
-    let forall: ast::Bool =
-        ast::forall_const(&Context::thread_local(), &[&x], &[], &set.member(&x).not());
+    let forall: ast::Bool = ast::forall_const(&[&x], &[], &set.member(&x).not());
     solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
@@ -1465,12 +1464,7 @@ fn test_ast_safe_decl() {
     let x = ast::Int::new_const("x");
     let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
     let f_x_pattern: Pattern = Pattern::new(&[&f_x]);
-    let forall = ast::forall_const(
-        &Context::thread_local(),
-        &[&x],
-        &[&f_x_pattern],
-        &x._eq(&f_x),
-    );
+    let forall = ast::forall_const(&[&x], &[&f_x_pattern], &x._eq(&f_x));
     assert!(forall.safe_decl().is_err());
     assert_eq!(
         format!("{}", forall.safe_decl().err().unwrap()),
@@ -1694,14 +1688,14 @@ fn test_atmost() {
     solver.assert(b.implies(&c));
 
     solver.push();
-    let am = atmost(&Context::thread_local(), [&a, &b, &c, &d], 2);
+    let am = atmost([&a, &b, &c, &d], 2);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Sat));
     solver.pop(1);
 
     solver.push();
     solver.assert(&a);
-    let am = atmost(&Context::thread_local(), [&a, &b, &c, &d], 0);
+    let am = atmost([&a, &b, &c, &d], 0);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Unsat));
     solver.pop(1);
@@ -1718,14 +1712,14 @@ fn test_atleast() {
     solver.assert(b.implies(&c));
 
     solver.push();
-    let am = atleast(&Context::thread_local(), [&a, &b, &c, &d], 4);
+    let am = atleast([&a, &b, &c, &d], 4);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Sat));
     solver.pop(1);
 
     solver.push();
     solver.assert(a.not());
-    let am = atleast(&Context::thread_local(), [&a, &b, &c, &d], 4);
+    let am = atleast([&a, &b, &c, &d], 4);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Unsat));
     solver.pop(1);

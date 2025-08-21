@@ -200,7 +200,6 @@ impl FromStr for Int {
             if numeral_ptr.is_null() {
                 return Err(());
             }
-
             numeral_ptr
         };
         Ok(unsafe { Int::wrap(ctx, ast) })

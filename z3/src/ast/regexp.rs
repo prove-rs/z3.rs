@@ -83,7 +83,8 @@ impl Regexp {
     }
 
     /// Creates a regular expression that recognizes all sequences
-    pub fn full(ctx: &Context) -> Self {
+    pub fn full() -> Self {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_full(
@@ -96,7 +97,7 @@ impl Regexp {
 
     /// Creates a regular expression that accepts all singleton sequences of the characters
     /// Requires Z3 4.8.13 or later.
-    pub fn allchar(ctx: &Context) -> Self {
+    pub fn allchar() -> Self {let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_allchar(
@@ -108,7 +109,7 @@ impl Regexp {
     }
 
     /// Creates a regular expression that doesn't recognize any sequences
-    pub fn empty(ctx: &Context) -> Self {
+    pub fn empty() -> Self {let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_empty(

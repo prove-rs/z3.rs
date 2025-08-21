@@ -201,10 +201,11 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(ctx: &Context, values: &[impl Borrow<Self>]) -> Bool
+    fn distinct(values: &[impl Borrow<Self>]) -> Bool
     where
         Self: Sized,
     {
+        let ctx = &Context::thread_local();
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
@@ -534,12 +535,13 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
 
-pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
+pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
-    _atmost(ctx, args.as_ref(), k)
+    _atmost(args.as_ref(), k)
 }
 
-fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
+fn _atmost(args: &[Z3_ast], k: u32) -> Bool {
+    let ctx = &Context::thread_local();
     unsafe {
         Bool::wrap(
             ctx,
@@ -553,12 +555,13 @@ fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
     }
 }
 
-pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
+pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
-    _atleast(ctx, args.as_ref(), k)
+    _atleast(args.as_ref(), k)
 }
 
-fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
+fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
+    let ctx = &Context::thread_local();
     unsafe {
         Bool::wrap(
             ctx,
@@ -586,7 +589,6 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
-///     &Context::thread_local(),
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x)
@@ -599,12 +601,8 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn forall_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    patterns: &[&Pattern],
-    body: &Bool,
-) -> Bool {
+pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
@@ -646,7 +644,6 @@ pub fn forall_const(
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
-///     &Context::thread_local(),
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x).not()
@@ -659,12 +656,8 @@ pub fn forall_const(
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn exists_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    patterns: &[&Pattern],
-    body: &Bool,
-) -> Bool {
+pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
@@ -715,7 +708,6 @@ pub fn exists_const(
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
-///     &Context::thread_local(),
 ///     true,
 ///     0,
 ///     "def_f",
@@ -735,7 +727,6 @@ pub fn exists_const(
 /// ```
 #[allow(clippy::too_many_arguments)]
 pub fn quantifier_const(
-    ctx: &Context,
     is_forall: bool,
     weight: u32,
     quantifier_id: impl Into<Symbol>,
@@ -745,6 +736,7 @@ pub fn quantifier_const(
     no_patterns: &[&dyn Ast],
     body: &Bool,
 ) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert!(no_patterns.iter().all(|p| p.get_ctx() == ctx));
@@ -796,7 +788,6 @@ pub fn quantifier_const(
 /// #
 /// let input = Int::fresh_const("");
 /// let lambda = lambda_const(
-///     &Context::thread_local(),
 ///     &[&input],
 ///     &Dynamic::from_ast(&Int::add(&[&input, &Int::from_i64(2)])),
 /// );
@@ -815,7 +806,8 @@ pub fn quantifier_const(
 ///
 /// assert_eq!(solver.check(), SatResult::Unsat);
 /// ```
-pub fn lambda_const(ctx: &Context, bounds: &[&dyn Ast], body: &Dynamic) -> Array {
+pub fn lambda_const(bounds: &[&dyn Ast], body: &Dynamic) -> Array {
+    let ctx = &Context::thread_local();
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
 
     unsafe {

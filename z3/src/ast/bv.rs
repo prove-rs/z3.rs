@@ -76,7 +76,8 @@ impl BV {
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, sz: u32) -> BV {
+    pub fn fresh_const(prefix: &str, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
         let sort = Sort::bitvector(sz);
         unsafe {
             Self::wrap(ctx, {

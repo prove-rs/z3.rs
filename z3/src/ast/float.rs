@@ -12,8 +12,7 @@ pub struct Float {
 }
 
 impl Float {
-    // Create a 32-bit (IEEE-754) Float [`Ast`] from a rust f32
-
+    /// Create a 32-bit (IEEE-754) Float [`Ast`] from an [`f32`].
     pub fn from_f32(value: f32) -> Float {
         let ctx = &Context::thread_local();
         let sort = Sort::float32();

@@ -60,7 +60,6 @@ impl RecFuncDecl {
     ///
     /// let solver = Solver::new();
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
-    ///         &Context::thread_local(),
     ///         &[&n],
     ///         &[],
     ///         &n.lt(&f_of_n.as_int().unwrap())

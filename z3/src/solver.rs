@@ -59,7 +59,8 @@ impl Solver {
 
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
-    pub fn new_for_logic<S: Into<Symbol>>(ctx: &Context, logic: S) -> Option<Solver> {
+    pub fn new_for_logic<S: Into<Symbol>>(logic: S) -> Option<Solver> {
+        let ctx = &Context::thread_local();
         unsafe {
             let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol());
             if s.is_null() {
