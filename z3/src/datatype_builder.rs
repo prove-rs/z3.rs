@@ -1,12 +1,42 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
+//! The main entry point is [create_datatypes](create_datatypes) which returns a
+//! list of sorts(more than one for the case that you are defining a set of
+//! mutually recursive data types)
+//!
+//!
+//! # Example
+//!
+//! If you just want to define a single recursive datatype, you can do so with
+//! the standard [DatatypeBuilder](DatatypeBuilder) as so.
+//!
+//! ```rust
+//! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol};
+//! let dt = DatatypeBuilder::new("my_datatype")
+//!     .variant("case1", vec![("field1", DatatypeAccessor::sort(Sort::int()))])
+//!     .variant("case2", vec![("field2", DatatypeAccessor::datatype("my_datatype"))])
+//!     .finish();
+//! ```
+//!
+//! For mutually recursive types, you must use [create_datatypes](create_datatypes)
+//!
+//! ```rust
+//! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol, datatype_builder::create_datatypes};
+//! let my_tree = DatatypeBuilder::new("my_tree")
+//!     .variant("leaf", vec![])
+//!     .variant("node", vec![("children", DatatypeAccessor::datatype("my_list"))]);
+//!
+//! let my_list = DatatypeBuilder::new("my_list")
+//!     .variant("nil", vec![])
+//!     .variant("cons", vec![("hd", DatatypeAccessor::datatype("my_tree")), ("tl", DatatypeAccessor::datatype("my_list"))]);
+//!
+//! let dts = create_datatypes(vec![my_tree, my_list]);
+//! ```
+//!
 
 use std::{convert::TryInto, ptr::null_mut};
 use z3_sys::*;
 
-use crate::{
-    Context, DatatypeAccessor, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort,
-    Symbol,
-};
+use crate::{Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
 impl DatatypeBuilder {
     pub fn new<S: Into<Symbol>>(name: S) -> Self {
         let ctx = &Context::thread_local();
@@ -38,6 +68,9 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     let num = datatype_builders.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
+    // todo: should we check that all the contexts are the same? (Currently
+    // not necessary since one can only use the thread local to construct a
+    // datatype builder)
     let ctx: Context = datatype_builders[0].ctx.clone();
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
 
@@ -192,4 +225,21 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     }
 
     datatype_sorts
+}
+
+/// Wrapper which can point to a sort (by value) or to a custom datatype (by name).
+#[derive(Debug)]
+pub enum DatatypeAccessor {
+    Sort(Sort),
+    Datatype(Symbol),
+}
+
+impl DatatypeAccessor {
+    pub fn sort<S: Into<Sort>>(s: S) -> Self {
+        Self::Sort(s.into())
+    }
+
+    pub fn datatype<S: Into<Symbol>>(s: S) -> Self {
+        Self::Datatype(s.into())
+    }
 }

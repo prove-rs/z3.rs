@@ -25,6 +25,12 @@ impl From<u32> for Symbol {
     }
 }
 
+impl From<i32> for Symbol {
+    fn from(val: i32) -> Self {
+        Symbol::Int(val as u32)
+    }
+}
+
 impl From<String> for Symbol {
     fn from(val: String) -> Self {
         Symbol::String(val)
