@@ -1,4 +1,37 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
+//! The main entry point is [create_datatypes](create_datatypes) which returns a
+//! list of sorts(more than one for the case that you are defining a set of
+//! mutually recursive data types)
+//!
+//!
+//! # Example
+//!
+//! If you just want to define a single recursive datatype, you can do so with
+//! the standard [DatatypeBuilder](DatatypeBuilder) as so.
+//!
+//! ```rust
+//! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol};
+//! let dt = DatatypeBuilder::new("my_datatype")
+//!     .variant("case1", vec![("field1", DatatypeAccessor::Sort(Sort::int()))])
+//!     .variant("case2", vec![("field2", DatatypeAccessor::Datatype(Symbol::String("my_datatype".to_string())))])
+//!     .finish();
+//! ```
+//!
+//! For mutually recursive types, you must use [create_datatypes](create_datatypes)
+//!
+//! ```rust
+//! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol, datatype_builder::create_datatypes};
+//! let my_tree = DatatypeBuilder::new("my_tree")
+//!     .variant("leaf", vec![])
+//!     .variant("node", vec![("children", DatatypeAccessor::Datatype(Symbol::String("my_list".to_string())))]);
+//!
+//! let my_list = DatatypeBuilder::new("my_list")
+//!     .variant("nil", vec![])
+//!     .variant("cons", vec![("hd", DatatypeAccessor::Datatype(Symbol::String("my_tree".to_string()))), ("tl", DatatypeAccessor::Datatype(Symbol::String("my_list".to_string())))]);
+//!
+//! let dts = create_datatypes(vec![my_tree, my_list]);
+//! ```
+//!
 
 use std::{convert::TryInto, ptr::null_mut};
 use z3_sys::*;
@@ -38,6 +71,9 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     let num = datatype_builders.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
+    // todo: should we check that all the contexts are the same? (Currently
+    // not necessary since one can only use the thread local to construct a
+    // datatype builder)
     let ctx: Context = datatype_builders[0].ctx.clone();
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
 
