@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::{env, path::PathBuf};
 
 macro_rules! assert_one_of_features {
@@ -262,7 +263,17 @@ fn find_library_header_by_vcpkg() -> String {
 fn find_header_by_env() -> String {
     const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
-        "z3/src/api/z3.h".to_string()
+        env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE")
+            .map(|a| {
+                Path::new(&a)
+                    .join("src")
+                    .join("api")
+                    .join("z3.h")
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            })
+            .unwrap_or("z3/src/api/z3.h".to_string())
     } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
         header_path
     } else {
