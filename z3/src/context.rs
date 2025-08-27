@@ -52,12 +52,11 @@ impl Context {
     /// Returns a handle to the default thread-local [`Context`].
     ///
     /// This [`Context`] is used in all z3 operations.
-    /// Custom [`Context`]s are supported through [`with_z3_context`] or [`with_z3_config`],
+    /// Custom [`Context`]s are supported through [`with_z3_config`](crate::with_z3_config),
     /// which allow for running a closure inside an environment with the provided [`Context`]
     ///
     /// # See also:
-    /// - [`with_z3_context`]
-    /// - [`with_z3_config`]
+    /// - [`with_z3_config`](crate::with_z3_config)
     pub fn thread_local() -> Context {
         DEFAULT_CONTEXT.with(|f| f.borrow().clone())
     }
@@ -79,6 +78,9 @@ impl Context {
         });
     }
 
+    /// Creates a new Z3 Context using the given configuration.
+    #[deprecated(note = "The z3 crate now uses an implicit thread-local context. To configure the active context,\
+     use `with_z3_config` instead")]
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
