@@ -10,7 +10,7 @@ env:
   CARGO_INCREMENTAL: 0
   CARGO_REGISTRIES_CRATES_IO_PROTOCOL: sparse
   RUSTFLAGS: "-D warnings"
-  EMSCRIPTEN_VERSION: "latest"
+  EMSCRIPTEN_VERSION: "4.0.13"
 
 jobs:
   check-formatting:
@@ -37,7 +37,7 @@ jobs:
       run: cargo test --workspace
 
   build_on_wasm:
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+    # if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
