@@ -79,8 +79,10 @@ impl Context {
     }
 
     /// Creates a new Z3 Context using the given configuration.
-    #[deprecated(note = "The z3 crate now uses an implicit thread-local context. To configure the active context,\
-     use `with_z3_config` instead")]
+    #[deprecated(
+        note = "The z3 crate now uses an implicit thread-local context. To configure the active context,\
+     use `with_z3_config` instead"
+    )]
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
@@ -166,6 +168,10 @@ impl Context {
 }
 
 /// The default [`Context`] uses [`Config::default`]
+///
+/// Note: this implementation will be removed in a future release,
+/// when [`Context::new`] and [`with_z3_context`](crate::with_z3_context) are removed.
+#[allow(deprecated)]
 impl Default for Context {
     fn default() -> Self {
         let cfg = Config::default();
