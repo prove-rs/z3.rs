@@ -1,5 +1,5 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
-//! The main entry point is [create_datatypes](create_datatypes) which returns a
+//! The main entry point is [`create_datatypes`] which returns a
 //! list of sorts(more than one for the case that you are defining a set of
 //! mutually recursive data types)
 //!
@@ -7,7 +7,7 @@
 //! # Example
 //!
 //! If you just want to define a single recursive datatype, you can do so with
-//! the standard [DatatypeBuilder](DatatypeBuilder) as so.
+//! the standard [`DatatypeBuilder`] as so.
 //!
 //! ```rust
 //! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol};
@@ -17,7 +17,7 @@
 //!     .finish();
 //! ```
 //!
-//! For mutually recursive types, you must use [create_datatypes](create_datatypes)
+//! For mutually recursive types, you must use [`create_datatypes`]
 //!
 //! ```rust
 //! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol, datatype_builder::create_datatypes};

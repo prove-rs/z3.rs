@@ -310,10 +310,11 @@ pub struct Statistics {
 ///
 /// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
 /// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
-/// into or out of the closure, use [`Synchronized::synchronized()`].
+/// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
 /// # See also
 ///
 /// [`with_z3_config`]
+#[deprecated = "Use `with_z3_config` instead, which constructs a Context from a Config"]
 pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
     ctx: &Context,
     callback: T,
@@ -330,11 +331,8 @@ pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
 ///
 /// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
 /// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
-/// into or out of the closure, use [`Synchronized::synchronized()`].
-///
-/// # See also
-///
-/// [`with_z3_context`]
+/// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
+#[allow(deprecated)]
 pub fn with_z3_config<T: Fn() -> R + Send + Sync, R: Send + Sync>(cfg: &Config, callback: T) -> R {
     with_z3_context(&Context::new(cfg), callback)
 }

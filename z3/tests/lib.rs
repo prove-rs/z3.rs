@@ -21,6 +21,7 @@ fn test_config() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_context() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
@@ -218,9 +219,9 @@ fn test_floating_point_bits() {
 fn test_ast_translate() {
     let a = ast::Int::new_const("a");
 
-    let destination = Context::default();
+    let dest_config = Config::default();
     let sync = a.synchronized();
-    with_z3_context(&destination, move || {
+    with_z3_config(&dest_config, move || {
         let translated_a = sync.recover();
         let slv = Solver::new();
         slv.assert(translated_a._eq(2));
@@ -273,6 +274,7 @@ fn test_solver_translate() {
 }
 
 #[test]
+#[allow(deprecated)]
 fn test_model_translate() {
     let cfg = Config::new();
     let a = ast::Int::new_const("a");
