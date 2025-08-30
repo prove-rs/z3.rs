@@ -14,10 +14,15 @@ impl Real {
     pub fn from_big_rational(value: &BigRational) -> Real {
         let num = value.numer();
         let den = value.denom();
-        Real::from_real_str(&num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
+        Real::from_rational_str(&num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
     }
 
+    #[deprecated = "Please use from_rational_str instead"]
     pub fn from_real_str(num: &str, den: &str) -> Option<Real> {
+        Self::from_rational_str(num, den)
+    }
+
+    pub fn from_rational_str(num: &str, den: &str) -> Option<Real> {
         let ctx = &Context::thread_local();
         let sort = Sort::real();
         let ast = unsafe {
@@ -29,7 +34,7 @@ impl Real {
 
             numeral_ptr
         };
-        Some(unsafe { Real::wrap(ctx, ast) })
+        Some(unsafe { Real::wrap(&ctx, ast) })
     }
 }
 impl Real {
@@ -55,7 +60,12 @@ impl Real {
         }
     }
 
+    #[deprecated = "Please use from_rational instead"]
     pub fn from_real(num: i32, den: i32) -> Real {
+        Self::from_rational(num as i64, den as i64)
+    }
+
+    pub fn from_rational(num: i64, den: i64) -> Real {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
@@ -68,7 +78,12 @@ impl Real {
         }
     }
 
+    #[deprecated = "Please use as_rational instead"]
     pub fn as_real(&self) -> Option<(i64, i64)> {
+        self.as_rational()
+    }
+
+    pub fn as_rational(&self) -> Option<(i64, i64)> {
         unsafe {
             let mut num: i64 = 0;
             let mut den: i64 = 0;

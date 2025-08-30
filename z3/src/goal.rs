@@ -2,6 +2,7 @@ use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 
+use crate::ast::Bool;
 use crate::{Context, Goal, Translate, ast, ast::Ast};
 
 // todo: is this sound? This should be through `wrap`, no?
@@ -89,16 +90,16 @@ impl Goal {
     }
 
     /// Return a vector of the formulas from the given goal.
-    pub fn get_formulas<T>(&self) -> Vec<T>
-    where
-        T: Ast,
-    {
+    ///
+    /// Though not guaranteed by Z3's type system, goals and subgoals are
+    /// conceptually always going to be expressions of the [`Bool`] Sort.
+    pub fn get_formulas(&self) -> Vec<Bool> {
         let goal_size = self.get_size() as usize;
-        let mut formulas: Vec<T> = Vec::with_capacity(goal_size);
+        let mut formulas: Vec<Bool> = Vec::with_capacity(goal_size);
 
         for i in 0..goal_size {
             let formula = unsafe { Z3_goal_formula(self.ctx.z3_ctx.0, self.z3_goal, i as u32) };
-            formulas.push(unsafe { T::wrap(&self.ctx, formula) });
+            formulas.push(unsafe { Bool::wrap(&self.ctx, formula) });
         }
         formulas
     }

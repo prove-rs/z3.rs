@@ -343,15 +343,15 @@ fn test_func_decl_attributes() {
 fn test_real_approx() {
     let x = Real::new_const("x");
     let xx = &x * &x;
-    let zero = Real::from_real(0, 1);
-    let two = Real::from_real(2, 1);
+    let zero = Real::from_rational(0, 1);
+    let two = Real::from_rational(2, 1);
     let s = Solver::new();
     s.assert(x.ge(&zero));
-    s.assert(xx._eq(&two));
+    s.assert(xx.eq(&two));
     assert_eq!(s.check(), SatResult::Sat);
     let m = s.get_model().unwrap();
     let res = m.eval(&x, false).unwrap();
-    assert_eq!(res.as_real(), None); // sqrt is irrational
+    assert_eq!(res.as_rational(), None); // sqrt is irrational
     println!("f64 res: {}", res.approx_f64());
     assert!((res.approx_f64() - ::std::f64::consts::SQRT_2).abs() < 1e-20);
     assert_eq!(res.approx(0), "1.");
