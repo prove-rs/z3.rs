@@ -2,7 +2,6 @@
 
 use log::debug;
 use std::borrow::Borrow;
-use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::CStr;
 use std::fmt;
@@ -156,6 +155,19 @@ pub trait Ast: fmt::Debug {
     where
         Self: Sized;
 
+    fn ast_eq(&self, other: &dyn Ast) -> bool {
+        assert_eq!(self.get_ctx(), other.get_ctx());
+        unsafe { Z3_is_eq_ast(self.get_ctx().z3_ctx.0, self.get_z3_ast(), other.get_z3_ast()) }
+    }
+
+    #[deprecated = "Please use eq instead"]
+    fn _eq(&self, other: &Self) -> Bool
+    where
+        Self: Sized,
+    {
+        self.eq(other)
+    }
+
     /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
     /// representing the result.
     ///
@@ -163,31 +175,35 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must be the same type.
     //
     // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+    fn eq(&self, other: &Self) -> Bool
     where
         Self: Sized,
     {
-        self._safe_eq(other).unwrap()
+        self.safe_eq(other).unwrap()
+    }
+
+    #[deprecated = "Please use safe_eq instead"]
+    fn _safe_eq(&self, other: &Self) -> Result<Bool, SortDiffers>
+    where
+        Self: Sized,
+    {
+        self.safe_eq(other)
     }
 
     /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
     /// match for the two values.
-    fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+    fn safe_eq(&self, other: &Self) -> Result<Bool, SortDiffers>
     where
         Self: Sized,
     {
-        let other = other.into_ast(self);
+        assert_eq!(self.get_ctx(), other.get_ctx());
 
         let left_sort = self.get_sort();
         let right_sort = other.get_sort();
         match left_sort == right_sort {
             true => Ok(unsafe {
                 Bool::wrap(self.get_ctx(), {
-                    Z3_mk_eq(
-                        self.get_ctx().z3_ctx.0,
-                        self.get_z3_ast(),
-                        other.get_z3_ast(),
-                    )
+                    Z3_mk_eq(self.get_ctx().z3_ctx.0, self.get_z3_ast(), other.get_z3_ast())
                 })
             }),
             false => Err(SortDiffers::new(left_sort, right_sort)),
@@ -415,15 +431,6 @@ macro_rules! impl_ast {
                 ast.z3_ast
             }
         }
-
-        impl<T: IntoAst<$ast> + Clone> PartialEq<T> for $ast {
-            fn eq(&self, other: &T) -> bool {
-                let other = other.clone().into_ast(self);
-                unsafe { Z3_is_eq_ast(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast) }
-            }
-        }
-
-        impl Eq for $ast {}
 
         impl Clone for $ast {
             fn clone(&self) -> Self {
