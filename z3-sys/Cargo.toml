@@ -1,9 +1,10 @@
 [package]
 name = "z3-sys"
-version = "0.8.1"
+rust-version = "1.85.0"
+version = "0.9.8"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 build = "build.rs"
-edition = "2018"
+edition = "2024"
 
 description = "Low-level bindings for the Z3 SMT solver from Microsoft Research"
 license = "MIT"
@@ -16,14 +17,18 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
-bindgen = { version = "0.69", default-features = false, features = ["runtime"] }
-cmake = { version = "0.1.49", optional = true }
-pkg-config = "0.3.27"
+bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
+cmake = { version = "0.1.54", optional = true }
+zip = { version = "4.3", optional = true }
+pkg-config = "0.3.32"
+reqwest = { version = "0.12.22", default-features = false, features = ["blocking", "default-tls"], optional = true }
+serde_json = { version = "1.0.140", optional = true }
 vcpkg = { version = "0.2.15", optional = true }
 
 [features]
 bundled = ["dep:cmake"] # Build Z3 via our bundled submodule.
 vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
+gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip"] # Download pre-compiled Z3 lib from GitHub release for supported platforms.
 
 # Legacy feature for short term compatibility
 static-link-z3 = ["bundled", "deprecated-static-link-z3"]

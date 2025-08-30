@@ -1,245 +1,14 @@
+use crate::ast::{Bool, Float, IntoAst};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
 };
 
-use crate::ast::{Ast, Bool, Float, Int, Real, BV};
-
-macro_rules! mk_const_bv {
-    ($constant:expr, $function:ident, $val:expr, $other:expr) => {
-        $constant = BV::$function($other.get_ctx(), $val, $other.get_size());
-    };
-}
-
-macro_rules! mk_const_int {
-    ($constant:expr, $function:ident, $val:expr, $other:expr) => {
-        $constant = Int::$function($other.get_ctx(), $val);
-    };
-}
-
-macro_rules! mk_const_bool {
-    ($constant:expr, $function:ident, $val:expr, $other:expr) => {
-        $constant = Bool::from_bool($other.get_ctx(), $val);
-    };
-}
-
-macro_rules! impl_binary_op_raw {
-    ($ty:ty, $rhs:ty, $output:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl<'ctx> $base_trait<$rhs> for $ty {
-            type Output = $output;
-
-            fn $base_fn(self, rhs: $rhs) -> Self::Output {
-                (&self as &$output).$function(&rhs as &$output)
-            }
-        }
-    };
-}
-
-macro_rules! impl_binary_assign_op_raw {
-    ($ty:ty, $rhs:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl_binary_op_raw!(
-            $ty,
-            $rhs,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl<'ctx> $assign_trait<$rhs> for $ty {
-            fn $assign_fn(&mut self, rhs: $rhs) {
-                *self = (self as &$ty).$function(&rhs as &$ty);
-            }
-        }
-    };
-}
-
-macro_rules! impl_binary_op_number_raw {
-    ($ty:ty, $other:ty, $other_fn:ident, $output:ty, $base_trait:ident, $base_fn:ident, $function:ident, $construct_constant:ident) => {
-        impl<'ctx> $base_trait<$other> for $ty {
-            type Output = $output;
-
-            fn $base_fn(self, rhs: $other) -> Self::Output {
-                let c;
-                $construct_constant!(c, $other_fn, rhs, self);
-                $base_trait::$base_fn(self, c)
-            }
-        }
-
-        impl<'ctx> $base_trait<$ty> for $other {
-            type Output = $output;
-
-            fn $base_fn(self, rhs: $ty) -> Self::Output {
-                let c;
-                $construct_constant!(c, $other_fn, self, rhs);
-                $base_trait::$base_fn(rhs, c)
-            }
-        }
-    };
-}
-
-macro_rules! impl_binary_op_assign_number_raw {
-    ($ty:ty, $other:ty, $other_fn:ident, $output:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident, $construct_constant:ident) => {
-        impl_binary_op_number_raw!(
-            $ty,
-            $other,
-            $other_fn,
-            $output,
-            $base_trait,
-            $base_fn,
-            $function,
-            $construct_constant
-        );
-
-        impl<'ctx> $assign_trait<$other> for $ty {
-            fn $assign_fn(&mut self, rhs: $other) {
-                let c;
-                $construct_constant!(c, $other_fn, rhs, self);
-                self.$assign_fn(c);
-            }
-        }
-    };
-}
-
-macro_rules! impl_binary_op_without_numbers {
-    ($ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl_binary_assign_op_raw!(
-            $ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_assign_op_raw!(
-            $ty,
-            &$ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_op_raw!(
-            &$ty,
-            $ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_op_raw!(
-            &$ty,
-            &$ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-    };
-}
-
-macro_rules! impl_binary_op_bool {
-    ($ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl_binary_op_without_numbers!(
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_op_assign_number_raw!(
-            $ty,
-            bool,
-            from_bool,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function,
-            mk_const_bool
-        );
-        impl_binary_op_number_raw!(
-            &$ty,
-            bool,
-            from_bool,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function,
-            mk_const_bool
-        );
-    };
-}
-
-macro_rules! impl_binary_op {
-    ($ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident, $construct_constant:ident) => {
-        impl_binary_op_without_numbers!(
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_op_assign_number_raw!(
-            $ty,
-            u64,
-            from_u64,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function,
-            $construct_constant
-        );
-        impl_binary_op_number_raw!(
-            &$ty,
-            u64,
-            from_u64,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function,
-            $construct_constant
-        );
-        impl_binary_op_assign_number_raw!(
-            $ty,
-            i64,
-            from_i64,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function,
-            $construct_constant
-        );
-        impl_binary_op_number_raw!(
-            &$ty,
-            i64,
-            from_i64,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $function,
-            $construct_constant
-        );
-    };
-}
+use crate::ast::{BV, Int, Real};
 
 macro_rules! impl_unary_op_raw {
     ($ty:ty, $output:ty, $base_trait:ident, $base_fn:ident, $function:ident) => {
-        impl<'ctx> $base_trait for $ty {
+        impl $base_trait for $ty {
             type Output = $output;
 
             fn $base_fn(self) -> Self::Output {
@@ -250,350 +19,162 @@ macro_rules! impl_unary_op_raw {
 }
 
 macro_rules! impl_unary_op {
-    ($ty:ty, $base_trait:ident, $base_fn:ident, $function:ident) => {
+    ($ty:ident::$function:ident = $base_trait:ident::$base_fn:ident) => {
         impl_unary_op_raw!($ty, $ty, $base_trait, $base_fn, $function);
         impl_unary_op_raw!(&$ty, $ty, $base_trait, $base_fn, $function);
     };
 }
 
-macro_rules! impl_binary_mult_op_raw {
-    ($base_ty:ident, $ty:ty, $rhs:ty, $output:ty, $base_trait:ident, $base_fn:ident, $function:ident) => {
-        impl<'ctx> $base_trait<$rhs> for $ty {
-            type Output = $output;
+impl_unary_op!(BV::bvnot = Not::not);
+impl_unary_op!(BV::bvneg = Neg::neg);
 
-            fn $base_fn(self, other: $rhs) -> Self::Output {
-                $base_ty::$function(self.get_ctx(), &[&self as &$output, &other as &$output])
+macro_rules! impl_bin_trait {
+    ($t:ident::$op:ident = $tr:ident::$trop:ident) => {
+        impl<T: IntoAst<$t>> $tr<T> for $t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                <$t>::$op(&self, rhs)
+            }
+        }
+
+        impl<T: IntoAst<$t>> $tr<T> for &$t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                <$t>::$op(&self, rhs)
             }
         }
     };
 }
 
-macro_rules! impl_binary_mult_op_assign_raw {
-    ($base_ty:ident, $ty:ty, $rhs:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl_binary_mult_op_raw!($base_ty, $ty, $rhs, $ty, $base_trait, $base_fn, $function);
-
-        impl<'ctx> $assign_trait<$rhs> for $ty {
-            fn $assign_fn(&mut self, other: $rhs) {
-                *self = $base_ty::$function(self.get_ctx(), &[&self as &$ty, &other as &$ty])
+macro_rules! impl_bin_assign_trait {
+    ($t:ident::$op:ident = $tr:ident::$trop:ident) => {
+        impl<T: IntoAst<$t>> $tr<T> for $t {
+            fn $trop(&mut self, rhs: T) {
+                let res = (self as &mut $t).clone().$op(rhs);
+                *self = res
             }
         }
     };
 }
 
-macro_rules! impl_binary_mult_op_number_raw {
-    ($ty:ty, $other:ty, $other_fn:ident, $output:ty, $base_trait:ident, $base_fn:ident, $construct_constant:ident) => {
-        impl<'ctx> $base_trait<$other> for $ty {
-            type Output = $output;
-
-            fn $base_fn(self, rhs: $other) -> Self::Output {
-                let c;
-                $construct_constant!(c, $other_fn, rhs, self);
-                $base_trait::$base_fn(self, c)
+macro_rules! impl_var_trait {
+    ($t:ident::$op:ident = $tr:ident::$trop:ident) => {
+        impl<T: IntoAst<$t>> $tr<T> for $t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                <$t>::$op(&[self.clone(), rhs])
             }
         }
 
-        impl<'ctx> $base_trait<$ty> for $other {
-            type Output = $output;
-
-            fn $base_fn(self, rhs: $ty) -> Self::Output {
-                let c;
-                $construct_constant!(c, $other_fn, self, rhs);
-                $base_trait::$base_fn(rhs, c)
+        impl<T: IntoAst<$t>> $tr<T> for &$t {
+            type Output = $t;
+            fn $trop(self, rhs: T) -> Self::Output {
+                let rhs = rhs.into_ast(&self);
+                <$t>::$op(&[self.clone(), rhs])
             }
         }
     };
 }
 
-macro_rules! impl_binary_mult_op_assign_number_raw {
-    ($ty:ty, $other:ty, $other_fn:ident, $output:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $construct_constant:ident) => {
-        impl_binary_mult_op_number_raw!(
-            $ty,
-            $other,
-            $other_fn,
-            $output,
-            $base_trait,
-            $base_fn,
-            $construct_constant
-        );
+impl_var_trait!(Bool::and = BitAnd::bitand);
+impl_var_trait!(Bool::or = BitOr::bitor);
+impl_bin_trait!(Bool::xor = BitXor::bitxor);
 
-        impl<'ctx> $assign_trait<$other> for $ty {
-            fn $assign_fn(&mut self, rhs: $other) {
-                let c;
-                $construct_constant!(c, $other_fn, rhs, self);
-                *self = (&self as &$ty).$base_fn(&c as &$ty)
-            }
-        }
-    };
-}
+impl_bin_assign_trait!(Bool::bitand = BitAndAssign::bitand_assign);
+impl_bin_assign_trait!(Bool::bitor = BitOrAssign::bitor_assign);
+impl_bin_assign_trait!(Bool::bitxor = BitXorAssign::bitxor_assign);
 
-macro_rules! impl_binary_mult_op_without_numbers {
-    ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl_binary_mult_op_assign_raw!(
-            $base_ty,
-            $ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_mult_op_assign_raw!(
-            $base_ty,
-            $ty,
-            &$ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_mult_op_raw!($base_ty, &$ty, $ty, $ty, $base_trait, $base_fn, $function);
-        impl_binary_mult_op_raw!($base_ty, &$ty, &$ty, $ty, $base_trait, $base_fn, $function);
-    };
-    ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident) => {
-        impl_binary_mult_op_without_numbers!(
-            $base_ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $base_fn
-        );
-    };
-}
+impl_bin_trait!(BV::bvadd = Add::add);
+impl_bin_trait!(BV::bvsub = Sub::sub);
+impl_bin_trait!(BV::bvmul = Mul::mul);
+impl_bin_trait!(BV::bvand = BitAnd::bitand);
+impl_bin_trait!(BV::bvor = BitOr::bitor);
+impl_bin_trait!(BV::bvxor = BitXor::bitxor);
+impl_bin_trait!(BV::bvshl = Shl::shl);
 
-macro_rules! impl_binary_mult_op_bool {
-    ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $function:ident) => {
-        impl_binary_mult_op_without_numbers!(
-            $base_ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $function
-        );
-        impl_binary_mult_op_assign_number_raw!(
-            $ty,
-            bool,
-            from_bool,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            mk_const_bool
-        );
-        impl_binary_mult_op_number_raw!(
-            &$ty,
-            bool,
-            from_bool,
-            $ty,
-            $base_trait,
-            $base_fn,
-            mk_const_bool
-        );
-    };
-}
+impl_bin_assign_trait!(BV::bvadd = AddAssign::add_assign);
+impl_bin_assign_trait!(BV::bvsub = SubAssign::sub_assign);
+impl_bin_assign_trait!(BV::bvmul = MulAssign::mul_assign);
+impl_bin_assign_trait!(BV::bvand = BitAndAssign::bitand_assign);
+impl_bin_assign_trait!(BV::bvor = BitOrAssign::bitor_assign);
+impl_bin_assign_trait!(BV::bvxor = BitXorAssign::bitxor_assign);
+impl_bin_assign_trait!(BV::bvshl = ShlAssign::shl_assign);
 
-macro_rules! impl_binary_mult_op {
-    ($base_ty:ident, $ty:ty, $base_trait:ident, $assign_trait:ident, $base_fn:ident, $assign_fn:ident, $construct_constant:ident) => {
-        impl_binary_mult_op_without_numbers!(
-            $base_ty,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn
-        );
-        impl_binary_mult_op_assign_number_raw!(
-            $ty,
-            u64,
-            from_u64,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $construct_constant
-        );
-        impl_binary_mult_op_number_raw!(
-            &$ty,
-            u64,
-            from_u64,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $construct_constant
-        );
-        impl_binary_mult_op_assign_number_raw!(
-            $ty,
-            i64,
-            from_i64,
-            $ty,
-            $base_trait,
-            $assign_trait,
-            $base_fn,
-            $assign_fn,
-            $construct_constant
-        );
-        impl_binary_mult_op_number_raw!(
-            &$ty,
-            i64,
-            from_i64,
-            $ty,
-            $base_trait,
-            $base_fn,
-            $construct_constant
-        );
-    };
-}
+impl_unary_op!(Int::unary_minus = Neg::neg);
 
-// implementations for BV
-impl_binary_op!(
-    BV<'ctx>,
-    Add,
-    AddAssign,
-    add,
-    add_assign,
-    bvadd,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV<'ctx>,
-    Sub,
-    SubAssign,
-    sub,
-    sub_assign,
-    bvsub,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV<'ctx>,
-    Mul,
-    MulAssign,
-    mul,
-    mul_assign,
-    bvmul,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV<'ctx>,
-    BitAnd,
-    BitAndAssign,
-    bitand,
-    bitand_assign,
-    bvand,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV<'ctx>,
-    BitOr,
-    BitOrAssign,
-    bitor,
-    bitor_assign,
-    bvor,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV<'ctx>,
-    BitXor,
-    BitXorAssign,
-    bitxor,
-    bitxor_assign,
-    bvxor,
-    mk_const_bv
-);
-impl_binary_op!(
-    BV<'ctx>,
-    Shl,
-    ShlAssign,
-    shl,
-    shl_assign,
-    bvshl,
-    mk_const_bv
-);
-impl_unary_op!(BV<'ctx>, Not, not, bvnot);
-impl_unary_op!(BV<'ctx>, Neg, neg, bvneg);
+impl_var_trait!(Int::add = Add::add);
+impl_var_trait!(Int::sub = Sub::sub);
+impl_var_trait!(Int::mul = Mul::mul);
+impl_bin_trait!(Int::div = Div::div);
+impl_bin_trait!(Int::rem = Rem::rem);
 
-// implementations for Int
-impl_binary_mult_op!(
-    Int,
-    Int<'ctx>,
-    Add,
-    AddAssign,
-    add,
-    add_assign,
-    mk_const_int
-);
-impl_binary_mult_op!(
-    Int,
-    Int<'ctx>,
-    Sub,
-    SubAssign,
-    sub,
-    sub_assign,
-    mk_const_int
-);
-impl_binary_mult_op!(
-    Int,
-    Int<'ctx>,
-    Mul,
-    MulAssign,
-    mul,
-    mul_assign,
-    mk_const_int
-);
-impl_binary_op!(
-    Int<'ctx>,
-    Div,
-    DivAssign,
-    div,
-    div_assign,
-    div,
-    mk_const_int
-);
-impl_binary_op!(
-    Int<'ctx>,
-    Rem,
-    RemAssign,
-    rem,
-    rem_assign,
-    rem,
-    mk_const_int
-);
-impl_unary_op!(Int<'ctx>, Neg, neg, unary_minus);
+impl_bin_assign_trait!(Int::add = AddAssign::add_assign);
+impl_bin_assign_trait!(Int::sub = SubAssign::sub_assign);
+impl_bin_assign_trait!(Int::mul = MulAssign::mul_assign);
+impl_bin_assign_trait!(Int::div = DivAssign::div_assign);
+impl_bin_assign_trait!(Int::rem = RemAssign::rem_assign);
+
+impl_var_trait!(Real::add = Add::add);
+impl_var_trait!(Real::sub = Sub::sub);
+impl_var_trait!(Real::mul = Mul::mul);
+impl_bin_trait!(Real::div = Div::div);
+impl_unary_op!(Real::unary_minus = Neg::neg);
+
+impl_bin_assign_trait!(Real::add = AddAssign::add_assign);
+impl_bin_assign_trait!(Real::sub = SubAssign::sub_assign);
+impl_bin_assign_trait!(Real::mul = MulAssign::mul_assign);
+impl_bin_assign_trait!(Real::div = DivAssign::div_assign);
 
 // implementations for Real
-impl_binary_mult_op_without_numbers!(Real, Real<'ctx>, Add, AddAssign, add, add_assign);
-impl_binary_mult_op_without_numbers!(Real, Real<'ctx>, Sub, SubAssign, sub, sub_assign);
-impl_binary_mult_op_without_numbers!(Real, Real<'ctx>, Mul, MulAssign, mul, mul_assign);
-impl_binary_op_without_numbers!(Real<'ctx>, Div, DivAssign, div, div_assign, div);
-impl_unary_op!(Real<'ctx>, Neg, neg, unary_minus);
+//
+// // // implementations for Float
+impl_unary_op!(Float::unary_neg = Neg::neg);
+//
+// // implementations for Bool
+impl_unary_op!(Bool::not = Not::not);
 
-// // implementations for Float
-impl_unary_op!(Float<'ctx>, Neg, neg, unary_neg);
+// Impl bin ops for concrete types on the left-hand-side that people
+// might want to use
+// Note that this is not necessary when an Ast is on the left hand
+// side because it is covered by a blanket impl of `IntoAst`. This
+// does not work for the IntoAst being on the LHS because of the orphan
+// rule
+macro_rules! impl_trait_number_types {
+    ($Z3ty:ty, $tr:ident::$op:ident, [$($num:ty),+]) => {
+        $(
+        impl_trait_number_types!($Z3ty, $tr::$op, $num);
+        )+
+    };
+    ($Z3ty:ty, $tr:ident::$op:ident, $num:ty) => {
+        impl $tr<$Z3ty> for $num {
+            type Output = $Z3ty;
+            fn $op(self, rhs: $Z3ty) -> Self::Output {
+                let lhs = self.into_ast(&rhs);
+                lhs.$op(&rhs)
+            }
+        }
 
-// implementations for Bool
-impl_binary_mult_op_bool!(
-    Bool,
-    Bool<'ctx>,
-    BitAnd,
-    BitAndAssign,
-    bitand,
-    bitand_assign,
-    and
-);
-impl_binary_mult_op_bool!(
-    Bool,
-    Bool<'ctx>,
-    BitOr,
-    BitOrAssign,
-    bitor,
-    bitor_assign,
-    or
-);
-impl_binary_op_bool!(Bool<'ctx>, BitXor, BitXorAssign, bitxor, bitxor_assign, xor);
-impl_unary_op!(Bool<'ctx>, Not, not, not);
+        impl<'a> $tr<&'a $Z3ty> for $num {
+            type Output = $Z3ty;
+            fn $op(self, rhs: &'a $Z3ty) -> Self::Output {
+                let lhs = self.into_ast(rhs);
+                lhs.$op(rhs)
+            }
+        }
+    };
+}
+
+impl_trait_number_types!(Int, Add::add, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(Int, Sub::sub, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(Int, Mul::mul, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(Int, Div::div, [u8, i8, u16, i16, u32, i32, u64, i64]);
+
+impl_trait_number_types!(BV, Add::add, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, Sub::sub, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, Mul::mul, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, BitXor::bitxor, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, BitAnd::bitand, [u8, i8, u16, i16, u32, i32, u64, i64]);
+impl_trait_number_types!(BV, BitOr::bitor, [u8, i8, u16, i16, u32, i32, u64, i64]);

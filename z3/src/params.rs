@@ -1,27 +1,32 @@
 use std::ffi::{CStr, CString};
 use std::fmt;
-
 use z3_sys::*;
 
 use crate::{Context, Params, Symbol};
 
-impl<'ctx> Params<'ctx> {
-    unsafe fn wrap(ctx: &'ctx Context, z3_params: Z3_params) -> Params<'ctx> {
-        Z3_params_inc_ref(ctx.z3_ctx, z3_params);
-        Params { ctx, z3_params }
+impl Params {
+    unsafe fn wrap(ctx: &Context, z3_params: Z3_params) -> Params {
+        unsafe {
+            Z3_params_inc_ref(ctx.z3_ctx.0, z3_params);
+        }
+        Params {
+            ctx: ctx.clone(),
+            z3_params,
+        }
     }
 
-    pub fn new(ctx: &'ctx Context) -> Params<'ctx> {
-        unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx)) }
+    pub fn new() -> Params {
+        let ctx = &Context::thread_local();
+        unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
     }
 
     pub fn set_symbol<K: Into<Symbol>, V: Into<Symbol>>(&mut self, k: K, v: V) {
         unsafe {
             Z3_params_set_symbol(
-                self.ctx.z3_ctx,
+                self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(self.ctx),
-                v.into().as_z3_symbol(self.ctx),
+                k.into().as_z3_symbol(),
+                v.into().as_z3_symbol(),
             );
         };
     }
@@ -29,9 +34,9 @@ impl<'ctx> Params<'ctx> {
     pub fn set_bool<K: Into<Symbol>>(&mut self, k: K, v: bool) {
         unsafe {
             Z3_params_set_bool(
-                self.ctx.z3_ctx,
+                self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(self.ctx),
+                k.into().as_z3_symbol(),
                 v,
             );
         };
@@ -40,9 +45,9 @@ impl<'ctx> Params<'ctx> {
     pub fn set_f64<K: Into<Symbol>>(&mut self, k: K, v: f64) {
         unsafe {
             Z3_params_set_double(
-                self.ctx.z3_ctx,
+                self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(self.ctx),
+                k.into().as_z3_symbol(),
                 v,
             );
         };
@@ -51,9 +56,9 @@ impl<'ctx> Params<'ctx> {
     pub fn set_u32<K: Into<Symbol>>(&mut self, k: K, v: u32) {
         unsafe {
             Z3_params_set_uint(
-                self.ctx.z3_ctx,
+                self.ctx.z3_ctx.0,
                 self.z3_params,
-                k.into().as_z3_symbol(self.ctx),
+                k.into().as_z3_symbol(),
                 v,
             );
         };
@@ -99,9 +104,9 @@ pub fn reset_all_global_params() {
     unsafe { Z3_global_param_reset_all() };
 }
 
-impl<'ctx> fmt::Display for Params<'ctx> {
+impl fmt::Display for Params {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_params_to_string(self.ctx.z3_ctx, self.z3_params) };
+        let p = unsafe { Z3_params_to_string(self.ctx.z3_ctx.0, self.z3_params) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -112,14 +117,14 @@ impl<'ctx> fmt::Display for Params<'ctx> {
     }
 }
 
-impl<'ctx> fmt::Debug for Params<'ctx> {
+impl fmt::Debug for Params {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<'ctx> Drop for Params<'ctx> {
+impl Drop for Params {
     fn drop(&mut self) {
-        unsafe { Z3_params_dec_ref(self.ctx.z3_ctx, self.z3_params) };
+        unsafe { Z3_params_dec_ref(self.ctx.z3_ctx.0, self.z3_params) };
     }
 }
