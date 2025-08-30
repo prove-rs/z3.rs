@@ -34,7 +34,7 @@ impl Real {
 
             numeral_ptr
         };
-        Some(unsafe { Real::wrap(&ctx, ast) })
+        Some(unsafe { Real::wrap(ctx, ast) })
     }
 }
 impl Real {

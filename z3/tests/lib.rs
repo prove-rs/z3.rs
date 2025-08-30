@@ -433,7 +433,8 @@ fn test_float_add() {
 fn test_arbitrary_size_real() {
     let solver = Solver::new();
 
-    let x = ast::Real::from_rational_str("99999999999999999999998", "99999999999999999999999").unwrap();
+    let x =
+        ast::Real::from_rational_str("99999999999999999999998", "99999999999999999999999").unwrap();
     let y = ast::Real::from_rational(1, 1);
 
     solver.assert(x.lt(&y));
@@ -456,7 +457,8 @@ fn test_arbitrary_size_int() {
 fn test_arbitrary_size_real_from_bigrational() {
     let solver = Solver::new();
 
-    let x = ast::Real::from_rational_str("99999999999999999999998", "99999999999999999999999").unwrap();
+    let x =
+        ast::Real::from_rational_str("99999999999999999999998", "99999999999999999999999").unwrap();
     let num = BigInt::from_str("99999999999999999999998").unwrap();
     let den = BigInt::from_str("99999999999999999999999").unwrap();
     let ratio = BigRational::new(num, den);
