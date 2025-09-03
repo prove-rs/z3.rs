@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.16.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.2...z3-v0.16.3) - 2025-09-03
+## [0.17.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.2...z3-v0.17.0) - 2025-09-03
 
 ### Changed
 
-- rename `_eq` to `eq` and `*_real_*` to `*_rational_*` ([#305](https://github.com/prove-rs/z3.rs/pull/305)) (by @dragazo) - #305
+- [**breaking**] rename `_eq` to `eq` and `*_real_*` to `*_rational_*` ([#305](https://github.com/prove-rs/z3.rs/pull/305)) (by @dragazo) - #305
 - deprecate legacy Context APIs ([#427](https://github.com/prove-rs/z3.rs/pull/427)) (by @toolCHAINZ) - #427
 
 ### Contributors
