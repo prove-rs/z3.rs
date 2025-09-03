@@ -441,12 +441,53 @@ impl Solver {
     ///  let a = Int::new_const("a");
     ///  s.assert(a.le(2));
     ///  s.assert(a.ge(0));
-    ///  let solutions: Vec<_> = s.solutions(vec![&a, &(a+2)], true).collect();
+    ///  let solutions: Vec<_> = s.solutions(vec![a.clone(), a+2], true).collect();
+    ///  // Doing all this to avoid relying on the order Z3 returns solutions.
     ///  let mut solutions: Vec<Vec<_>> = solutions.into_iter().map(|a|a.into_iter().map(|b|b.as_u64().unwrap()).collect()).collect();
+    ///  solutions.sort_by(|a,b| a[0].cmp(&b[0]));
+    ///
     ///  assert_eq!(vec![vec![0,2], vec![1,3], vec![2,4]], solutions);
     /// ```
     /// Users can also implement [`Solvable`] on their types that wrap Z3 types to allow
     /// iterating over their models with this API:
+    ///
+    /// ```
+    /// # use z3::ast::*;
+    /// # use z3::*;
+    ///  struct MyStruct{
+    ///    pub a: Int,
+    ///    pub b: Int
+    ///  }
+    ///
+    ///  impl Solvable for MyStruct {
+    ///     fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+    ///         Some(
+    ///             Self{
+    ///                 a: model.eval(&self.a, model_completion).unwrap(),
+    ///                 b: model.eval(&self.b, model_completion).unwrap()
+    ///             }
+    ///         )
+    ///     }
+    ///
+    ///     fn generate_constraint(&self, model: &Self) -> Bool {
+    ///         Bool::or(&[self.a.eq(&model.a).not(), self.b.eq(&model.b).not()])
+    ///     }
+    ///  }
+    ///  let s = Solver::new();
+    ///  let my_struct = MyStruct{
+    ///     a: Int::fresh_const("a"),
+    ///     b: Int::fresh_const("b")
+    ///  };
+    ///  // only valid model will be a = 0 and b = 4
+    ///  s.assert(my_struct.a.lt(1));
+    ///  s.assert(my_struct.a.ge(0));
+    ///  s.assert(my_struct.b.eq(&my_struct.a + 4));
+    ///
+    ///  let solutions: Vec<_> = s.solutions(my_struct, true).collect();
+    ///  assert_eq!(solutions.len(), 1);
+    ///  assert_eq!(solutions[0].a, 0);
+    ///  assert_eq!(solutions[0].b, 4);
+    /// ```
     pub fn solutions<T: Solvable>(&self, t: T, model_completion: bool) -> impl Iterator<Item = T> {
         SolverIterator {
             solver: self.clone(),
@@ -567,7 +608,7 @@ impl<T: Ast + Clone> Solvable for T {
     }
 
     fn generate_constraint(&self, model: &Self) -> Bool {
-        model._eq(self.clone()).not()
+        model.eq(self.clone()).not()
     }
 }
 

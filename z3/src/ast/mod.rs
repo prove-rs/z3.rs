@@ -203,6 +203,10 @@ pub trait Ast: fmt::Debug {
         }
     }
 
+    fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized;
+
     /// Performs substitution on the `Ast`. The slice `substitutions` contains a
     /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
     fn substitute<T: Ast>(&self, substitutions: &[(&T, &T)]) -> Self
@@ -360,6 +364,13 @@ macro_rules! impl_ast {
                         ast
                     },
                 }
+            }
+
+            fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other)
             }
 
             fn get_ctx(&self) -> &Context {
