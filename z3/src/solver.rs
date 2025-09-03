@@ -632,9 +632,19 @@ pub trait Solvable: Sized + Clone {
     /// values into [`Solver::solutions`], and to allow implementing this trait for types like
     /// `&[T]`.
     type ModelInstance: Solvable;
+
+    /// Defines how to derive data derived from the implementing type (usually just a [`Self`])
+    /// and a given [`Model`].
+    ///
+    /// Usually this just invokes [`Model::eval`] on some [`Ast`]s and wraps
+    /// it up into the proper type.
     fn read_from_model(&self, model: &Model, model_completion: bool)
     -> Option<Self::ModelInstance>;
 
+    /// Produce a [`Bool`] assertion ruling out the given model from the valuation of `self`.
+    ///
+    /// This is used to advance the [`Solver`] in [`Solver::solutions`]. This is usually just a
+    /// disjunction (in case of multiple terms) of "not equal" assertions between `self` and `model`.
     fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool;
 }
 
