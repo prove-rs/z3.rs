@@ -124,7 +124,7 @@ impl<T: Translate> PrepareSynchronized for T {
 #[cfg(not(target_arch = "wasm32"))]
 mod thread_tests {
     use crate::Solver;
-    use crate::ast::{Ast, Bool};
+    use crate::ast::Bool;
     use crate::translate::synchronization::PrepareSynchronized;
 
     #[test]
@@ -160,7 +160,7 @@ mod thread_tests {
         let model = std::thread::spawn(move || {
             let moved = sendable.recover();
             let solver = Solver::new();
-            solver.assert(moved._eq(true));
+            solver.assert(moved.eq(true));
             solver.check();
             let model = solver.get_model().unwrap();
             model.synchronized()
@@ -174,7 +174,7 @@ mod thread_tests {
 
 #[cfg(test)]
 mod rayon_tests {
-    use crate::ast::{Ast, Int};
+    use crate::ast::Int;
     use crate::{PrepareSynchronized, Solver};
     use std::ops::Add;
 
@@ -186,7 +186,7 @@ mod rayon_tests {
         (0..100).into_par_iter().for_each(|i| {
             let moved = sendable.recover();
             let solver = Solver::new();
-            solver.assert(moved._eq(i));
+            solver.assert(moved.eq(i));
             assert_eq!(solver.check(), crate::SatResult::Sat);
             let model = solver.get_model().unwrap();
             assert_eq!(model.eval(&moved, true).unwrap(), i);
