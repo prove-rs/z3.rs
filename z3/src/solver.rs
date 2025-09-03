@@ -402,6 +402,89 @@ impl Solver {
             .map(|s| s.to_string())
             .unwrap_or_else(String::new)
     }
+
+    /// Produces an [`Iterator`] which queries the [`Solver`] and extracts a [`Model`] on every iteration.
+    ///
+    /// The iterator terminates if the [`Solver`] returns `UNSAT` or `UNKNOWN`, as well as if model
+    /// generation fails. This iterator may also _never_ terminate as some problems have infinite
+    /// solutions. It is recommended to use [`Iterator::take`] if your problem has an unbounded number
+    /// of solutions.
+    ///
+    /// Note that, since this iterator is querying the solver, it's not guaranteed to be at all "fast":
+    /// every iteration requires querying the solver and constructing a model, which can take time. This
+    /// interface is merely here as a clean alternative to manually issuing [`Solver::check`] and [`Solver::get_model`]
+    /// calls
+    ///
+    /// # Examples
+    ///
+    /// This can be used to iterate over solutions to individual [`Ast`]s:
+    ///
+    /// ```
+    /// # use z3::Solver;
+    /// # use z3::ast::*;
+    ///  let s = Solver::new();
+    ///  let a = Int::new_const("a");
+    ///  s.assert(a.le(4));
+    ///  s.assert(a.ge(0));
+    ///  let solutions: Vec<_> = s.solutions(a, true).collect();
+    ///  let mut solutions: Vec<_> = solutions.into_iter().map(|a|a.as_u64().unwrap()).collect();
+    ///  solutions.sort();
+    ///  assert_eq!(vec![0,1,2,3,4], solutions);
+    /// ```
+    ///
+    /// As well as solutions to multiple [`Ast`]s, if passed through a [`Vec`] or an Array:
+    ///
+    /// ```
+    /// # use z3::Solver;
+    /// # use z3::ast::*;
+    ///  let s = Solver::new();
+    ///  let a = Int::new_const("a");
+    ///  s.assert(a.le(2));
+    ///  s.assert(a.ge(0));
+    ///  let solutions: Vec<_> = s.solutions(vec![&a, &(a+2)], true).collect();
+    ///  let mut solutions: Vec<Vec<_>> = solutions.into_iter().map(|a|a.into_iter().map(|b|b.as_u64().unwrap()).collect()).collect();
+    ///  assert_eq!(vec![vec![0,2], vec![1,3], vec![2,4]], solutions);
+    /// ```
+    /// Users can also implement [`Solvable`] on their types that wrap Z3 types to allow
+    /// iterating over their models with this API:
+    pub fn solutions<T: Solvable>(&self, t: T, model_completion: bool) -> impl Iterator<Item = T> {
+        SolverIterator {
+            solver: self.clone(),
+            ast: t,
+            model_completion,
+            terminated: false,
+        }
+    }
+}
+
+struct SolverIterator<T> {
+    solver: Solver,
+    ast: T,
+    model_completion: bool,
+    terminated: bool,
+}
+
+impl<T: Solvable> Iterator for SolverIterator<T> {
+    type Item = T;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        if self.terminated {
+            return None;
+        }
+        match self.solver.check() {
+            SatResult::Sat => {
+                let model = self.solver.get_model()?;
+                let instance = self.ast.read_from_model(&model, self.model_completion)?;
+                let counterexample = self.ast.generate_constraint(&instance);
+                self.solver.assert(counterexample);
+                Some(instance)
+            }
+            _ => {
+                self.terminated = true;
+                None
+            }
+        }
+    }
 }
 
 impl fmt::Display for Solver {
@@ -462,5 +545,66 @@ impl AddAssign<&ast::Bool> for Solver {
 impl AddAssign<ast::Bool> for Solver {
     fn add_assign(&mut self, rhs: ast::Bool) {
         self.assert(&rhs);
+    }
+}
+
+/// Implemented by types that in some way wrap `Ast`s.
+///
+/// Specifically, types implementing this trait:
+/// * Can read a Z3 [`Model`] in a structured way to produce an instance
+///   of the type with its inner [`Ast`]s constrained by the [`Model`]
+/// * Can generate a counter-example assertion from its internal [`Ast`]s
+///   to constrain a [`Solver`] (usually just a disjunction of "not-equal"s)
+pub trait Solvable: Sized {
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self>;
+
+    fn generate_constraint(&self, model: &Self) -> Bool;
+}
+
+impl<T: Ast + Clone> Solvable for T {
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+        model.eval(self, model_completion)
+    }
+
+    fn generate_constraint(&self, model: &Self) -> Bool {
+        model._eq(self.clone()).not()
+    }
+}
+
+impl<T: Solvable> Solvable for Vec<T> {
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+        self.iter()
+            .map(|x| x.read_from_model(model, model_completion))
+            .collect()
+    }
+
+    fn generate_constraint(&self, model: &Self) -> Bool {
+        let bools: Vec<_> = self
+            .iter()
+            .zip(model)
+            .map(|(a, b)| a.generate_constraint(b))
+            .collect();
+        Bool::or(&bools)
+    }
+}
+
+impl<T: Solvable + Clone, const N: usize> Solvable for [T; N] {
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+        let v: Option<Vec<_>> = self
+            .iter()
+            .map(|x| x.read_from_model(model, model_completion))
+            .collect();
+        let v = v?;
+        let a: [T; N] = v.try_into().ok()?;
+        Some(a)
+    }
+
+    fn generate_constraint(&self, model: &Self) -> Bool {
+        let bools: Vec<_> = self
+            .iter()
+            .zip(model)
+            .map(|(a, b)| a.generate_constraint(b))
+            .collect();
+        Bool::or(&bools)
     }
 }
