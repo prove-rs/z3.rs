@@ -264,11 +264,11 @@ mod tests {
         let f1 = Float::new_const("weird", 15, 53);
         let solver = Solver::new();
         // but we can make compatible symbolic floats out of a f64!
-        solver.assert(f1._eq(300.0));
+        solver.assert(f1.eq(300.0));
         solver.check();
         let model = solver.get_model().unwrap();
         let f1_value = model.eval(&f1, false).unwrap();
         // and we can also use compare models to floats
-        assert!(f1_value._eq(300.0).simplify().eq(&true));
+        assert_eq!(f1_value.eq(300.0).simplify(), true);
     }
 }

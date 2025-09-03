@@ -137,11 +137,11 @@ fn test_optimize_assert_soft_and_get_objectives() {
         }
 
         assert_eq!(
-            ite_children[1].as_real().unwrap().as_real().unwrap(),
+            ite_children[1].as_real().unwrap().as_rational().unwrap(),
             (0, 1)
         );
         assert_eq!(
-            ite_children[2].as_real().unwrap().as_real().unwrap(),
+            ite_children[2].as_real().unwrap().as_rational().unwrap(),
             (1, 1)
         );
     }
