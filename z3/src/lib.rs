@@ -36,10 +36,10 @@ mod version;
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
+pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
 pub use context::Context;
-
-pub use crate::translate::synchronization::*;
+pub use datatype_builder::DatatypeAccessor;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:
@@ -210,13 +210,6 @@ pub struct DatatypeBuilder {
     constructors: Vec<(String, Vec<(String, DatatypeAccessor)>)>,
 }
 
-/// Wrapper which can point to a sort (by value) or to a custom datatype (by name).
-#[derive(Debug)]
-pub enum DatatypeAccessor {
-    Sort(Sort),
-    Datatype(Symbol),
-}
-
 /// Inner variant for a custom [datatype sort](DatatypeSort).
 #[derive(Debug)]
 pub struct DatatypeVariant {
@@ -311,4 +304,35 @@ pub struct Probe {
 pub struct Statistics {
     ctx: Context,
     z3_stats: Z3_stats,
+}
+
+/// Runs the provided callback with all inner Z3 calls using the provided [`Context`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
+/// # See also
+///
+/// [`with_z3_config`]
+#[deprecated = "Use `with_z3_config` instead, which constructs a Context from a Config"]
+pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
+    ctx: &Context,
+    callback: T,
+) -> R {
+    let old = Context::thread_local();
+    Context::set_thread_local(ctx);
+    let res = callback();
+    Context::set_thread_local(&old);
+    res
+}
+
+/// Runs the provided callback with all inner Z3 calls using a [`Context`] derived
+/// from the provided [`Config`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
+#[allow(deprecated)]
+pub fn with_z3_config<T: Fn() -> R + Send + Sync, R: Send + Sync>(cfg: &Config, callback: T) -> R {
+    with_z3_context(&Context::new(cfg), callback)
 }

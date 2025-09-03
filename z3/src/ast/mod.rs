@@ -2,7 +2,6 @@
 
 use log::debug;
 use std::borrow::Borrow;
-use std::cmp::{Eq, PartialEq};
 use std::convert::{TryFrom, TryInto};
 use std::ffi::CStr;
 use std::fmt;
@@ -88,9 +87,9 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: IntoAstCtx<$retty>, B: IntoAstCtx<$retty>>(&self, a: A, b: B) -> $retty {
-                let a = a.into_ast_ctx(&self.ctx);
-                let b = b.into_ast_ctx(&self.ctx);
+            pub fn $f<A: Into<$retty>, B: IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
+                let a = a.into();
+                let b = b.into_ast(&a);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
                         $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast)
@@ -109,11 +108,11 @@ macro_rules! varop {
     ) => {
         $(
             $( #[ $attr ] )*
-            #[z3_ctx(Context::thread_local)]
-            pub fn $f<T: IntoAstCtx<Self>>(ctx: &Context, values: &[T]) -> $retty {
+            pub fn $f<T: Into<Self> + Clone>(values: &[T]) -> $retty {
+                let ctx = &Context::thread_local();
                 unsafe {
                     <$retty>::wrap(ctx, {
-                        let tmp: Vec<_> = values.iter().cloned().map(|x| x.into_ast_ctx(ctx)).collect();
+                        let tmp: Vec<Self> = values.iter().cloned().map(|x| x.into()).collect();
                         let tmp2: Vec<_> = tmp.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
                         $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr())
@@ -152,47 +151,9 @@ pub trait Ast: fmt::Debug {
     /// # Safety
     ///
     /// The `ast` must be a valid pointer to a [`Z3_ast`].
-    unsafe fn wrap(ctx: &Context, ast: Option<Z3_ast>) -> Self
+    unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self
     where
         Self: Sized;
-
-    /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
-    /// representing the result.
-    ///
-    /// This operation works with all possible `Ast`s (int, real, BV, etc), but the two
-    /// `Ast`s being compared must be the same type.
-    //
-    // Note that we can't use the binop! macro because of the `pub` keyword on it
-    fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
-    where
-        Self: Sized,
-    {
-        self._safe_eq(other).unwrap()
-    }
-
-    /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
-    /// match for the two values.
-    fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
-    where
-        Self: Sized,
-    {
-        let other = other.into_ast(self);
-
-        let left_sort = self.get_sort();
-        let right_sort = other.get_sort();
-        match left_sort == right_sort {
-            true => Ok(unsafe {
-                Bool::wrap(self.get_ctx(), {
-                    Z3_mk_eq(
-                        self.get_ctx().z3_ctx.0,
-                        self.get_z3_ast(),
-                        other.get_z3_ast(),
-                    )
-                })
-            }),
-            false => Err(SortDiffers::new(left_sort, right_sort)),
-        }
-    }
 
     /// Compare this `Ast` with a list of other `Ast`s, and get a [`Bool`]
     /// which is true only if all arguments (including Self) are pairwise distinct.
@@ -201,10 +162,11 @@ pub trait Ast: fmt::Debug {
     /// `Ast`s being compared must all be the same type.
     //
     // Note that we can't use the varop! macro because of the `pub` keyword on it
-    fn distinct(ctx: &Context, values: &[impl Borrow<Self>]) -> Bool
+    fn distinct(values: &[impl Borrow<Self>]) -> Bool
     where
         Self: Sized,
     {
+        let ctx = &Context::thread_local();
         unsafe {
             Bool::wrap(ctx, {
                 assert!(values.len() <= 0xffffffff);
@@ -364,63 +326,32 @@ pub trait Ast: fmt::Debug {
 ///
 /// This is used in "binops" and "trinops" to allow seamless conversion
 /// of right-hand-side operands into the left-hand-side's [`Ast`] type.
-/// The whole [`Ast`] is used other than just the [`Context`] because
-/// some Sorts (e.g. [`BV`]) require extra context from the source data
-/// to ensure the correct [`Sort`] is used in the resulting [`Ast`].
+/// The [`Ast`] argument is necessary because
+/// some Sorts (e.g. [`BV`], [`Float`]) are parameterized (not captured by these bindings),
+/// and many operations can only be applied to objects with the same parameterization.
 pub trait IntoAst<T: Ast> {
     fn into_ast(self, a: &T) -> T;
 }
 
-/// Turns a piece of data into a Z3 [`Ast`], associated with the
-/// given [`Context`]. This is used in "varop" operations.
-pub trait IntoAstCtx<T: Ast>: Clone + IntoAst<T> {
-    fn into_ast_ctx(self, ctx: &Context) -> T;
-}
-
-/// This is trivially implemented for Asts. It also
-/// serves as a unified place to check for [`Context`] mismatches.
-impl<T: Ast + Clone> IntoAstCtx<T> for T {
-    fn into_ast_ctx(self, ctx: &Context) -> T {
-        self.check_ctx(ctx);
-        self
-    }
-}
-
-/// Implemented for [`Ast`] references for ease.
-impl<T: IntoAstCtx<T> + Ast> IntoAstCtx<T> for &T {
-    fn into_ast_ctx(self, a: &Context) -> T {
-        self.clone().into_ast_ctx(a)
-    }
-}
-
-/// Implemented for [`Ast`] references for ease.
-impl<T: IntoAst<T> + Ast + Clone> IntoAst<T> for &T {
-    fn into_ast(self, a: &T) -> T {
-        self.clone().into_ast(a)
-    }
-}
-
-/// This is trivially implemented for [`Ast`]s. It also
-/// serves as a unified place to check for context mismatches.
-impl<T: Ast> IntoAst<T> for T {
-    fn into_ast(self, a: &T) -> T {
-        self.check_ctx(a.get_ctx());
-        self
+/// Blanket impl to say that anything with a [`From`] impl
+/// is also [`IntoAst`], similar to how [`Into`] is done.
+impl<T: Into<A>, A: Ast> IntoAst<A> for T {
+    fn into_ast(self, _a: &A) -> A {
+        self.into()
     }
 }
 
 macro_rules! impl_ast {
     ($ast:ident) => {
         impl Ast for $ast {
-            unsafe fn wrap(ctx: &Context, ast: Option<Z3_ast>) -> Self {
-                assert!(!ast.is_none());
-                let ast = ast.unwrap();
+            unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self {
+                assert!(!ast.is_null());
                 Self {
                     ctx: ctx.clone(),
                     z3_ast: {
                         debug!(
                             "new ast: id = {}, pointer = {:p}",
-                            unsafe { Z3_get_ast_id(ctx.z3_ctx.0, ast) }.unwrap(),
+                            unsafe { Z3_get_ast_id(ctx.z3_ctx.0, ast) },
                             ast
                         );
                         unsafe {
@@ -440,9 +371,74 @@ macro_rules! impl_ast {
             }
         }
 
-        impl From<$ast> for Z3_ast {
-            fn from(ast: $ast) -> Self {
-                ast.z3_ast
+        impl $ast {
+            pub fn ast_eq<T: IntoAst<Self>>(&self, other: T) -> bool
+            where
+                Self: Sized,
+            {
+                let other = other.into_ast(self);
+                assert_eq!(self.get_ctx(), other.get_ctx());
+                unsafe {
+                    Z3_is_eq_ast(
+                        self.get_ctx().z3_ctx.0,
+                        self.get_z3_ast(),
+                        other.get_z3_ast(),
+                    )
+                }
+            }
+
+            #[deprecated = "Please use eq instead"]
+            pub fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other)
+            }
+
+            /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
+            /// representing the result.
+            ///
+            /// This operation works with all possible `Ast`s (int, real, BV, etc), but the two
+            /// `Ast`s being compared must be the same type.
+            //
+            // Note that we can't use the binop! macro because of the `pub` keyword on it
+            pub fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.safe_eq(other).unwrap()
+            }
+
+            #[deprecated = "Please use safe_eq instead"]
+            pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+            where
+                Self: Sized,
+            {
+                self.safe_eq(other)
+            }
+
+            /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
+            /// match for the two values.
+            pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+            where
+                Self: Sized,
+            {
+                let other = other.into_ast(self);
+
+                let left_sort = self.get_sort();
+                let right_sort = other.get_sort();
+                match left_sort == right_sort {
+                    true => Ok(unsafe {
+                        Bool::wrap(self.get_ctx(), {
+                            Z3_mk_eq(
+                                self.get_ctx().z3_ctx.0,
+                                self.get_z3_ast(),
+                                other.get_z3_ast(),
+                            )
+                        })
+                    }),
+                    false => Err(SortDiffers::new(left_sort, right_sort)),
+                }
             }
         }
 
@@ -454,6 +450,12 @@ macro_rules! impl_ast {
         }
 
         impl Eq for $ast {}
+
+        impl From<$ast> for Z3_ast {
+            fn from(ast: $ast) -> Self {
+                ast.z3_ast
+            }
+        }
 
         impl Clone for $ast {
             fn clone(&self) -> Self {
@@ -491,10 +493,9 @@ macro_rules! impl_ast {
         impl fmt::Debug for $ast {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 let p = unsafe { Z3_ast_to_string(self.ctx.z3_ctx.0, self.z3_ast) };
-                if p.is_none() {
+                if p.is_null() {
                     return Result::Err(fmt::Error);
                 }
-                let p = p.unwrap();
                 match unsafe { CStr::from_ptr(p) }.to_str() {
                     Ok(s) => write!(f, "{}", s),
                     Err(_) => Result::Err(fmt::Error),
@@ -505,6 +506,12 @@ macro_rules! impl_ast {
         impl fmt::Display for $ast {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 <Self as fmt::Debug>::fmt(self, f)
+            }
+        }
+
+        impl From<&$ast> for $ast {
+            fn from(value: &Self) -> Self {
+                value.clone()
             }
         }
     };
@@ -529,13 +536,6 @@ macro_rules! impl_from_try_into_dynamic {
             fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
                 ast.$as_ast()
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
-            }
-        }
-
-        impl IntoAst<Dynamic> for $ast {
-            fn into_ast(self, d: &Dynamic) -> Dynamic {
-                self.check_ctx(d.get_ctx());
-                Dynamic::from_ast(&self)
             }
         }
     };
@@ -567,12 +567,13 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
 
-pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
+pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
-    _atmost(ctx, args.as_ref(), k)
+    _atmost(args.as_ref(), k)
 }
 
-fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
+fn _atmost(args: &[Z3_ast], k: u32) -> Bool {
+    let ctx = &Context::thread_local();
     unsafe {
         Bool::wrap(
             ctx,
@@ -586,12 +587,13 @@ fn _atmost(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
     }
 }
 
-pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(ctx: &Context, args: I, k: u32) -> Bool {
+pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
-    _atleast(ctx, args.as_ref(), k)
+    _atleast(args.as_ref(), k)
 }
 
-fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
+fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
+    let ctx = &Context::thread_local();
     unsafe {
         Bool::wrap(
             ctx,
@@ -619,7 +621,6 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
-///     &Context::thread_local(),
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x)
@@ -632,12 +633,8 @@ fn _atleast(ctx: &Context, args: &[Z3_ast], k: u32) -> Bool {
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn forall_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    patterns: &[&Pattern],
-    body: &Bool,
-) -> Bool {
+pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
@@ -679,7 +676,6 @@ pub fn forall_const(
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
-///     &Context::thread_local(),
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &x._eq(&f_x).not()
@@ -692,12 +688,8 @@ pub fn forall_const(
 /// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
-pub fn exists_const(
-    ctx: &Context,
-    bounds: &[&dyn Ast],
-    patterns: &[&Pattern],
-    body: &Bool,
-) -> Bool {
+pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert_eq!(ctx, body.get_ctx());
@@ -748,7 +740,6 @@ pub fn exists_const(
 /// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
-///     &Context::thread_local(),
 ///     true,
 ///     0,
 ///     "def_f",
@@ -768,7 +759,6 @@ pub fn exists_const(
 /// ```
 #[allow(clippy::too_many_arguments)]
 pub fn quantifier_const(
-    ctx: &Context,
     is_forall: bool,
     weight: u32,
     quantifier_id: impl Into<Symbol>,
@@ -778,6 +768,7 @@ pub fn quantifier_const(
     no_patterns: &[&dyn Ast],
     body: &Bool,
 ) -> Bool {
+    let ctx = &Context::thread_local();
     assert!(bounds.iter().all(|a| a.get_ctx() == ctx));
     assert!(patterns.iter().all(|p| &p.ctx == ctx));
     assert!(no_patterns.iter().all(|p| p.get_ctx() == ctx));
@@ -797,8 +788,8 @@ pub fn quantifier_const(
                 ctx.z3_ctx.0,
                 is_forall,
                 weight,
-                quantifier_id.into().as_z3_symbol_in_ctx(ctx),
-                skolem_id.into().as_z3_symbol_in_ctx(ctx),
+                quantifier_id.into().as_z3_symbol(),
+                skolem_id.into().as_z3_symbol(),
                 bounds.len().try_into().unwrap(),
                 bounds.as_ptr() as *const Z3_app,
                 patterns.len().try_into().unwrap(),
@@ -829,7 +820,6 @@ pub fn quantifier_const(
 /// #
 /// let input = Int::fresh_const("");
 /// let lambda = lambda_const(
-///     &Context::thread_local(),
 ///     &[&input],
 ///     &Dynamic::from_ast(&Int::add(&[&input, &Int::from_i64(2)])),
 /// );
@@ -848,7 +838,8 @@ pub fn quantifier_const(
 ///
 /// assert_eq!(solver.check(), SatResult::Unsat);
 /// ```
-pub fn lambda_const(ctx: &Context, bounds: &[&dyn Ast], body: &Dynamic) -> Array {
+pub fn lambda_const(bounds: &[&dyn Ast], body: &Dynamic) -> Array {
+    let ctx = &Context::thread_local();
     let bounds: Vec<_> = bounds.iter().map(|a| a.get_z3_ast()).collect();
 
     unsafe {

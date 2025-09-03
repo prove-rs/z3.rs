@@ -5,12 +5,9 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
-use z3_macros::z3_ctx;
 
-#[z3_ctx(Context::thread_local)]
 impl Sort {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Option<Z3_sort>) -> Sort {
-        let z3_sort = z3_sort.unwrap();
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
         unsafe {
             Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
         }
@@ -24,44 +21,69 @@ impl Sort {
         self.z3_sort
     }
 
-    pub fn uninterpreted(ctx: &Context, name: Symbol) -> Sort {
+    pub fn uninterpreted(name: Symbol) -> Sort {
+        let ctx = &Context::thread_local();
+
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol_in_ctx(ctx)),
+                Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol()),
             )
         }
     }
 
-    pub fn bool(ctx: &Context) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0)) }
+    pub fn bool() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0))
+        }
     }
 
-    pub fn int(ctx: &Context) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0)) }
+    pub fn int() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0))
+        }
     }
 
-    pub fn real(ctx: &Context) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0)) }
+    pub fn real() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0))
+        }
     }
 
-    pub fn float(ctx: &Context, ebits: u32, sbits: u32) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits)) }
+    pub fn float(ebits: u32, sbits: u32) -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits))
+        }
     }
 
-    pub fn float32(ctx: &Context) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24)) }
+    pub fn float32() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24))
+        }
     }
 
-    pub fn double(ctx: &Context) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53)) }
+    pub fn double() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53))
+        }
     }
 
-    pub fn string(ctx: &Context) -> Sort {
-        unsafe { Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0)) }
+    pub fn string() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0))
+        }
     }
 
-    pub fn bitvector(ctx: &Context, sz: u32) -> Sort {
+    pub fn bitvector(sz: u32) -> Sort {
+        let ctx = &Context::thread_local();
+
         unsafe {
             Self::wrap(
                 ctx,
@@ -70,7 +92,9 @@ impl Sort {
         }
     }
 
-    pub fn array(ctx: &Context, domain: &Sort, range: &Sort) -> Sort {
+    pub fn array(domain: &Sort, range: &Sort) -> Sort {
+        let ctx = &Context::thread_local();
+
         unsafe {
             Self::wrap(
                 ctx,
@@ -79,11 +103,15 @@ impl Sort {
         }
     }
 
-    pub fn set(ctx: &Context, elt: &Sort) -> Sort {
+    pub fn set(elt: &Sort) -> Sort {
+        let ctx = &Context::thread_local();
+
         unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
 
-    pub fn seq(ctx: &Context, elt: &Sort) -> Sort {
+    pub fn seq(elt: &Sort) -> Sort {
+        let ctx = &Context::thread_local();
+
         unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }
     }
 
@@ -120,14 +148,11 @@ impl Sort {
     /// assert!(model.eval(&eq, true).unwrap().as_bool().unwrap().as_bool().unwrap());
     /// ```
     pub fn enumeration(
-        ctx: &Context,
         name: Symbol,
         enum_names: &[Symbol],
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
-        let enum_names: Vec<_> = enum_names
-            .iter()
-            .map(|s| s.as_z3_symbol_in_ctx(ctx))
-            .collect();
+        let ctx = &Context::thread_local();
+        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
@@ -136,7 +161,7 @@ impl Sort {
                 ctx,
                 Z3_mk_enumeration_sort(
                     ctx.z3_ctx.0,
-                    name.as_z3_symbol_in_ctx(ctx),
+                    name.as_z3_symbol(),
                     enum_names.len().try_into().unwrap(),
                     enum_names.as_ptr(),
                     enum_consts.as_mut_ptr(),

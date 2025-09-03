@@ -1,9 +1,7 @@
 use crate::ast::IntoAst;
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, Bool, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a set value.
@@ -12,23 +10,20 @@ pub struct Set {
     pub(crate) z3_ast: Z3_ast,
 }
 
-#[z3_ctx(Context::thread_local)]
 impl Set {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, eltype: &Sort) -> Set {
-        let sort = Sort::set_in_ctx(ctx, eltype);
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Set {
+        let ctx = &Context::thread_local();
+        let sort = Sort::set(eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, eltype: &Sort) -> Set {
-        let sort = Sort::set_in_ctx(ctx, eltype);
+    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Set {
+        let ctx = &Context::thread_local();
+        let sort = Sort::set(eltype);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -39,7 +34,8 @@ impl Set {
     }
 
     /// Creates a set that maps the domain to false by default
-    pub fn empty(ctx: &Context, domain: &Sort) -> Set {
+    pub fn empty(domain: &Sort) -> Set {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.0, domain.z3_sort)) }
     }
 

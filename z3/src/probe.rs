@@ -2,11 +2,9 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::result::Result;
 use std::str::Utf8Error;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, Goal, Probe};
-#[z3_ctx(Context::thread_local)]
 impl Probe {
     unsafe fn wrap(ctx: &Context, z3_probe: Z3_probe) -> Probe {
         unsafe {
@@ -30,7 +28,8 @@ impl Probe {
     /// let probes: Vec<_> = Probe::list_all().into_iter().filter_map(|r| r.ok()).collect();
     /// assert!(probes.contains(&"is-quasi-pb".to_string()));
     /// ```
-    pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {
+    pub fn list_all() -> Vec<Result<String, Utf8Error>> {
+        let ctx = &Context::thread_local();
         let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.0) };
         (0..p)
             .map(move |n| {
@@ -42,7 +41,8 @@ impl Probe {
 
     /// Return a string containing a description of the probe with
     /// the given `name`.
-    pub fn describe(ctx: &Context, name: &str) -> std::result::Result<String, Utf8Error> {
+    pub fn describe(name: &str) -> std::result::Result<String, Utf8Error> {
+        let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
         unsafe {
             CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr()))
@@ -60,7 +60,8 @@ impl Probe {
     ///
     /// let probe = Probe::new("is-qfbv");
     /// ```
-    pub fn new(ctx: &Context, name: &str) -> Probe {
+    pub fn new(name: &str) -> Probe {
+        let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
         unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr())) }
     }
@@ -81,7 +82,8 @@ impl Probe {
     /// let ctx = Context::new(&cfg);
     /// let probe = Probe::constant(1.0);
     /// ```
-    pub fn constant(ctx: &Context, val: f64) -> Probe {
+    pub fn constant(val: f64) -> Probe {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }
     }
 

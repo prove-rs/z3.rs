@@ -1,7 +1,6 @@
 use log::info;
 use semver::{Version, VersionReq};
 use std::collections::HashMap;
-use z3::ast::Ast;
 use z3::*;
 
 struct Spec {
@@ -219,7 +218,7 @@ fn test_solve_simple_semver_example() {
                         );
                         opt.assert(
                             &k_ast
-                                ._eq(ast::Int::from_u64(n as u64))
+                                .eq(ast::Int::from_u64(n as u64))
                                 .implies(r_ast.ge(ast::Int::from_u64(low as u64))),
                         );
                     }
@@ -238,7 +237,7 @@ fn test_solve_simple_semver_example() {
                         );
                         opt.assert(
                             &k_ast
-                                ._eq(ast::Int::from_u64(n as u64))
+                                .eq(ast::Int::from_u64(n as u64))
                                 .implies(r_ast.le(ast::Int::from_u64(high as u64))),
                         );
                     }

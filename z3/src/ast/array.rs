@@ -1,7 +1,6 @@
 use crate::ast::{Ast, Dynamic};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing an array value.
@@ -11,32 +10,24 @@ pub struct Array {
     pub(crate) z3_ast: Z3_ast,
 }
 
-#[z3_ctx(Context::thread_local)]
 impl Array {
     /// Create an `Array` which maps from indices of the `domain` `Sort` to
     /// values of the `range` `Sort`.
     ///
     /// All values in the `Array` will be unconstrained.
-    pub fn new_const<S: Into<Symbol>>(
-        ctx: &Context,
-        name: S,
-        domain: &Sort,
-        range: &Sort,
-    ) -> Array {
-        let sort = Sort::array_in_ctx(ctx, domain, range);
+    pub fn new_const<S: Into<Symbol>>(name: S, domain: &Sort, range: &Sort) -> Array {
+        let ctx = &Context::thread_local();
+        let sort = Sort::array(domain, range);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, domain: &Sort, range: &Sort) -> Array {
-        let sort = Sort::array_in_ctx(ctx, domain, range);
+    pub fn fresh_const(prefix: &str, domain: &Sort, range: &Sort) -> Array {
+        let ctx = &Context::thread_local();
+        let sort = Sort::array(domain, range);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -48,10 +39,11 @@ impl Array {
 
     /// Create a "constant array", that is, an `Array` initialized so that all of the
     /// indices in the `domain` map to the given value `val`
-    pub fn const_array<A>(ctx: &Context, domain: &Sort, val: &A) -> Array
+    pub fn const_array<A>(domain: &Sort, val: &A) -> Array
     where
         A: Ast,
     {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_const_array(ctx.z3_ctx.0, domain.z3_sort, val.get_z3_ast())

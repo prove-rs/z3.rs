@@ -5,7 +5,6 @@ use std::os::raw::c_uint;
 use std::result::Result;
 use std::str::Utf8Error;
 use std::time::Duration;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
@@ -41,7 +40,6 @@ impl Drop for ApplyResult {
     }
 }
 
-#[z3_ctx(Context::thread_local)]
 impl Tactic {
     /// Iterate through the valid tactic names.
     ///
@@ -55,7 +53,8 @@ impl Tactic {
     /// let tactics: Vec<_> = Tactic::list_all().into_iter().filter_map(|r| r.ok()).collect();
     /// assert!(tactics.contains(&"ufbv".to_string()));
     /// ```
-    pub fn list_all(ctx: &Context) -> Vec<Result<String, Utf8Error>> {
+    pub fn list_all() -> Vec<Result<String, Utf8Error>> {
+        let ctx = &Context::thread_local();
         let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.0) };
         (0..p)
             .map(move |n| {
@@ -65,8 +64,7 @@ impl Tactic {
             .collect()
     }
 
-    unsafe fn wrap(ctx: &Context, z3_tactic: Option<Z3_tactic>) -> Tactic {
-        let z3_tactic = z3_tactic.unwrap();
+    unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
         unsafe {
             Z3_tactic_inc_ref(ctx.z3_ctx.0, z3_tactic);
         }
@@ -91,7 +89,8 @@ impl Tactic {
     /// # See also
     ///
     /// - [`Tactic::list_all()`]
-    pub fn new(ctx: &Context, name: &str) -> Tactic {
+    pub fn new(name: &str) -> Tactic {
+        let ctx = &Context::thread_local();
         let tactic_name = CString::new(name).unwrap();
 
         unsafe {
@@ -105,18 +104,21 @@ impl Tactic {
     }
 
     /// Return a tactic that just return the given goal.
-    pub fn create_skip(ctx: &Context) -> Tactic {
+    pub fn create_skip() -> Tactic {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that always fails.
-    pub fn create_fail(ctx: &Context) -> Tactic {
+    pub fn create_fail() -> Tactic {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0)) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
-    pub fn repeat(ctx: &Context, t: &Tactic, max: u32) -> Tactic {
+    pub fn repeat(t: &Tactic, max: u32) -> Tactic {
+        let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max)) }
     }
 

@@ -2,12 +2,10 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::ops::Deref;
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 
-#[z3_ctx(Context::thread_local)]
 impl RecFuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
@@ -22,7 +20,8 @@ impl RecFuncDecl {
         }
     }
 
-    pub fn new<S: Into<Symbol>>(ctx: &Context, name: S, domain: &[&Sort], range: &Sort) -> Self {
+    pub fn new<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
+        let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx.0, range.ctx.z3_ctx.0);
 
@@ -33,7 +32,7 @@ impl RecFuncDecl {
                 ctx,
                 Z3_mk_rec_func_decl(
                     ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
+                    name.into().as_z3_symbol(),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
@@ -61,7 +60,6 @@ impl RecFuncDecl {
     ///
     /// let solver = Solver::new();
     /// let forall: z3::ast::Bool = z3::ast::forall_const(
-    ///         &Context::thread_local(),
     ///         &[&n],
     ///         &[],
     ///         &n.lt(&f_of_n.as_int().unwrap())

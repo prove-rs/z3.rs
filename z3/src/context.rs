@@ -50,11 +50,13 @@ pub struct Context {
 }
 impl Context {
     /// Returns a handle to the default thread-local [`Context`].
-    /// This [`Context`] is used by default in any API that does not
-    /// act on an existing [`Ast`] and does not have a [`Context`] argument.
+    ///
+    /// This [`Context`] is used in all z3 operations.
+    /// Custom [`Context`]s are supported through [`with_z3_config`](crate::with_z3_config),
+    /// which allow for running a closure inside an environment with the provided [`Context`]
     ///
     /// # See also:
-    /// - [`Context::set_thread_local_from_config()`]
+    /// - [`with_z3_config`](crate::with_z3_config)
     pub fn thread_local() -> Context {
         DEFAULT_CONTEXT.with(|f| f.borrow().clone())
     }
@@ -70,12 +72,17 @@ impl Context {
     ///
     /// # See also:
     /// /// - [`Context::thread_local()`]
-    pub fn set_thread_local_from_config(cfg: &Config) {
+    pub(crate) fn set_thread_local(ctx: &Context) {
         DEFAULT_CONTEXT.with(|f| {
-            *f.borrow_mut() = Context::new(cfg);
+            *f.borrow_mut() = ctx.clone();
         });
     }
 
+    /// Creates a new Z3 Context using the given configuration.
+    #[deprecated(
+        note = "The z3 crate now uses an implicit thread-local context. To configure the active context,\
+     use `with_z3_config` instead"
+    )]
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
@@ -161,6 +168,10 @@ impl Context {
 }
 
 /// The default [`Context`] uses [`Config::default`]
+///
+/// Note: this implementation will be removed in a future release,
+/// when [`Context::new`] and [`with_z3_context`](crate::with_z3_context) are removed.
+#[allow(deprecated)]
 impl Default for Context {
     fn default() -> Self {
         let cfg = Config::default();

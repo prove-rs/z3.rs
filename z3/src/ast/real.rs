@@ -1,10 +1,8 @@
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, IntoAst};
 use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
 use std::ffi::{CStr, CString};
-use z3_macros::z3_ctx;
 use z3_sys::*;
 
 /// [`Ast`] node representing a real value.
@@ -12,16 +10,21 @@ pub struct Real {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-#[z3_ctx(Context::thread_local)]
 impl Real {
-    pub fn from_big_rational(ctx: &Context, value: &BigRational) -> Real {
+    pub fn from_big_rational(value: &BigRational) -> Real {
         let num = value.numer();
         let den = value.denom();
-        Real::from_real_str_in_ctx(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
+        Real::from_rational_str(&num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
     }
 
-    pub fn from_real_str(ctx: &Context, num: &str, den: &str) -> Option<Real> {
-        let sort = Sort::real_in_ctx(ctx);
+    #[deprecated = "Please use from_rational_str instead"]
+    pub fn from_real_str(num: &str, den: &str) -> Option<Real> {
+        Self::from_rational_str(num, den)
+    }
+
+    pub fn from_rational_str(num: &str, den: &str) -> Option<Real> {
+        let ctx = &Context::thread_local();
+        let sort = Sort::real();
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
             let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, fraction_cstring.as_ptr(), sort.z3_sort);
@@ -34,23 +37,20 @@ impl Real {
         Some(unsafe { Real::wrap(ctx, ast) })
     }
 }
-#[z3_ctx(Context::thread_local)]
 impl Real {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Real {
-        let sort = Sort::real_in_ctx(ctx);
+    pub fn new_const<S: Into<Symbol>>(name: S) -> Real {
+        let ctx = &Context::thread_local();
+        let sort = Sort::real();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(
-                    ctx.z3_ctx.0,
-                    name.into().as_z3_symbol_in_ctx(ctx),
-                    sort.z3_sort,
-                )
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str) -> Real {
-        let sort = Sort::real_in_ctx(ctx);
+    pub fn fresh_const(prefix: &str) -> Real {
+        let ctx = &Context::thread_local();
+        let sort = Sort::real();
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
@@ -60,7 +60,13 @@ impl Real {
         }
     }
 
-    pub fn from_real(ctx: &Context, num: i32, den: i32) -> Real {
+    #[deprecated = "Please use from_rational instead"]
+    pub fn from_real(num: i32, den: i32) -> Real {
+        Self::from_rational(num as i64, den as i64)
+    }
+
+    pub fn from_rational(num: i64, den: i64) -> Real {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_real(
@@ -72,7 +78,12 @@ impl Real {
         }
     }
 
+    #[deprecated = "Please use as_rational instead"]
     pub fn as_real(&self) -> Option<(i64, i64)> {
+        self.as_rational()
+    }
+
+    pub fn as_rational(&self) -> Option<(i64, i64)> {
         unsafe {
             let mut num: i64 = 0;
             let mut den: i64 = 0;
@@ -133,8 +144,8 @@ impl Real {
     }
 }
 
-impl IntoAst<Real> for BigRational {
-    fn into_ast(self, a: &Real) -> Real {
-        Real::from_big_rational_in_ctx(a.get_ctx(), &self)
+impl From<BigRational> for Real {
+    fn from(v: BigRational) -> Real {
+        Real::from_big_rational(&v)
     }
 }

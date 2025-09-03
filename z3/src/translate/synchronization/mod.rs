@@ -17,11 +17,9 @@ use std::sync::Mutex;
 /// use z3::{Context, PrepareSynchronized, Solver, Translate};
 ///
 /// // Creating a Synchronized<BV> and moving it to another thread.
-/// let ctx = Context::default();
 /// let bv = Bool::from_bool(true);
 /// let sendable = bv.synchronized();
 /// std::thread::spawn(move || {
-///     let thread_ctx = Context::default();
 ///     let moved = sendable.recover();
 ///     assert_eq!(moved.as_bool(), Some(true));
 /// }).join().expect("Thread panicked");
@@ -38,7 +36,6 @@ use std::sync::Mutex;
 /// // and moving the resulting model back out for inspection.
 /// use z3::ast::{Ast, Bool};
 /// use z3::{Context, PrepareSynchronized, Solver};
-/// let ctx = Context::default();
 /// let bool = Bool::new_const("hello");
 /// let sendable_solver = {
 ///     let solver = Solver::new();
@@ -79,7 +76,6 @@ use std::sync::Mutex;
 ///     }
 /// }
 ///
-/// let ctx = Context::default();
 /// let my_struct = MyStruct {
 ///     bv: Bool::from_bool(true),
 ///     int: Int::from_i64(42),
@@ -128,7 +124,7 @@ impl<T: Translate> PrepareSynchronized for T {
 #[cfg(not(target_arch = "wasm32"))]
 mod thread_tests {
     use crate::Solver;
-    use crate::ast::{Ast, Bool};
+    use crate::ast::Bool;
     use crate::translate::synchronization::PrepareSynchronized;
 
     #[test]
@@ -164,7 +160,7 @@ mod thread_tests {
         let model = std::thread::spawn(move || {
             let moved = sendable.recover();
             let solver = Solver::new();
-            solver.assert(moved._eq(true));
+            solver.assert(moved.eq(true));
             solver.check();
             let model = solver.get_model().unwrap();
             model.synchronized()
@@ -178,7 +174,7 @@ mod thread_tests {
 
 #[cfg(test)]
 mod rayon_tests {
-    use crate::ast::{Ast, Int};
+    use crate::ast::Int;
     use crate::{PrepareSynchronized, Solver};
     use std::ops::Add;
 
@@ -190,7 +186,7 @@ mod rayon_tests {
         (0..100).into_par_iter().for_each(|i| {
             let moved = sendable.recover();
             let solver = Solver::new();
-            solver.assert(moved._eq(i));
+            solver.assert(moved.eq(i));
             assert_eq!(solver.check(), crate::SatResult::Sat);
             let model = solver.get_model().unwrap();
             assert_eq!(model.eval(&moved, true).unwrap(), i);
