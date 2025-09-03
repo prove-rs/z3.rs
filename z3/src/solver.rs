@@ -449,8 +449,8 @@ impl Solver {
     ///  assert_eq!(vec![vec![0,2], vec![1,3], vec![2,4]], solutions);
     /// ```
     ///
-    /// It is also possible to pass in differing types of [`Ast`]s in a [`Tuple`]. The traits to allow
-    /// this have been implemented for [`Tuple`]s of arity 2 and 3. If you need more, it is suggested
+    /// It is also possible to pass in differing types of [`Ast`]s in a [`tuple`]. The traits to allow
+    /// this have been implemented for [`tuple`]s of arity 2 and 3. If you need more, it is suggested
     /// to use a struct (see the next example):
     ///
     /// ```
