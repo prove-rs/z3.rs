@@ -512,7 +512,11 @@ impl Solver {
     ///  assert_eq!(solutions[0].a, 0);
     ///  assert_eq!(solutions[0].b, 4);
     /// ```
-    pub fn solutions<T: Solvable>(&self, t: T, model_completion: bool) -> impl Iterator<Item = T::ModelInstance> {
+    pub fn solutions<T: Solvable>(
+        &self,
+        t: T,
+        model_completion: bool,
+    ) -> impl Iterator<Item = T::ModelInstance> {
         SolverIterator {
             solver: self.clone(),
             ast: t,
@@ -628,14 +632,19 @@ pub trait Solvable: Sized + Clone {
     /// values into [`Solver::solutions`], and to allow implementing this trait for types like
     /// `&[T]`.
     type ModelInstance: Solvable;
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance>;
+    fn read_from_model(&self, model: &Model, model_completion: bool)
+    -> Option<Self::ModelInstance>;
 
     fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool;
 }
 
-impl<T: Solvable> Solvable for &T{
+impl<T: Solvable> Solvable for &T {
     type ModelInstance = T::ModelInstance;
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
         (*self).read_from_model(model, model_completion)
     }
 
@@ -646,7 +655,11 @@ impl<T: Solvable> Solvable for &T{
 
 impl<T: Solvable> Solvable for Vec<T> {
     type ModelInstance = Vec<T::ModelInstance>;
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
         self.iter()
             .map(|x| x.read_from_model(model, model_completion))
             .collect()
@@ -664,7 +677,11 @@ impl<T: Solvable> Solvable for Vec<T> {
 
 impl<T: Solvable> Solvable for &[T] {
     type ModelInstance = Vec<T::ModelInstance>;
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
         self.iter()
             .map(|x| x.read_from_model(model, model_completion))
             .collect()
@@ -680,10 +697,13 @@ impl<T: Solvable> Solvable for &[T] {
     }
 }
 
-
 impl<T: Solvable + Clone, const N: usize> Solvable for [T; N] {
     type ModelInstance = [T::ModelInstance; N];
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
         let v: Option<Vec<_>> = self
             .iter()
             .map(|x| x.read_from_model(model, model_completion))
@@ -704,7 +724,11 @@ impl<T: Solvable + Clone, const N: usize> Solvable for [T; N] {
 }
 impl<A: Solvable, B: Solvable> Solvable for (A, B) {
     type ModelInstance = (A::ModelInstance, B::ModelInstance);
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
         let (a, b) = self;
         Some((
             a.read_from_model(model, model_completion)?,
@@ -721,7 +745,11 @@ impl<A: Solvable, B: Solvable> Solvable for (A, B) {
 
 impl<A: Solvable, B: Solvable, C: Solvable> Solvable for (A, B, C) {
     type ModelInstance = (A::ModelInstance, B::ModelInstance, C::ModelInstance);
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
         let (a, b, c) = self;
         Some((
             a.read_from_model(model, model_completion)?,

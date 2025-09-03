@@ -528,7 +528,11 @@ macro_rules! impl_ast {
 
         impl Solvable for $ast {
             type ModelInstance = Self;
-            fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+            fn read_from_model(
+                &self,
+                model: &Model,
+                model_completion: bool,
+            ) -> Option<Self::ModelInstance> {
                 model.eval(self, model_completion)
             }
 
