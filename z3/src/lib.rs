@@ -40,6 +40,7 @@ pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
 pub use context::Context;
 pub use datatype_builder::DatatypeAccessor;
+pub use solver::Solvable;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:
