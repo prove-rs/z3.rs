@@ -448,6 +448,27 @@ impl Solver {
     ///
     ///  assert_eq!(vec![vec![0,2], vec![1,3], vec![2,4]], solutions);
     /// ```
+    ///
+    /// It is also possible to pass in differing types of [`Ast`]s in a [`Tuple`]. The traits to allow
+    /// this have been implemented for [`Tuple`]s of arity 2 and 3. If you need more, it is suggested
+    /// to use a struct (see the next example):
+    ///
+    /// ```
+    /// # use z3::Solver;
+    /// # use z3::ast::*;
+    ///  let s = Solver::new();
+    ///  let a = Int::new_const("a");
+    ///  let b = BV::new_const("b", 8);
+    ///  s.assert(a.lt(1));
+    ///  s.assert(a.ge(0));
+    ///  s.assert(b.bvxor(0xff).to_int(false).eq(&a));
+    ///  let solutions: Vec<_> = s.solutions((a, b), true).collect();
+    ///  assert_eq!(solutions.len(), 1);
+    ///  let solution = &solutions[0];
+    ///  assert_eq!(solution.0, 0);
+    ///  assert_eq!(solution.1, 0xff);
+    /// ```
+    ///
     /// Users can also implement [`Solvable`] on their types that wrap Z3 types to allow
     /// iterating over their models with this API:
     ///
@@ -650,3 +671,43 @@ impl<T: Solvable + Clone, const N: usize> Solvable for [T; N] {
         Bool::or(&bools)
     }
 }
+impl<A: Solvable, B: Solvable> Solvable for (A, B) {
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+        let (a, b) = self;
+        Some((
+            a.read_from_model(model, model_completion)?,
+            b.read_from_model(model, model_completion)?,
+        ))
+    }
+
+    fn generate_constraint(&self, model: &Self) -> Bool {
+        let (a1, b1) = self;
+        let (a2, b2) = model;
+        Bool::or(&[a1.generate_constraint(a2), b1.generate_constraint(b2)])
+    }
+}
+
+impl<A: Solvable, B: Solvable, C: Solvable> Solvable for (A, B, C) {
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+        let (a, b, c) = self;
+        Some((
+            a.read_from_model(model, model_completion)?,
+            b.read_from_model(model, model_completion)?,
+            c.read_from_model(model, model_completion)?,
+        ))
+    }
+
+    fn generate_constraint(&self, model: &Self) -> Bool {
+        let (a1, b1, c1) = self;
+        let (a2, b2, c2) = model;
+        Bool::or(&[
+            a1.generate_constraint(a2),
+            b1.generate_constraint(b2),
+            c1.generate_constraint(c2),
+        ])
+    }
+}
+
+// todo: there may be a way to do this with a macro, but I can't figure it out, without needing
+// to bring in the `paste` crate. Since this is niche anyway, I'm just going to do these two and
+// we can add more later if needed.
