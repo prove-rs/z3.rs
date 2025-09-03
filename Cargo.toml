@@ -1,3 +1,3 @@
 [workspace]
-members = ["z3", "z3-macros", "z3-sys"]
+members = ["z3", "z3-sys"]
 resolver = "3"
