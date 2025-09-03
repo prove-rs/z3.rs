@@ -473,6 +473,7 @@ impl Solver {
     ///         Bool::or(&[self.a.eq(&model.a).not(), self.b.eq(&model.b).not()])
     ///     }
     ///  }
+    ///
     ///  let s = Solver::new();
     ///  let my_struct = MyStruct{
     ///     a: Int::fresh_const("a"),
