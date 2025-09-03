@@ -10,7 +10,7 @@ use std::hash::{Hash, Hasher};
 pub use z3_sys::AstKind;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
+use crate::{Context, FuncDecl, IsNotApp, Model, Pattern, Solvable, Sort, SortDiffers, Symbol};
 
 mod array;
 mod bool;
@@ -523,6 +523,17 @@ macro_rules! impl_ast {
         impl From<&$ast> for $ast {
             fn from(value: &Self) -> Self {
                 value.clone()
+            }
+        }
+
+        impl Solvable for $ast {
+            type ModelInstance = Self;
+            fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+                model.eval(self, model_completion)
+            }
+
+            fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
+                model.eq(self.clone()).not()
             }
         }
     };

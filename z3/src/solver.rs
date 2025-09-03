@@ -432,7 +432,7 @@ impl Solver {
     ///  assert_eq!(vec![0,1,2,3,4], solutions);
     /// ```
     ///
-    /// As well as solutions to multiple [`Ast`]s, if passed through a [`Vec`] or an Array:
+    /// As well as solutions to multiple [`Ast`]s, if passed through a [`Vec`], an [`array`] or a [`slice`]:
     ///
     /// ```
     /// # use z3::Solver;
@@ -441,7 +441,7 @@ impl Solver {
     ///  let a = Int::new_const("a");
     ///  s.assert(a.le(2));
     ///  s.assert(a.ge(0));
-    ///  let solutions: Vec<_> = s.solutions(vec![a.clone(), a+2], true).collect();
+    ///  let solutions: Vec<_> = s.solutions(&[a.clone(), a+2], true).collect();
     ///  // Doing all this to avoid relying on the order Z3 returns solutions.
     ///  let mut solutions: Vec<Vec<_>> = solutions.into_iter().map(|a|a.into_iter().map(|b|b.as_u64().unwrap()).collect()).collect();
     ///  solutions.sort_by(|a,b| a[0].cmp(&b[0]));
@@ -475,12 +475,14 @@ impl Solver {
     /// ```
     /// # use z3::ast::*;
     /// # use z3::*;
+    /// #[derive(Clone)]
     ///  struct MyStruct{
     ///    pub a: Int,
     ///    pub b: Int
     ///  }
     ///
     ///  impl Solvable for MyStruct {
+    ///     type ModelInstance = Self;
     ///     fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
     ///         Some(
     ///             Self{
@@ -505,12 +507,12 @@ impl Solver {
     ///  s.assert(my_struct.a.ge(0));
     ///  s.assert(my_struct.b.eq(&my_struct.a + 4));
     ///
-    ///  let solutions: Vec<_> = s.solutions(my_struct, true).collect();
+    ///  let solutions: Vec<_> = s.solutions(&my_struct, true).collect();
     ///  assert_eq!(solutions.len(), 1);
     ///  assert_eq!(solutions[0].a, 0);
     ///  assert_eq!(solutions[0].b, 4);
     /// ```
-    pub fn solutions<T: Solvable>(&self, t: T, model_completion: bool) -> impl Iterator<Item = T> {
+    pub fn solutions<T: Solvable>(&self, t: T, model_completion: bool) -> impl Iterator<Item = T::ModelInstance> {
         SolverIterator {
             solver: self.clone(),
             ast: t,
@@ -528,7 +530,7 @@ struct SolverIterator<T> {
 }
 
 impl<T: Solvable> Iterator for SolverIterator<T> {
-    type Item = T;
+    type Item = T::ModelInstance;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.terminated {
@@ -618,30 +620,39 @@ impl AddAssign<ast::Bool> for Solver {
 ///   of the type with its inner [`Ast`]s constrained by the [`Model`]
 /// * Can generate a counter-example assertion from its internal [`Ast`]s
 ///   to constrain a [`Solver`] (usually just a disjunction of "not-equal"s)
-pub trait Solvable: Sized {
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self>;
+pub trait Solvable: Sized + Clone {
+    /// The type to be extracted from the [`Solver`]'s Model.
+    ///
+    /// It will usually just be [`Self`] and must be [`Solvable`]. This is only an associated
+    /// type and not just hard-coded to [`Self`] to allow for passing both owned and borrowed
+    /// values into [`Solver::solutions`], and to allow implementing this trait for types like
+    /// `&[T]`.
+    type ModelInstance: Solvable;
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance>;
 
-    fn generate_constraint(&self, model: &Self) -> Bool;
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool;
 }
 
-impl<T: Ast + Clone> Solvable for T {
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
-        model.eval(self, model_completion)
+impl<T: Solvable> Solvable for &T{
+    type ModelInstance = T::ModelInstance;
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+        (*self).read_from_model(model, model_completion)
     }
 
-    fn generate_constraint(&self, model: &Self) -> Bool {
-        model.eq(self.clone()).not()
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
+        (*self).generate_constraint(model)
     }
 }
 
 impl<T: Solvable> Solvable for Vec<T> {
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+    type ModelInstance = Vec<T::ModelInstance>;
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
         self.iter()
             .map(|x| x.read_from_model(model, model_completion))
             .collect()
     }
 
-    fn generate_constraint(&self, model: &Self) -> Bool {
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
         let bools: Vec<_> = self
             .iter()
             .zip(model)
@@ -651,18 +662,38 @@ impl<T: Solvable> Solvable for Vec<T> {
     }
 }
 
+impl<T: Solvable> Solvable for &[T] {
+    type ModelInstance = Vec<T::ModelInstance>;
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
+        self.iter()
+            .map(|x| x.read_from_model(model, model_completion))
+            .collect()
+    }
+
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
+        let bools: Vec<_> = self
+            .iter()
+            .zip(model)
+            .map(|(a, b)| a.generate_constraint(b))
+            .collect();
+        Bool::or(&bools)
+    }
+}
+
+
 impl<T: Solvable + Clone, const N: usize> Solvable for [T; N] {
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+    type ModelInstance = [T::ModelInstance; N];
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
         let v: Option<Vec<_>> = self
             .iter()
             .map(|x| x.read_from_model(model, model_completion))
             .collect();
         let v = v?;
-        let a: [T; N] = v.try_into().ok()?;
+        let a: [T::ModelInstance; N] = v.try_into().ok()?;
         Some(a)
     }
 
-    fn generate_constraint(&self, model: &Self) -> Bool {
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
         let bools: Vec<_> = self
             .iter()
             .zip(model)
@@ -672,7 +703,8 @@ impl<T: Solvable + Clone, const N: usize> Solvable for [T; N] {
     }
 }
 impl<A: Solvable, B: Solvable> Solvable for (A, B) {
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+    type ModelInstance = (A::ModelInstance, B::ModelInstance);
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
         let (a, b) = self;
         Some((
             a.read_from_model(model, model_completion)?,
@@ -680,7 +712,7 @@ impl<A: Solvable, B: Solvable> Solvable for (A, B) {
         ))
     }
 
-    fn generate_constraint(&self, model: &Self) -> Bool {
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
         let (a1, b1) = self;
         let (a2, b2) = model;
         Bool::or(&[a1.generate_constraint(a2), b1.generate_constraint(b2)])
@@ -688,7 +720,8 @@ impl<A: Solvable, B: Solvable> Solvable for (A, B) {
 }
 
 impl<A: Solvable, B: Solvable, C: Solvable> Solvable for (A, B, C) {
-    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self> {
+    type ModelInstance = (A::ModelInstance, B::ModelInstance, C::ModelInstance);
+    fn read_from_model(&self, model: &Model, model_completion: bool) -> Option<Self::ModelInstance> {
         let (a, b, c) = self;
         Some((
             a.read_from_model(model, model_completion)?,
@@ -697,7 +730,7 @@ impl<A: Solvable, B: Solvable, C: Solvable> Solvable for (A, B, C) {
         ))
     }
 
-    fn generate_constraint(&self, model: &Self) -> Bool {
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
         let (a1, b1, c1) = self;
         let (a2, b2, c2) = model;
         Bool::or(&[
