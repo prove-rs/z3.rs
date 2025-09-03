@@ -1,7 +1,7 @@
 use log::debug;
 use std::ffi::{CStr, CString};
 use std::fmt;
-
+use std::iter::FusedIterator;
 use z3_sys::*;
 
 use crate::ast::Bool;
@@ -516,13 +516,13 @@ impl Solver {
         &self,
         t: T,
         model_completion: bool,
-    ) -> impl Iterator<Item = T::ModelInstance> {
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
         SolverIterator {
             solver: self.clone(),
             ast: t,
             model_completion,
-            terminated: false,
         }
+        .fuse()
     }
 }
 
@@ -530,16 +530,12 @@ struct SolverIterator<T> {
     solver: Solver,
     ast: T,
     model_completion: bool,
-    terminated: bool,
 }
 
 impl<T: Solvable> Iterator for SolverIterator<T> {
     type Item = T::ModelInstance;
 
     fn next(&mut self) -> Option<Self::Item> {
-        if self.terminated {
-            return None;
-        }
         match self.solver.check() {
             SatResult::Sat => {
                 let model = self.solver.get_model()?;
@@ -548,10 +544,7 @@ impl<T: Solvable> Iterator for SolverIterator<T> {
                 self.solver.assert(counterexample);
                 Some(instance)
             }
-            _ => {
-                self.terminated = true;
-                None
-            }
+            _ => None,
         }
     }
 }
