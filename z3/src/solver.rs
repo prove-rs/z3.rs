@@ -403,7 +403,7 @@ impl Solver {
             .unwrap_or_else(String::new)
     }
 
-    /// Produces an [`Iterator`] which queries the [`Solver`] and extracts a [`Model`] on every iteration.
+    /// Iterates over models for the given [`Solvable`] from the current state of a [`Solver`].
     ///
     /// The iterator terminates if the [`Solver`] returns `UNSAT` or `UNKNOWN`, as well as if model
     /// generation fails. This iterator may also _never_ terminate as some problems have infinite
@@ -413,7 +413,10 @@ impl Solver {
     /// Note that, since this iterator is querying the solver, it's not guaranteed to be at all "fast":
     /// every iteration requires querying the solver and constructing a model, which can take time. This
     /// interface is merely here as a clean alternative to manually issuing [`Solver::check`] and [`Solver::get_model`]
-    /// calls
+    /// calls.
+    ///
+    /// The [`Solver`] given to this method is [`Clone`]'d when producing the iterator: no change
+    /// is made in the solver passed to the function.
     ///
     /// # Examples
     ///
@@ -524,6 +527,44 @@ impl Solver {
         }
         .fuse()
     }
+
+    /// Consume the current solver and iterate over solutions from it.
+    ///
+    /// This consuming version of [`Solver::solutions`] is necessary to use the iteration pattern
+    /// with [`Solver`]s using custom [`Tactic`](crate::Tactic)s or set logics due to the lossy
+    /// nature of [`Solver`]'s [`Clone`] impl.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::Solver;
+    /// # use z3::ast::*;
+    ///  let s = Solver::new_for_logic("QF_BV").unwrap();
+    ///  let a = BV::new_const("a", 8);
+    ///  let b = BV::new_const("b", 8);
+    ///  s.assert(a.bvxor(0xff).eq(&b));
+    ///  s.assert(b.eq(0x25));
+    ///  let solutions: Vec<_> = s.into_solutions([a,b], true).collect();
+    ///  assert_eq!(solutions.len(), 1);
+    ///  let solution = &solutions[0];
+    ///  assert_eq!(solution[0], 0xda);
+    ///  assert_eq!(solution[1], 0x25);
+    ///```
+    /// # See also:
+    ///
+    /// - [`Solver::solutions`]
+    pub fn into_solutions<T: Solvable>(
+        self,
+        t: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        SolverIterator {
+            solver: self,
+            ast: t,
+            model_completion,
+        }
+        .fuse()
+    }
 }
 
 struct SolverIterator<T> {
@@ -574,6 +615,11 @@ impl Drop for Solver {
     }
 }
 
+/// Makes a new [`Solver`] with the same sequence of assertions as the original. It does not
+/// however preserve properties of the solver other than its assertions, such as its configured
+/// [`Tactic`](crate::Tactic) or logic.
+///
+/// [`Solver`]s produced by [`Clone`] use the default [`Tactic`](crate::Tactic)
 impl Clone for Solver {
     // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
     fn clone(self: &Solver) -> Self {
@@ -610,7 +656,8 @@ impl AddAssign<ast::Bool> for Solver {
     }
 }
 
-/// Implemented by types that in some way wrap `Ast`s.
+/// Indicates that a type can be evaluated from a [`Model`] and produce a [`Bool`] counterexample,
+/// allowing usage in the [`Solver::solutions`] iterator pattern.
 ///
 /// Specifically, types implementing this trait:
 /// * Can read a Z3 [`Model`] in a structured way to produce an instance
