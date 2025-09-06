@@ -132,7 +132,7 @@ impl BV {
     /// # use z3::ast::Ast;
     /// # let solver = Solver::new();
     /// let i = ast::Int::new_const("x");
-    /// solver.assert(&i._eq(&ast::Int::from_i64(-3)));
+    /// solver.assert(&i.eq(&ast::Int::from_i64(-3)));
     ///
     /// let x = ast::BV::from_int(&i, 64);
     /// assert_eq!(64, x.get_size());
