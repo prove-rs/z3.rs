@@ -256,7 +256,7 @@ impl_into_ast!(f64, from_f64);
 #[cfg(test)]
 mod tests {
     use crate::Solver;
-    use crate::ast::{Ast, Float};
+    use crate::ast::{Ast, Bool, Float};
 
     #[test]
     fn test_nonstandard_float() {
@@ -269,6 +269,6 @@ mod tests {
         let model = solver.get_model().unwrap();
         let f1_value = model.eval(&f1, false).unwrap();
         // and we can also use compare models to floats
-        assert_eq!(f1_value.eq(300.0).simplify(), true);
+        assert_eq!(f1_value.eq(300.0).simplify(), Bool::from_bool(true));
     }
 }

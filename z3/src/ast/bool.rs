@@ -145,15 +145,3 @@ impl Bool {
         }
     }
 }
-
-impl From<bool> for Bool {
-    fn from(value: bool) -> Self {
-        Bool::from_bool(value)
-    }
-}
-
-impl From<&bool> for Bool {
-    fn from(value: &bool) -> Self {
-        Bool::from_bool(*value)
-    }
-}

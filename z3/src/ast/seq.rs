@@ -82,7 +82,6 @@ impl Seq {
     ///         .simplify()
     ///         .as_bool()
     ///         .unwrap()
-    ///         ._eq(true)
     /// );
     /// ```
     pub fn nth<T: Into<Int>>(&self, index: T) -> Dynamic {

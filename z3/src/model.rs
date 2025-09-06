@@ -222,11 +222,17 @@ unsafe impl Translate for Model {
     }
 }
 
-#[test]
-fn test_unsat() {
-    use crate::SatResult;
-    let solver = Solver::new();
-    solver.assert(false);
-    assert_eq!(solver.check(), SatResult::Unsat);
-    assert!(solver.get_model().is_none());
+#[cfg(test)]
+mod tests {
+    use crate::Solver;
+    use crate::ast::Bool;
+
+    #[test]
+    fn test_unsat() {
+        use crate::SatResult;
+        let solver = Solver::new();
+        solver.assert(Bool::from_bool(false));
+        assert_eq!(solver.check(), SatResult::Unsat);
+        assert!(solver.get_model().is_none());
+    }
 }

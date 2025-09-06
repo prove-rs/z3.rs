@@ -160,7 +160,7 @@ mod thread_tests {
         let model = std::thread::spawn(move || {
             let moved = sendable.recover();
             let solver = Solver::new();
-            solver.assert(moved.eq(true));
+            solver.assert(moved);
             solver.check();
             let model = solver.get_model().unwrap();
             model.synchronized()

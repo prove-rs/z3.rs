@@ -1309,7 +1309,7 @@ fn test_goal_apply_tactic() {
 
     let false_bool = ast::Bool::from_bool(false);
     let goal = Goal::new(false, false, false);
-    let true_and_false_and_true = ast::Bool::and(&[true, false, true]);
+    let true_and_false_and_true = ast::Bool::and(&[true, false, true].map(Bool::from_bool));
     goal.assert(&true_and_false_and_true);
     test_apply_tactic(goal, vec![false_bool.clone()], vec![false_bool.clone()]);
 }
