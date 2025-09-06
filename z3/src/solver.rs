@@ -1,5 +1,5 @@
-use std::borrow::Borrow;
 use log::debug;
+use std::borrow::Borrow;
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::iter::FusedIterator;
