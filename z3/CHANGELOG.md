@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.17.0...z3-v0.18.0) - 2025-09-08
+
+### Added
+
+- add consuming solutions iterator ([#433](https://github.com/prove-rs/z3.rs/pull/433)) (by @toolCHAINZ) - #433
+
+### Changed
+
+- [**breaking**] APIs accepting `Bool` no longer accept `bool` ([#436](https://github.com/prove-rs/z3.rs/pull/436)) (by @toolCHAINZ) - #436
+
+### Fixed
+
+- Solver::clone preserves tactics and params ([#440](https://github.com/prove-rs/z3.rs/pull/440)) (by @toolCHAINZ) - #440
+
+### Other
+
+- add simple example ([#437](https://github.com/prove-rs/z3.rs/pull/437)) (by @toolCHAINZ) - #437
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.17.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.2...z3-v0.17.0) - 2025-09-03
 
 ### Added
