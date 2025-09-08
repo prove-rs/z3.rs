@@ -611,7 +611,7 @@ impl Drop for Solver {
     }
 }
 
-/// Creates a new [`Solver`] with the same assertions, tactics, params, and learned lemmas
+/// Creates a new [`Solver`] with the same assertions, tactics, and parameters
 /// as the original
 impl Clone for Solver {
     fn clone(self: &Solver) -> Self {
