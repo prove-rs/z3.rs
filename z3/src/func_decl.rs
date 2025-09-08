@@ -3,7 +3,7 @@ use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast};
+use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
 impl FuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
@@ -124,5 +124,33 @@ impl Drop for FuncDecl {
                 Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl),
             );
         }
+    }
+}
+
+unsafe impl Translate for FuncDecl {
+    fn translate(&self, dest: &Context) -> Self {
+        unsafe {
+            Self::wrap(dest, {
+                Z3_translate(self.ctx.z3_ctx.0, self.z3_func_decl as Z3_ast, dest.z3_ctx.0) as Z3_func_decl
+            })
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::{with_z3_config, Config, FuncDecl, PrepareSynchronized, Sort};
+    use crate::ast::Bool;
+
+    #[test]
+    pub fn test_translate_func_decl(){
+        let f = FuncDecl::new("foo", &[&Sort::bool()], &Sort::bool());
+        let ff =f.synchronized();
+        with_z3_config(&Config::new(), || {
+           let f = ff.recover();
+            assert_eq!(f.name(), "foo");
+            assert_eq!(f.arity(), 1);
+            assert!(f.apply(&[&Bool::from(true)]).as_bool().is_some());
+        });
     }
 }
