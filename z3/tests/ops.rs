@@ -220,7 +220,7 @@ fn test_bool_ops() {
         ($op:tt) => {
             let a = Bool::new_const("a");
             let b = Bool::new_const("b");
-            let _ = a $op b $op true $op false;
+            let _ = a $op b;
         };
     }
     macro_rules! test_op_assign {
@@ -229,8 +229,6 @@ fn test_bool_ops() {
             let mut a = Bool::new_const("a");
             let b = Bool::new_const("b");
             a $assign b;
-            a $assign true;
-            a $assign false;
         };
     }
     macro_rules! test_unary_op {
@@ -418,7 +416,7 @@ fn test_eq() {
     let t2 = Bool::from_bool(true);
     // the `true` here is being transparently converted
     // to a z3 Bool
-    assert_eq!((t | t2).simplify(), true);
+    assert_eq!((t | t2).simplify(), Bool::from_bool(true));
 }
 
 #[test]

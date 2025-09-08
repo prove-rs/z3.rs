@@ -1,4 +1,5 @@
 use log::debug;
+use std::borrow::Borrow;
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::iter::FusedIterator;
@@ -96,8 +97,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::assert_and_track()`]
-    pub fn assert<T: Into<Bool>>(&self, ast: T) {
-        let ast = ast.into();
+    pub fn assert<T: Borrow<Bool>>(&self, ast: T) {
+        let ast = ast.borrow();
         debug!("assert: {ast:?}");
         unsafe { Z3_solver_assert(self.ctx.z3_ctx.0, self.z3_slv, ast.z3_ast) };
     }
