@@ -528,11 +528,7 @@ impl Solver {
         .fuse()
     }
 
-    /// Consume the current solver and iterate over solutions from it.
-    ///
-    /// This consuming version of [`Solver::solutions`] is necessary to use the iteration pattern
-    /// with [`Solver`]s using custom [`Tactic`](crate::Tactic)s or set logics due to the lossy
-    /// nature of [`Solver`]'s [`Clone`] impl.
+    /// Consume the current [`Solver`] and iterate over solutions to the given [`Solvable`].
     ///
     /// # Example
     ///
@@ -615,21 +611,11 @@ impl Drop for Solver {
     }
 }
 
-/// Makes a new [`Solver`] with the same sequence of assertions as the original. It does not
-/// however preserve properties of the solver other than its assertions, such as its configured
-/// [`Tactic`](crate::Tactic) or logic.
-///
-/// [`Solver`]s produced by [`Clone`] use the default [`Tactic`](crate::Tactic)
+/// Creates a new [`Solver`] with the same assertions, tactics, and parameters
+/// as the original
 impl Clone for Solver {
-    // Cloning using routines suggested by the author of Z3: https://stackoverflow.com/questions/16516337/copying-z3-solver
     fn clone(self: &Solver) -> Self {
-        let new_solver = Solver::new();
-
-        self.get_assertions().iter().for_each(|a| {
-            new_solver.assert(a);
-        });
-
-        new_solver
+        self.translate(&Context::thread_local())
     }
 }
 
