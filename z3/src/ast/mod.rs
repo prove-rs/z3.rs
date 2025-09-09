@@ -207,6 +207,10 @@ pub trait Ast: fmt::Debug {
     where
         Self: Sized;
 
+    fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized;
+
     /// Performs substitution on the `Ast`. The slice `substitutions` contains a
     /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
     fn substitute<T: Ast>(&self, substitutions: &[(&T, &T)]) -> Self
@@ -373,6 +377,13 @@ macro_rules! impl_ast {
                 self.eq(other)
             }
 
+            fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.ne(other)
+            }
+
             fn get_ctx(&self) -> &Context {
                 &self.ctx
             }
@@ -404,6 +415,13 @@ macro_rules! impl_ast {
                 Self: Sized,
             {
                 self.eq(other)
+            }
+
+            pub fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other).not()
             }
 
             /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
