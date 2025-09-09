@@ -1789,9 +1789,8 @@ fn test_round_towards_nearest_even() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
-
 #[test]
-fn test_compare_trait_resolution(){
+fn test_compare_trait_resolution() {
     let a = ast::Int::new_const("a");
     let b = ast::Int::new_const("b");
     let test_bool = Bool::new_const("test_bool");
