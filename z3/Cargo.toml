@@ -1,7 +1,7 @@
 [package]
 name = "z3"
 rust-version = "1.85.0"
-version = "0.18.0"
+version = "0.18.1"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>"]
 
 description = "High-level rust bindings for the Z3 SMT solver from Microsoft Research"

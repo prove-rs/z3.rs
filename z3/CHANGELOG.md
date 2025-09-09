@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.0...z3-v0.18.1) - 2025-09-09
+
+### Fixed
+
+- Ast::ne -> Bool is now defined and preferred over PartialEq::ne ([#442](https://github.com/prove-rs/z3.rs/pull/442)) (by @toolCHAINZ) - #442
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.18.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.17.0...z3-v0.18.0) - 2025-09-08
 
 ### Added
