@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.1...z3-v0.18.2) - 2025-09-10
+
+### Added
+
+- gate newer Z3 APIs behind features ([#444](https://github.com/prove-rs/z3.rs/pull/444)) (by @toolCHAINZ) - #444
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.18.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.0...z3-v0.18.1) - 2025-09-09
 
 ### Fixed
