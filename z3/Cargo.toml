@@ -16,13 +16,17 @@ edition = "2024"
 
 
 [features]
-default = []
+default = ["z3_4_8_15"]
 bundled = ["z3-sys/bundled"]
 vcpkg = ["z3-sys/vcpkg"]
 gh-release = ["z3-sys/gh-release"]
 
 # This is a legacy feature here for short term compatibility.
 static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]
+
+# Features requiring a minimum Z3 version of 4.8.15
+# Once ubuntu stops distributing 4.8.12, we can remove this for convenience.
+z3_4_8_15 = []
 
 [dependencies]
 log = "0.4"
