@@ -23,7 +23,7 @@
 //! > - Alice must receive at least 5 apples.
 //! > - Bob must receive an even number of apples.
 //! > - Charlie must get at least as many apples as Bob.
-//! >  - The number of apples Alice receives must be exactly 3 more than the number Charlie receives.
+//! > - The number of apples Alice receives must be exactly 3 times more than the number Charlie receives.
 //! >
 //! > What are the possible distributions of apples they could make?
 //!
@@ -43,9 +43,9 @@
 //!  // encode the constraints of the problem as Bool-valued Asts
 //!  // and assert them in the solver
 //!  solver.assert((&alice + &bob + &charlie).eq(30));
-//!  solver.assert(alice.ge(0));
-//!  solver.assert(bob.ge(0));
-//!  solver.assert(charlie.ge(0));
+//!  solver.assert(alice.gt(0));
+//!  solver.assert(bob.gt(0));
+//!  solver.assert(charlie.gt(0));
 //!  solver.assert(alice.ge(5));
 //!  solver.assert((&bob % 2).eq(0));
 //!  solver.assert(charlie.ge(&bob));
