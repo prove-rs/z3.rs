@@ -267,11 +267,7 @@ unsafe impl Translate for FuncDecl {
         unsafe {
             let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl);
             Self::wrap(dest, {
-                Z3_translate(
-                    self.ctx.z3_ctx.0,
-                    func_decl_ast,
-                    dest.z3_ctx.0,
-                ) as Z3_func_decl
+                Z3_translate(self.ctx.z3_ctx.0, func_decl_ast, dest.z3_ctx.0) as Z3_func_decl
             })
         }
     }
