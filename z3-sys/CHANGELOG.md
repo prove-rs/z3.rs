@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.11](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.10...z3-sys-v0.9.11) - 2025-09-11
+
+### Added
+
+- Special Binary Relation FuncDecls ([#340](https://github.com/prove-rs/z3.rs/pull/340)) (by @grahnen) - #340
+
+### Contributors
+
+* @grahnen
+
 ## [0.9.10](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.9...z3-sys-v0.9.10) - 2025-09-08
 
 ### Other
