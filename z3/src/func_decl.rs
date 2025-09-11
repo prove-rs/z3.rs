@@ -265,10 +265,11 @@ impl Drop for FuncDecl {
 unsafe impl Translate for FuncDecl {
     fn translate(&self, dest: &Context) -> Self {
         unsafe {
+            let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl);
             Self::wrap(dest, {
                 Z3_translate(
                     self.ctx.z3_ctx.0,
-                    self.z3_func_decl as Z3_ast,
+                    func_decl_ast,
                     dest.z3_ctx.0,
                 ) as Z3_func_decl
             })
@@ -289,7 +290,7 @@ mod test {
             let f = ff.recover();
             assert_eq!(f.name(), "foo");
             assert_eq!(f.arity(), 1);
-            assert!(f.apply(&[&Bool::from(true)]).as_bool().is_some());
+            assert!(f.apply(&[&Bool::from_bool(true)]).as_bool().is_some());
         });
     }
 }
