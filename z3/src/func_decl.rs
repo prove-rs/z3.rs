@@ -39,6 +39,51 @@ impl FuncDecl {
         }
     }
 
+    /// Create a partial order `FuncDecl`.
+    ///
+    /// A partial order is a binary relation that is reflexive, antisymmetric, and transitive.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::{FuncDecl, Sort, Solver, SatResult, Symbol};
+    /// # use z3::ast::{Bool, Int};
+    ///
+    ///   let sort = Sort::int();
+    ///   let partial_order = FuncDecl::partial_order(&sort, 0);
+    ///   // Create a solver to assert properties of the partial order.
+    ///   let solver = Solver::new();
+    ///   let x = Int::new_const("x");
+    ///   let y = Int::new_const("y");
+    ///   let z = Int::new_const("z");
+    ///
+    ///   solver.assert(&partial_order.apply(&[&x, &x]).as_bool().unwrap());
+    ///   // test reflexivity
+    ///   assert_eq!(
+    ///       solver.check_assumptions(&[partial_order.apply(&[&x, &x]).not()]),
+    ///       SatResult::Unsat
+    ///   );
+    ///
+    ///   // test antisymmetry
+    ///   assert_eq!(
+    ///       solver.check_assumptions(&[
+    ///           partial_order.apply(&[&x, &y]),
+    ///           partial_order.apply(&[&y, &x]),
+    ///           x.eq(&y).not()
+    ///       ]),
+    ///       SatResult::Unsat
+    ///   );
+    ///
+    ///   // test transitivity
+    ///   assert_eq!(
+    ///       solver.check_assumptions(&[
+    ///           partial_order.apply(&[&x, &y]),
+    ///           partial_order.apply(&[&y, &z]),
+    ///           x.eq(&y).not()
+    ///       ]),
+    ///       SatResult::Unsat
+    ///   );
+    /// ```
     pub fn partial_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let ctx = Context::thread_local();
         let a = a.borrow();
