@@ -39,7 +39,14 @@ impl FuncDecl {
         }
     }
 
-    /// Create a partial order `FuncDecl`.
+    /// Create a partial order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// The [`Sort`] may have many
+    /// partial orders derived this way, distinguished by the second integer argument to this call,
+    /// which represents the "id" of the partial order. Calling this twice with the same ID will
+    /// yield the same partial order [`FuncDecl`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
     ///
     /// A partial order is a binary relation that is reflexive, antisymmetric, and transitive.
     ///
@@ -60,15 +67,15 @@ impl FuncDecl {
     ///   solver.assert(&partial_order.apply(&[&x, &x]).as_bool().unwrap());
     ///   // test reflexivity
     ///   assert_eq!(
-    ///       solver.check_assumptions(&[partial_order.apply(&[&x, &x]).not()]),
+    ///       solver.check_assumptions(&[partial_order.apply(&[&x, &x]).as_bool().unwrap().not()]),
     ///       SatResult::Unsat
     ///   );
     ///
     ///   // test antisymmetry
     ///   assert_eq!(
     ///       solver.check_assumptions(&[
-    ///           partial_order.apply(&[&x, &y]),
-    ///           partial_order.apply(&[&y, &x]),
+    ///           partial_order.apply(&[&x, &y]).as_bool().unwrap(),
+    ///           partial_order.apply(&[&y, &x]).as_bool().unwrap(),
     ///           x.eq(&y).not()
     ///       ]),
     ///       SatResult::Unsat
@@ -77,46 +84,93 @@ impl FuncDecl {
     ///   // test transitivity
     ///   assert_eq!(
     ///       solver.check_assumptions(&[
-    ///           partial_order.apply(&[&x, &y]),
-    ///           partial_order.apply(&[&y, &z]),
-    ///           x.eq(&y).not()
+    ///           partial_order.apply(&[&x, &y]).as_bool().unwrap(),
+    ///           partial_order.apply(&[&y, &z]).as_bool().unwrap(),
+    ///           partial_order.apply(&[&x, &z]).as_bool().unwrap().not(),
     ///       ]),
     ///       SatResult::Unsat
     ///   );
     /// ```
+    ///
+    /// # See also
+    ///
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
     pub fn partial_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
-        let ctx = Context::thread_local();
         let a = a.borrow();
-        unsafe { Self::wrap(&ctx, Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id)) }
     }
 
+    /// Create a piecewise linear order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
     pub fn piecewise_linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
-        let ctx = Context::thread_local();
         let a = a.borrow();
+        let ctx = &a.ctx;
         unsafe {
             Self::wrap(
-                &ctx,
+                ctx,
                 Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id),
             )
         }
     }
 
+    /// Create a linear order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
     pub fn linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
-        let ctx = Context::thread_local();
         let a = a.borrow();
-        unsafe { Self::wrap(&ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
     }
 
+    /// Create a tree order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
     pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
-        let ctx = Context::thread_local();
         let a = a.borrow();
-        unsafe { Self::wrap(&ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
     }
 
+    /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`tree_order`](Self::tree_order)
     pub fn transitive_closure<A: Borrow<FuncDecl>>(a: A) -> Self {
-        let ctx = Context::thread_local();
         let a = a.borrow();
-        unsafe { Self::wrap(&ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
     }
 
     /// Return the number of arguments of a function declaration.
