@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.1...z3-v0.18.2) - 2025-09-10
+
+### Added
+
+- gate newer Z3 APIs behind features ([#444](https://github.com/prove-rs/z3.rs/pull/444)) (by @toolCHAINZ) - #444
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.18.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.0...z3-v0.18.1) - 2025-09-09
+
+### Fixed
+
+- Ast::ne -> Bool is now defined and preferred over PartialEq::ne ([#442](https://github.com/prove-rs/z3.rs/pull/442)) (by @toolCHAINZ) - #442
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.18.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.17.0...z3-v0.18.0) - 2025-09-08
+
+### Added
+
+- add consuming solutions iterator ([#433](https://github.com/prove-rs/z3.rs/pull/433)) (by @toolCHAINZ) - #433
+
+### Changed
+
+- [**breaking**] APIs accepting `Bool` no longer accept `bool` ([#436](https://github.com/prove-rs/z3.rs/pull/436)) (by @toolCHAINZ) - #436
+
+### Fixed
+
+- Solver::clone preserves tactics and params ([#440](https://github.com/prove-rs/z3.rs/pull/440)) (by @toolCHAINZ) - #440
+
+### Other
+
+- add simple example ([#437](https://github.com/prove-rs/z3.rs/pull/437)) (by @toolCHAINZ) - #437
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.17.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.2...z3-v0.17.0) - 2025-09-03
 
 ### Added

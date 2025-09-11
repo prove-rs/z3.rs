@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.10](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.9...z3-sys-v0.9.10) - 2025-09-08
+
+### Other
+
+- Add nostd tags ([#435](https://github.com/prove-rs/z3.rs/pull/435)) (by @toolCHAINZ) - #435
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.9.9](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.8...z3-sys-v0.9.9) - 2025-09-03
 
 ### Added

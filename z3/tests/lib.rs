@@ -1309,7 +1309,7 @@ fn test_goal_apply_tactic() {
 
     let false_bool = ast::Bool::from_bool(false);
     let goal = Goal::new(false, false, false);
-    let true_and_false_and_true = ast::Bool::and(&[true, false, true]);
+    let true_and_false_and_true = ast::Bool::and(&[true, false, true].map(Bool::from_bool));
     goal.assert(&true_and_false_and_true);
     test_apply_tactic(goal, vec![false_bool.clone()], vec![false_bool.clone()]);
 }
@@ -1787,4 +1787,18 @@ fn test_round_towards_nearest_even() {
     solver.assert(res_rtne.eq(&expected));
 
     assert_eq!(solver.check(), SatResult::Sat);
+}
+
+#[test]
+fn test_compare_trait_resolution() {
+    let a = ast::Int::new_const("a");
+    let b = ast::Int::new_const("b");
+    let test_bool = Bool::new_const("test_bool");
+    // ensure that we are returning `Bool`s here
+    // the test here is that this compiles, if PartialEq
+    // was being used, this would fail to compile
+    assert!(!test_bool.eq(a.eq(&b)).is_const());
+    assert!(!test_bool.eq(a.ne(&b)).is_const());
+    assert!(!test_bool.ne(a.eq(&b)).is_const());
+    assert!(!test_bool.ne(a.ne(&b)).is_const());
 }
