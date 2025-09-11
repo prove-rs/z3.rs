@@ -7,6 +7,189 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.1...z3-v0.18.2) - 2025-09-10
+
+### Added
+
+- gate newer Z3 APIs behind features ([#444](https://github.com/prove-rs/z3.rs/pull/444)) (by @toolCHAINZ) - #444
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.18.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.0...z3-v0.18.1) - 2025-09-09
+
+### Fixed
+
+- Ast::ne -> Bool is now defined and preferred over PartialEq::ne ([#442](https://github.com/prove-rs/z3.rs/pull/442)) (by @toolCHAINZ) - #442
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.18.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.17.0...z3-v0.18.0) - 2025-09-08
+
+### Added
+
+- add consuming solutions iterator ([#433](https://github.com/prove-rs/z3.rs/pull/433)) (by @toolCHAINZ) - #433
+
+### Changed
+
+- [**breaking**] APIs accepting `Bool` no longer accept `bool` ([#436](https://github.com/prove-rs/z3.rs/pull/436)) (by @toolCHAINZ) - #436
+
+### Fixed
+
+- Solver::clone preserves tactics and params ([#440](https://github.com/prove-rs/z3.rs/pull/440)) (by @toolCHAINZ) - #440
+
+### Other
+
+- add simple example ([#437](https://github.com/prove-rs/z3.rs/pull/437)) (by @toolCHAINZ) - #437
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.17.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.2...z3-v0.17.0) - 2025-09-03
+
+### Added
+
+- Add the ability to iterate over solutions from a `Solver` ([#431](https://github.com/prove-rs/z3.rs/pull/431)) (by @toolCHAINZ) - #431
+
+### Changed
+
+- [**breaking**] rename `_eq` to `eq` and `*_real_*` to `*_rational_*` ([#305](https://github.com/prove-rs/z3.rs/pull/305)) (by @dragazo) - #305
+- deprecate legacy Context APIs ([#427](https://github.com/prove-rs/z3.rs/pull/427)) (by @toolCHAINZ) - #427
+
+### Contributors
+
+* @toolCHAINZ
+* @dragazo
+
+## [0.16.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.1...z3-v0.16.2) - 2025-08-25
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.16.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.0...z3-v0.16.1) - 2025-08-23
+
+### Other
+
+- A first pass at documenting how to define recursive datatypes ([#420](https://github.com/prove-rs/z3.rs/pull/420)) (by @Pat-Lafon) - #420
+
+### Contributors
+
+* @Pat-Lafon
+
+## [0.16.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.15.0...z3-v0.16.0) - 2025-08-21
+
+### Added
+
+- [**breaking**] Use an implicit thread-local z3 context by default ([#417](https://github.com/prove-rs/z3.rs/pull/417)) (by @toolCHAINZ) - #417
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.15.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.4...z3-v0.15.0) - 2025-08-19
+
+### Added
+
+- [**breaking**] trait-based conversions and operations ([#410](https://github.com/prove-rs/z3.rs/pull/410)) (by @toolCHAINZ) - #410
+
+### Other
+
+- add unit tests for rounding modes ([#389](https://github.com/prove-rs/z3.rs/pull/389)) (by @mehrad31415) - #389
+
+### Contributors
+
+* @mehrad31415
+* @toolCHAINZ
+
+## [0.14.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.3...z3-v0.14.4) - 2025-08-19
+
+### Added
+
+- Add string comparison APIs ([#386](https://github.com/prove-rs/z3.rs/pull/386)) (by @mehrad31415) - #386
+- Add Sequence::empty and contains Methods ([#390](https://github.com/prove-rs/z3.rs/pull/390)) (by @mehrad31415) - #390
+- Add Constructors for Floating-Point NaN Values ([#392](https://github.com/prove-rs/z3.rs/pull/392)) (by @mehrad31415) - #392
+
+### Other
+
+- Move Model Retrieval Docs ([#394](https://github.com/prove-rs/z3.rs/pull/394)) (by @mehrad31415) - #394
+
+### Contributors
+
+* @mehrad31415
+
+## [0.14.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.2...z3-v0.14.3) - 2025-08-18
+
+### Fixed
+
+- decrement vectors after get_consequences is done with them ([#414](https://github.com/prove-rs/z3.rs/pull/414)) (by @Pat-Lafon) - #414
+
+### Other
+
+- reorganize ast module ([#411](https://github.com/prove-rs/z3.rs/pull/411)) (by @toolCHAINZ) - #411
+
+### Contributors
+
+* @Pat-Lafon
+* @toolCHAINZ
+
+## [0.14.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.1...z3-v0.14.2) - 2025-08-14
+
+### Added
+
+- add bundled path override ([#408](https://github.com/prove-rs/z3.rs/pull/408)) (by @toolCHAINZ)
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.14.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.0...z3-v0.14.1) - 2025-08-09
+
+### Added
+
+- enable moving and referencing z3 types between threads ([#404](https://github.com/prove-rs/z3.rs/pull/404)) (by @toolCHAINZ) - #404
+- impl default for context ([#402](https://github.com/prove-rs/z3.rs/pull/402)) (by @toolCHAINZ) - #402
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.14.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.3...z3-v0.14.0) - 2025-08-06
+
+### Added
+
+- add BV::from_bits  ([#398](https://github.com/prove-rs/z3.rs/pull/398)) (by @Evian-Zhang) - #398
+- Bump to Rust 2024 edition ([#381](https://github.com/prove-rs/z3.rs/pull/381)) (by @Evian-Zhang) - #381
+
+### Changed
+
+- [**breaking**] refcount z3 context ([#401](https://github.com/prove-rs/z3.rs/pull/401)) (by @toolCHAINZ) - #401
+
+### Fixed
+
+- [**breaking**] make argument of `Probe::lt` consistent with other comparison operations (by @mehrad31415) - #391
+- make BV::from_bits return Option ([#399](https://github.com/prove-rs/z3.rs/pull/399)) (by @toolCHAINZ) - #399
+
+### Contributors
+
+* @toolCHAINZ
+* @Evian-Zhang
+* @mehrad31415
+
+## [0.13.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.2...z3-v0.13.3) - 2025-07-17
+
+### Added
+
+- Add Z3_LIBRARY_PATH_OVERRIDE ([#377](https://github.com/prove-rs/z3.rs/pull/377)) (by @Evian-Zhang) - #377
+
+### Contributors
+
+* @Evian-Zhang
+
 ## [0.13.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.13.1...z3-v0.13.2) - 2025-07-14
 
 ### Fixed

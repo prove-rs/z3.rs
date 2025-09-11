@@ -1,26 +1,23 @@
+use num::abs;
 use z3::{
-    ast,
-    ast::{Array, Ast, AstKind, Bool, Dynamic, Float, Int, Real, BV},
-    Config, Context, DeclKind, FuncDecl, SatResult, Solver, Sort,
+    DeclKind, FuncDecl, SatResult, Solver, Sort, ast,
+    ast::{Array, Ast, AstKind, BV, Bool, Dynamic, Float, Int, Real},
 };
 
 #[test]
 fn test_bv_ops() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = BV::new_const(&ctx, "a", 5);
-            let b = BV::new_const(&ctx, "b", 5);
+            let a = BV::new_const("a", 5);
+            let b = BV::new_const("b", 5);
             let _ = a $op b $op 2u64 $op 2i64;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = BV::new_const(&ctx, "a", 5);
-            let b = BV::new_const(&ctx, "b", 5);
+            let mut a = BV::new_const("a", 5);
+            let b = BV::new_const("b", 5);
             a $assign b;
             a $assign 2u64;
             a $assign 2i64;
@@ -28,7 +25,7 @@ fn test_bv_ops() {
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = BV::new_const(&ctx, "a", 5);
+            let a = BV::new_const("a", 5);
             let _ = $op a;
         };
     }
@@ -46,21 +43,18 @@ fn test_bv_ops() {
 
 #[test]
 fn test_int_ops() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = Int::new_const(&ctx, "a");
-            let b = Int::new_const(&ctx, "b");
+            let a = Int::new_const("a");
+            let b = Int::new_const("b");
             let _ = a $op b $op 2u64 $op 2i64;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = Int::new_const(&ctx, "a");
-            let b = Int::new_const(&ctx, "b");
+            let mut a = Int::new_const("a");
+            let b = Int::new_const("b");
             a $assign b;
             a $assign 2u64;
             a $assign 2i64;
@@ -68,7 +62,7 @@ fn test_int_ops() {
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Int::new_const(&ctx, "a");
+            let a = Int::new_const("a");
             let _ = $op a;
         };
     }
@@ -83,36 +77,31 @@ fn test_int_ops() {
 
 #[test]
 fn test_pow_ret_real() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-    let x = Int::new_const(&ctx, "x");
+    let x = Int::new_const("x");
     let y = x.power(&x);
-    assert!(y.get_sort() == Sort::real(&ctx));
+    assert!(y.get_sort() == Sort::real());
 }
 
 #[test]
 fn test_real_ops() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = Real::new_const(&ctx, "a");
-            let b = Real::new_const(&ctx, "b");
+            let a = Real::new_const("a");
+            let b = Real::new_const("b");
             let _ = a $op b;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = Real::new_const(&ctx, "a");
-            let b = Real::new_const(&ctx, "b");
+            let mut a = Real::new_const("a");
+            let b = Real::new_const("b");
             a $assign b;
         };
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Real::new_const(&ctx, "a");
+            let a = Real::new_const("a");
             let _ = $op a;
         };
     }
@@ -126,140 +115,125 @@ fn test_real_ops() {
 
 #[test]
 fn test_float32_ops() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Float::new_const_float32(&ctx, "a");
+            let a = Float::new_const_float32("a");
             let _ = $op a;
         };
     }
     test_unary_op!(-);
 
-    let solver = Solver::new(&ctx);
+    let solver = Solver::new();
 
     // Infinite
-    solver.check_assumptions(&[Float::from_f32(&ctx, f32::INFINITY).is_infinite()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, f32::NEG_INFINITY).is_infinite()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, 0f32).is_infinite().not()]);
+    solver.check_assumptions(&[Float::from_f32(f32::INFINITY).is_infinite()]);
+    solver.check_assumptions(&[Float::from_f32(f32::NEG_INFINITY).is_infinite()]);
+    solver.check_assumptions(&[Float::from_f32(0f32).is_infinite().not()]);
 
     // Normal
-    solver.check_assumptions(&[Float::from_f32(&ctx, 1f32).is_normal()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, f32::MIN_POSITIVE / 2.0)
-        .is_normal()
-        .not()]);
+    solver.check_assumptions(&[Float::from_f32(1f32).is_normal()]);
+    solver.check_assumptions(&[Float::from_f32(f32::MIN_POSITIVE / 2.0).is_normal().not()]);
 
     // Subnormal
-    solver.check_assumptions(&[Float::from_f32(&ctx, f32::MIN_POSITIVE / 2.0).is_subnormal()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, 1f32).is_subnormal().not()]);
+    solver.check_assumptions(&[Float::from_f32(f32::MIN_POSITIVE / 2.0).is_subnormal()]);
+    solver.check_assumptions(&[Float::from_f32(1f32).is_subnormal().not()]);
 
     // Zero
-    solver.check_assumptions(&[Float::from_f32(&ctx, 0f32).is_zero()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, 1f32).is_zero().not()]);
+    solver.check_assumptions(&[Float::from_f32(0f32).is_zero()]);
+    solver.check_assumptions(&[Float::from_f32(1f32).is_zero().not()]);
 
     // NaN
-    solver.check_assumptions(&[Float::from_f32(&ctx, f32::NAN).is_nan()]);
-    solver.check_assumptions(&[Float::from_f32(&ctx, 1f32).is_nan().not()]);
+    solver.check_assumptions(&[Float::from_f32(f32::NAN).is_nan()]);
+    solver.check_assumptions(&[Float::from_f32(1f32).is_nan().not()]);
 }
 
 #[test]
 fn test_double_ops() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Float::new_const_double(&ctx, "a");
+            let a = Float::new_const_double("a");
             let _ = $op a;
         };
     }
     test_unary_op!(-);
 
-    let solver = Solver::new(&ctx);
+    let solver = Solver::new();
 
     // Infinite
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, f64::INFINITY).is_infinite()]),
+        solver.check_assumptions(&[Float::from_f64(f64::INFINITY).is_infinite()]),
         SatResult::Sat
     );
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, f64::NEG_INFINITY).is_infinite()]),
+        solver.check_assumptions(&[Float::from_f64(f64::NEG_INFINITY).is_infinite()]),
         SatResult::Sat
     );
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, 0f64).is_infinite().not()]),
+        solver.check_assumptions(&[Float::from_f64(0f64).is_infinite().not()]),
         SatResult::Sat
     );
 
     // Normal
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_normal()]),
+        solver.check_assumptions(&[Float::from_f64(1f64).is_normal()]),
         SatResult::Sat
     );
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0)
-            .is_normal()
-            .not()]),
+        solver.check_assumptions(&[Float::from_f64(f64::MIN_POSITIVE / 2.0).is_normal().not()]),
         SatResult::Sat
     );
 
     // Subnormal
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, f64::MIN_POSITIVE / 2.0).is_subnormal()]),
+        solver.check_assumptions(&[Float::from_f64(f64::MIN_POSITIVE / 2.0).is_subnormal()]),
         SatResult::Sat
     );
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_subnormal().not()]),
+        solver.check_assumptions(&[Float::from_f64(1f64).is_subnormal().not()]),
         SatResult::Sat
     );
 
     // Zero
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, 0f64).is_zero()]),
+        solver.check_assumptions(&[Float::from_f64(0f64).is_zero()]),
         SatResult::Sat
     );
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_zero().not()]),
+        solver.check_assumptions(&[Float::from_f64(1f64).is_zero().not()]),
         SatResult::Sat
     );
 
     // NaN
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, f64::NAN).is_nan()]),
+        solver.check_assumptions(&[Float::from_f64(f64::NAN).is_nan()]),
         SatResult::Sat
     );
     assert_eq!(
-        solver.check_assumptions(&[Float::from_f64(&ctx, 1f64).is_nan().not()]),
+        solver.check_assumptions(&[Float::from_f64(1f64).is_nan().not()]),
         SatResult::Sat
     );
 }
 
 #[test]
 fn test_bool_ops() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
     macro_rules! test_binary_op {
         ($op:tt) => {
-            let a = Bool::new_const(&ctx, "a");
-            let b = Bool::new_const(&ctx, "b");
-            let _ = a $op b $op true $op false;
+            let a = Bool::new_const("a");
+            let b = Bool::new_const("b");
+            let _ = a $op b;
         };
     }
     macro_rules! test_op_assign {
         ($op:tt, $assign:tt) => {
             test_binary_op!($op);
-            let mut a = Bool::new_const(&ctx, "a");
-            let b = Bool::new_const(&ctx, "b");
+            let mut a = Bool::new_const("a");
+            let b = Bool::new_const("b");
             a $assign b;
-            a $assign true;
-            a $assign false;
         };
     }
     macro_rules! test_unary_op {
         ($op:tt) => {
-            let a = Bool::new_const(&ctx, "a");
+            let a = Bool::new_const("a");
             let _ = $op a;
         };
     }
@@ -270,28 +244,25 @@ fn test_bool_ops() {
     test_unary_op!(!);
 }
 
-fn assert_bool_child<'c>(node: &impl Ast<'c>, idx: usize, expected: &Bool<'c>) {
+fn assert_bool_child(node: &impl Ast, idx: usize, expected: &Bool) {
     assert_eq!(&node.nth_child(idx).unwrap().as_bool().unwrap(), expected);
 }
 
 #[test]
 fn test_ast_children() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
-    let a = Bool::new_const(&ctx, "a");
+    let a = Bool::new_const("a");
     assert_eq!(a.num_children(), 0);
     assert_eq!(a.nth_child(0), None);
-    assert_eq!(a.children(), vec![]);
+    assert_eq!(a.children().len(), 0);
 
     let not_a = a.not();
     assert_eq!(not_a.num_children(), 1);
     assert_bool_child(&not_a, 0, &a);
     assert_eq!(not_a.nth_child(1), None);
 
-    let b = Bool::new_const(&ctx, "b");
+    let b = Bool::new_const("b");
     // This is specifically testing for an array of values, not an array of slices
-    let a_or_b = Bool::or(&ctx, &[a.clone(), b.clone()]);
+    let a_or_b = Bool::or(&[a.clone(), b.clone()]);
     assert_eq!(a_or_b.num_children(), 2);
     assert_bool_child(&a_or_b, 0, &a);
     assert_bool_child(&a_or_b, 1, &b);
@@ -301,8 +272,8 @@ fn test_ast_children() {
     assert_eq!(children[0].as_bool().unwrap(), a);
     assert_eq!(children[1].as_bool().unwrap(), b);
 
-    let c = Bool::new_const(&ctx, "c");
-    let a_and_b_and_c = Bool::and(&ctx, &[&a, &b, &c]);
+    let c = Bool::new_const("c");
+    let a_and_b_and_c = Bool::and(&[&a, &b, &c]);
     assert_eq!(a_and_b_and_c.num_children(), 3);
     assert_bool_child(&a_and_b_and_c, 0, &a);
     assert_bool_child(&a_and_b_and_c, 1, &b);
@@ -314,7 +285,7 @@ fn test_ast_children() {
     assert_eq!(children[2].as_bool().unwrap(), c);
 }
 
-fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
+fn assert_ast_attributes<T: Ast>(expr: &T, is_const: bool) {
     assert_eq!(expr.kind(), AstKind::App);
     assert!(expr.is_app());
     assert_eq!(expr.is_const(), is_const);
@@ -322,13 +293,10 @@ fn assert_ast_attributes<'c, T: Ast<'c>>(expr: &T, is_const: bool) {
 
 #[test]
 fn test_ast_attributes() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
-    let a = Bool::new_const(&ctx, "a");
-    let b = Bool::from_bool(&ctx, false);
+    let a = Bool::new_const("a");
+    let b = Bool::from_bool(false);
     let not_a = a.not();
-    let a_or_b = &Bool::or(&ctx, &[&a, &b]);
+    let a_or_b = &Bool::or(&[&a, &b]);
     assert_eq!(b.decl().kind(), DeclKind::FALSE);
     assert_eq!(not_a.decl().kind(), DeclKind::NOT);
     assert_eq!(a_or_b.decl().kind(), DeclKind::OR);
@@ -339,16 +307,13 @@ fn test_ast_attributes() {
     assert_ast_attributes(&not_a, false);
     assert_ast_attributes(a_or_b, false);
 
-    assert_ast_attributes(
-        &Array::new_const(&ctx, "arr", &Sort::int(&ctx), &Sort::bool(&ctx)),
-        true,
-    );
-    assert_ast_attributes(&BV::new_const(&ctx, "bv", 512), true);
-    assert_ast_attributes(&Real::new_const(&ctx, "r"), true);
-    assert_ast_attributes(&ast::String::new_const(&ctx, "st"), true);
+    assert_ast_attributes(&Array::new_const("arr", &Sort::int(), &Sort::bool()), true);
+    assert_ast_attributes(&BV::new_const("bv", 512), true);
+    assert_ast_attributes(&Real::new_const("r"), true);
+    assert_ast_attributes(&ast::String::new_const("st"), true);
 
-    let int_expr = Int::new_const(&ctx, "i");
-    let set_expr = ast::Set::new_const(&ctx, "set", &Sort::int(&ctx));
+    let int_expr = Int::new_const("i");
+    let set_expr = ast::Set::new_const("set", &Sort::int());
     assert_ast_attributes(&int_expr, true);
     assert_ast_attributes(&set_expr, true);
     assert_ast_attributes(&set_expr.add(&Dynamic::from_ast(&int_expr)), false);
@@ -356,25 +321,17 @@ fn test_ast_attributes() {
 
 #[test]
 fn test_func_decl_attributes() {
-    let cfg = Config::default();
-    let ctx = Context::new(&cfg);
-
-    let const_decl = FuncDecl::new(&ctx, "c", &[], &Sort::bool(&ctx));
+    let const_decl = FuncDecl::new("c", &[], &Sort::bool());
     assert_eq!(const_decl.kind(), DeclKind::UNINTERPRETED);
     assert_eq!(const_decl.name(), "c");
     assert_eq!(const_decl.arity(), 0);
 
-    let unary_decl = FuncDecl::new(&ctx, "unary", &[&Sort::bool(&ctx)], &Sort::bool(&ctx));
+    let unary_decl = FuncDecl::new("unary", &[&Sort::bool()], &Sort::bool());
     assert_eq!(unary_decl.kind(), DeclKind::UNINTERPRETED);
     assert_eq!(unary_decl.name(), "unary");
     assert_eq!(unary_decl.arity(), 1);
 
-    let binary_decl = FuncDecl::new(
-        &ctx,
-        "binary",
-        &[&Sort::bool(&ctx), &Sort::bool(&ctx)],
-        &Sort::bool(&ctx),
-    );
+    let binary_decl = FuncDecl::new("binary", &[&Sort::bool(), &Sort::bool()], &Sort::bool());
     assert_eq!(binary_decl.kind(), DeclKind::UNINTERPRETED);
     assert_eq!(binary_decl.name(), "binary");
     assert_eq!(binary_decl.arity(), 2);
@@ -382,18 +339,17 @@ fn test_func_decl_attributes() {
 
 #[test]
 fn test_real_approx() {
-    let ctx = Context::new(&Config::default());
-    let x = Real::new_const(&ctx, "x");
+    let x = Real::new_const("x");
     let xx = &x * &x;
-    let zero = Real::from_real(&ctx, 0, 1);
-    let two = Real::from_real(&ctx, 2, 1);
-    let s = Solver::new(&ctx);
-    s.assert(&x.ge(&zero));
-    s.assert(&xx._eq(&two));
+    let zero = Real::from_rational(0, 1);
+    let two = Real::from_rational(2, 1);
+    let s = Solver::new();
+    s.assert(x.ge(&zero));
+    s.assert(xx.eq(&two));
     assert_eq!(s.check(), SatResult::Sat);
     let m = s.get_model().unwrap();
     let res = m.eval(&x, false).unwrap();
-    assert_eq!(res.as_real(), None); // sqrt is irrational
+    assert_eq!(res.as_rational(), None); // sqrt is irrational
     println!("f64 res: {}", res.approx_f64());
     assert!((res.approx_f64() - ::std::f64::consts::SQRT_2).abs() < 1e-20);
     assert_eq!(res.approx(0), "1.");
@@ -427,4 +383,47 @@ fn test_real_approx() {
     assert_eq!(res.approx(28), "1.4142135623730950488016887242");
     assert_eq!(res.approx_f64(), res.approx(32).parse().unwrap());
     assert_ne!(res.approx_f64(), res.approx(16).parse().unwrap());
+}
+
+#[test]
+fn into_ast_int() {
+    let i = Int::from_u64(10);
+
+    let a1 = &i + 1;
+    let a2: Int = 1 + &i;
+    assert_eq!(a1.simplify(), 11);
+    assert_eq!(a2.simplify(), 11);
+
+    let a1 = &i - 1;
+    let a2: Int = 1 - &i;
+    assert_eq!(a1.simplify(), 9);
+    assert_eq!(a2.simplify(), -9);
+
+    let a1 = &i * 2;
+    let a2: Int = 2 * &i;
+    assert_eq!(a1.simplify(), 20);
+    assert_eq!(a2.simplify(), 20);
+
+    let a1 = &i / 2;
+    let a2: Int = 200 / &i;
+    assert_eq!(a1.simplify(), 5);
+    assert_eq!(a2.simplify(), 20);
+}
+
+#[test]
+fn test_eq() {
+    let t = Bool::from_bool(false);
+    let t2 = Bool::from_bool(true);
+    // the `true` here is being transparently converted
+    // to a z3 Bool
+    assert_eq!((t | t2).simplify(), Bool::from_bool(true));
+}
+
+#[test]
+fn test_float_ops() {
+    let t = Float::from_f64(10.0);
+    assert!(abs(t.add_towards_zero(1.0).simplify().as_f64() - 11.0) < 0.1);
+    assert!(abs(t.sub_towards_zero(1.0).simplify().as_f64() - 9.0) < 0.1);
+    assert!(abs(t.mul_towards_zero(2.0).simplify().as_f64() - 20.0) < 0.1);
+    assert!(abs(t.div_towards_zero(2.0).simplify().as_f64() - 5.0) < 0.1);
 }
