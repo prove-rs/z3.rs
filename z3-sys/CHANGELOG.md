@@ -7,6 +7,81 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.9.10](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.9...z3-sys-v0.9.10) - 2025-09-08
+
+### Other
+
+- Add nostd tags ([#435](https://github.com/prove-rs/z3.rs/pull/435)) (by @toolCHAINZ) - #435
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.9.9](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.8...z3-sys-v0.9.9) - 2025-09-03
+
+### Added
+
+- *(z3-sys)* do not depend on std ([#425](https://github.com/prove-rs/z3.rs/pull/425)) (by @lucascool12)
+
+### Contributors
+
+* @lucascool12
+
+## [0.9.8](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.7...z3-sys-v0.9.8) - 2025-08-25
+
+### Fixed
+
+- use proper header path on overridden build ([#423](https://github.com/prove-rs/z3.rs/pull/423)) (by @toolCHAINZ) - #423
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.9.7](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.6...z3-sys-v0.9.7) - 2025-08-19
+
+### Added
+
+- add string comparison APIs ([#386](https://github.com/prove-rs/z3.rs/pull/386)) (by @mehrad31415) - #386
+
+### Contributors
+
+* @mehrad31415
+
+## [0.9.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.5...z3-sys-v0.9.6) - 2025-08-14
+
+### Added
+
+- add bundled path override ([#408](https://github.com/prove-rs/z3.rs/pull/408)) (by @toolCHAINZ)
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.9.5](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.4...z3-sys-v0.9.5) - 2025-08-06
+
+### Added
+
+- Bump to Rust 2024 edition ([#381](https://github.com/prove-rs/z3.rs/pull/381)) (by @Evian-Zhang) - #381
+
+### Contributors
+
+* @Evian-Zhang
+
+## [0.9.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.3...z3-sys-v0.9.4) - 2025-07-17
+
+### Added
+
+- Add Z3_LIBRARY_PATH_OVERRIDE ([#377](https://github.com/prove-rs/z3.rs/pull/377)) (by @Evian-Zhang) - #377
+
+### Fixed
+
+- use zip instead of deprecated zip-extract ([#380](https://github.com/prove-rs/z3.rs/pull/380)) (by @toolCHAINZ) - #380
+
+### Contributors
+
+* @toolCHAINZ
+* @Evian-Zhang
+
 ## [0.9.3](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.2...z3-sys-v0.9.3) - 2025-07-14
 
 ### Fixed

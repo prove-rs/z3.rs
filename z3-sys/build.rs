@@ -1,3 +1,4 @@
+use std::path::Path;
 use std::{env, path::PathBuf};
 
 macro_rules! assert_one_of_features {
@@ -36,12 +37,18 @@ fn main() {
             } else {
                 vec![]
             };
+            println!("cargo:rerun-if-env-changed=Z3_LIBRARY_PATH_OVERRIDE");
+            if let Ok(lib_path) = env::var("Z3_LIBRARY_PATH_OVERRIDE") {
+                println!("cargo:rustc-link-search=native={lib_path}")
+            }
             (find_header_by_env(), search_paths)
         }
     };
 
     #[cfg(feature = "deprecated-static-link-z3")]
-    println!("cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature.");
+    println!(
+        "cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature."
+    );
 
     link_against_cxx_stdlib();
 
@@ -83,7 +90,9 @@ mod gh_release {
 
     use super::*;
     use reqwest::blocking::{Client, ClientBuilder};
-    use reqwest::header::{HeaderMap, AUTHORIZATION};
+    use reqwest::header::{AUTHORIZATION, HeaderMap};
+    use zip::ZipArchive;
+    use zip::read::root_dir_common_filter;
 
     pub(super) fn install_from_gh_release() -> String {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
@@ -164,8 +173,10 @@ mod gh_release {
 
         println!("Downloaded {:0.2}MB", ziplib.len() as f64 / 1024.0 / 1024.0);
 
-        zip_extract::extract(std::io::Cursor::new(ziplib), dir, true).unwrap();
-
+        ZipArchive::new(std::io::Cursor::new(ziplib))
+            .unwrap()
+            .extract_unwrapped_root_dir(dir, root_dir_common_filter)
+            .expect("Failed to extract z3 release asset");
         Ok(())
     }
 
@@ -252,7 +263,17 @@ fn find_library_header_by_vcpkg() -> String {
 fn find_header_by_env() -> String {
     const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
-        "z3/src/api/z3.h".to_string()
+        env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE")
+            .map(|a| {
+                Path::new(&a)
+                    .join("src")
+                    .join("api")
+                    .join("z3.h")
+                    .to_str()
+                    .unwrap()
+                    .to_string()
+            })
+            .unwrap_or("z3/src/api/z3.h".to_string())
     } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
         header_path
     } else {
@@ -305,7 +326,8 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
 /// Build z3 with bundled source codes.
 #[cfg(feature = "bundled")]
 fn build_bundled_z3() {
-    let mut cfg = cmake::Config::new("z3");
+    let bundled_path = env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or("z3".to_string());
+    let mut cfg = cmake::Config::new(bundled_path);
     // Don't build `libz3.so`, build `libz3.a` instead.
     cfg.define("Z3_BUILD_LIBZ3_SHARED", "false")
         // Don't build the Z3 repl.
