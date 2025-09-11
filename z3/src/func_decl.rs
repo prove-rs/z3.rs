@@ -1,3 +1,4 @@
+use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
@@ -38,24 +39,39 @@ impl FuncDecl {
         }
     }
 
-    pub fn partial_order(ctx: &'ctx Context, a: &Sort<'ctx>, id: usize) -> Self {
-        unsafe { Self::wrap(ctx, Z3_mk_partial_order(ctx.z3_ctx, a.z3_sort, id)) }
+    pub fn partial_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let ctx = Context::thread_local();
+        let a = a.borrow();
+        unsafe { Self::wrap(&ctx, Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id)) }
     }
 
-    pub fn piecewise_linear_order(ctx: &'ctx Context, a: &Sort<'ctx>, id: usize) -> Self {
-        unsafe { Self::wrap(ctx, Z3_mk_piecewise_linear_order(ctx.z3_ctx, a.z3_sort, id)) }
+    pub fn piecewise_linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let ctx = Context::thread_local();
+        let a = a.borrow();
+        unsafe {
+            Self::wrap(
+                &ctx,
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id),
+            )
+        }
     }
 
-    pub fn linear_order(ctx: &'ctx Context, a: &Sort<'ctx>, id: usize) -> Self {
-        unsafe { Self::wrap(ctx, Z3_mk_linear_order(ctx.z3_ctx, a.z3_sort, id)) }
+    pub fn linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let ctx = Context::thread_local();
+        let a = a.borrow();
+        unsafe { Self::wrap(&ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
     }
 
-    pub fn tree_order(ctx: &'ctx Context, a: &Sort<'ctx>, id: usize) -> Self {
-        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx, a.z3_sort, id)) }
+    pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let ctx = Context::thread_local();
+        let a = a.borrow();
+        unsafe { Self::wrap(&ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
     }
 
-    pub fn transitive_closure(ctx: &'ctx Context, a: &FuncDecl<'ctx>) -> Self {
-        unsafe { Self::wrap(ctx, Z3_mk_transitive_closure(ctx.z3_ctx, a.z3_func_decl)) }
+    pub fn transitive_closure<A: Borrow<FuncDecl>>(a: A) -> Self {
+        let ctx = Context::thread_local();
+        let a = a.borrow();
+        unsafe { Self::wrap(&ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
     }
 
     /// Return the number of arguments of a function declaration.
