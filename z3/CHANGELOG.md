@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.18.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.2...z3-v0.18.3) - 2025-09-11
+
+### Added
+
+- impl Translate for FuncDecl ([#439](https://github.com/prove-rs/z3.rs/pull/439)) (by @toolCHAINZ) - #439
+- Special Binary Relation FuncDecls ([#340](https://github.com/prove-rs/z3.rs/pull/340)) (by @grahnen) - #340
+
+### Other
+
+- fix typos in example ([#448](https://github.com/prove-rs/z3.rs/pull/448)) (by @toolCHAINZ) - #448
+
+### Contributors
+
+* @toolCHAINZ
+* @grahnen
+
 ## [0.18.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.1...z3-v0.18.2) - 2025-09-10
 
 ### Added
