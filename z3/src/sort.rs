@@ -1,19 +1,21 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
-use std::fmt;
-
+use std::{fmt, mem};
+use std::marker::PhantomData;
 use z3_sys::*;
 
+use crate::ast::{Array, BV, Bool, Dynamic, Float, Int, Real, Seq, Set};
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
-impl Sort {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
+impl<A> Sort<A> {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort<A> {
         unsafe {
             Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
         }
         Sort {
             ctx: ctx.clone(),
             z3_sort,
+            phantom: PhantomData::default(),
         }
     }
 
@@ -21,99 +23,18 @@ impl Sort {
         self.z3_sort
     }
 
-    pub fn uninterpreted(name: Symbol) -> Sort {
+    pub fn uninterpreted(name: Symbol) -> Sort<Dynamic> {
         let ctx = &Context::thread_local();
 
         unsafe {
-            Self::wrap(
+            Sort::wrap(
                 ctx,
                 Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol()),
             )
         }
     }
 
-    pub fn bool() -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0))
-        }
-    }
 
-    pub fn int() -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0))
-        }
-    }
-
-    pub fn real() -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0))
-        }
-    }
-
-    pub fn float(ebits: u32, sbits: u32) -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits))
-        }
-    }
-
-    pub fn float32() -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24))
-        }
-    }
-
-    pub fn double() -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53))
-        }
-    }
-
-    pub fn string() -> Sort {
-        unsafe {
-            let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0))
-        }
-    }
-
-    pub fn bitvector(sz: u32) -> Sort {
-        let ctx = &Context::thread_local();
-
-        unsafe {
-            Self::wrap(
-                ctx,
-                Z3_mk_bv_sort(ctx.z3_ctx.0, sz as ::std::os::raw::c_uint),
-            )
-        }
-    }
-
-    pub fn array(domain: &Sort, range: &Sort) -> Sort {
-        let ctx = &Context::thread_local();
-
-        unsafe {
-            Self::wrap(
-                ctx,
-                Z3_mk_array_sort(ctx.z3_ctx.0, domain.z3_sort, range.z3_sort),
-            )
-        }
-    }
-
-    pub fn set(elt: &Sort) -> Sort {
-        let ctx = &Context::thread_local();
-
-        unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
-    }
-
-    pub fn seq(elt: &Sort) -> Sort {
-        let ctx = &Context::thread_local();
-
-        unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }
-    }
 
     /// Create an enumeration sort.
     ///
@@ -150,14 +71,14 @@ impl Sort {
     pub fn enumeration(
         name: Symbol,
         enum_names: &[Symbol],
-    ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
+    ) -> (Sort<Dynamic>, Vec<FuncDecl>, Vec<FuncDecl>) {
         let ctx = &Context::thread_local();
         let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
         let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
         let sort = unsafe {
-            Self::wrap(
+            Sort::wrap(
                 ctx,
                 Z3_mk_enumeration_sort(
                     ctx.z3_ctx.0,
@@ -259,14 +180,14 @@ impl Sort {
     /// assert!(int_sort.array_domain().is_none());
     /// assert!(bool_sort.array_domain().is_none());
     /// ```
-    pub fn array_domain(&self) -> Option<Sort> {
+    pub fn array_domain(&self) -> Option<Sort<Dynamic>> {
         if self.is_array() {
             unsafe {
                 let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort);
                 if domain_sort.is_null() {
                     None
                 } else {
-                    Some(Self::wrap(&self.ctx, domain_sort))
+                    Some(Sort::wrap(&self.ctx, domain_sort))
                 }
             }
         } else {
@@ -291,14 +212,14 @@ impl Sort {
     /// assert!(int_sort.array_range().is_none());
     /// assert!(bool_sort.array_range().is_none());
     /// ```
-    pub fn array_range(&self) -> Option<Sort> {
+    pub fn array_range(&self) -> Option<Sort<Dynamic>> {
         if self.is_array() {
             unsafe {
                 let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.0, self.z3_sort);
                 if range_sort.is_null() {
                     None
                 } else {
-                    Some(Self::wrap(&self.ctx, range_sort))
+                    Some(Sort::wrap(&self.ctx, range_sort))
                 }
             }
         } else {
@@ -307,13 +228,148 @@ impl Sort {
     }
 }
 
-impl Clone for Sort {
+impl Sort<Bool>{
+    pub fn bool() -> Self {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0))
+        }
+    }
+}
+
+impl Sort<Int>{
+    pub fn int() -> Self {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0))
+        }
+    }
+}
+
+impl Sort<Real>{
+    pub fn real() -> Sort<Real> {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0))
+        }
+    }
+}
+
+impl Sort<Float>{
+    pub fn float(ebits: u32, sbits: u32) -> Sort<Float> {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits))
+        }
+    }
+
+    pub fn float32() -> Sort<Float> {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24))
+        }
+    }
+    pub fn double() -> Sort<Float> {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53))
+        }
+    }
+
+}
+
+impl Sort<BV>{
+    pub fn bitvector(sz: u32) -> Sort<BV> {
+        let ctx = &Context::thread_local();
+
+        unsafe {
+            Sort::wrap(
+                ctx,
+                Z3_mk_bv_sort(ctx.z3_ctx.0, sz as ::std::os::raw::c_uint),
+            )
+        }
+    }
+}
+
+impl Sort<String>{
+    pub fn string() -> Sort<crate::ast::String> {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0))
+        }
+    }
+}
+
+impl Sort<Seq>{
+    pub fn seq<B>(elt: &Sort<B>) -> Sort<Seq> {
+        let ctx = &Context::thread_local();
+
+        unsafe { Sort::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }
+    }
+}
+
+impl Sort<Set>{
+    pub fn set<B>(elt: &Sort<B>) -> Sort<Set> {
+        let ctx = &Context::thread_local();
+
+        unsafe { Sort::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
+    }
+}
+
+impl Sort<Array>{
+    pub fn array<B, C>(domain: &Sort<B>, range: &Sort<C>) -> Sort<Array> {
+        let ctx = &Context::thread_local();
+
+        unsafe {
+            Sort::wrap(
+                ctx,
+                Z3_mk_array_sort(ctx.z3_ctx.0, domain.z3_sort, range.z3_sort),
+            )
+        }
+    }
+}
+
+impl<A> Sort<A>{
+    pub(crate) fn as_dyn(&self) -> Sort<Dynamic>{
+        Sort{
+            ctx: self.ctx.clone(),
+            z3_sort: self.z3_sort,
+            phantom: PhantomData::default(),
+        }
+    }
+}
+macro_rules! into_dynamic_sort {
+    ($t:ty) => {
+        impl From<Sort<$t>> for Sort<Dynamic>{
+            fn from(value: Sort<$t>) -> Self {
+                Self{
+                    ctx: value.ctx.clone(),
+                    z3_sort: value.z3_sort,
+                    phantom: PhantomData::default(),
+                }
+            }
+        }
+    };
+}
+
+into_dynamic_sort!(Bool);
+into_dynamic_sort!(Int);
+into_dynamic_sort!(Real);
+into_dynamic_sort!(Float);
+into_dynamic_sort!(BV);
+into_dynamic_sort!(String);
+into_dynamic_sort!(Seq);
+into_dynamic_sort!(Set);
+into_dynamic_sort!(Array);
+
+
+impl<A> Clone for Sort<A> {
     fn clone(&self) -> Self {
         unsafe { Self::wrap(&self.ctx, self.z3_sort) }
     }
 }
 
-impl fmt::Display for Sort {
+impl<A> fmt::Display for Sort<A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_sort_to_string(self.ctx.z3_ctx.0, self.z3_sort) };
         if p.is_null() {
@@ -326,21 +382,21 @@ impl fmt::Display for Sort {
     }
 }
 
-impl fmt::Debug for Sort {
+impl<A> fmt::Debug for Sort<A> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl PartialEq<Sort> for Sort {
-    fn eq(&self, other: &Sort) -> bool {
+impl<A> PartialEq<Sort<A>> for Sort<A> {
+    fn eq(&self, other: &Sort<A>) -> bool {
         unsafe { Z3_is_eq_sort(self.ctx.z3_ctx.0, self.z3_sort, other.z3_sort) }
     }
 }
 
-impl Eq for Sort {}
+impl<A> Eq for Sort<A> {}
 
-impl Drop for Sort {
+impl<A> Drop for Sort<A> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(
@@ -351,21 +407,21 @@ impl Drop for Sort {
     }
 }
 
-impl SortDiffers {
-    pub fn new(left: Sort, right: Sort) -> Self {
+impl<A, B> SortDiffers<A, B> {
+    pub fn new(left: Sort<A>, right: Sort<B>) -> Self {
         Self { left, right }
     }
 
-    pub fn left(&self) -> &Sort {
+    pub fn left(&self) -> &Sort<A> {
         &self.left
     }
 
-    pub fn right(&self) -> &Sort {
+    pub fn right(&self) -> &Sort<B> {
         &self.right
     }
 }
 
-impl fmt::Display for SortDiffers {
+impl<A, B> fmt::Display for SortDiffers<A, B> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         write!(
             f,

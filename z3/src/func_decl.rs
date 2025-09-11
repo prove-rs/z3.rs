@@ -2,10 +2,12 @@ use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
+use std::marker::PhantomData;
 use z3_sys::*;
+use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast, Translate};
+use crate::ast::{Array, Bool, Datatype, Dynamic, Int, Real, Seq, Set, BV};
 
-use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
-impl FuncDecl {
+impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
             Z3_inc_ref(
@@ -16,15 +18,17 @@ impl FuncDecl {
         Self {
             ctx: ctx.clone(),
             z3_func_decl,
+            phantom_a: PhantomData::default(),
+            phantom_r: PhantomData::default(),
         }
     }
 
-    pub fn new<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
+    pub fn new<S: Into<Symbol>>(name: S, domain: &A, range: &Sort<R>) -> Self {
         let ctx = &Context::thread_local();
-        assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
+
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
 
-        let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
+        let domain: Vec<_> = domain.sorts().iter().map(|s| s.z3_sort).collect();
         unsafe {
             Self::wrap(
                 ctx,
@@ -98,7 +102,7 @@ impl FuncDecl {
     /// - [`linear_order`](Self::linear_order)
     /// - [`tree_order`](Self::tree_order)
     /// - [`transitive_closure`](Self::transitive_closure)
-    pub fn partial_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+    pub fn partial_order<T: Borrow<Sort<C>>, C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id)) }
@@ -114,7 +118,7 @@ impl FuncDecl {
     /// - [`linear_order`](Self::linear_order)
     /// - [`tree_order`](Self::tree_order)
     /// - [`transitive_closure`](Self::transitive_closure)
-    pub fn piecewise_linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+    pub fn piecewise_linear_order<T: Borrow<Sort<C>>, C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe {
@@ -135,7 +139,7 @@ impl FuncDecl {
     /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
     /// - [`tree_order`](Self::tree_order)
     /// - [`transitive_closure`](Self::transitive_closure)
-    pub fn linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+    pub fn linear_order<T: Borrow<Sort<C>>,C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
@@ -151,7 +155,7 @@ impl FuncDecl {
     /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
     /// - [`linear_order`](Self::linear_order)
     /// - [`transitive_closure`](Self::transitive_closure)
-    pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+    pub fn tree_order<T: Borrow<Sort<C>>,C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
@@ -167,7 +171,7 @@ impl FuncDecl {
     /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
     /// - [`linear_order`](Self::linear_order)
     /// - [`tree_order`](Self::tree_order)
-    pub fn transitive_closure<A: Borrow<FuncDecl>>(a: A) -> Self {
+    pub fn transitive_closure<T: Borrow<FuncDecl<A,R>>>(a: T) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
@@ -192,7 +196,13 @@ impl FuncDecl {
     /// Create a constant (if `args` has length 0) or function application (otherwise).
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
-    pub fn apply(&self, args: &[&dyn ast::Ast]) -> ast::Dynamic {
+    pub fn apply(&self, args: A::ApplicationParam) -> R{
+        let a = A::application_args(&args);
+        let refs = a.iter().map(|a|a.as_ref()).collect::<Vec<_>>();
+        let d = self.apply_internal(&refs);
+        R::process(d)    }
+
+    fn apply_internal(&self, args: &[&dyn ast::Ast]) -> ast::Dynamic {
         assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
 
         let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
@@ -232,7 +242,7 @@ impl FuncDecl {
     }
 }
 
-impl fmt::Display for FuncDecl {
+impl<A: FuncDeclDomain,R> fmt::Display for FuncDecl<A,R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.0, self.z3_func_decl) };
         if p.is_null() {
@@ -245,13 +255,13 @@ impl fmt::Display for FuncDecl {
     }
 }
 
-impl fmt::Debug for FuncDecl {
+impl<A: FuncDeclDomain,R> fmt::Debug for FuncDecl<A,R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl Drop for FuncDecl {
+impl<A: FuncDeclDomain,R> Drop for FuncDecl<A,R> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(
@@ -262,7 +272,7 @@ impl Drop for FuncDecl {
     }
 }
 
-unsafe impl Translate for FuncDecl {
+unsafe impl<A: FuncDeclDomain,R: FuncDeclReturn> Translate for FuncDecl<A,R> {
     fn translate(&self, dest: &Context) -> Self {
         unsafe {
             let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl);
@@ -289,4 +299,104 @@ mod test {
             assert!(f.apply(&[&Bool::from_bool(true)]).as_bool().is_some());
         });
     }
+}
+
+
+
+pub trait FuncDeclDomain{
+    type ApplicationParam;
+
+    fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>>;
+
+    fn sorts(&self) -> Vec<Sort<Dynamic>>;
+}
+
+impl<A: Ast + Clone + 'static> FuncDeclDomain for Sort<A>{
+    type ApplicationParam = A;
+
+    fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>> {
+        let a = a.clone();
+        vec![Box::new(a)]
+    }
+
+    fn sorts(&self) -> Vec<Sort<Dynamic>> {
+        vec![self.as_dyn()]
+    }
+}
+
+
+pub trait FuncDeclReturn{
+    fn process(d: ast::Dynamic) -> Self;
+}
+
+impl FuncDeclReturn for BV{
+    fn process(d: Dynamic) -> Self {
+        d.as_bv().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Bool{
+    fn process( d: Dynamic) -> Self {
+        d.as_bool().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Int{
+    fn process(d: Dynamic) -> Self {
+        d.as_int().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Real{
+    fn process(d: Dynamic) -> Self {
+        d.as_real().unwrap()
+    }
+}
+
+impl FuncDeclReturn for ast::String{
+    fn process(d: Dynamic) -> Self {
+        d.as_string().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Seq{
+    fn process( d: Dynamic) -> Self {
+        d.as_seq().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Set{
+    fn process( d: Dynamic) -> Self {
+        d.as_set().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Array{
+    fn process( d: Dynamic) -> Self {
+        d.as_array().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Datatype{
+    fn process( d: Dynamic) -> Self {
+        d.as_datatype().unwrap()
+    }
+}
+
+impl FuncDeclReturn for Dynamic{
+    fn process( d: Dynamic) -> Self {
+        d
+    }
+}
+
+mod duh{
+    use crate::{FuncDecl, Sort};
+    use crate::ast::Int;
+
+    fn test_func_decl(){
+    let a = FuncDecl::new("f", &Sort::int(), &Sort::int());
+        let i = Int::new_const("sdf");
+        let b = a.apply(i);
+
+}
 }

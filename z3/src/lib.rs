@@ -81,6 +81,8 @@
 #![deny(missing_debug_implementations)]
 
 use std::ffi::CString;
+use std::marker::PhantomData;
+use std::rc::Rc;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
@@ -149,16 +151,17 @@ pub enum Symbol {
 //
 // Note for in-crate users: Never construct a `Sort` directly; only use
 // `Sort::new()` which handles Z3 refcounting properly.
-pub struct Sort {
+pub struct Sort<A> {
     ctx: Context,
     z3_sort: Z3_sort,
+    phantom: PhantomData<A>,
 }
 
 /// A struct to represent when two sorts are of different types.
 #[derive(Debug)]
-pub struct SortDiffers {
-    left: Sort,
-    right: Sort,
+pub struct SortDiffers<A,B> {
+    left: Sort<A>,
+    right: Sort<B>,
 }
 
 /// A struct to represent when an ast is not a function application.
@@ -206,9 +209,11 @@ pub struct Optimize {
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
-pub struct FuncDecl {
+pub struct FuncDecl<A: FuncDeclDomain, R> {
     ctx: Context,
     z3_func_decl: Z3_func_decl,
+    phantom_a: PhantomData<A>,
+    phantom_r: PhantomData<R>,
 }
 
 /// Stores the interpretation of a function in a Z3 model.
@@ -244,6 +249,8 @@ pub struct RecFuncDecl {
 }
 
 pub use z3_sys::DeclKind;
+use crate::ast::{Bool, Datatype, Dynamic};
+use crate::func_decl::FuncDeclDomain;
 
 /// Build a custom [datatype sort](DatatypeSort).
 ///
@@ -287,16 +294,16 @@ pub struct DatatypeBuilder {
 
 /// Inner variant for a custom [datatype sort](DatatypeSort).
 #[derive(Debug)]
-pub struct DatatypeVariant {
-    pub constructor: FuncDecl,
-    pub tester: FuncDecl,
+pub struct DatatypeVariant<A,R> {
+    pub constructor: FuncDecl<A,R>,
+    pub tester: FuncDecl<Dynamic, Bool>,
     pub accessors: Vec<FuncDecl>,
 }
 
 /// A custom datatype sort.
 #[derive(Debug)]
 pub struct DatatypeSort {
-    pub sort: Sort,
+    pub sort: Sort<Datatype>,
     pub variants: Vec<DatatypeVariant>,
 }
 
