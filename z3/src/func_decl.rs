@@ -1,13 +1,13 @@
+use crate::ast::{Array, BV, Bool, Datatype, Dynamic, Int, Real, Seq, Set};
+use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
 use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::marker::PhantomData;
 use z3_sys::*;
-use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast, Translate};
-use crate::ast::{Array, Bool, Datatype, Dynamic, Int, Real, Seq, Set, BV};
 
-impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
+impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
             Z3_inc_ref(
@@ -139,7 +139,7 @@ impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
     /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
     /// - [`tree_order`](Self::tree_order)
     /// - [`transitive_closure`](Self::transitive_closure)
-    pub fn linear_order<T: Borrow<Sort<C>>,C>(a: T, id: usize) -> Self {
+    pub fn linear_order<T: Borrow<Sort<C>>, C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
@@ -155,7 +155,7 @@ impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
     /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
     /// - [`linear_order`](Self::linear_order)
     /// - [`transitive_closure`](Self::transitive_closure)
-    pub fn tree_order<T: Borrow<Sort<C>>,C>(a: T, id: usize) -> Self {
+    pub fn tree_order<T: Borrow<Sort<C>>, C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
@@ -171,7 +171,7 @@ impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
     /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
     /// - [`linear_order`](Self::linear_order)
     /// - [`tree_order`](Self::tree_order)
-    pub fn transitive_closure<T: Borrow<FuncDecl<A,R>>>(a: T) -> Self {
+    pub fn transitive_closure<T: Borrow<FuncDecl<A, R>>>(a: T) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
         unsafe { Self::wrap(ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
@@ -196,11 +196,12 @@ impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
     /// Create a constant (if `args` has length 0) or function application (otherwise).
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
-    pub fn apply(&self, args: A::ApplicationParam) -> R{
+    pub fn apply(&self, args: A::ApplicationParam) -> R {
         let a = A::application_args(&args);
-        let refs = a.iter().map(|a|a.as_ref()).collect::<Vec<_>>();
+        let refs = a.iter().map(|a| a.as_ref()).collect::<Vec<_>>();
         let d = self.apply_internal(&refs);
-        R::process(d)    }
+        R::process(d)
+    }
 
     fn apply_internal(&self, args: &[&dyn ast::Ast]) -> ast::Dynamic {
         assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
@@ -242,7 +243,7 @@ impl<A: FuncDeclDomain,R: FuncDeclReturn> FuncDecl<A,R> {
     }
 }
 
-impl<A: FuncDeclDomain,R> fmt::Display for FuncDecl<A,R> {
+impl<A: FuncDeclDomain, R> fmt::Display for FuncDecl<A, R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.0, self.z3_func_decl) };
         if p.is_null() {
@@ -255,13 +256,13 @@ impl<A: FuncDeclDomain,R> fmt::Display for FuncDecl<A,R> {
     }
 }
 
-impl<A: FuncDeclDomain,R> fmt::Debug for FuncDecl<A,R> {
+impl<A: FuncDeclDomain, R> fmt::Debug for FuncDecl<A, R> {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         <Self as fmt::Display>::fmt(self, f)
     }
 }
 
-impl<A: FuncDeclDomain,R> Drop for FuncDecl<A,R> {
+impl<A: FuncDeclDomain, R> Drop for FuncDecl<A, R> {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(
@@ -272,7 +273,7 @@ impl<A: FuncDeclDomain,R> Drop for FuncDecl<A,R> {
     }
 }
 
-unsafe impl<A: FuncDeclDomain,R: FuncDeclReturn> Translate for FuncDecl<A,R> {
+unsafe impl<A: FuncDeclDomain, R: FuncDeclReturn> Translate for FuncDecl<A, R> {
     fn translate(&self, dest: &Context) -> Self {
         unsafe {
             let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl);
@@ -301,9 +302,7 @@ mod test {
     }
 }
 
-
-
-pub trait FuncDeclDomain{
+pub trait FuncDeclDomain {
     type ApplicationParam;
 
     fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>>;
@@ -311,7 +310,7 @@ pub trait FuncDeclDomain{
     fn sorts(&self) -> Vec<Sort<Dynamic>>;
 }
 
-impl<A: Ast + Clone + 'static> FuncDeclDomain for Sort<A>{
+impl<A: Ast + Clone + 'static> FuncDeclDomain for Sort<A> {
     type ApplicationParam = A;
 
     fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>> {
@@ -324,79 +323,116 @@ impl<A: Ast + Clone + 'static> FuncDeclDomain for Sort<A>{
     }
 }
 
+// Macro to implement FuncDeclDomain for tuples of FuncDeclDomain
+macro_rules! impl_func_decl_domain_for_tuples {
+    ($(($($T:ident),+)),+) => {
+        $(
+            impl<$($T: FuncDeclDomain),+> FuncDeclDomain for ($($T,)+) {
+                type ApplicationParam = ($($T::ApplicationParam,)+);
 
-pub trait FuncDeclReturn{
+                fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>> {
+                    let ($($T,)+) = a;
+                    let mut args = Vec::new();
+                    $(
+                        args.extend($T::application_args($T));
+                    )+
+                    args
+                }
+
+                fn sorts(&self) -> Vec<Sort<Dynamic>> {
+                    let ($($T,)+) = self;
+                    let mut sorts = Vec::new();
+                    $(
+                        sorts.extend($T.sorts());
+                    )+
+                    sorts
+                }
+            }
+        )+
+    };
+}
+
+// Implement for tuples up to arity 5 (can be extended as needed)
+impl_func_decl_domain_for_tuples!(
+    (A, B),
+    (A, B, C),
+    (A, B, C, D),
+    (A, B, C, D, E),
+    (A, B, C, D, E, F)
+);
+
+pub trait FuncDeclReturn {
     fn process(d: ast::Dynamic) -> Self;
 }
 
-impl FuncDeclReturn for BV{
+impl FuncDeclReturn for BV {
     fn process(d: Dynamic) -> Self {
         d.as_bv().unwrap()
     }
 }
 
-impl FuncDeclReturn for Bool{
-    fn process( d: Dynamic) -> Self {
+impl FuncDeclReturn for Bool {
+    fn process(d: Dynamic) -> Self {
         d.as_bool().unwrap()
     }
 }
 
-impl FuncDeclReturn for Int{
+impl FuncDeclReturn for Int {
     fn process(d: Dynamic) -> Self {
         d.as_int().unwrap()
     }
 }
 
-impl FuncDeclReturn for Real{
+impl FuncDeclReturn for Real {
     fn process(d: Dynamic) -> Self {
         d.as_real().unwrap()
     }
 }
 
-impl FuncDeclReturn for ast::String{
+impl FuncDeclReturn for ast::String {
     fn process(d: Dynamic) -> Self {
         d.as_string().unwrap()
     }
 }
 
-impl FuncDeclReturn for Seq{
-    fn process( d: Dynamic) -> Self {
+impl FuncDeclReturn for Seq {
+    fn process(d: Dynamic) -> Self {
         d.as_seq().unwrap()
     }
 }
 
-impl FuncDeclReturn for Set{
-    fn process( d: Dynamic) -> Self {
+impl FuncDeclReturn for Set {
+    fn process(d: Dynamic) -> Self {
         d.as_set().unwrap()
     }
 }
 
-impl FuncDeclReturn for Array{
-    fn process( d: Dynamic) -> Self {
+impl FuncDeclReturn for Array {
+    fn process(d: Dynamic) -> Self {
         d.as_array().unwrap()
     }
 }
 
-impl FuncDeclReturn for Datatype{
-    fn process( d: Dynamic) -> Self {
+impl FuncDeclReturn for Datatype {
+    fn process(d: Dynamic) -> Self {
         d.as_datatype().unwrap()
     }
 }
 
-impl FuncDeclReturn for Dynamic{
-    fn process( d: Dynamic) -> Self {
+impl FuncDeclReturn for Dynamic {
+    fn process(d: Dynamic) -> Self {
         d
     }
 }
 
-mod duh{
+mod duh {
+    use crate::ast::{BV, Int};
     use crate::{FuncDecl, Sort};
-    use crate::ast::Int;
 
-    fn test_func_decl(){
-    let a = FuncDecl::new("f", &Sort::int(), &Sort::int());
+    fn test_func_decl() {
+        let a = FuncDecl::new("f", &(Sort::int(), Sort::bitvector(5)), &Sort::int());
         let i = Int::new_const("sdf");
-        let b = a.apply(i);
-
-}
+        let b = BV::new_const("sf", 5);
+        let b = a.apply((i, b));
+    }
 }
