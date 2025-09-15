@@ -1,9 +1,10 @@
+use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, Sort, Symbol, ast, ast::Ast};
+use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
 impl FuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
@@ -36,6 +37,140 @@ impl FuncDecl {
                 ),
             )
         }
+    }
+
+    /// Create a partial order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// The [`Sort`] may have many
+    /// partial orders derived this way, distinguished by the second integer argument to this call,
+    /// which represents the "id" of the partial order. Calling this twice with the same ID will
+    /// yield the same partial order [`FuncDecl`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// A partial order is a binary relation that is reflexive, antisymmetric, and transitive.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::{FuncDecl, Sort, Solver, SatResult, Symbol};
+    /// # use z3::ast::{Bool, Int};
+    ///
+    ///   let sort = Sort::int();
+    ///   let partial_order = FuncDecl::partial_order(&sort, 0);
+    ///   // Create a solver to assert properties of the partial order.
+    ///   let solver = Solver::new();
+    ///   let x = Int::new_const("x");
+    ///   let y = Int::new_const("y");
+    ///   let z = Int::new_const("z");
+    ///
+    ///   solver.assert(&partial_order.apply(&[&x, &x]).as_bool().unwrap());
+    ///   // test reflexivity
+    ///   assert_eq!(
+    ///       solver.check_assumptions(&[partial_order.apply(&[&x, &x]).as_bool().unwrap().not()]),
+    ///       SatResult::Unsat
+    ///   );
+    ///
+    ///   // test antisymmetry
+    ///   assert_eq!(
+    ///       solver.check_assumptions(&[
+    ///           partial_order.apply(&[&x, &y]).as_bool().unwrap(),
+    ///           partial_order.apply(&[&y, &x]).as_bool().unwrap(),
+    ///           x.eq(&y).not()
+    ///       ]),
+    ///       SatResult::Unsat
+    ///   );
+    ///
+    ///   // test transitivity
+    ///   assert_eq!(
+    ///       solver.check_assumptions(&[
+    ///           partial_order.apply(&[&x, &y]).as_bool().unwrap(),
+    ///           partial_order.apply(&[&y, &z]).as_bool().unwrap(),
+    ///           partial_order.apply(&[&x, &z]).as_bool().unwrap().not(),
+    ///       ]),
+    ///       SatResult::Unsat
+    ///   );
+    /// ```
+    ///
+    /// # See also
+    ///
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
+    pub fn partial_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let a = a.borrow();
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+    }
+
+    /// Create a piecewise linear order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
+    pub fn piecewise_linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let a = a.borrow();
+        let ctx = &a.ctx;
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id),
+            )
+        }
+    }
+
+    /// Create a linear order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
+    pub fn linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let a = a.borrow();
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+    }
+
+    /// Create a tree order [`FuncDecl`] "Special Relation" over the given [`Sort`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`transitive_closure`](Self::transitive_closure)
+    pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
+        let a = a.borrow();
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+    }
+
+    /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].
+    ///
+    /// See <https://microsoft.github.io/z3guide/docs/theories/Special%20Relations/> for more info.
+    ///
+    /// # See also
+    ///
+    /// - [`partial_order`](Self::partial_order)
+    /// - [`piecewise_linear_order`](Self::piecewise_linear_order)
+    /// - [`linear_order`](Self::linear_order)
+    /// - [`tree_order`](Self::tree_order)
+    pub fn transitive_closure<A: Borrow<FuncDecl>>(a: A) -> Self {
+        let a = a.borrow();
+        let ctx = &a.ctx;
+        unsafe { Self::wrap(ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
     }
 
     /// Return the number of arguments of a function declaration.
@@ -124,5 +259,34 @@ impl Drop for FuncDecl {
                 Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl),
             );
         }
+    }
+}
+
+unsafe impl Translate for FuncDecl {
+    fn translate(&self, dest: &Context) -> Self {
+        unsafe {
+            let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl);
+            let translated = Z3_translate(self.ctx.z3_ctx.0, func_decl_ast, dest.z3_ctx.0);
+            let func_decl = Z3_to_func_decl(self.ctx.z3_ctx.0, translated);
+            Self::wrap(dest, func_decl)
+        }
+    }
+}
+
+#[cfg(test)]
+mod test {
+    use crate::ast::Bool;
+    use crate::{Config, FuncDecl, PrepareSynchronized, Sort, with_z3_config};
+
+    #[test]
+    pub fn test_translate_func_decl() {
+        let f = FuncDecl::new("foo", &[&Sort::bool()], &Sort::bool());
+        let ff = f.synchronized();
+        with_z3_config(&Config::new(), || {
+            let f = ff.recover();
+            assert_eq!(f.name(), "foo");
+            assert_eq!(f.arity(), 1);
+            assert!(f.apply(&[&Bool::from_bool(true)]).as_bool().is_some());
+        });
     }
 }

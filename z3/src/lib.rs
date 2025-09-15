@@ -1,7 +1,81 @@
 //! # Z3
 //!
 //! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
-
+//!
+//! This library aims to provide an idiomatic Rust wrapper around Z3.
+//!
+//! # Basic Usage
+//!
+//! The simplest way to use Z3 is to build a formula (also known as an [`Ast`](ast::Ast))
+//! and use Z3's [`Solver`] to find solutions to it.
+//!
+//! This example walks through the process of expressing a simple math problem in the language of
+//! SMT, asserting it into a Solver, and extracting answers from it. Z3 can encode much more varied
+//! and complex problems than this example shows (and some of these features are supported by
+//! the Rust bindings), but this covers the absolute basics.
+//!
+//! Consider the following problem:
+//!
+//! > Three friends, named Alice, Bob, and Charlie, wish to divide 30 apples amongst themselves,
+//! > subject to the following constraints:
+//! > - Everyone must get at least one apple.
+//! > - All apples must be accounted for.
+//! > - Alice must receive at least 5 apples.
+//! > - Bob must receive an even number of apples.
+//! > - Charlie must get at least as many apples as Bob.
+//! > - The number of apples Alice receives must be exactly 3 times more than the number Charlie receives.
+//! >
+//! > What are the possible distributions of apples they could make?
+//!
+//! To express this in Z3, we define symbolic [`Int`](ast::Int) [`Ast`](ast::Ast)s representing the number
+//! of apples each friend has, and [`assert`](Solver::assert) the constraints of the problem into a [`Solver`].
+//! We can then query the [`Solver`] for a solution:
+//!
+//! ```
+//!  # use z3::Solver;
+//!  # use z3::ast::{Bool, Int};
+//!  // define Int values representing the number of apples each friend has
+//!  let alice = Int::fresh_const("alice");
+//!  let bob = Int::fresh_const("bob");
+//!  let charlie = Int::fresh_const("charlie");
+//!  // instantiate a Solver
+//!  let solver = Solver::new();
+//!  // encode the constraints of the problem as Bool-valued Asts
+//!  // and assert them in the solver
+//!  solver.assert((&alice + &bob + &charlie).eq(30));
+//!  solver.assert(alice.gt(0));
+//!  solver.assert(bob.gt(0));
+//!  solver.assert(charlie.gt(0));
+//!  solver.assert(alice.ge(5));
+//!  solver.assert((&bob % 2).eq(0));
+//!  solver.assert(charlie.ge(&bob));
+//!  solver.assert(alice.eq(&charlie * 3));
+//!  // iterate over the solutions to our variables
+//!  for solution in solver
+//!      .solutions([alice, bob, charlie], false)
+//!      // we use take to ensure that this loop terminates in case there are very many solutions
+//!      .take(100) {
+//!      // extract concrete values for each modeled Int Ast
+//!      let solution: Vec<u64> = solution.iter().map(Int::as_u64).map(Option::unwrap).collect();
+//!      let alice = solution[0];
+//!      let bob = solution[1];
+//!      let charlie = solution[2];
+//!      println!("alice: {alice}, bob: {bob}, charlie: {charlie}");
+//!      // check that the concrete values match the constraints we gave the solver
+//!      assert_eq!(alice + bob + charlie, 30);
+//!      assert!(alice >= 5);
+//!      assert_eq!(bob % 2, 0);
+//!      assert!(charlie >= bob);
+//!      assert_eq!(alice, charlie * 3);
+//!  }
+//! ```
+//!
+//! In this case, there are 2 solutions, and the above snippet gives the following
+//! output:
+//! > `alice: 21, bob: 2, charlie: 7`
+//! >
+//! > `alice: 18, bob: 6, charlie: 6`
+//!
 #![allow(clippy::unreadable_literal)]
 #![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
@@ -40,6 +114,7 @@ pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
 pub use context::Context;
 pub use datatype_builder::DatatypeAccessor;
+pub use solver::Solvable;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:

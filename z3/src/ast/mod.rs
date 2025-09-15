@@ -10,7 +10,7 @@ use std::hash::{Hash, Hasher};
 pub use z3_sys::AstKind;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, IsNotApp, Pattern, Sort, SortDiffers, Symbol};
+use crate::{Context, FuncDecl, IsNotApp, Model, Pattern, Solvable, Sort, SortDiffers, Symbol};
 
 mod array;
 mod bool;
@@ -203,6 +203,14 @@ pub trait Ast: fmt::Debug {
         }
     }
 
+    fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized;
+
+    fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized;
+
     /// Performs substitution on the `Ast`. The slice `substitutions` contains a
     /// list of pairs with a "from" `Ast` that will be substituted by a "to" `Ast`.
     fn substitute<T: Ast>(&self, substitutions: &[(&T, &T)]) -> Self
@@ -362,6 +370,20 @@ macro_rules! impl_ast {
                 }
             }
 
+            fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other)
+            }
+
+            fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.ne(other)
+            }
+
             fn get_ctx(&self) -> &Context {
                 &self.ctx
             }
@@ -393,6 +415,13 @@ macro_rules! impl_ast {
                 Self: Sized,
             {
                 self.eq(other)
+            }
+
+            pub fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other).not()
             }
 
             /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
@@ -512,6 +541,21 @@ macro_rules! impl_ast {
         impl From<&$ast> for $ast {
             fn from(value: &Self) -> Self {
                 value.clone()
+            }
+        }
+
+        impl Solvable for $ast {
+            type ModelInstance = Self;
+            fn read_from_model(
+                &self,
+                model: &Model,
+                model_completion: bool,
+            ) -> Option<Self::ModelInstance> {
+                model.eval(self, model_completion)
+            }
+
+            fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
+                model.eq(self.clone()).not()
             }
         }
     };

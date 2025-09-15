@@ -2259,6 +2259,21 @@ unsafe extern "C" {
         body: Z3_ast,
     );
 
+    /// Create a `FuncDecl` representing a partial order
+    pub fn Z3_mk_partial_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+
+    /// Create a `FuncDecl` representing a piecewise linear order
+    pub fn Z3_mk_piecewise_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+
+    /// Create a `FuncDecl` representing a linear order
+    pub fn Z3_mk_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+
+    /// Create a `FuncDecl` representing a tree order
+    pub fn Z3_mk_tree_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+
+    /// Create a `FuncDecl` representing a transitive closure
+    pub fn Z3_mk_transitive_closure(c: Z3_context, f: Z3_func_decl) -> Z3_func_decl;
+
     /// Create an AST node representing `true`.
     pub fn Z3_mk_true(c: Z3_context) -> Option<Z3_ast>;
 
