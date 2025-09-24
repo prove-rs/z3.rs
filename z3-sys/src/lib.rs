@@ -19,8 +19,8 @@
 //!
 //!     let a = Z3_mk_not(ctx, Z3_mk_eq(ctx, Z3_mk_false(ctx).unwrap(), Z3_mk_true(ctx).unwrap()).unwrap()).unwrap();
 //!     let b = Z3_mk_not(ctx, Z3_mk_iff(ctx, Z3_mk_false(ctx).unwrap(), Z3_mk_true(ctx).unwrap()).unwrap()).unwrap();
-//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, a).unwrap());
-//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, b).unwrap());
+//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, a));
+//!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, b));
 //!
 //!     Z3_del_config(cfg);
 //!     Z3_del_context(ctx);
