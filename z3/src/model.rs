@@ -75,7 +75,7 @@ impl Model {
         } else {
             let ret =
                 unsafe { Z3_model_get_func_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl) };
-            Some(unsafe{ FuncInterp::wrap(&self.ctx, ret?)})
+            Some(unsafe { FuncInterp::wrap(&self.ctx, ret?) })
         }
     }
 

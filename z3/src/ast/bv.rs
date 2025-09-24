@@ -35,12 +35,7 @@ impl BV {
         let sort = Sort::bitvector(sz);
         let ast = unsafe {
             let bv_cstring = CString::new(value).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, bv_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_none() {
-                return None;
-            }
-
-            numeral_ptr
+            Z3_mk_numeral(ctx.z3_ctx.0, bv_cstring.as_ptr(), sort.z3_sort)
         };
         Some(unsafe { Self::wrap(ctx, ast) })
     }

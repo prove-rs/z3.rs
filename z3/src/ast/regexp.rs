@@ -36,7 +36,10 @@ impl Regexp {
         unsafe {
             Self::wrap(ctx, {
                 let c_str = CString::new(s).unwrap();
-                Z3_mk_seq_to_re(ctx.z3_ctx.0, Z3_mk_string(ctx.z3_ctx.0, c_str.as_ptr()).unwrap())
+                Z3_mk_seq_to_re(
+                    ctx.z3_ctx.0,
+                    Z3_mk_string(ctx.z3_ctx.0, c_str.as_ptr()).unwrap(),
+                )
             })
         }
     }

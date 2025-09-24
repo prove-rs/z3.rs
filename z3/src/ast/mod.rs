@@ -311,7 +311,8 @@ pub trait Ast: fmt::Debug {
         } else {
             let ctx = self.get_ctx();
             let func_decl = unsafe {
-                let app = Z3_to_app(ctx.z3_ctx.0, self.get_z3_ast()).ok_or(IsNotApp::new(self.kind()))?;
+                let app =
+                    Z3_to_app(ctx.z3_ctx.0, self.get_z3_ast()).ok_or(IsNotApp::new(self.kind()))?;
                 Z3_get_app_decl(ctx.z3_ctx.0, app)
             };
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })

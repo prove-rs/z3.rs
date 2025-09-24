@@ -92,8 +92,7 @@ impl Optimize {
     pub fn assert_soft(&self, ast: &impl Ast, weight: impl Weight, group: Option<Symbol>) {
         let weight_string = weight.to_string();
         let weight_cstring = CString::new(weight_string).unwrap();
-        let group = group
-            .map(|g| g.as_z3_symbol());
+        let group = group.map(|g| g.as_z3_symbol());
 
         unsafe {
             Z3_optimize_assert_soft(

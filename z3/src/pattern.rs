@@ -38,7 +38,8 @@ impl Pattern {
                     ctx.z3_ctx.0,
                     terms.len().try_into().unwrap(),
                     terms.as_ptr() as *const Z3_ast,
-                ).unwrap();
+                )
+                .unwrap();
                 Z3_inc_ref(ctx.z3_ctx.0, Z3_pattern_to_ast(ctx.z3_ctx.0, p).unwrap());
                 p
             },
