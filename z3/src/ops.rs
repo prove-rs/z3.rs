@@ -79,8 +79,8 @@ macro_rules! impl_var_trait {
     };
 }
 
-impl_var_trait!(Bool::and_in_ctx = BitAnd::bitand);
-impl_var_trait!(Bool::or_in_ctx = BitOr::bitor);
+impl_var_trait!(Bool::and = BitAnd::bitand);
+impl_var_trait!(Bool::or = BitOr::bitor);
 impl_bin_trait!(Bool::xor = BitXor::bitxor);
 
 impl_bin_assign_trait!(Bool::bitand = BitAndAssign::bitand_assign);
@@ -105,9 +105,9 @@ impl_bin_assign_trait!(BV::bvshl = ShlAssign::shl_assign);
 
 impl_unary_op!(Int::unary_minus = Neg::neg);
 
-impl_var_trait!(Int::add_in_ctx = Add::add);
-impl_var_trait!(Int::sub_in_ctx = Sub::sub);
-impl_var_trait!(Int::mul_in_ctx = Mul::mul);
+impl_var_trait!(Int::add = Add::add);
+impl_var_trait!(Int::sub = Sub::sub);
+impl_var_trait!(Int::mul = Mul::mul);
 impl_bin_trait!(Int::div = Div::div);
 impl_bin_trait!(Int::rem = Rem::rem);
 
@@ -117,9 +117,9 @@ impl_bin_assign_trait!(Int::mul = MulAssign::mul_assign);
 impl_bin_assign_trait!(Int::div = DivAssign::div_assign);
 impl_bin_assign_trait!(Int::rem = RemAssign::rem_assign);
 
-impl_var_trait!(Real::add_in_ctx = Add::add);
-impl_var_trait!(Real::sub_in_ctx = Sub::sub);
-impl_var_trait!(Real::mul_in_ctx = Mul::mul);
+impl_var_trait!(Real::add = Add::add);
+impl_var_trait!(Real::sub = Sub::sub);
+impl_var_trait!(Real::mul = Mul::mul);
 impl_bin_trait!(Real::div = Div::div);
 impl_unary_op!(Real::unary_minus = Neg::neg);
 

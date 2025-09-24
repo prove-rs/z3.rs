@@ -2,7 +2,6 @@ use crate::Context;
 use crate::translate::Translate;
 use std::fmt::{Debug, Formatter};
 use std::sync::Mutex;
-use z3_macros::z3_ctx;
 
 /// A [`Send`] and [`Sync`] wrapper for Z3 structures associated with a [`Context`].
 ///
@@ -65,7 +64,6 @@ impl<T: Translate> Synchronized<T> {
     }
 }
 
-#[z3_ctx(Context::thread_local)]
 impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
     /// and return the inner data.

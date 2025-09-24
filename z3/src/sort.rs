@@ -1,19 +1,19 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-
+use std::ptr::NonNull;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
 impl Sort {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Option<Z3_sort>) -> Sort {
         unsafe {
-            Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
+            Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort.unwrap()).unwrap());
         }
         Sort {
             ctx: ctx.clone(),
-            z3_sort,
+            z3_sort: z3_sort.unwrap(),
         }
     }
 
@@ -152,9 +152,10 @@ impl Sort {
         enum_names: &[Symbol],
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
         let ctx = &Context::thread_local();
-        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
-        let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
-        let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
+        let enum_names: Vec<Z3_symbol> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
+        let enums = NonNull::new(enum_names.as_ptr() as *mut _).unwrap();
+        let enum_consts: Vec<Option<Z3_func_decl>> = vec![None; enum_names.len()];
+        let enum_testers: Vec<Option<Z3_func_decl>>= vec![None; enum_names.len()];
 
         let sort = unsafe {
             Self::wrap(
@@ -163,9 +164,9 @@ impl Sort {
                     ctx.z3_ctx.0,
                     name.as_z3_symbol(),
                     enum_names.len().try_into().unwrap(),
-                    enum_names.as_ptr(),
-                    enum_consts.as_mut_ptr(),
-                    enum_testers.as_mut_ptr(),
+                    enums,
+                    NonNull::new(enum_consts.as_ptr() as *mut _).unwrap(),
+                    NonNull::new(enum_testers.as_ptr() as *mut _).unwrap(),
                 ),
             )
         };
@@ -173,29 +174,23 @@ impl Sort {
         // increase ref counts
         for i in &enum_consts {
             unsafe {
-                Z3_inc_ref(ctx.z3_ctx.0, *i as Z3_ast);
+                Z3_inc_ref(ctx.z3_ctx.0, Z3_func_decl_to_ast(ctx.z3_ctx.0, i.unwrap()).unwrap());
             }
         }
         for i in &enum_testers {
             unsafe {
-                Z3_inc_ref(ctx.z3_ctx.0, *i as Z3_ast);
+                Z3_inc_ref(ctx.z3_ctx.0, Z3_func_decl_to_ast(ctx.z3_ctx.0, i.unwrap()).unwrap());
             }
         }
 
         // convert to Rust types
         let enum_consts: Vec<_> = enum_consts
-            .iter()
-            .map(|z3_func_decl| FuncDecl {
-                ctx: ctx.clone(),
-                z3_func_decl: *z3_func_decl,
-            })
+            .iter().cloned()
+            .map(|z3_func_decl| unsafe {FuncDecl::wrap(ctx, z3_func_decl)})
             .collect();
         let enum_testers: Vec<_> = enum_testers
-            .iter()
-            .map(|z3_func_decl| FuncDecl {
-                ctx: ctx.clone(),
-                z3_func_decl: *z3_func_decl,
-            })
+            .iter().cloned()
+            .map(|z3_func_decl| unsafe {FuncDecl::wrap(ctx, z3_func_decl) })
             .collect();
 
         (sort, enum_consts, enum_testers)
@@ -263,7 +258,7 @@ impl Sort {
         if self.is_array() {
             unsafe {
                 let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort);
-                if domain_sort.is_null() {
+                if domain_sort.is_none() {
                     None
                 } else {
                     Some(Self::wrap(&self.ctx, domain_sort))
@@ -295,7 +290,7 @@ impl Sort {
         if self.is_array() {
             unsafe {
                 let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.0, self.z3_sort);
-                if range_sort.is_null() {
+                if range_sort.is_none() {
                     None
                 } else {
                     Some(Self::wrap(&self.ctx, range_sort))
@@ -309,7 +304,7 @@ impl Sort {
 
 impl Clone for Sort {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, self.z3_sort) }
+        unsafe { Self::wrap(&self.ctx, Some(self.z3_sort)) }
     }
 }
 
@@ -345,7 +340,7 @@ impl Drop for Sort {
         unsafe {
             Z3_dec_ref(
                 self.ctx.z3_ctx.0,
-                Z3_sort_to_ast(self.ctx.z3_ctx.0, self.z3_sort),
+                Z3_sort_to_ast(self.ctx.z3_ctx.0, self.z3_sort).unwrap(),
             );
         }
     }

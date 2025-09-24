@@ -26,7 +26,7 @@ impl Config {
         Config {
             kvs: Vec::new(),
             z3_cfg: unsafe {
-                let p = Z3_mk_config();
+                let p = Z3_mk_config().unwrap();
                 debug!("new config {p:p}");
                 p
             },

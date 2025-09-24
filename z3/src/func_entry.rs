@@ -7,7 +7,8 @@ use crate::{
 };
 
 impl FuncEntry {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Z3_func_entry) -> Self {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Option<Z3_func_entry>) -> Self {
+        let z3_func_entry = z3_func_entry.unwrap();
         unsafe {
             Z3_func_entry_inc_ref(ctx.z3_ctx.0, z3_func_entry);
         }

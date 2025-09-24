@@ -7,11 +7,12 @@ use z3_sys::*;
 use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 
 impl RecFuncDecl {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Option<Z3_func_decl>) -> Self {
+        let z3_func_decl = z3_func_decl.unwrap();
         unsafe {
             Z3_inc_ref(
                 ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl),
+                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl).unwrap(),
             );
         }
         Self {
@@ -79,7 +80,7 @@ impl RecFuncDecl {
         unsafe {
             assert_eq!(
                 body.get_sort().z3_sort,
-                Z3_get_range(self.ctx.z3_ctx.0, self.z3_func_decl)
+                Z3_get_range(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap()
             );
 
             Z3_add_rec_def(
@@ -117,7 +118,7 @@ impl Drop for RecFuncDecl {
         unsafe {
             Z3_dec_ref(
                 self.ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl),
+                Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap(),
             );
         }
     }

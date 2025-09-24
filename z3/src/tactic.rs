@@ -10,13 +10,13 @@ use z3_sys::*;
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 
 impl ApplyResult {
-    unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
+    unsafe fn wrap(ctx: &Context, z3_apply_result: Option<Z3_apply_result>) -> ApplyResult {
         unsafe {
-            Z3_apply_result_inc_ref(ctx.z3_ctx.0, z3_apply_result);
+            Z3_apply_result_inc_ref(ctx.z3_ctx.0, z3_apply_result.unwrap());
         }
         ApplyResult {
             ctx: ctx.clone(),
-            z3_apply_result,
+            z3_apply_result: z3_apply_result.unwrap(),
         }
     }
 
@@ -64,7 +64,8 @@ impl Tactic {
             .collect()
     }
 
-    unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
+    unsafe fn wrap(ctx: &Context, z3_tactic: Option<Z3_tactic>) -> Tactic {
+        let z3_tactic = z3_tactic.unwrap();
         unsafe {
             Z3_tactic_inc_ref(ctx.z3_ctx.0, z3_tactic);
         }
@@ -95,7 +96,7 @@ impl Tactic {
 
         unsafe {
             let tactic = Z3_mk_tactic(ctx.z3_ctx.0, tactic_name.as_ptr());
-            if tactic.is_null() {
+            if tactic.is_none() {
                 panic!("{name} is an invalid tactic");
             } else {
                 Self::wrap(ctx, tactic)
@@ -210,7 +211,7 @@ impl Tactic {
                     params.z3_params,
                 ),
             };
-            if z3_apply_result.is_null() {
+            if z3_apply_result.is_none() {
                 let code = Z3_get_error_code(self.ctx.z3_ctx.0);
                 let msg = Z3_get_error_msg(self.ctx.z3_ctx.0, code);
                 Err(String::from(CStr::from_ptr(msg).to_str().unwrap_or(

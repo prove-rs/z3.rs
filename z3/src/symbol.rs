@@ -8,12 +8,12 @@ impl Symbol {
         let ctx = &Context::thread_local();
         match self {
             Symbol::Int(i) => unsafe {
-                Z3_mk_int_symbol(ctx.z3_ctx.0, *i as ::std::os::raw::c_int)
+                Z3_mk_int_symbol(ctx.z3_ctx.0, *i as ::std::os::raw::c_int).unwrap()
             },
             Symbol::String(s) => {
                 let ss = CString::new(s.clone()).unwrap();
                 let p = ss.as_ptr();
-                unsafe { Z3_mk_string_symbol(ctx.z3_ctx.0, p) }
+                unsafe { Z3_mk_string_symbol(ctx.z3_ctx.0, p).unwrap() }
             }
         }
     }

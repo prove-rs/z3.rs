@@ -16,13 +16,13 @@ impl Clone for Goal {
 }
 
 impl Goal {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal) -> Goal {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Option<Z3_goal>) -> Goal {
         unsafe {
-            Z3_goal_inc_ref(ctx.z3_ctx.0, z3_goal);
+            Z3_goal_inc_ref(ctx.z3_ctx.0, z3_goal.unwrap());
         }
         Goal {
             ctx: ctx.clone(),
-            z3_goal,
+            z3_goal: z3_goal.unwrap(),
         }
     }
 

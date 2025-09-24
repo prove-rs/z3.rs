@@ -16,7 +16,8 @@ use num::{
 };
 
 impl Optimize {
-    unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
+    unsafe fn wrap(ctx: &Context, z3_opt: Option<Z3_optimize>) -> Optimize {
+        let z3_opt = z3_opt.unwrap();
         unsafe {
             Z3_optimize_inc_ref(ctx.z3_ctx.0, z3_opt);
         }
@@ -92,8 +93,8 @@ impl Optimize {
         let weight_string = weight.to_string();
         let weight_cstring = CString::new(weight_string).unwrap();
         let group = group
-            .map(|g| g.as_z3_symbol())
-            .unwrap_or_else(std::ptr::null_mut);
+            .map(|g| g.as_z3_symbol());
+
         unsafe {
             Z3_optimize_assert_soft(
                 self.ctx.z3_ctx.0,
@@ -156,9 +157,10 @@ impl Optimize {
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
         let z3_unsat_core = unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) };
-        if z3_unsat_core.is_null() {
+        if z3_unsat_core.is_none() {
             return vec![];
         }
+        let z3_unsat_core = z3_unsat_core.unwrap();
 
         let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_unsat_core) };
 
@@ -236,7 +238,7 @@ impl Optimize {
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic> {
         let (z3_objectives, len) = unsafe {
-            let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt);
+            let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt).unwrap();
             let len = Z3_ast_vector_size(self.ctx.z3_ctx.0, objectives);
             (objectives, len)
         };

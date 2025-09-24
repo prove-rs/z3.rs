@@ -151,7 +151,7 @@ pub trait Ast: fmt::Debug {
     /// # Safety
     ///
     /// The `ast` must be a valid pointer to a [`Z3_ast`].
-    unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self
+    unsafe fn wrap(ctx: &Context, ast: Option<Z3_ast>) -> Self
     where
         Self: Sized;
 
@@ -246,7 +246,7 @@ pub trait Ast: fmt::Debug {
     fn num_children(&self) -> usize {
         let this_ctx = self.get_ctx().z3_ctx.0;
         unsafe {
-            let this_app = Z3_to_app(this_ctx, self.get_z3_ast());
+            let this_app = Z3_to_app(this_ctx, self.get_z3_ast()).unwrap();
             Z3_get_app_num_args(this_ctx, this_app) as usize
         }
     }
@@ -261,7 +261,7 @@ pub trait Ast: fmt::Debug {
             let idx = u32::try_from(idx).unwrap();
             let this_ctx = self.get_ctx().z3_ctx.0;
             let child_ast = unsafe {
-                let this_app = Z3_to_app(this_ctx, self.get_z3_ast());
+                let this_app = Z3_to_app(this_ctx, self.get_z3_ast()).unwrap();
                 Z3_get_app_arg(this_ctx, this_app, idx)
             };
             Some(unsafe { Dynamic::wrap(self.get_ctx(), child_ast) })
@@ -311,7 +311,7 @@ pub trait Ast: fmt::Debug {
         } else {
             let ctx = self.get_ctx();
             let func_decl = unsafe {
-                let app = Z3_to_app(ctx.z3_ctx.0, self.get_z3_ast());
+                let app = Z3_to_app(ctx.z3_ctx.0, self.get_z3_ast()).ok_or(IsNotApp::new(self.kind()))?;
                 Z3_get_app_decl(ctx.z3_ctx.0, app)
             };
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
@@ -352,8 +352,8 @@ impl<T: Into<A>, A: Ast> IntoAst<A> for T {
 macro_rules! impl_ast {
     ($ast:ident) => {
         impl Ast for $ast {
-            unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self {
-                assert!(!ast.is_null());
+            unsafe fn wrap(ctx: &Context, ast: Option<Z3_ast>) -> Self {
+                let ast = ast.unwrap();
                 Self {
                     ctx: ctx.clone(),
                     z3_ast: {
@@ -493,7 +493,7 @@ macro_rules! impl_ast {
                     unsafe { Z3_get_ast_id(self.ctx.z3_ctx.0, self.z3_ast) },
                     self.z3_ast
                 );
-                unsafe { Self::wrap(&self.ctx, self.z3_ast) }
+                unsafe { Self::wrap(&self.ctx, Some(self.z3_ast)) }
             }
         }
 
@@ -565,13 +565,13 @@ macro_rules! impl_from_try_into_dynamic {
     ($ast:ident, $as_ast:ident) => {
         impl From<$ast> for Dynamic {
             fn from(ast: $ast) -> Self {
-                unsafe { Dynamic::wrap(&ast.ctx, ast.z3_ast) }
+                unsafe { Dynamic::wrap(&ast.ctx, Some(ast.z3_ast)) }
             }
         }
 
         impl From<&$ast> for Dynamic {
             fn from(ast: &$ast) -> Self {
-                unsafe { Dynamic::wrap(&ast.ctx, ast.z3_ast) }
+                unsafe { Dynamic::wrap(&ast.ctx, Some(ast.z3_ast)) }
             }
         }
 
@@ -787,11 +787,11 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 ///     true,
 ///     0,
 ///     "def_f",
-///     "",
+///     "sk",
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &[],
-///     &x._eq(&f_x)
+///     &x.eq(&f_x)
 /// ).try_into().unwrap();
 /// solver.assert(&forall);
 ///

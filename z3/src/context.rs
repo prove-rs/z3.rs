@@ -86,7 +86,7 @@ impl Context {
     pub fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
-                let p = Z3_mk_context_rc(cfg.z3_cfg);
+                let p = Z3_mk_context_rc(cfg.z3_cfg).unwrap();
                 debug!("new context {p:p}");
                 Z3_set_error_handler(p, None);
                 Rc::new(ContextInternal(p))
@@ -110,8 +110,8 @@ impl Context {
     /// use z3::Context;
     ///
     /// // Create a raw Z3_config using the low-level API
-    /// let cfg = unsafe { Z3_mk_config() };
-    /// let raw_ctx = unsafe { Z3_mk_context_rc(cfg) };
+    /// let cfg = unsafe { Z3_mk_config() }.unwrap();
+    /// let raw_ctx = unsafe { Z3_mk_context_rc(cfg) }.unwrap();
     /// let ctx = unsafe { Context::from_raw(raw_ctx) };
     /// // Use `ctx` as usual...
     /// unsafe { Z3_del_config(cfg) };

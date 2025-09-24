@@ -6,7 +6,8 @@ use z3_sys::*;
 
 use crate::{Context, Goal, Probe};
 impl Probe {
-    unsafe fn wrap(ctx: &Context, z3_probe: Z3_probe) -> Probe {
+    unsafe fn wrap(ctx: &Context, z3_probe: Option<Z3_probe>) -> Probe {
+        let z3_probe = z3_probe.unwrap();
         unsafe {
             Z3_probe_inc_ref(ctx.z3_ctx.0, z3_probe);
         }
@@ -178,7 +179,7 @@ impl Probe {
 
 impl Clone for Probe {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, self.z3_probe) }
+        unsafe { Self::wrap(&self.ctx, Some(self.z3_probe)) }
     }
 }
 

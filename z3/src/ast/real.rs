@@ -28,7 +28,7 @@ impl Real {
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
             let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, fraction_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
+            if numeral_ptr.is_none() {
                 return None;
             }
 

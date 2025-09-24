@@ -1785,7 +1785,7 @@ unsafe extern "C" {
 
     /// Convert a parameter set into a string. This function is mainly used for printing the
     /// contents of a parameter set.
-    pub fn Z3_params_to_string(c: Z3_context, p: Z3_params) -> Option<Z3_string>;
+    pub fn Z3_params_to_string(c: Z3_context, p: Z3_params) -> Z3_string;
 
     /// Validate the parameter set `p` against the parameter description set `d`.
     ///
@@ -1820,11 +1820,11 @@ unsafe extern "C" {
         c: Z3_context,
         p: Z3_param_descrs,
         s: Z3_symbol,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Convert a parameter description set into a string. This function is mainly used for printing the
     /// contents of a parameter description set.
-    pub fn Z3_param_descrs_to_string(c: Z3_context, p: Z3_param_descrs) -> Option<Z3_string>;
+    pub fn Z3_param_descrs_to_string(c: Z3_context, p: Z3_param_descrs) -> Z3_string;
 
     /// Create a Z3 symbol using an integer.
     ///
@@ -1962,9 +1962,9 @@ unsafe extern "C" {
         c: Z3_context,
         name: Z3_symbol,
         n: ::core::ffi::c_uint,
-        enum_names: *const Z3_symbol,
-        enum_consts: *mut Z3_func_decl,
-        enum_testers: *mut Z3_func_decl,
+        enum_names: NonNull<Z3_symbol>,
+        enum_consts: NonNull<Option<Z3_func_decl>>,
+        enum_testers: NonNull<Option<Z3_func_decl>>,
     ) -> Option<Z3_sort>;
 
     /// Create a list sort
@@ -2016,7 +2016,7 @@ unsafe extern "C" {
         recognizer: Z3_symbol,
         num_fields: ::core::ffi::c_uint,
         field_names: *const Z3_symbol,
-        sorts: *const Z3_sort,
+        sorts: *const Option<Z3_sort>,
         sort_refs: *mut ::core::ffi::c_uint,
     ) -> Option<Z3_constructor>;
 
@@ -2260,19 +2260,19 @@ unsafe extern "C" {
     );
 
     /// Create a `FuncDecl` representing a partial order
-    pub fn Z3_mk_partial_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_partial_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a piecewise linear order
-    pub fn Z3_mk_piecewise_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_piecewise_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a linear order
-    pub fn Z3_mk_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a tree order
-    pub fn Z3_mk_tree_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_tree_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a transitive closure
-    pub fn Z3_mk_transitive_closure(c: Z3_context, f: Z3_func_decl) -> Z3_func_decl;
+    pub fn Z3_mk_transitive_closure(c: Z3_context, f: Z3_func_decl) -> Option<Z3_func_decl>;
 
     /// Create an AST node representing `true`.
     pub fn Z3_mk_true(c: Z3_context) -> Option<Z3_ast>;
@@ -3042,7 +3042,7 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `Z3_is_string(c, s)`
-    pub fn Z3_get_string(c: Z3_context, s: Z3_ast) -> Option<Z3_string>;
+    pub fn Z3_get_string(c: Z3_context, s: Z3_ast) -> Z3_string;
 
     /// Create an empty sequence of the sequence sort `seq`.
     ///
@@ -3534,7 +3534,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_string_symbol`]
-    pub fn Z3_get_symbol_string(c: Z3_context, s: Z3_symbol) -> Option<Z3_string>;
+    pub fn Z3_get_symbol_string(c: Z3_context, s: Z3_symbol) -> Z3_string;
 
     /// Return the sort name as a symbol.
     pub fn Z3_get_sort_name(c: Z3_context, d: Z3_sort) -> Option<Z3_symbol>;
@@ -3958,7 +3958,7 @@ unsafe extern "C" {
         c: Z3_context,
         d: Z3_func_decl,
         idx: ::core::ffi::c_uint,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Convert a [`Z3_app`] into [`Z3_ast`]. This is just type casting.
     ///
@@ -4021,7 +4021,7 @@ unsafe extern "C" {
 
     /// Return `Z3_L_TRUE` if `a` is true, `Z3_L_FALSE` if it is false,
     /// and `Z3_L_UNDEF` otherwise.
-    pub fn Z3_get_bool_value(c: Z3_context, a: Z3_ast) -> Option<Z3_lbool>;
+    pub fn Z3_get_bool_value(c: Z3_context, a: Z3_ast) -> Z3_lbool;
 
     /// Return the kind of the given AST.
     pub fn Z3_get_ast_kind(c: Z3_context, a: Z3_ast) -> AstKind;
@@ -4069,7 +4069,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::Numeral`]
-    pub fn Z3_get_numeral_string(c: Z3_context, a: Z3_ast) -> Option<Z3_string>;
+    pub fn Z3_get_numeral_string(c: Z3_context, a: Z3_ast) -> Z3_string;
 
     /// Return numeral as a string in decimal notation.
     /// The result has at most `precision` decimal places.
@@ -4087,7 +4087,7 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         precision: ::core::ffi::c_uint,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Return numeral as a double.
     /// # Preconditions:
@@ -4408,7 +4408,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_simplify_ex`]
     /// - [`Z3_simplify_get_param_descrs`]
-    pub fn Z3_simplify_get_help(c: Z3_context) -> Option<Z3_string>;
+    pub fn Z3_simplify_get_help(c: Z3_context) -> Z3_string;
 
     /// Return the parameter description set for the simplify procedure.
     ///
@@ -4827,7 +4827,7 @@ unsafe extern "C" {
     /// - [`Z3_func_decl_to_string`]
     /// - [`Z3_pattern_to_string`]
     /// - [`Z3_sort_to_string`]
-    pub fn Z3_ast_to_string(c: Z3_context, a: Z3_ast) -> Option<Z3_string>;
+    pub fn Z3_ast_to_string(c: Z3_context, a: Z3_ast) -> Z3_string;
 
     /// Convert the given pattern AST node into a string.
     ///
@@ -4844,7 +4844,7 @@ unsafe extern "C" {
     /// - [`Z3_ast_to_string`]
     /// - [`Z3_func_decl_to_string`]
     /// - [`Z3_sort_to_string`]
-    pub fn Z3_pattern_to_string(c: Z3_context, p: Z3_pattern) -> Option<Z3_string>;
+    pub fn Z3_pattern_to_string(c: Z3_context, p: Z3_pattern) -> Z3_string;
 
     /// Convert the given sort AST node into a string.
     ///
@@ -4861,7 +4861,7 @@ unsafe extern "C" {
     /// - [`Z3_ast_to_string`]
     /// - [`Z3_func_decl_to_string`]
     /// - [`Z3_pattern_to_string`]
-    pub fn Z3_sort_to_string(c: Z3_context, s: Z3_sort) -> Option<Z3_string>;
+    pub fn Z3_sort_to_string(c: Z3_context, s: Z3_sort) -> Z3_string;
 
     /// Convert the given func decl AST node into a string.
     ///
@@ -4878,7 +4878,7 @@ unsafe extern "C" {
     /// - [`Z3_ast_to_string`]
     /// - [`Z3_pattern_to_string`]
     /// - [`Z3_sort_to_string`]
-    pub fn Z3_func_decl_to_string(c: Z3_context, d: Z3_func_decl) -> Option<Z3_string>;
+    pub fn Z3_func_decl_to_string(c: Z3_context, d: Z3_func_decl) -> Z3_string;
 
     /// Convert the given model into a string.
     ///
@@ -4886,7 +4886,7 @@ unsafe extern "C" {
     /// It will be automatically deallocated when
     /// [`Z3_del_context`] is invoked.
     /// So, the buffer is invalidated in the next call to `Z3_model_to_string`.
-    pub fn Z3_model_to_string(c: Z3_context, m: Z3_model) -> Option<Z3_string>;
+    pub fn Z3_model_to_string(c: Z3_context, m: Z3_model) -> Z3_string;
 
     /// Convert the given benchmark into SMT-LIB formatted string.
     ///
@@ -4913,7 +4913,7 @@ unsafe extern "C" {
         num_assumptions: ::core::ffi::c_uint,
         assumptions: *const Z3_ast,
         formula: Z3_ast,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Parse the given string using the SMT-LIB2 parser.
     ///
@@ -4946,7 +4946,7 @@ unsafe extern "C" {
     /// call is saved so the next evaluation builds on top of the previous call.
     ///
     /// Returns output generated from processing commands.
-    pub fn Z3_eval_smtlib2_string(arg1: Z3_context, str: Z3_string) -> Option<Z3_string>;
+    pub fn Z3_eval_smtlib2_string(arg1: Z3_context, str: Z3_string) -> Z3_string;
 
     /// Return the error code for the last API call.
     ///
@@ -4977,7 +4977,7 @@ unsafe extern "C" {
     pub fn Z3_set_error(c: Z3_context, e: ErrorCode);
 
     /// Return a string describing the given error code.
-    pub fn Z3_get_error_msg(c: Z3_context, err: ErrorCode) -> Option<Z3_string>;
+    pub fn Z3_get_error_msg(c: Z3_context, err: ErrorCode) -> Z3_string;
 
     /// Return Z3 version number information.
     ///
@@ -4996,7 +4996,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_version`]
-    pub fn Z3_get_full_version() -> Option<Z3_string>;
+    pub fn Z3_get_full_version() -> Z3_string;
 
     /// Enable tracing messages tagged as `tag` when Z3 is compiled in debug mode.
     /// It is a NOOP otherwise
@@ -5114,7 +5114,7 @@ unsafe extern "C" {
     pub fn Z3_goal_convert_model(c: Z3_context, g: Z3_goal, m: Z3_model) -> Option<Z3_model>;
 
     /// Convert a goal into a string.
-    pub fn Z3_goal_to_string(c: Z3_context, g: Z3_goal) -> Option<Z3_string>;
+    pub fn Z3_goal_to_string(c: Z3_context, g: Z3_goal) -> Z3_string;
 
     /// Convert a goal into a DIMACS formatted string.
     /// The goal must be in CNF. You can convert a goal to CNF
@@ -5122,7 +5122,7 @@ unsafe extern "C" {
     /// converted to Booleans either, so the if caller intends to
     /// preserve satisfiability, it should apply bit-blasting tactics.
     /// Quantifiers and theory atoms will not be encoded.
-    pub fn Z3_goal_to_dimacs_string(c: Z3_context, g: Z3_goal) -> Option<Z3_string>;
+    pub fn Z3_goal_to_dimacs_string(c: Z3_context, g: Z3_goal) -> Z3_string;
 
     /// Return a tactic associated with the given name.
     ///
@@ -5262,7 +5262,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_num_tactics`]
-    pub fn Z3_get_tactic_name(c: Z3_context, i: ::core::ffi::c_uint) -> Option<Z3_string>;
+    pub fn Z3_get_tactic_name(c: Z3_context, i: ::core::ffi::c_uint) -> Z3_string;
 
     /// Return the number of builtin probes available in Z3.
     ///
@@ -5280,19 +5280,19 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_num_probes`]
-    pub fn Z3_get_probe_name(c: Z3_context, i: ::core::ffi::c_uint) -> Option<Z3_string>;
+    pub fn Z3_get_probe_name(c: Z3_context, i: ::core::ffi::c_uint) -> Z3_string;
 
     /// Return a string containing a description of parameters accepted by the given tactic.
-    pub fn Z3_tactic_get_help(c: Z3_context, t: Z3_tactic) -> Option<Z3_string>;
+    pub fn Z3_tactic_get_help(c: Z3_context, t: Z3_tactic) -> Z3_string;
 
     /// Return the parameter description set for the given tactic object.
     pub fn Z3_tactic_get_param_descrs(c: Z3_context, t: Z3_tactic) -> Option<Z3_param_descrs>;
 
     /// Return a string containing a description of the tactic with the given name.
-    pub fn Z3_tactic_get_descr(c: Z3_context, name: Z3_string) -> Option<Z3_string>;
+    pub fn Z3_tactic_get_descr(c: Z3_context, name: Z3_string) -> Z3_string;
 
     /// Return a string containing a description of the probe with the given name.
-    pub fn Z3_probe_get_descr(c: Z3_context, name: Z3_string) -> Option<Z3_string>;
+    pub fn Z3_probe_get_descr(c: Z3_context, name: Z3_string) -> Z3_string;
 
     /// Execute the probe over the goal. The probe always produce a double value.
     /// "Boolean" probes return 0.0 for false, and a value different from 0.0 for true.
@@ -5324,7 +5324,7 @@ unsafe extern "C" {
     pub fn Z3_apply_result_dec_ref(c: Z3_context, r: Z3_apply_result);
 
     /// Convert the `Z3_apply_result` object returned by [`Z3_tactic_apply`] into a string.
-    pub fn Z3_apply_result_to_string(c: Z3_context, r: Z3_apply_result) -> Option<Z3_string>;
+    pub fn Z3_apply_result_to_string(c: Z3_context, r: Z3_apply_result) -> Z3_string;
 
     /// Return the number of subgoals in the `Z3_apply_result` object returned by [`Z3_tactic_apply`].
     ///
@@ -5459,7 +5459,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_solver_get_param_descrs`]
     /// - [`Z3_solver_set_params`]
-    pub fn Z3_solver_get_help(c: Z3_context, s: Z3_solver) -> Option<Z3_string>;
+    pub fn Z3_solver_get_help(c: Z3_context, s: Z3_solver) -> Z3_string;
 
     /// Return the parameter description set for the given solver object.
     ///
@@ -5594,7 +5594,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_solver_check_assumptions`]
-    pub fn Z3_solver_check(c: Z3_context, s: Z3_solver) -> Option<Z3_lbool>;
+    pub fn Z3_solver_check(c: Z3_context, s: Z3_solver) -> Z3_lbool;
 
     /// Check whether the assertions in the given solver and
     /// optional assumptions are consistent or not.
@@ -5612,7 +5612,7 @@ unsafe extern "C" {
         s: Z3_solver,
         num_assumptions: ::core::ffi::c_uint,
         assumptions: *const Z3_ast,
-    ) -> Option<Z3_lbool>;
+    ) -> Z3_lbool;
 
     /// Retrieve congruence class representatives for terms.
     ///
@@ -5634,7 +5634,7 @@ unsafe extern "C" {
         num_terms: ::core::ffi::c_uint,
         terms: *const Z3_ast,
         class_ids: *mut ::core::ffi::c_uint,
-    ) -> Option<Z3_lbool>;
+    ) -> Z3_lbool;
 
     /// retrieve consequences from solver that determine values of the supplied function symbols.
     pub fn Z3_solver_get_consequences(
@@ -5643,7 +5643,7 @@ unsafe extern "C" {
         assumptions: Z3_ast_vector,
         variables: Z3_ast_vector,
         consequences: Z3_ast_vector,
-    ) -> Option<Z3_lbool>;
+    ) -> Z3_lbool;
 
     /// Extract a next cube for a solver. The last cube is the constant `true` or `false`.
     /// The number of (non-constant) cubes is by default 1. For the sat solver cubing is controlled
@@ -5689,7 +5689,7 @@ unsafe extern "C" {
 
     /// Return a brief justification for an "unknown" result (i.e., `Z3_L_UNDEF`) for
     /// the commands [`Z3_solver_check`]
-    pub fn Z3_solver_get_reason_unknown(c: Z3_context, s: Z3_solver) -> Option<Z3_string>;
+    pub fn Z3_solver_get_reason_unknown(c: Z3_context, s: Z3_solver) -> Z3_string;
 
     /// Return statistics for the given solver.
     ///
@@ -5702,10 +5702,10 @@ unsafe extern "C" {
     ///
     /// - [`Z3_solver_from_file`]
     /// - [`Z3_solver_from_string`]
-    pub fn Z3_solver_to_string(c: Z3_context, s: Z3_solver) -> Option<Z3_string>;
+    pub fn Z3_solver_to_string(c: Z3_context, s: Z3_solver) -> Z3_string;
 
     /// Convert a statistics into a string.
-    pub fn Z3_stats_to_string(c: Z3_context, s: Z3_stats) -> Option<Z3_string>;
+    pub fn Z3_stats_to_string(c: Z3_context, s: Z3_stats) -> Z3_string;
 
     /// Increment the reference counter of the given statistics object.
     pub fn Z3_stats_inc_ref(c: Z3_context, s: Z3_stats);
@@ -5721,7 +5721,7 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `idx < Z3_stats_size(c, s)`
-    pub fn Z3_stats_get_key(c: Z3_context, s: Z3_stats, idx: ::core::ffi::c_uint) -> Option<Z3_string>;
+    pub fn Z3_stats_get_key(c: Z3_context, s: Z3_stats, idx: ::core::ffi::c_uint) -> Z3_string;
 
     /// Return `true` if the given statistical data is a unsigned integer.
     ///
@@ -5798,7 +5798,7 @@ unsafe extern "C" {
     -> Option<Z3_ast_vector>;
 
     /// Convert AST vector into a string.
-    pub fn Z3_ast_vector_to_string(c: Z3_context, v: Z3_ast_vector) -> Option<Z3_string>;
+    pub fn Z3_ast_vector_to_string(c: Z3_context, v: Z3_ast_vector) -> Z3_string;
 
     /// Return an empty mapping from AST to AST
     ///
@@ -5836,7 +5836,7 @@ unsafe extern "C" {
     pub fn Z3_ast_map_keys(c: Z3_context, m: Z3_ast_map) -> Option<Z3_ast_vector>;
 
     /// Convert the given map into a string.
-    pub fn Z3_ast_map_to_string(c: Z3_context, m: Z3_ast_map) -> Option<Z3_string>;
+    pub fn Z3_ast_map_to_string(c: Z3_context, m: Z3_ast_map) -> Z3_string;
 
     /// Return `true` if `a` can be used as value in the Z3 real algebraic
     /// number package.
@@ -6189,14 +6189,14 @@ unsafe extern "C" {
         a: Z3_rcf_num,
         compact: bool,
         html: bool,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Convert the RCF numeral into a string in decimal notation.
     pub fn Z3_rcf_num_to_decimal_string(
         c: Z3_context,
         a: Z3_rcf_num,
         prec: ::core::ffi::c_uint,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Extract the "numerator" and "denominator" of the given RCF numeral.
     ///
@@ -6268,7 +6268,7 @@ unsafe extern "C" {
     /// - `Z3_L_FALSE` if the query is unsatisfiable.
     /// - `Z3_L_TRUE` if the query is satisfiable. Obtain the answer by calling [`Z3_fixedpoint_get_answer`].
     /// - `Z3_L_UNDEF` if the query was interrupted, timed out or otherwise failed.
-    pub fn Z3_fixedpoint_query(c: Z3_context, d: Z3_fixedpoint, query: Z3_ast) -> Option<Z3_lbool>;
+    pub fn Z3_fixedpoint_query(c: Z3_context, d: Z3_fixedpoint, query: Z3_ast) -> Z3_lbool;
 
     /// Pose multiple queries against the asserted rules.
     ///
@@ -6283,7 +6283,7 @@ unsafe extern "C" {
         d: Z3_fixedpoint,
         num_relations: ::core::ffi::c_uint,
         relations: *const Z3_func_decl,
-    ) -> Option<Z3_lbool>;
+    ) -> Z3_lbool;
 
     /// Retrieve a formula that encodes satisfying answers to the query.
     ///
@@ -6299,7 +6299,7 @@ unsafe extern "C" {
     /// Retrieve a string that describes the last status returned by [`Z3_fixedpoint_query`].
     ///
     /// Use this method when [`Z3_fixedpoint_query`] returns `Z3_L_UNDEF`.
-    pub fn Z3_fixedpoint_get_reason_unknown(c: Z3_context, d: Z3_fixedpoint) -> Option<Z3_string>;
+    pub fn Z3_fixedpoint_get_reason_unknown(c: Z3_context, d: Z3_fixedpoint) -> Z3_string;
 
     /// Update a named rule.
     /// A rule with the same name must have been previously created.
@@ -6387,7 +6387,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_fixedpoint_get_param_descrs`]
     /// - [`Z3_fixedpoint_set_params`]
-    pub fn Z3_fixedpoint_get_help(c: Z3_context, f: Z3_fixedpoint) -> Option<Z3_string>;
+    pub fn Z3_fixedpoint_get_help(c: Z3_context, f: Z3_fixedpoint) -> Z3_string;
 
     /// Return the parameter description set for the given fixedpoint object.
     ///
@@ -6412,7 +6412,7 @@ unsafe extern "C" {
         f: Z3_fixedpoint,
         num_queries: ::core::ffi::c_uint,
         queries: *mut Z3_ast,
-    ) -> Option<Z3_string>;
+    ) -> Z3_string;
 
     /// Parse an SMT-LIB2 string with fixedpoint rules.
     /// Add the rules to the current fixedpoint context.
@@ -6571,7 +6571,7 @@ unsafe extern "C" {
         o: Z3_optimize,
         a: Z3_ast,
         weight: Z3_string,
-        id: Z3_symbol,
+        id: Option<Z3_symbol>,
     ) -> ::core::ffi::c_uint;
 
     /// Add a maximization constraint.
@@ -6633,12 +6633,12 @@ unsafe extern "C" {
         o: Z3_optimize,
         num_assumptions: ::core::ffi::c_uint,
         assumptions: *const Z3_ast,
-    ) -> Option<Z3_lbool>;
+    ) -> Z3_lbool;
 
     /// Retrieve a string that describes the last status returned by [`Z3_optimize_check`].
     ///
     /// Use this method when [`Z3_optimize_check`] returns `Z3_L_UNDEF`.
-    pub fn Z3_optimize_get_reason_unknown(c: Z3_context, d: Z3_optimize) -> Option<Z3_string>;
+    pub fn Z3_optimize_get_reason_unknown(c: Z3_context, d: Z3_optimize) -> Z3_string;
 
     /// Retrieve the model for the last [`Z3_optimize_check`].
     ///
@@ -6748,7 +6748,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_optimize_from_file`]
     /// - [`Z3_optimize_from_string`]
-    pub fn Z3_optimize_to_string(c: Z3_context, o: Z3_optimize) -> Option<Z3_string>;
+    pub fn Z3_optimize_to_string(c: Z3_context, o: Z3_optimize) -> Z3_string;
 
     /// Parse an SMT-LIB2 string with assertions,
     /// soft constraints and optimization objectives.
@@ -6784,7 +6784,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_optimize_get_param_descrs`]
     /// - [`Z3_optimize_set_params`]
-    pub fn Z3_optimize_get_help(c: Z3_context, t: Z3_optimize) -> Option<Z3_string>;
+    pub fn Z3_optimize_get_help(c: Z3_context, t: Z3_optimize) -> Z3_string;
 
     /// Retrieve statistics information from the last call to [`Z3_optimize_check`]
     pub fn Z3_optimize_get_statistics(c: Z3_context, d: Z3_optimize) -> Option<Z3_stats>;
@@ -7844,7 +7844,7 @@ unsafe extern "C" {
     ///
     /// Remarks: The significand `s` is always `0.0 <= s < 2.0`; the resulting string is
     /// long enough to represent the real significand precisely.
-    pub fn Z3_fpa_get_numeral_significand_string(c: Z3_context, t: Z3_ast) -> Option<Z3_string>;
+    pub fn Z3_fpa_get_numeral_significand_string(c: Z3_context, t: Z3_ast) -> Z3_string;
 
     /// Return the significand value of a floating-point numeral as a uint64.
     ///
@@ -7865,7 +7865,7 @@ unsafe extern "C" {
     ///
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid argument.
-    pub fn Z3_fpa_get_numeral_exponent_string(c: Z3_context, t: Z3_ast, biased: bool) -> Option<Z3_string>;
+    pub fn Z3_fpa_get_numeral_exponent_string(c: Z3_context, t: Z3_ast, biased: bool) -> Z3_string;
 
     /// Return the exponent value of a floating-point numeral as a signed 64-bit integer
     ///
@@ -7945,7 +7945,7 @@ unsafe extern "C" {
         d: Z3_fixedpoint,
         query: Z3_ast,
         lvl: ::core::ffi::c_uint,
-    ) -> Option<Z3_lbool>;
+    ) -> Z3_lbool;
 
     /// Retrieve a bottom-up (from query) sequence of ground facts
     ///
