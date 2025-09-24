@@ -9,7 +9,10 @@ use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 impl Sort {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Option<Z3_sort>) -> Sort {
         unsafe {
-            Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort.unwrap()).unwrap());
+            Z3_inc_ref(
+                ctx.z3_ctx.0,
+                Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort.unwrap()).unwrap(),
+            );
         }
         Sort {
             ctx: ctx.clone(),
@@ -155,7 +158,7 @@ impl Sort {
         let enum_names: Vec<Z3_symbol> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
         let enums = NonNull::new(enum_names.as_ptr() as *mut _).unwrap();
         let enum_consts: Vec<Option<Z3_func_decl>> = vec![None; enum_names.len()];
-        let enum_testers: Vec<Option<Z3_func_decl>>= vec![None; enum_names.len()];
+        let enum_testers: Vec<Option<Z3_func_decl>> = vec![None; enum_names.len()];
 
         let sort = unsafe {
             Self::wrap(
@@ -174,23 +177,31 @@ impl Sort {
         // increase ref counts
         for i in &enum_consts {
             unsafe {
-                Z3_inc_ref(ctx.z3_ctx.0, Z3_func_decl_to_ast(ctx.z3_ctx.0, i.unwrap()).unwrap());
+                Z3_inc_ref(
+                    ctx.z3_ctx.0,
+                    Z3_func_decl_to_ast(ctx.z3_ctx.0, i.unwrap()).unwrap(),
+                );
             }
         }
         for i in &enum_testers {
             unsafe {
-                Z3_inc_ref(ctx.z3_ctx.0, Z3_func_decl_to_ast(ctx.z3_ctx.0, i.unwrap()).unwrap());
+                Z3_inc_ref(
+                    ctx.z3_ctx.0,
+                    Z3_func_decl_to_ast(ctx.z3_ctx.0, i.unwrap()).unwrap(),
+                );
             }
         }
 
         // convert to Rust types
         let enum_consts: Vec<_> = enum_consts
-            .iter().cloned()
-            .map(|z3_func_decl| unsafe {FuncDecl::wrap(ctx, z3_func_decl)})
+            .iter()
+            .cloned()
+            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, z3_func_decl) })
             .collect();
         let enum_testers: Vec<_> = enum_testers
-            .iter().cloned()
-            .map(|z3_func_decl| unsafe {FuncDecl::wrap(ctx, z3_func_decl) })
+            .iter()
+            .cloned()
+            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, z3_func_decl) })
             .collect();
 
         (sort, enum_consts, enum_testers)
@@ -367,5 +378,18 @@ impl fmt::Display for SortDiffers {
             "Can not compare nodes, Sort does not match.  Nodes contain types {} and {}",
             self.left, self.right
         )
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::Sort;
+
+    #[test]
+    #[should_panic]
+    fn duplicate_sort() {
+        let _res1 = Sort::enumeration("SameNameSort".into(), &["A".into(), "B".into()]);
+        // defining a duplicate sort name
+        let _res2 = Sort::enumeration("SameNameSort".into(), &["C".into(), "D".into()]);
     }
 }
