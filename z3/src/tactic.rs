@@ -95,7 +95,7 @@ impl Tactic {
 
         unsafe {
             let tactic = Z3_mk_tactic(ctx.z3_ctx.0, tactic_name.as_ptr())
-                .expect(&format!("{name} is an invalid tactic"));
+                .unwrap_or_else(|| panic!("{name} is an invalid tactic"));
             Self::wrap(ctx, tactic)
         }
     }
@@ -116,7 +116,12 @@ impl Tactic {
     /// number of iterations `max` is reached.
     pub fn repeat(t: &Tactic, max: u32) -> Tactic {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max).unwrap(),
+            )
+        }
     }
 
     /// Return a tactic that applies the current tactic to a given goal, failing
@@ -137,7 +142,8 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_and_then(self.ctx.z3_ctx.0, self.z3_tactic, then_tactic.z3_tactic).unwrap(),
+                Z3_tactic_and_then(self.ctx.z3_ctx.0, self.z3_tactic, then_tactic.z3_tactic)
+                    .unwrap(),
             )
         }
     }
@@ -148,7 +154,8 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_or_else(self.ctx.z3_ctx.0, self.z3_tactic, else_tactic.z3_tactic).unwrap(),
+                Z3_tactic_or_else(self.ctx.z3_ctx.0, self.z3_tactic, else_tactic.z3_tactic)
+                    .unwrap(),
             )
         }
     }
@@ -190,7 +197,12 @@ impl Tactic {
 
     /// Return a tactic that fails if the probe `p` evaluates to false.
     pub fn fail_if(p: &Probe) -> Tactic {
-        unsafe { Self::wrap(&p.ctx, Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe).unwrap()) }
+        unsafe {
+            Self::wrap(
+                &p.ctx,
+                Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe).unwrap(),
+            )
+        }
     }
 
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns
@@ -207,14 +219,14 @@ impl Tactic {
                     params.z3_params,
                 ),
             };
-            if z3_apply_result.is_none() {
+            if let Some(z3_apply_result) = z3_apply_result {
+                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result))
+            } else {
                 let code = Z3_get_error_code(self.ctx.z3_ctx.0);
                 let msg = Z3_get_error_msg(self.ctx.z3_ctx.0, code);
                 Err(String::from(CStr::from_ptr(msg).to_str().unwrap_or(
                     "Couldn't retrieve error message from z3: got invalid UTF-8",
                 )))
-            } else {
-                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result.unwrap()))
             }
         }
     }

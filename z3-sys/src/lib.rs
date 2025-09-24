@@ -32,6 +32,7 @@
 #![warn(clippy::doc_markdown)]
 #![no_std]
 
+use core::mem::MaybeUninit;
 use core::ptr::NonNull;
 
 mod generated;
@@ -1963,8 +1964,8 @@ unsafe extern "C" {
         name: Z3_symbol,
         n: ::core::ffi::c_uint,
         enum_names: NonNull<Z3_symbol>,
-        enum_consts: NonNull<Option<Z3_func_decl>>,
-        enum_testers: NonNull<Option<Z3_func_decl>>,
+        enum_consts: NonNull<MaybeUninit<Z3_func_decl>>,
+        enum_testers: NonNull<MaybeUninit<Z3_func_decl>>,
     ) -> Option<Z3_sort>;
 
     /// Create a list sort

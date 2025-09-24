@@ -88,7 +88,8 @@ impl Array {
                     self.z3_ast,
                     idxs.len().try_into().unwrap(),
                     idxs.as_ptr() as *const Z3_ast,
-                ).unwrap()
+                )
+                .unwrap()
             })
         }
     }
@@ -111,7 +112,8 @@ impl Array {
                     self.z3_ast,
                     index.get_z3_ast(),
                     value.get_z3_ast(),
-                ).unwrap()
+                )
+                .unwrap()
             })
         }
     }

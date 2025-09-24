@@ -36,7 +36,8 @@ impl RecFuncDecl {
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
-                ).unwrap(),
+                )
+                .unwrap(),
             )
         }
     }

@@ -67,7 +67,8 @@ impl Bool {
                     self.z3_ast,
                     a.get_z3_ast(),
                     b.get_z3_ast(),
-                ).unwrap()
+                )
+                .unwrap()
             })
         }
     }
@@ -100,7 +101,8 @@ impl Bool {
                     values.as_ptr(),
                     coefficients.as_ptr(),
                     k,
-                ).unwrap()
+                )
+                .unwrap()
             })
         }
     }
@@ -120,7 +122,8 @@ impl Bool {
                     values.as_ptr(),
                     coefficients.as_ptr(),
                     k,
-                ).unwrap()
+                )
+                .unwrap()
             })
         }
     }
@@ -140,7 +143,8 @@ impl Bool {
                     values.as_ptr(),
                     coefficients.as_ptr(),
                     k,
-                ).unwrap()
+                )
+                .unwrap()
             })
         }
     }

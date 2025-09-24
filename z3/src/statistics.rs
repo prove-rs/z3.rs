@@ -92,7 +92,7 @@ impl Statistics {
 
 impl Clone for Statistics {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, Some(self.z3_stats).unwrap()) }
+        unsafe { Self::wrap(&self.ctx, self.z3_stats) }
     }
 }
 

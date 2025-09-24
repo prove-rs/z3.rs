@@ -207,7 +207,8 @@ impl FromStr for Int {
         let ast = unsafe {
             let int_cstring = CString::new(value).unwrap();
             Z3_mk_numeral(ctx.z3_ctx.0, int_cstring.as_ptr(), sort.z3_sort)
-        }.ok_or(())?;
+        }
+        .ok_or(())?;
         Ok(unsafe { Int::wrap(ctx, ast) })
     }
 }

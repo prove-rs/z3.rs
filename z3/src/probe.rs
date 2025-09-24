@@ -166,7 +166,12 @@ impl Probe {
 
     /// Return a probe that evaluates to "true" when `p` does not evaluate to true.
     pub fn not(&self) -> Probe {
-        unsafe { Self::wrap(&self.ctx, Z3_probe_not(self.ctx.z3_ctx.0, self.z3_probe).unwrap()) }
+        unsafe {
+            Self::wrap(
+                &self.ctx,
+                Z3_probe_not(self.ctx.z3_ctx.0, self.z3_probe).unwrap(),
+            )
+        }
     }
 
     /// Return a probe that evaluates to "true" when the value returned
@@ -178,7 +183,7 @@ impl Probe {
 
 impl Clone for Probe {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, Some(self.z3_probe).unwrap()) }
+        unsafe { Self::wrap(&self.ctx, self.z3_probe) }
     }
 }
 
