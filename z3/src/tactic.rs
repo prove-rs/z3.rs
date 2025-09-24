@@ -10,13 +10,13 @@ use z3_sys::*;
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 
 impl ApplyResult {
-    unsafe fn wrap(ctx: &Context, z3_apply_result: Option<Z3_apply_result>) -> ApplyResult {
+    unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
         unsafe {
-            Z3_apply_result_inc_ref(ctx.z3_ctx.0, z3_apply_result.unwrap());
+            Z3_apply_result_inc_ref(ctx.z3_ctx.0, z3_apply_result);
         }
         ApplyResult {
             ctx: ctx.clone(),
-            z3_apply_result: z3_apply_result.unwrap(),
+            z3_apply_result,
         }
     }
 
@@ -26,7 +26,7 @@ impl ApplyResult {
         (0..num_subgoals).map(move |i| unsafe {
             Goal::wrap(
                 &self.ctx,
-                Z3_apply_result_get_subgoal(self.ctx.z3_ctx.0, self.z3_apply_result, i),
+                Z3_apply_result_get_subgoal(self.ctx.z3_ctx.0, self.z3_apply_result, i).unwrap(),
             )
         })
     }
@@ -64,8 +64,7 @@ impl Tactic {
             .collect()
     }
 
-    unsafe fn wrap(ctx: &Context, z3_tactic: Option<Z3_tactic>) -> Tactic {
-        let z3_tactic = z3_tactic.unwrap();
+    unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
         unsafe {
             Z3_tactic_inc_ref(ctx.z3_ctx.0, z3_tactic);
         }
@@ -95,32 +94,29 @@ impl Tactic {
         let tactic_name = CString::new(name).unwrap();
 
         unsafe {
-            let tactic = Z3_mk_tactic(ctx.z3_ctx.0, tactic_name.as_ptr());
-            if tactic.is_none() {
-                panic!("{name} is an invalid tactic");
-            } else {
-                Self::wrap(ctx, tactic)
-            }
+            let tactic = Z3_mk_tactic(ctx.z3_ctx.0, tactic_name.as_ptr())
+                .expect(&format!("{name} is an invalid tactic"));
+            Self::wrap(ctx, tactic)
         }
     }
 
     /// Return a tactic that just return the given goal.
     pub fn create_skip() -> Tactic {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0)) }
+        unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0).unwrap()) }
     }
 
     /// Return a tactic that always fails.
     pub fn create_fail() -> Tactic {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0)) }
+        unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0).unwrap()) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
     pub fn repeat(t: &Tactic, max: u32) -> Tactic {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max)) }
+        unsafe { Self::wrap(ctx, Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max).unwrap()) }
     }
 
     /// Return a tactic that applies the current tactic to a given goal, failing
@@ -130,7 +126,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_try_for(self.ctx.z3_ctx.0, self.z3_tactic, timeout_ms),
+                Z3_tactic_try_for(self.ctx.z3_ctx.0, self.z3_tactic, timeout_ms).unwrap(),
             )
         }
     }
@@ -141,7 +137,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_and_then(self.ctx.z3_ctx.0, self.z3_tactic, then_tactic.z3_tactic),
+                Z3_tactic_and_then(self.ctx.z3_ctx.0, self.z3_tactic, then_tactic.z3_tactic).unwrap(),
             )
         }
     }
@@ -152,7 +148,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_or_else(self.ctx.z3_ctx.0, self.z3_tactic, else_tactic.z3_tactic),
+                Z3_tactic_or_else(self.ctx.z3_ctx.0, self.z3_tactic, else_tactic.z3_tactic).unwrap(),
             )
         }
     }
@@ -163,7 +159,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_cond(self.ctx.z3_ctx.0, p.z3_probe, self.z3_tactic, t.z3_tactic),
+                Z3_tactic_cond(self.ctx.z3_ctx.0, p.z3_probe, self.z3_tactic, t.z3_tactic).unwrap(),
             )
         }
     }
@@ -174,7 +170,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_when(self.ctx.z3_ctx.0, p.z3_probe, self.z3_tactic),
+                Z3_tactic_when(self.ctx.z3_ctx.0, p.z3_probe, self.z3_tactic).unwrap(),
             )
         }
     }
@@ -187,14 +183,14 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &p.ctx,
-                Z3_tactic_cond(p.ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic),
+                Z3_tactic_cond(p.ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic).unwrap(),
             )
         }
     }
 
     /// Return a tactic that fails if the probe `p` evaluates to false.
     pub fn fail_if(p: &Probe) -> Tactic {
-        unsafe { Self::wrap(&p.ctx, Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe)) }
+        unsafe { Self::wrap(&p.ctx, Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe).unwrap()) }
     }
 
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns
@@ -218,7 +214,7 @@ impl Tactic {
                     "Couldn't retrieve error message from z3: got invalid UTF-8",
                 )))
             } else {
-                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result))
+                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result.unwrap()))
             }
         }
     }
@@ -246,7 +242,7 @@ impl Tactic {
         unsafe {
             Solver::wrap(
                 &self.ctx,
-                Z3_mk_solver_from_tactic(self.ctx.z3_ctx.0, self.z3_tactic),
+                Z3_mk_solver_from_tactic(self.ctx.z3_ctx.0, self.z3_tactic).unwrap(),
             )
         }
     }

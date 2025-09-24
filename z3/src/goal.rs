@@ -16,20 +16,20 @@ impl Clone for Goal {
 }
 
 impl Goal {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Option<Z3_goal>) -> Goal {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal) -> Goal {
         unsafe {
-            Z3_goal_inc_ref(ctx.z3_ctx.0, z3_goal.unwrap());
+            Z3_goal_inc_ref(ctx.z3_ctx.0, z3_goal);
         }
         Goal {
             ctx: ctx.clone(),
-            z3_goal: z3_goal.unwrap(),
+            z3_goal,
         }
     }
 
     pub fn new(models: bool, unsat_cores: bool, proofs: bool) -> Goal {
         let ctx = &Context::thread_local();
         // NOTE: The Z3 context ctx must have been created with proof generation support.
-        unsafe { Self::wrap(ctx, Z3_mk_goal(ctx.z3_ctx.0, models, unsat_cores, proofs)) }
+        unsafe { Self::wrap(ctx, Z3_mk_goal(ctx.z3_ctx.0, models, unsat_cores, proofs).unwrap()) }
     }
 
     /// Add a new formula `a` to the given goal.
@@ -84,7 +84,7 @@ impl Goal {
         let z3_ctx = self.ctx.z3_ctx.0;
         let z3_goal = self.z3_goal;
         (0..goal_size).map(move |i| {
-            let formula = unsafe { Z3_goal_formula(z3_ctx, z3_goal, i as u32) };
+            let formula = unsafe { Z3_goal_formula(z3_ctx, z3_goal, i as u32).unwrap() };
             unsafe { T::wrap(&self.ctx, formula) }
         })
     }
@@ -98,7 +98,8 @@ impl Goal {
         let mut formulas: Vec<Bool> = Vec::with_capacity(goal_size);
 
         for i in 0..goal_size {
-            let formula = unsafe { Z3_goal_formula(self.ctx.z3_ctx.0, self.z3_goal, i as u32) };
+            let formula =
+                unsafe { Z3_goal_formula(self.ctx.z3_ctx.0, self.z3_goal, i as u32).unwrap() };
             formulas.push(unsafe { Bool::wrap(&self.ctx, formula) });
         }
         formulas
@@ -137,7 +138,7 @@ unsafe impl Translate for Goal {
         unsafe {
             Goal::wrap(
                 ctx,
-                Z3_goal_translate(self.ctx.z3_ctx.0, self.z3_goal, ctx.z3_ctx.0),
+                Z3_goal_translate(self.ctx.z3_ctx.0, self.z3_goal, ctx.z3_ctx.0).unwrap(),
             )
         }
     }

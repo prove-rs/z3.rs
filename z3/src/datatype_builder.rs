@@ -180,11 +180,13 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
 
             let raw_constructor = unsafe {
                 Z3_get_datatype_sort_constructor(ctx.z3_ctx.0, z3_sort, j.try_into().unwrap())
+                    .unwrap()
             };
             let constructor: FuncDecl = unsafe { FuncDecl::wrap(&ctx, raw_constructor) };
 
             let tester_func = unsafe {
                 Z3_get_datatype_sort_recognizer(ctx.z3_ctx.0, z3_sort, j.try_into().unwrap())
+                    .unwrap()
             };
             let tester = unsafe { FuncDecl::wrap(&ctx, tester_func) };
 
@@ -197,6 +199,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
                         j.try_into().unwrap(),
                         k.try_into().unwrap(),
                     )
+                    .unwrap()
                 };
 
                 accessors.push(unsafe { FuncDecl::wrap(&ctx, accessor_func) });

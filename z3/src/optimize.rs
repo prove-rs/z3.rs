@@ -16,8 +16,7 @@ use num::{
 };
 
 impl Optimize {
-    unsafe fn wrap(ctx: &Context, z3_opt: Option<Z3_optimize>) -> Optimize {
-        let z3_opt = z3_opt.unwrap();
+    unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {
             Z3_optimize_inc_ref(ctx.z3_ctx.0, z3_opt);
         }
@@ -30,7 +29,7 @@ impl Optimize {
     /// Create a new optimize context.
     pub fn new() -> Optimize {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.0)) }
+        unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.0).unwrap()) }
     }
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
@@ -155,23 +154,24 @@ impl Optimize {
     ///
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        let z3_unsat_core = unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) };
-        if z3_unsat_core.is_none() {
-            return vec![];
+        if let Some(z3_unsat_core) =
+            unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) }
+        {
+            let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_unsat_core) };
+
+            let mut unsat_core = Vec::with_capacity(len as usize);
+
+            for i in 0..len {
+                let elem =
+                    unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i).unwrap() };
+                let elem = unsafe { Bool::wrap(&self.ctx, elem) };
+                unsat_core.push(elem);
+            }
+
+            unsat_core
+        } else {
+            vec![]
         }
-        let z3_unsat_core = z3_unsat_core.unwrap();
-
-        let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_unsat_core) };
-
-        let mut unsat_core = Vec::with_capacity(len as usize);
-
-        for i in 0..len {
-            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i) };
-            let elem = unsafe { Bool::wrap(&self.ctx, elem) };
-            unsat_core.push(elem);
-        }
-
-        unsat_core
     }
 
     /// Create a backtracking point.
@@ -245,7 +245,7 @@ impl Optimize {
         let mut objectives = Vec::with_capacity(len as usize);
 
         for i in 0..len {
-            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_objectives, i) };
+            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_objectives, i).unwrap() };
             let elem = unsafe { Dynamic::wrap(&self.ctx, elem) };
             objectives.push(elem);
         }
@@ -277,7 +277,7 @@ impl Optimize {
         unsafe {
             Statistics::wrap(
                 &self.ctx,
-                Z3_optimize_get_statistics(self.ctx.z3_ctx.0, self.z3_opt),
+                Z3_optimize_get_statistics(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
             )
         }
     }

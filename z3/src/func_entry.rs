@@ -7,8 +7,7 @@ use crate::{
 };
 
 impl FuncEntry {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Option<Z3_func_entry>) -> Self {
-        let z3_func_entry = z3_func_entry.unwrap();
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Z3_func_entry) -> Self {
         unsafe {
             Z3_func_entry_inc_ref(ctx.z3_ctx.0, z3_func_entry);
         }
@@ -23,7 +22,7 @@ impl FuncEntry {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_func_entry_get_value(self.ctx.z3_ctx.0, self.z3_func_entry),
+                Z3_func_entry_get_value(self.ctx.z3_ctx.0, self.z3_func_entry).unwrap(),
             )
         }
     }
@@ -39,7 +38,7 @@ impl FuncEntry {
             .map(|i| unsafe {
                 Dynamic::wrap(
                     &self.ctx,
-                    Z3_func_entry_get_arg(self.ctx.z3_ctx.0, self.z3_func_entry, i),
+                    Z3_func_entry_get_arg(self.ctx.z3_ctx.0, self.z3_func_entry, i).unwrap(),
                 )
             })
             .collect()

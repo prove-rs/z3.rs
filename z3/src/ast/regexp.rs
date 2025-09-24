@@ -40,6 +40,7 @@ impl Regexp {
                     ctx.z3_ctx.0,
                     Z3_mk_string(ctx.z3_ctx.0, c_str.as_ptr()).unwrap(),
                 )
+                .unwrap()
             })
         }
     }
@@ -60,7 +61,7 @@ impl Regexp {
                 let ret = Z3_mk_re_range(ctx.z3_ctx.0, lo_z3s, hi_z3s);
                 Z3_dec_ref(ctx.z3_ctx.0, lo_z3s);
                 Z3_dec_ref(ctx.z3_ctx.0, hi_z3s);
-                ret
+                ret.unwrap()
             })
         }
     }
@@ -69,7 +70,7 @@ impl Regexp {
     pub fn r#loop(&self, lo: u32, hi: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_re_loop(self.ctx.z3_ctx.0, self.z3_ast, lo, hi)
+                Z3_mk_re_loop(self.ctx.z3_ctx.0, self.z3_ast, lo, hi).unwrap()
             })
         }
     }
@@ -81,7 +82,7 @@ impl Regexp {
     pub fn power(&self, n: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_re_power(self.ctx.z3_ctx.0, self.z3_ast, n)
+                Z3_mk_re_power(self.ctx.z3_ctx.0, self.z3_ast, n).unwrap()
             })
         }
     }
@@ -95,6 +96,7 @@ impl Regexp {
                     ctx.z3_ctx.0,
                     Z3_mk_re_sort(ctx.z3_ctx.0, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap()).unwrap(),
                 )
+                .unwrap()
             })
         }
     }
@@ -110,6 +112,7 @@ impl Regexp {
                     ctx.z3_ctx.0,
                     Z3_mk_re_sort(ctx.z3_ctx.0, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap()).unwrap(),
                 )
+                .unwrap()
             })
         }
     }
@@ -123,6 +126,7 @@ impl Regexp {
                     ctx.z3_ctx.0,
                     Z3_mk_re_sort(ctx.z3_ctx.0, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap()).unwrap(),
                 )
+                .unwrap()
             })
         }
     }

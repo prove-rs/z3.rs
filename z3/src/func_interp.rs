@@ -46,7 +46,7 @@ impl FuncInterp {
             .map(|i| unsafe {
                 FuncEntry::wrap(
                     &self.ctx,
-                    Z3_func_interp_get_entry(self.ctx.z3_ctx.0, self.z3_func_interp, i),
+                    Z3_func_interp_get_entry(self.ctx.z3_ctx.0, self.z3_func_interp, i).unwrap(),
                 )
             })
             .collect()
@@ -58,7 +58,7 @@ impl FuncInterp {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_func_interp_get_else(self.ctx.z3_ctx.0, self.z3_func_interp),
+                Z3_func_interp_get_else(self.ctx.z3_ctx.0, self.z3_func_interp).unwrap(),
             )
         }
     }

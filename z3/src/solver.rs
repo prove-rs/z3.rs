@@ -12,13 +12,13 @@ use crate::{
 use std::ops::AddAssign;
 
 impl Solver {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Option<Z3_solver>) -> Solver {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
         unsafe {
-            Z3_solver_inc_ref(ctx.z3_ctx.0, z3_slv.unwrap());
+            Z3_solver_inc_ref(ctx.z3_ctx.0, z3_slv);
         }
         Solver {
             ctx: ctx.clone(),
-            z3_slv: z3_slv.unwrap(),
+            z3_slv,
         }
     }
 
@@ -46,7 +46,7 @@ impl Solver {
     /// solver to change its behaviour.
     pub fn new() -> Solver {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0)) }
+        unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0).unwrap()) }
     }
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
@@ -63,12 +63,8 @@ impl Solver {
     pub fn new_for_logic<S: Into<Symbol>>(logic: S) -> Option<Solver> {
         let ctx = &Context::thread_local();
         unsafe {
-            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol());
-            if s.is_none() {
-                None
-            } else {
-                Some(Self::wrap(ctx, s))
-            }
+            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol())?;
+            Some(Self::wrap(ctx, s))
         }
     }
 
@@ -188,7 +184,7 @@ impl Solver {
 
         (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_vec) })
             .map(|i| unsafe {
-                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_vec, i);
+                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_vec, i).unwrap();
                 ast::Bool::wrap(&self.ctx, z3_ast)
             })
             .collect()
@@ -227,7 +223,7 @@ impl Solver {
         let mut unsat_core = Vec::with_capacity(len as usize);
 
         for i in 0..len {
-            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i) };
+            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i).unwrap() };
             let elem = unsafe { ast::Bool::wrap(&self.ctx, elem) };
             unsat_core.push(elem);
         }
@@ -265,7 +261,7 @@ impl Solver {
             );
             let mut cons = vec![];
             for i in 0..Z3_ast_vector_size(self.ctx.z3_ctx.0, consequences) {
-                let val = Z3_ast_vector_get(self.ctx.z3_ctx.0, consequences, i);
+                let val = Z3_ast_vector_get(self.ctx.z3_ctx.0, consequences, i).unwrap();
                 cons.push(ast::Bool::wrap(&self.ctx, val));
             }
 
@@ -332,7 +328,7 @@ impl Solver {
     // have an Ast subtype for yet.
     pub fn get_proof(&self) -> Option<impl Ast> {
         let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx.0, self.z3_slv) }?;
-        Some(unsafe { ast::Dynamic::wrap(&self.ctx, Some(m)) })
+        Some(unsafe { ast::Dynamic::wrap(&self.ctx, m) })
     }
 
     /// Return a brief justification for an "unknown" result (i.e.,
@@ -359,7 +355,7 @@ impl Solver {
         unsafe {
             Statistics::wrap(
                 &self.ctx,
-                Z3_solver_get_statistics(self.ctx.z3_ctx.0, self.z3_slv),
+                Z3_solver_get_statistics(self.ctx.z3_ctx.0, self.z3_slv).unwrap(),
             )
         }
     }
@@ -622,7 +618,7 @@ unsafe impl Translate for Solver {
         unsafe {
             Solver::wrap(
                 dest,
-                Z3_solver_translate(self.ctx.z3_ctx.0, self.z3_slv, dest.z3_ctx.0),
+                Z3_solver_translate(self.ctx.z3_ctx.0, self.z3_slv, dest.z3_ctx.0).unwrap(),
             )
         }
     }

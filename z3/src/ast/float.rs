@@ -18,7 +18,7 @@ impl Float {
         let sort = Sort::float32();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_fpa_numeral_float(ctx.z3_ctx.0, value, sort.z3_sort)
+                Z3_mk_fpa_numeral_float(ctx.z3_ctx.0, value, sort.z3_sort).unwrap()
             })
         }
     }
@@ -30,7 +30,7 @@ impl Float {
         let sort = Sort::double();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort)
+                Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort).unwrap()
             })
         }
     }
@@ -43,7 +43,7 @@ impl Float {
     pub fn nan(sort: &Sort) -> Float {
         let ctx = &Context::thread_local();
         assert!(matches!(sort.kind(), SortKind::FloatingPoint));
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.0, sort.z3_sort)) }
+        unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.0, sort.z3_sort).unwrap()) }
     }
 
     /// A single-precision [`Float`] NaN value.
@@ -98,7 +98,7 @@ impl Float {
         let sort = Sort::float(ebits, sbits);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -109,7 +109,7 @@ impl Float {
         let sort = Sort::float32();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -120,7 +120,7 @@ impl Float {
         let sort = Sort::double();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -133,7 +133,7 @@ impl Float {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -145,7 +145,7 @@ impl Float {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -157,7 +157,7 @@ impl Float {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -211,7 +211,7 @@ impl Float {
         unsafe {
             BV::wrap(
                 &self.ctx,
-                Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx.0, self.z3_ast),
+                Z3_mk_fpa_to_ieee_bv(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
             )
         }
     }
@@ -242,7 +242,7 @@ macro_rules! impl_into_ast {
                 let ctx = a.get_ctx();
                 unsafe {
                     Float::wrap(ctx, {
-                        Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort)
+                        Z3_mk_fpa_numeral_double(ctx.z3_ctx.0, value, sort.z3_sort).unwrap()
                     })
                 }
             }

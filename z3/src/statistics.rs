@@ -30,8 +30,7 @@ pub struct StatisticsEntry {
 
 impl Statistics {
     /// Wrap a raw [`Z3_stats`], managing refcounts.
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_stats: Option<Z3_stats>) -> Statistics {
-        let z3_stats = z3_stats.unwrap();
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_stats: Z3_stats) -> Statistics {
         unsafe {
             Z3_stats_inc_ref(ctx.z3_ctx.0, z3_stats);
         }
@@ -93,7 +92,7 @@ impl Statistics {
 
 impl Clone for Statistics {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, Some(self.z3_stats)) }
+        unsafe { Self::wrap(&self.ctx, Some(self.z3_stats).unwrap()) }
     }
 }
 

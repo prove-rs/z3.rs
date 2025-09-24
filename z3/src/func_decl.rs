@@ -6,16 +6,16 @@ use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
 impl FuncDecl {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Option<Z3_func_decl>) -> Self {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
             Z3_inc_ref(
                 ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl.unwrap()).unwrap(),
+                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl).unwrap(),
             );
         }
         Self {
             ctx: ctx.clone(),
-            z3_func_decl: z3_func_decl.unwrap(),
+            z3_func_decl,
         }
     }
 
@@ -34,7 +34,8 @@ impl FuncDecl {
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
-                ),
+                )
+                .unwrap(),
             )
         }
     }
@@ -101,7 +102,12 @@ impl FuncDecl {
     pub fn partial_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+            )
+        }
     }
 
     /// Create a piecewise linear order [`FuncDecl`] "Special Relation" over the given [`Sort`].
@@ -120,7 +126,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id),
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
             )
         }
     }
@@ -138,7 +144,12 @@ impl FuncDecl {
     pub fn linear_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+            )
+        }
     }
 
     /// Create a tree order [`FuncDecl`] "Special Relation" over the given [`Sort`].
@@ -154,7 +165,7 @@ impl FuncDecl {
     pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id)) }
+        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap()) }
     }
 
     /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].
@@ -170,7 +181,12 @@ impl FuncDecl {
     pub fn transitive_closure<A: Borrow<FuncDecl>>(a: A) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl)) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl).unwrap(),
+            )
+        }
     }
 
     /// Return the number of arguments of a function declaration.
@@ -205,6 +221,7 @@ impl FuncDecl {
                     args.len().try_into().unwrap(),
                     args.as_ptr(),
                 )
+                .unwrap()
             })
         }
     }
@@ -267,7 +284,7 @@ unsafe impl Translate for FuncDecl {
         unsafe {
             let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap();
             let translated = Z3_translate(self.ctx.z3_ctx.0, func_decl_ast, dest.z3_ctx.0).unwrap();
-            let func_decl = Z3_to_func_decl(self.ctx.z3_ctx.0, translated);
+            let func_decl = Z3_to_func_decl(self.ctx.z3_ctx.0, translated).unwrap();
             Self::wrap(dest, func_decl)
         }
     }

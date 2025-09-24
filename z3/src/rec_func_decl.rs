@@ -7,8 +7,7 @@ use z3_sys::*;
 use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 
 impl RecFuncDecl {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Option<Z3_func_decl>) -> Self {
-        let z3_func_decl = z3_func_decl.unwrap();
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
             Z3_inc_ref(
                 ctx.z3_ctx.0,
@@ -37,7 +36,7 @@ impl RecFuncDecl {
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
-                ),
+                ).unwrap(),
             )
         }
     }

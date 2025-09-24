@@ -24,7 +24,7 @@ unsafe impl<T: Ast> Translate for T {
     fn translate(&self, dest: &Context) -> Self {
         unsafe {
             Self::wrap(dest, {
-                Z3_translate(self.get_ctx().z3_ctx.0, self.get_z3_ast(), dest.z3_ctx.0)
+                Z3_translate(self.get_ctx().z3_ctx.0, self.get_z3_ast(), dest.z3_ctx.0).unwrap()
             })
         }
     }

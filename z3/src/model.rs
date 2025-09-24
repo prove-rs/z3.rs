@@ -34,8 +34,9 @@ impl Model {
     pub fn get_const_interp<T: Ast>(&self, ast: &T) -> Option<T> {
         let func = ast.safe_decl().ok()?;
 
-        let ret =
-            unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl) };
+        let ret = unsafe {
+            Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl)?
+        };
         Some(unsafe { T::wrap(&self.ctx, ret) })
     }
 
@@ -45,32 +46,28 @@ impl Model {
         if f.arity() == 0 {
             let ret = unsafe {
                 Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl)
+            }?;
+            let sort_kind = unsafe {
+                Z3_get_sort_kind(
+                    self.ctx.z3_ctx.0,
+                    Z3_get_range(self.ctx.z3_ctx.0, f.z3_func_decl).unwrap(),
+                )
             };
-            if ret.is_none() {
-                None
-            } else {
-                let sort_kind = unsafe {
-                    Z3_get_sort_kind(
-                        self.ctx.z3_ctx.0,
-                        Z3_get_range(self.ctx.z3_ctx.0, f.z3_func_decl)?,
-                    )
-                };
-                match sort_kind {
-                    SortKind::Array => {
-                        if unsafe { Z3_is_as_array(self.ctx.z3_ctx.0, ret?) } {
-                            let fd = unsafe {
-                                FuncDecl::wrap(
-                                    &self.ctx,
-                                    Z3_get_as_array_func_decl(self.ctx.z3_ctx.0, ret?),
-                                )
-                            };
-                            self.get_func_interp(&fd)
-                        } else {
-                            None
-                        }
+            match sort_kind {
+                SortKind::Array => {
+                    if unsafe { Z3_is_as_array(self.ctx.z3_ctx.0, ret) } {
+                        let fd = unsafe {
+                            FuncDecl::wrap(
+                                &self.ctx,
+                                Z3_get_as_array_func_decl(self.ctx.z3_ctx.0, ret).unwrap(),
+                            )
+                        };
+                        self.get_func_interp(&fd)
+                    } else {
+                        None
                     }
-                    _ => None,
                 }
+                _ => None,
             }
         } else {
             let ret =
@@ -96,7 +93,7 @@ impl Model {
             }
         };
         if res {
-            Some(unsafe { T::wrap(&self.ctx, Some(tmp)) })
+            Some(unsafe { T::wrap(&self.ctx, tmp) })
         } else {
             None
         }
@@ -172,6 +169,7 @@ impl Iterator for ModelIter<'_> {
             if self.idx < num_consts {
                 let const_decl = unsafe {
                     Z3_model_get_const_decl(self.model.ctx.z3_ctx.0, self.model.z3_mdl, self.idx)
+                        .unwrap()
                 };
                 self.idx += 1;
                 Some(unsafe { FuncDecl::wrap(&self.model.ctx, const_decl) })
@@ -182,6 +180,7 @@ impl Iterator for ModelIter<'_> {
                         self.model.z3_mdl,
                         self.idx - num_consts,
                     )
+                    .unwrap()
                 };
                 self.idx += 1;
                 Some(unsafe { FuncDecl::wrap(&self.model.ctx, func_decl) })
