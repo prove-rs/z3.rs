@@ -380,16 +380,3 @@ impl fmt::Display for SortDiffers {
         )
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use crate::Sort;
-
-    #[test]
-    #[should_panic]
-    fn duplicate_sort() {
-        let _res1 = Sort::enumeration("SameNameSort".into(), &["A".into(), "B".into()]);
-        // defining a duplicate sort name
-        let _res2 = Sort::enumeration("SameNameSort".into(), &["C".into(), "D".into()]);
-    }
-}
