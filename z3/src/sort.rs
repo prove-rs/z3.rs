@@ -2,7 +2,6 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::mem::MaybeUninit;
-use std::ptr::NonNull;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
@@ -154,10 +153,9 @@ impl Sort {
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
         let ctx = &Context::thread_local();
         let enum_names: Vec<Z3_symbol> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
-        let enums = NonNull::new(enum_names.as_ptr() as *mut _).unwrap();
-        let enum_consts: Vec<MaybeUninit<Z3_func_decl>> =
+        let mut enum_consts: Vec<MaybeUninit<Z3_func_decl>> =
             vec![MaybeUninit::zeroed(); enum_names.len()];
-        let enum_testers: Vec<MaybeUninit<Z3_func_decl>> =
+        let mut enum_testers: Vec<MaybeUninit<Z3_func_decl>> =
             vec![MaybeUninit::zeroed(); enum_names.len()];
 
         let sort = unsafe {
@@ -167,9 +165,9 @@ impl Sort {
                     ctx.z3_ctx.0,
                     name.as_z3_symbol(),
                     enum_names.len().try_into().unwrap(),
-                    enums,
-                    NonNull::new(enum_consts.as_ptr() as *mut _).unwrap(),
-                    NonNull::new(enum_testers.as_ptr() as *mut _).unwrap(),
+                    enum_names.as_ptr(),
+                    enum_consts.as_mut_ptr(),
+                    enum_testers.as_mut_ptr(),
                 )
                 .unwrap(),
             )
