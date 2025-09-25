@@ -156,9 +156,9 @@ impl Sort {
         let enum_names: Vec<Z3_symbol> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
         let enums = NonNull::new(enum_names.as_ptr() as *mut _).unwrap();
         let enum_consts: Vec<MaybeUninit<Z3_func_decl>> =
-            vec![MaybeUninit::uninit(); enum_names.len()];
+            vec![MaybeUninit::zeroed(); enum_names.len()];
         let enum_testers: Vec<MaybeUninit<Z3_func_decl>> =
-            vec![MaybeUninit::uninit(); enum_names.len()];
+            vec![MaybeUninit::zeroed(); enum_names.len()];
 
         let sort = unsafe {
             Self::wrap(
