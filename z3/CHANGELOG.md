@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.0...z3-v0.19.1) - 2025-09-26
+
+### Added
+
+- allow context closures to capture non-Sync data ([#452](https://github.com/prove-rs/z3.rs/pull/452)) (by @gmorenz) - #452
+
+### Contributors
+
+* @gmorenz
+
 ## [0.19.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.2...z3-v0.19.0) - 2025-09-26
 
 ### Added
