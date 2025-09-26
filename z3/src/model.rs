@@ -35,9 +35,9 @@ impl Model {
         let func = ast.safe_decl().ok()?;
 
         let ret = unsafe {
-            Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl)?
+            Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl)
         };
-        Some(unsafe { T::wrap(&self.ctx, ret) })
+        Some(unsafe { T::wrap(&self.ctx, ret?) })
     }
 
     /// Returns the interpretation of the given `f` in the `Model`
