@@ -119,7 +119,7 @@ pub use solver::Solvable;
 ///
 /// # See also:
 ///
-/// - [`Context::new()`]
+/// - [`with_z3_config`]
 #[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,

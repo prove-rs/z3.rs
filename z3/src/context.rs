@@ -40,7 +40,6 @@ impl Drop for ContextInternal {
 /// # See also:
 ///
 /// - [`Config`]
-/// - [`Context::new()`]
 /// - [`with_z3_config`](crate::with_z3_config)
 /// - [`with_z3_context`](crate::with_z3_context)
 /// - [`Synchronized`](crate::Synchronized)
