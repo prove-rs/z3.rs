@@ -34,9 +34,8 @@ impl Model {
     pub fn get_const_interp<T: Ast>(&self, ast: &T) -> Option<T> {
         let func = ast.safe_decl().ok()?;
 
-        let ret = unsafe {
-            Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl)
-        };
+        let ret =
+            unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl) };
         Some(unsafe { T::wrap(&self.ctx, ret?) })
     }
 
