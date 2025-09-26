@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.18.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.2...z3-v0.18.3) - 2025-09-26
+## [0.19.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.2...z3-v0.19.0) - 2025-09-26
 
 ### Added
 
@@ -24,7 +24,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Removed
 
-- Context no longer implements Default and Context::new is now private ([#451](https://github.com/prove-rs/z3.rs/pull/451)) (by @toolCHAINZ) - #451
+- [**breaking**] Context no longer implements Default and Context::new is now private ([#451](https://github.com/prove-rs/z3.rs/pull/451)) (by @toolCHAINZ) - #451
 
 ### Contributors
 

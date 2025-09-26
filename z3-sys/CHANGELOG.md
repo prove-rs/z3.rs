@@ -7,7 +7,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-## [0.9.11](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.10...z3-sys-v0.9.11) - 2025-09-26
+## [0.10.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.10...z3-sys-v0.10.0) - 2025-09-26
 
 ### Added
 
@@ -15,7 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- Fallible z3-sys APIs now return Option<NonNull<T>> ([#450](https://github.com/prove-rs/z3.rs/pull/450)) (by @toolCHAINZ) - #450
+- [**breaking**] Fallible z3-sys APIs now return Option<NonNull<T>> ([#450](https://github.com/prove-rs/z3.rs/pull/450)) (by @toolCHAINZ) - #450
 
 ### Contributors
 
