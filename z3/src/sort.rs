@@ -152,10 +152,9 @@ impl Sort {
         enum_names: &[Symbol],
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
         let ctx = &Context::thread_local();
-        let enum_names: Vec<Z3_symbol> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
-        let mut enum_consts: Vec<*mut _Z3_func_decl> = vec![std::ptr::null_mut(); enum_names.len()];
-        let mut enum_testers: Vec<*mut _Z3_func_decl> =
-            vec![std::ptr::null_mut(); enum_names.len()];
+        let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
+        let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
+        let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
 
         let sort = unsafe {
             Self::wrap(
