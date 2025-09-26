@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.2...z3-v0.19.0) - 2025-09-26
+
+### Added
+
+- impl Translate for FuncDecl ([#439](https://github.com/prove-rs/z3.rs/pull/439)) (by @toolCHAINZ) - #439
+- Special Binary Relation FuncDecls ([#340](https://github.com/prove-rs/z3.rs/pull/340)) (by @grahnen) - #340
+
+### Changed
+
+- Fallible z3-sys APIs now return Option<NonNull<T>> ([#450](https://github.com/prove-rs/z3.rs/pull/450)) (by @toolCHAINZ) - #450
+
+### Other
+
+- fix typos in example ([#448](https://github.com/prove-rs/z3.rs/pull/448)) (by @toolCHAINZ) - #448
+
+### Removed
+
+- [**breaking**] Context no longer implements Default and Context::new is now private ([#451](https://github.com/prove-rs/z3.rs/pull/451)) (by @toolCHAINZ) - #451
+
+### Contributors
+
+* @toolCHAINZ
+* @grahnen
+
 ## [0.18.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.1...z3-v0.18.2) - 2025-09-10
 
 ### Added
