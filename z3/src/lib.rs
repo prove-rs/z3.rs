@@ -119,7 +119,7 @@ pub use solver::Solvable;
 ///
 /// # See also:
 ///
-/// - [`Context::new()`]
+/// - [`with_z3_config`]
 #[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,
@@ -249,9 +249,7 @@ pub use z3_sys::DeclKind;
 ///
 /// Example:
 /// ```
-/// # use z3::{ Config, Context, DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
+/// # use z3::{ DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
 /// # let solver = Solver::new();
 /// // Like Rust's Option<int> type
 /// let option_int = DatatypeBuilder::new("OptionInt")
@@ -386,10 +384,13 @@ pub struct Statistics {
 /// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
 /// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
 /// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
+///
+/// Most users should prefer to use [`with_z3_config`] instead; this function is present
+/// to allow advanced users to use a [`Context`] they unsafely created themselves.
+///
 /// # See also
 ///
-/// [`with_z3_config`]
-#[deprecated = "Use `with_z3_config` instead, which constructs a Context from a Config"]
+/// - [`with_z3_config`]
 pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
     ctx: &Context,
     callback: T,
@@ -407,7 +408,29 @@ pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
 /// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
 /// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
 /// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
-#[allow(deprecated)]
+///
+/// # Examples
+///
+/// ```
+///  # use z3::{Config, Solver, with_z3_config};
+///  # fn make_my_assertions(s: &Solver) {}
+///  let mut cfg = Config::new();
+///  // Set a timeout of 5 seconds
+///  cfg.set_timeout_msec(5000);
+///
+///  with_z3_config(&cfg, || {
+///     let solver = Solver::new();
+///
+///     make_my_assertions(&solver);
+///
+///     // this check will have a five-second timeout
+///     solver.check()
+///  });
+/// ```
+///
+/// # See also
+///
+/// - [`with_z3_context`]
 pub fn with_z3_config<T: Fn() -> R + Send + Sync, R: Send + Sync>(cfg: &Config, callback: T) -> R {
     with_z3_context(&Context::new(cfg), callback)
 }

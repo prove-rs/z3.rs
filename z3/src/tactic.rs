@@ -46,10 +46,7 @@ impl Tactic {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Tactic};
-    ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
+    /// # use z3::Tactic;
     /// let tactics: Vec<_> = Tactic::list_all().into_iter().filter_map(|r| r.ok()).collect();
     /// assert!(tactics.contains(&"ufbv".to_string()));
     /// ```
@@ -79,10 +76,7 @@ impl Tactic {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Tactic};
-    ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
+    /// # use z3::Tactic;
     /// let tactic = Tactic::new("nlsat");
     /// ```
     ///
@@ -236,10 +230,8 @@ impl Tactic {
     /// # Example
     ///
     /// ```
-    /// use z3::{ast, Config, Context, SatResult, Tactic};
+    /// # use z3::{ast, SatResult, Tactic};
     ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
     /// let tactic = Tactic::new("qfnra");
     /// let solver = tactic.solver();
     ///

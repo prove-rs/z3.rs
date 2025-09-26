@@ -21,7 +21,7 @@ impl Config {
     ///
     /// # See also
     ///
-    /// - [`Context::new()`](crate::Context::new)
+    /// - [`with_z3_config`](crate::with_z3_config)
     pub fn new() -> Config {
         Config {
             kvs: Vec::new(),

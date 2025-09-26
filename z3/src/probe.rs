@@ -21,10 +21,7 @@ impl Probe {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Probe};
-    ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
+    /// # use z3::Probe;
     /// let probes: Vec<_> = Probe::list_all().into_iter().filter_map(|r| r.ok()).collect();
     /// assert!(probes.contains(&"is-quasi-pb".to_string()));
     /// ```
@@ -76,10 +73,7 @@ impl Probe {
 
     /// Return a probe that always evaluates to val.
     /// ```
-    /// use z3::{Config, Context, Probe};
-    ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
+    /// # use z3::Probe;
     /// let probe = Probe::constant(1.0);
     /// ```
     pub fn constant(val: f64) -> Probe {
