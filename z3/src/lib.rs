@@ -409,6 +409,25 @@ pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
 /// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
 /// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
 ///
+/// # Examples
+///
+/// ```
+///  # use z3::{Config, Solver, with_z3_config};
+///  # fn make_my_assertions(s: &Solver) {}
+///  let mut cfg = Config::new();
+///  // Set a timeout of 5 seconds
+///  cfg.set_timeout_msec(5000);
+///
+///  with_z3_config(&cfg, || {
+///     let solver = Solver::new();
+///
+///     make_my_assertions(&solver);
+///
+///     // this check will have a five-second timeout
+///     solver.check()
+///  });
+/// ```
+///
 /// # See also
 ///
 /// - [`with_z3_context`]
