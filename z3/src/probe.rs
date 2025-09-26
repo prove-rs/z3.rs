@@ -63,7 +63,7 @@ impl Probe {
     pub fn new(name: &str) -> Probe {
         let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
-        unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr())) }
+        unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr()).unwrap()) }
     }
 
     /// Execute the probe over the goal.
@@ -84,7 +84,7 @@ impl Probe {
     /// ```
     pub fn constant(val: f64) -> Probe {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }
+        unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val).unwrap()) }
     }
 
     /// Return a probe that evaluates to "true" when the value returned
@@ -95,7 +95,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_lt(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_lt(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -106,7 +106,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_gt(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_gt(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -117,7 +117,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_le(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_le(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -128,7 +128,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_ge(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_ge(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -139,7 +139,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_eq(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_eq(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -149,7 +149,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_and(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_and(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -159,14 +159,19 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_or(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_or(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
 
     /// Return a probe that evaluates to "true" when `p` does not evaluate to true.
     pub fn not(&self) -> Probe {
-        unsafe { Self::wrap(&self.ctx, Z3_probe_not(self.ctx.z3_ctx.0, self.z3_probe)) }
+        unsafe {
+            Self::wrap(
+                &self.ctx,
+                Z3_probe_not(self.ctx.z3_ctx.0, self.z3_probe).unwrap(),
+            )
+        }
     }
 
     /// Return a probe that evaluates to "true" when the value returned

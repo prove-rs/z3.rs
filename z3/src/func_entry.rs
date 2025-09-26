@@ -22,7 +22,7 @@ impl FuncEntry {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_func_entry_get_value(self.ctx.z3_ctx.0, self.z3_func_entry),
+                Z3_func_entry_get_value(self.ctx.z3_ctx.0, self.z3_func_entry).unwrap(),
             )
         }
     }
@@ -38,7 +38,7 @@ impl FuncEntry {
             .map(|i| unsafe {
                 Dynamic::wrap(
                     &self.ctx,
-                    Z3_func_entry_get_arg(self.ctx.z3_ctx.0, self.z3_func_entry, i),
+                    Z3_func_entry_get_arg(self.ctx.z3_ctx.0, self.z3_func_entry, i).unwrap(),
                 )
             })
             .collect()

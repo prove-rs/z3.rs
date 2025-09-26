@@ -27,12 +27,7 @@ impl Real {
         let sort = Sort::real();
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, fraction_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
-                return None;
-            }
-
-            numeral_ptr
+            Z3_mk_numeral(ctx.z3_ctx.0, fraction_cstring.as_ptr(), sort.z3_sort)?
         };
         Some(unsafe { Real::wrap(ctx, ast) })
     }
@@ -43,7 +38,7 @@ impl Real {
         let sort = Sort::real();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -55,7 +50,7 @@ impl Real {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -74,6 +69,7 @@ impl Real {
                     num as ::std::os::raw::c_int,
                     den as ::std::os::raw::c_int,
                 )
+                .unwrap()
             })
         }
     }
@@ -112,7 +108,12 @@ impl Real {
     }
 
     pub fn from_int(ast: &Int) -> Real {
-        unsafe { Self::wrap(&ast.ctx, Z3_mk_int2real(ast.ctx.z3_ctx.0, ast.z3_ast)) }
+        unsafe {
+            Self::wrap(
+                &ast.ctx,
+                Z3_mk_int2real(ast.ctx.z3_ctx.0, ast.z3_ast).unwrap(),
+            )
+        }
     }
 
     /// Create an integer from a real.

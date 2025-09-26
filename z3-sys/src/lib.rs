@@ -14,11 +14,11 @@
 //! use z3_sys::*;
 //!
 //! unsafe {
-//!     let cfg = Z3_mk_config();
-//!     let ctx = Z3_mk_context(cfg);
+//!     let cfg = Z3_mk_config().unwrap();
+//!     let ctx = Z3_mk_context(cfg).unwrap();
 //!
-//!     let a = Z3_mk_not(ctx, Z3_mk_eq(ctx, Z3_mk_false(ctx), Z3_mk_true(ctx)));
-//!     let b = Z3_mk_not(ctx, Z3_mk_iff(ctx, Z3_mk_false(ctx), Z3_mk_true(ctx)));
+//!     let a = Z3_mk_not(ctx, Z3_mk_eq(ctx, Z3_mk_false(ctx).unwrap(), Z3_mk_true(ctx).unwrap()).unwrap()).unwrap();
+//!     let b = Z3_mk_not(ctx, Z3_mk_iff(ctx, Z3_mk_false(ctx).unwrap(), Z3_mk_true(ctx).unwrap()).unwrap()).unwrap();
 //!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, a));
 //!     assert_eq!(Z3_mk_true(ctx), Z3_simplify(ctx, b));
 //!
@@ -31,6 +31,8 @@
 #![allow(clippy::unreadable_literal)]
 #![warn(clippy::doc_markdown)]
 #![no_std]
+
+use core::ptr::NonNull;
 
 mod generated;
 
@@ -50,7 +52,7 @@ pub struct _Z3_symbol {
 /// - [`Z3_get_symbol_string`]
 /// - [`Z3_mk_int_symbol`]
 /// - [`Z3_mk_string_symbol`]
-pub type Z3_symbol = *mut _Z3_symbol;
+pub type Z3_symbol = NonNull<_Z3_symbol>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -58,7 +60,8 @@ pub type Z3_symbol = *mut _Z3_symbol;
 pub struct _Z3_literals {
     _unused: [u8; 0],
 }
-pub type Z3_literals = *mut _Z3_literals;
+
+pub type Z3_literals = NonNull<_Z3_literals>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -67,7 +70,7 @@ pub struct _Z3_config {
     _unused: [u8; 0],
 }
 /// Configuration object used to initialize logical contexts.
-pub type Z3_config = *mut _Z3_config;
+pub type Z3_config = NonNull<_Z3_config>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -76,7 +79,7 @@ pub struct _Z3_context {
     _unused: [u8; 0],
 }
 /// Manager of all other Z3 objects, global configuration options, etc.
-pub type Z3_context = *mut _Z3_context;
+pub type Z3_context = NonNull<_Z3_context>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -85,7 +88,7 @@ pub struct _Z3_sort {
     _unused: [u8; 0],
 }
 /// Kind of AST used to represent types.
-pub type Z3_sort = *mut _Z3_sort;
+pub type Z3_sort = NonNull<_Z3_sort>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -94,7 +97,7 @@ pub struct _Z3_func_decl {
     _unused: [u8; 0],
 }
 /// Kind of AST used to represent function symbols.
-pub type Z3_func_decl = *mut _Z3_func_decl;
+pub type Z3_func_decl = NonNull<_Z3_func_decl>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -104,7 +107,7 @@ pub struct _Z3_ast {
 }
 /// Abstract Syntax Tree node. That is, the data structure used in Z3
 /// to represent terms, formulas, and types.
-pub type Z3_ast = *mut _Z3_ast;
+pub type Z3_ast = NonNull<_Z3_ast>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -113,7 +116,7 @@ pub struct _Z3_app {
     _unused: [u8; 0],
 }
 /// Kind of AST used to represent function applications.
-pub type Z3_app = *mut _Z3_app;
+pub type Z3_app = NonNull<_Z3_app>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -123,7 +126,7 @@ pub struct _Z3_pattern {
 }
 /// Kind of AST used to represent pattern and multi-patterns used
 /// to guide quantifier instantiation.
-pub type Z3_pattern = *mut _Z3_pattern;
+pub type Z3_pattern = NonNull<_Z3_pattern>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -132,7 +135,7 @@ pub struct _Z3_model {
     _unused: [u8; 0],
 }
 /// Model for the constraints inserted into the logical context.
-pub type Z3_model = *mut _Z3_model;
+pub type Z3_model = NonNull<_Z3_model>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -141,7 +144,7 @@ pub struct _Z3_constructor {
     _unused: [u8; 0],
 }
 /// Type constructor for a (recursive) datatype.
-pub type Z3_constructor = *mut _Z3_constructor;
+pub type Z3_constructor = NonNull<_Z3_constructor>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -150,7 +153,7 @@ pub struct _Z3_constructor_list {
     _unused: [u8; 0],
 }
 /// List of constructors for a (recursive) datatype.
-pub type Z3_constructor_list = *mut _Z3_constructor_list;
+pub type Z3_constructor_list = NonNull<_Z3_constructor_list>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -160,7 +163,7 @@ pub struct _Z3_params {
 }
 /// Parameter set used to configure many components such as:
 /// simplifiers, tactics, solvers, etc.
-pub type Z3_params = *mut _Z3_params;
+pub type Z3_params = NonNull<_Z3_params>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -171,7 +174,7 @@ pub struct _Z3_param_descrs {
 /// Provides a collection of parameter names, their types,
 /// default values and documentation strings. Solvers, tactics,
 /// and other objects accept different collection of parameters.
-pub type Z3_param_descrs = *mut _Z3_param_descrs;
+pub type Z3_param_descrs = NonNull<_Z3_param_descrs>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -181,7 +184,7 @@ pub struct _Z3_goal {
 }
 /// Set of formulas that can be solved and/or transformed using
 /// tactics and solvers.
-pub type Z3_goal = *mut _Z3_goal;
+pub type Z3_goal = NonNull<_Z3_goal>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -191,7 +194,7 @@ pub struct _Z3_tactic {
 }
 /// Basic building block for creating custom solvers for specific
 /// problem domains.
-pub type Z3_tactic = *mut _Z3_tactic;
+pub type Z3_tactic = NonNull<_Z3_tactic>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -202,7 +205,7 @@ pub struct _Z3_probe {
 /// Function/predicate used to inspect a goal and collect information
 /// that may be used to decide which solver and/or preprocessing step
 /// will be used.
-pub type Z3_probe = *mut _Z3_probe;
+pub type Z3_probe = NonNull<_Z3_probe>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -211,7 +214,7 @@ pub struct _Z3_stats {
     _unused: [u8; 0],
 }
 /// Statistical data for a solver.
-pub type Z3_stats = *mut _Z3_stats;
+pub type Z3_stats = NonNull<_Z3_stats>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -221,7 +224,7 @@ pub struct _Z3_solver {
 }
 /// (Incremental) solver, possibly specialized by a particular
 /// tactic or logic.
-pub type Z3_solver = *mut _Z3_solver;
+pub type Z3_solver = NonNull<_Z3_solver>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -230,7 +233,7 @@ pub struct _Z3_ast_vector {
     _unused: [u8; 0],
 }
 /// Vector of [`Z3_ast`] objects.
-pub type Z3_ast_vector = *mut _Z3_ast_vector;
+pub type Z3_ast_vector = NonNull<_Z3_ast_vector>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -239,7 +242,7 @@ pub struct _Z3_ast_map {
     _unused: [u8; 0],
 }
 /// Mapping from [`Z3_ast`] to [`Z3_ast`] objects.
-pub type Z3_ast_map = *mut _Z3_ast_map;
+pub type Z3_ast_map = NonNull<_Z3_ast_map>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -249,7 +252,7 @@ pub struct _Z3_apply_result {
 }
 /// Collection of subgoals resulting from applying of a tactic
 /// to a goal.
-pub type Z3_apply_result = *mut _Z3_apply_result;
+pub type Z3_apply_result = NonNull<_Z3_apply_result>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -258,7 +261,7 @@ pub struct _Z3_func_interp {
     _unused: [u8; 0],
 }
 /// Interpretation of a function in a model.
-pub type Z3_func_interp = *mut _Z3_func_interp;
+pub type Z3_func_interp = NonNull<_Z3_func_interp>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -268,7 +271,7 @@ pub struct _Z3_func_entry {
 }
 /// Representation of the value of a [`Z3_func_interp`]
 /// at a particular point.
-pub type Z3_func_entry = *mut _Z3_func_entry;
+pub type Z3_func_entry = NonNull<_Z3_func_entry>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -277,7 +280,7 @@ pub struct _Z3_fixedpoint {
     _unused: [u8; 0],
 }
 /// Context for the recursive predicate solver.
-pub type Z3_fixedpoint = *mut _Z3_fixedpoint;
+pub type Z3_fixedpoint = NonNull<_Z3_fixedpoint>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -286,7 +289,7 @@ pub struct _Z3_optimize {
     _unused: [u8; 0],
 }
 /// Context for solving optimization queries.
-pub type Z3_optimize = *mut _Z3_optimize;
+pub type Z3_optimize = NonNull<_Z3_optimize>;
 
 #[doc(hidden)]
 #[repr(C)]
@@ -294,7 +297,7 @@ pub type Z3_optimize = *mut _Z3_optimize;
 pub struct _Z3_rcf_num {
     _unused: [u8; 0],
 }
-pub type Z3_rcf_num = *mut _Z3_rcf_num;
+pub type Z3_rcf_num = NonNull<_Z3_rcf_num>;
 
 /// Z3 string type. It is just an alias for `const char *`.
 pub type Z3_string = *const ::core::ffi::c_char;
@@ -1656,7 +1659,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_set_param_value`]
     /// - [`Z3_del_config`]
-    pub fn Z3_mk_config() -> Z3_config;
+    pub fn Z3_mk_config() -> Option<Z3_config>;
 
     /// Delete the given configuration object.
     ///
@@ -1699,7 +1702,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_del_context`]
-    pub fn Z3_mk_context(c: Z3_config) -> Z3_context;
+    pub fn Z3_mk_context(c: Z3_config) -> Option<Z3_context>;
 
     /// Create a context using the given configuration.
     /// This function is similar to [`Z3_mk_context`]. However,
@@ -1719,7 +1722,7 @@ unsafe extern "C" {
     /// - All main interaction with Z3 happens in the context of a [`Z3_context`].
     /// - Z3 uses hash-consing, i.e., when the same [`Z3_ast`] is created twice,
     ///   Z3 will return the same pointer twice.
-    pub fn Z3_mk_context_rc(c: Z3_config) -> Z3_context;
+    pub fn Z3_mk_context_rc(c: Z3_config) -> Option<Z3_context>;
 
     /// Delete the given logical context.
     ///
@@ -1760,7 +1763,7 @@ unsafe extern "C" {
     /// NOTE: Reference counting must be used to manage parameter
     /// sets, even when the [`Z3_context`] was created using
     /// [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
-    pub fn Z3_mk_params(c: Z3_context) -> Z3_params;
+    pub fn Z3_mk_params(c: Z3_context) -> Option<Z3_params>;
 
     /// Increment the reference counter of the given parameter set.
     pub fn Z3_params_inc_ref(c: Z3_context, p: Z3_params);
@@ -1810,7 +1813,7 @@ unsafe extern "C" {
         c: Z3_context,
         p: Z3_param_descrs,
         i: ::core::ffi::c_uint,
-    ) -> Z3_symbol;
+    ) -> Option<Z3_symbol>;
 
     /// Retrieve documentation string corresponding to parameter name `s`.
     pub fn Z3_param_descrs_get_documentation(
@@ -1834,7 +1837,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_get_symbol_int`]
     /// - [`Z3_mk_string_symbol`]
-    pub fn Z3_mk_int_symbol(c: Z3_context, i: ::core::ffi::c_int) -> Z3_symbol;
+    pub fn Z3_mk_int_symbol(c: Z3_context, i: ::core::ffi::c_int) -> Option<Z3_symbol>;
 
     /// Create a Z3 symbol using a C string.
     ///
@@ -1844,17 +1847,17 @@ unsafe extern "C" {
     ///
     /// - [`Z3_get_symbol_string`]
     /// - [`Z3_mk_int_symbol`]
-    pub fn Z3_mk_string_symbol(c: Z3_context, s: Z3_string) -> Z3_symbol;
+    pub fn Z3_mk_string_symbol(c: Z3_context, s: Z3_string) -> Option<Z3_symbol>;
 
     /// Create a free (uninterpreted) type using the given name (symbol).
     ///
     /// Two free types are considered the same iff the have the same name.
-    pub fn Z3_mk_uninterpreted_sort(c: Z3_context, s: Z3_symbol) -> Z3_sort;
+    pub fn Z3_mk_uninterpreted_sort(c: Z3_context, s: Z3_symbol) -> Option<Z3_sort>;
 
     /// Create the Boolean type.
     ///
     /// This type is used to create propositional variables and predicates.
-    pub fn Z3_mk_bool_sort(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_bool_sort(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the integer type.
     ///
@@ -1865,19 +1868,19 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_bv_sort`]
-    pub fn Z3_mk_int_sort(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_int_sort(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the real type.
     ///
     /// Note that this type is not a floating point number.
-    pub fn Z3_mk_real_sort(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_real_sort(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create a bit-vector type of the given size.
     ///
     /// This type can also be seen as a machine integer.
     ///
     /// NOTE: The size of the bit-vector type must be greater than zero.
-    pub fn Z3_mk_bv_sort(c: Z3_context, sz: ::core::ffi::c_uint) -> Z3_sort;
+    pub fn Z3_mk_bv_sort(c: Z3_context, sz: ::core::ffi::c_uint) -> Option<Z3_sort>;
 
     /// Create a named finite domain sort.
     ///
@@ -1890,7 +1893,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_finite_domain_sort_size`]
-    pub fn Z3_mk_finite_domain_sort(c: Z3_context, name: Z3_symbol, size: u64) -> Z3_sort;
+    pub fn Z3_mk_finite_domain_sort(c: Z3_context, name: Z3_symbol, size: u64) -> Option<Z3_sort>;
 
     /// Create an array type.
     ///
@@ -1901,7 +1904,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_select`]
     /// - [`Z3_mk_store`]
-    pub fn Z3_mk_array_sort(c: Z3_context, domain: Z3_sort, range: Z3_sort) -> Z3_sort;
+    pub fn Z3_mk_array_sort(c: Z3_context, domain: Z3_sort, range: Z3_sort) -> Option<Z3_sort>;
 
     /// Create an array type with N arguments
     ///
@@ -1914,7 +1917,7 @@ unsafe extern "C" {
         n: ::core::ffi::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort,
-    ) -> Z3_sort;
+    ) -> Option<Z3_sort>;
 
     /// Create a tuple type.
     ///
@@ -1934,9 +1937,9 @@ unsafe extern "C" {
         num_fields: ::core::ffi::c_uint,
         field_names: *const Z3_symbol,
         field_sorts: *const Z3_sort,
-        mk_tuple_decl: *mut Z3_func_decl,
-        proj_decl: *mut Z3_func_decl,
-    ) -> Z3_sort;
+        mk_tuple_decl: *mut *mut _Z3_func_decl,
+        proj_decl: *mut *mut _Z3_func_decl,
+    ) -> Option<Z3_sort>;
 
     /// Create a enumeration sort.
     ///
@@ -1960,9 +1963,9 @@ unsafe extern "C" {
         name: Z3_symbol,
         n: ::core::ffi::c_uint,
         enum_names: *const Z3_symbol,
-        enum_consts: *mut Z3_func_decl,
-        enum_testers: *mut Z3_func_decl,
-    ) -> Z3_sort;
+        enum_consts: *mut *mut _Z3_func_decl,
+        enum_testers: *mut *mut _Z3_func_decl,
+    ) -> Option<Z3_sort>;
 
     /// Create a list sort
     ///
@@ -1982,13 +1985,13 @@ unsafe extern "C" {
         c: Z3_context,
         name: Z3_symbol,
         elem_sort: Z3_sort,
-        nil_decl: *mut Z3_func_decl,
-        is_nil_decl: *mut Z3_func_decl,
-        cons_decl: *mut Z3_func_decl,
-        is_cons_decl: *mut Z3_func_decl,
-        head_decl: *mut Z3_func_decl,
-        tail_decl: *mut Z3_func_decl,
-    ) -> Z3_sort;
+        nil_decl: *mut *mut _Z3_func_decl,
+        is_nil_decl: *mut *mut _Z3_func_decl,
+        cons_decl: *mut *mut _Z3_func_decl,
+        is_cons_decl: *mut *mut _Z3_func_decl,
+        head_decl: *mut *mut _Z3_func_decl,
+        tail_decl: *mut *mut _Z3_func_decl,
+    ) -> Option<Z3_sort>;
 
     /// Create a constructor.
     ///
@@ -2013,9 +2016,9 @@ unsafe extern "C" {
         recognizer: Z3_symbol,
         num_fields: ::core::ffi::c_uint,
         field_names: *const Z3_symbol,
-        sorts: *const Z3_sort,
+        sorts: *const Option<Z3_sort>,
         sort_refs: *mut ::core::ffi::c_uint,
-    ) -> Z3_constructor;
+    ) -> Option<Z3_constructor>;
 
     /// Reclaim memory allocated to constructor.
     ///
@@ -2045,7 +2048,7 @@ unsafe extern "C" {
         name: Z3_symbol,
         num_constructors: ::core::ffi::c_uint,
         constructors: *mut Z3_constructor,
-    ) -> Z3_sort;
+    ) -> Option<Z3_sort>;
 
     /// Create list of constructors.
     ///
@@ -2061,7 +2064,7 @@ unsafe extern "C" {
         c: Z3_context,
         num_constructors: ::core::ffi::c_uint,
         constructors: *const Z3_constructor,
-    ) -> Z3_constructor_list;
+    ) -> Option<Z3_constructor_list>;
 
     /// Reclaim memory allocated for constructor list.
     ///
@@ -2112,9 +2115,9 @@ unsafe extern "C" {
         c: Z3_context,
         constr: Z3_constructor,
         num_fields: ::core::ffi::c_uint,
-        constructor: *mut Z3_func_decl,
-        tester: *mut Z3_func_decl,
-        accessors: *mut Z3_func_decl,
+        constructor: *mut *mut _Z3_func_decl,
+        tester: *mut *mut _Z3_func_decl,
+        accessors: *mut *mut _Z3_func_decl,
     );
 
     /// Declare a constant or function.
@@ -2140,7 +2143,7 @@ unsafe extern "C" {
         domain_size: ::core::ffi::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Create a constant or function application.
     ///
@@ -2154,7 +2157,7 @@ unsafe extern "C" {
         d: Z3_func_decl,
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Declare and create a constant.
     ///
@@ -2170,7 +2173,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_app`]
     /// - [`Z3_mk_fresh_const`]
     /// - [`Z3_mk_func_decl`]
-    pub fn Z3_mk_const(c: Z3_context, s: Z3_symbol, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_const(c: Z3_context, s: Z3_symbol, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Declare a fresh constant or function.
     ///
@@ -2188,7 +2191,7 @@ unsafe extern "C" {
         domain_size: ::core::ffi::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Declare and create a fresh constant.
     ///
@@ -2206,7 +2209,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_const`]
     /// - [`Z3_mk_fresh_func_decl`]
     /// - [`Z3_mk_func_decl`]
-    pub fn Z3_mk_fresh_const(c: Z3_context, prefix: Z3_string, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fresh_const(c: Z3_context, prefix: Z3_string, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Declare a recursive function
     ///
@@ -2232,7 +2235,7 @@ unsafe extern "C" {
         domain_size: ::core::ffi::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Define the body of a recursive function.
     ///
@@ -2257,30 +2260,34 @@ unsafe extern "C" {
     );
 
     /// Create a `FuncDecl` representing a partial order
-    pub fn Z3_mk_partial_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_partial_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a piecewise linear order
-    pub fn Z3_mk_piecewise_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_piecewise_linear_order(
+        c: Z3_context,
+        a: Z3_sort,
+        id: usize,
+    ) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a linear order
-    pub fn Z3_mk_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_linear_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a tree order
-    pub fn Z3_mk_tree_order(c: Z3_context, a: Z3_sort, id: usize) -> Z3_func_decl;
+    pub fn Z3_mk_tree_order(c: Z3_context, a: Z3_sort, id: usize) -> Option<Z3_func_decl>;
 
     /// Create a `FuncDecl` representing a transitive closure
-    pub fn Z3_mk_transitive_closure(c: Z3_context, f: Z3_func_decl) -> Z3_func_decl;
+    pub fn Z3_mk_transitive_closure(c: Z3_context, f: Z3_func_decl) -> Option<Z3_func_decl>;
 
     /// Create an AST node representing `true`.
-    pub fn Z3_mk_true(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_true(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create an AST node representing `false`.
-    pub fn Z3_mk_false(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_false(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create an AST node representing `l = r`.
     ///
     /// The nodes `l` and `r` must have the same type.
-    pub fn Z3_mk_eq(c: Z3_context, l: Z3_ast, r: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_eq(c: Z3_context, l: Z3_ast, r: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `distinct(args[0], ..., args[num_args-1])`.
     ///
@@ -2294,33 +2301,33 @@ unsafe extern "C" {
         c: Z3_context,
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create an AST node representing `not(a)`.
     ///
     /// The node `a` must have Boolean sort.
-    pub fn Z3_mk_not(c: Z3_context, a: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_not(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing an if-then-else: `ite(t1, t2, t3)`.
     ///
     /// The node `t1` must have Boolean sort, `t2` and `t3` must have the same sort.
     /// The sort of the new node is equal to the sort of `t2` and `t3`.
-    pub fn Z3_mk_ite(c: Z3_context, t1: Z3_ast, t2: Z3_ast, t3: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_ite(c: Z3_context, t1: Z3_ast, t2: Z3_ast, t3: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `t1 iff t2`.
     ///
     /// The nodes `t1` and `t2` must have Boolean sort.
-    pub fn Z3_mk_iff(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_iff(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `t1 implies t2`.
     ///
     /// The nodes `t1` and `t2` must have Boolean sort.
-    pub fn Z3_mk_implies(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_implies(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `t1 xor t2`.
     ///
     /// The nodes `t1` and `t2` must have Boolean sort.
-    pub fn Z3_mk_xor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_xor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `args[0] and ... and args[num_args-1]`.
     ///
@@ -2328,7 +2335,11 @@ unsafe extern "C" {
     /// All arguments must have Boolean sort.
     ///
     /// NOTE: The number of arguments must be greater than zero.
-    pub fn Z3_mk_and(c: Z3_context, num_args: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_and(
+        c: Z3_context,
+        num_args: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create an AST node representing `args[0] or ... or args[num_args-1]`.
     ///
@@ -2336,7 +2347,11 @@ unsafe extern "C" {
     /// All arguments must have Boolean sort.
     ///
     /// NOTE: The number of arguments must be greater than zero.
-    pub fn Z3_mk_or(c: Z3_context, num_args: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_or(
+        c: Z3_context,
+        num_args: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create an AST node representing `args[0] + ... + args[num_args-1]`.
     ///
@@ -2344,7 +2359,11 @@ unsafe extern "C" {
     /// All arguments must have int or real sort.
     ///
     /// NOTE: The number of arguments must be greater than zero.
-    pub fn Z3_mk_add(c: Z3_context, num_args: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_add(
+        c: Z3_context,
+        num_args: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create an AST node representing `args[0] * ... * args[num_args-1]`.
     ///
@@ -2353,7 +2372,11 @@ unsafe extern "C" {
     ///
     /// NOTE: Z3 has limited support for non-linear arithmetic.
     /// NOTE: The number of arguments must be greater than zero.
-    pub fn Z3_mk_mul(c: Z3_context, num_args: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_mul(
+        c: Z3_context,
+        num_args: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create an AST node representing `args[0] - ... - args[num_args - 1]`.
     ///
@@ -2361,54 +2384,58 @@ unsafe extern "C" {
     /// All arguments must have int or real sort.
     ///
     /// NOTE: The number of arguments must be greater than zero.
-    pub fn Z3_mk_sub(c: Z3_context, num_args: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_sub(
+        c: Z3_context,
+        num_args: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create an AST node representing `- arg`.
     ///
     /// The arguments must have int or real type.
-    pub fn Z3_mk_unary_minus(c: Z3_context, arg: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_unary_minus(c: Z3_context, arg: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `arg1 div arg2`.
     ///
     /// The arguments must either both have int type or both have real type.
     /// If the arguments have int type, then the result type is an int type, otherwise the
     /// the result type is real.
-    pub fn Z3_mk_div(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_div(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `arg1 mod arg2`.
     ///
     /// The arguments must have int type.
-    pub fn Z3_mk_mod(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_mod(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `arg1 rem arg2`.
     ///
     /// The arguments must have int type.
-    pub fn Z3_mk_rem(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_rem(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an AST node representing `arg1 ^ arg2`.
     ///
     /// The arguments must have int or real type.
-    pub fn Z3_mk_power(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_power(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create less than.
     ///
     /// The nodes `t1` and `t2` must have the same sort, and must be int or real.
-    pub fn Z3_mk_lt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_lt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create less than or equal to.
     ///
     /// The nodes `t1` and `t2` must have the same sort, and must be int or real.
-    pub fn Z3_mk_le(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_le(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create greater than.
     ///
     /// The nodes `t1` and `t2` must have the same sort, and must be int or real.
-    pub fn Z3_mk_gt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_gt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create greater than or equal to.
     ///
     /// The nodes `t1` and `t2` must have the same sort, and must be int or real.
-    pub fn Z3_mk_ge(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_ge(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Coerce an integer to a real.
     ///
@@ -2425,7 +2452,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_real2int`]
     /// - [`Z3_mk_is_int`]
-    pub fn Z3_mk_int2real(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_int2real(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Coerce a real to an integer.
     ///
@@ -2436,7 +2463,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_int2real`]
     /// - [`Z3_mk_is_int`]
-    pub fn Z3_mk_real2int(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_real2int(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Check if a real number is an integer.
     ///
@@ -2444,72 +2471,72 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_int2real`]
     /// - [`Z3_mk_real2int`]
-    pub fn Z3_mk_is_int(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_is_int(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise negation.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_bvnot(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvnot(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Take conjunction of bits in vector, return vector of length 1.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_bvredand(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvredand(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Take disjunction of bits in vector, return vector of length 1.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_bvredor(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvredor(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise and.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvand(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvand(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise or.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise exclusive-or.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvxor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvxor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise nand.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvnand(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvnand(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise nor.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvnor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvnor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Bitwise xnor.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvxnor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvxnor(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Standard two's complement unary minus.
     ///
     /// The node `t1` must have bit-vector sort.
-    pub fn Z3_mk_bvneg(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvneg(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Standard two's complement addition.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvadd(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvadd(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Standard two's complement subtraction.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsub(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsub(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Standard two's complement multiplication.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvmul(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvmul(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Unsigned division.
     ///
@@ -2518,7 +2545,7 @@ unsafe extern "C" {
     /// is undefined.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvudiv(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvudiv(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed division.
     ///
@@ -2531,7 +2558,7 @@ unsafe extern "C" {
     /// If `t2` is zero, then the result is undefined.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsdiv(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsdiv(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Unsigned remainder.
     ///
@@ -2540,7 +2567,7 @@ unsafe extern "C" {
     /// If `t2` is zero, then the result is undefined.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvurem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvurem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed remainder (sign follows dividend).
     ///
@@ -2554,7 +2581,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_bvsmod`]
-    pub fn Z3_mk_bvsrem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsrem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed remainder (sign follows divisor).
     ///
@@ -2565,12 +2592,12 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_bvsrem`]
-    pub fn Z3_mk_bvsmod(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsmod(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Unsigned less than.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvult(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvult(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed less than.
     ///
@@ -2583,37 +2610,37 @@ unsafe extern "C" {
     /// ```
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvslt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvslt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Unsigned less than or equal to.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvule(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvule(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed less than or equal to.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsle(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsle(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Unsigned greater than or equal to.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvuge(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvuge(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed greater than or equal to.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsge(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsge(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Unsigned greater than.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvugt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvugt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Two's complement signed greater than.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsgt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsgt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Concatenate the given bit-vectors.
     ///
@@ -2621,7 +2648,7 @@ unsafe extern "C" {
     ///
     /// The result is a bit-vector of size `n1+n2`, where `n1` (`n2`) is the size
     /// of `t1` (`t2`).
-    pub fn Z3_mk_concat(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_concat(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Extract the bits `high` down to `low` from a bit-vector of
     /// size `m` to yield a new bit-vector of size `n`, where `n = high - low + 1`.
@@ -2632,26 +2659,26 @@ unsafe extern "C" {
         high: ::core::ffi::c_uint,
         low: ::core::ffi::c_uint,
         t1: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Sign-extend of the given bit-vector to the (signed) equivalent bit-vector of
     /// size `m+i`, where `m` is the size of the given
     /// bit-vector.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_sign_ext(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_sign_ext(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Extend the given bit-vector with zeros to the (unsigned) equivalent
     /// bit-vector of size `m+i`, where `m` is the size of the
     /// given bit-vector.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_zero_ext(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_zero_ext(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Repeat the given bit-vector up length `i`.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_repeat(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_repeat(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Shift left.
     ///
@@ -2663,7 +2690,7 @@ unsafe extern "C" {
     /// programming language or assembly architecture you are modeling.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvshl(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvshl(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Logical shift right.
     ///
@@ -2675,7 +2702,7 @@ unsafe extern "C" {
     /// programming language or assembly architecture you are modeling.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvlshr(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvlshr(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Arithmetic shift right.
     ///
@@ -2688,27 +2715,27 @@ unsafe extern "C" {
     /// programming language or assembly architecture you are modeling.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvashr(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvashr(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Rotate bits of `t1` to the left `i` times.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_rotate_left(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_rotate_left(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Rotate bits of `t1` to the right `i` times.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_rotate_right(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_rotate_right(c: Z3_context, i: ::core::ffi::c_uint, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Rotate bits of `t1` to the left `t2` times.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_ext_rotate_left(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_ext_rotate_left(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Rotate bits of `t1` to the right `t2` times.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_ext_rotate_right(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_ext_rotate_right(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an `n` bit bit-vector from the integer argument `t1`.
     ///
@@ -2716,7 +2743,7 @@ unsafe extern "C" {
     /// from `0` to `n-1`) is `1` if `(t1 div 2^i) mod 2` is `1`.
     ///
     /// The node `t1` must have integer sort.
-    pub fn Z3_mk_int2bv(c: Z3_context, n: ::core::ffi::c_uint, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_int2bv(c: Z3_context, n: ::core::ffi::c_uint, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an integer from the bit-vector argument `t1`.
     /// If `is_signed` is false, then the bit-vector `t1` is treated as unsigned.
@@ -2725,7 +2752,7 @@ unsafe extern "C" {
     /// If `is_signed` is true, `t1` is treated as a signed bit-vector.
     ///
     /// The node `t1` must have a bit-vector sort.
-    pub fn Z3_mk_bv2int(c: Z3_context, t1: Z3_ast, is_signed: bool) -> Z3_ast;
+    pub fn Z3_mk_bv2int(c: Z3_context, t1: Z3_ast, is_signed: bool) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise addition
     /// of `t1` and `t2` does not overflow.
@@ -2736,19 +2763,19 @@ unsafe extern "C" {
         t1: Z3_ast,
         t2: Z3_ast,
         is_signed: bool,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise signed addition
     /// of `t1` and `t2` does not underflow.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvadd_no_underflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvadd_no_underflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise signed subtraction
     /// of `t1` and `t2` does not overflow.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsub_no_overflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsub_no_overflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise subtraction
     /// of `t1` and `t2` does not underflow.
@@ -2759,19 +2786,19 @@ unsafe extern "C" {
         t1: Z3_ast,
         t2: Z3_ast,
         is_signed: bool,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise signed division
     /// of `t1` and `t2` does not overflow.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvsdiv_no_overflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvsdiv_no_overflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Check that bit-wise negation does not overflow when
     /// `t1` is interpreted as a signed bit-vector.
     ///
     /// The node `t1` must have bit-vector sort.
-    pub fn Z3_mk_bvneg_no_overflow(c: Z3_context, t1: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvneg_no_overflow(c: Z3_context, t1: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise multiplication
     /// of `t1` and `t2` does not overflow.
@@ -2782,13 +2809,13 @@ unsafe extern "C" {
         t1: Z3_ast,
         t2: Z3_ast,
         is_signed: bool,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a predicate that checks that the bit-wise signed multiplication
     /// of `t1` and `t2` does not underflow.
     ///
     /// The nodes `t1` and `t2` must have the same bit-vector sort.
-    pub fn Z3_mk_bvmul_no_underflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_bvmul_no_underflow(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Array read.
     /// The argument `a` is the array and `i` is the index of the array that gets read.
@@ -2801,7 +2828,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_array_sort`]
     /// - [`Z3_mk_store`]
-    pub fn Z3_mk_select(c: Z3_context, a: Z3_ast, i: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_select(c: Z3_context, a: Z3_ast, i: Z3_ast) -> Option<Z3_ast>;
 
     /// n-ary Array read.
     /// The argument `a` is the array and `idxs` are the indices of the array that gets read.
@@ -2810,7 +2837,7 @@ unsafe extern "C" {
         a: Z3_ast,
         n: ::core::ffi::c_uint,
         idxs: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Array update.
     ///
@@ -2826,7 +2853,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_array_sort`]
     /// - [`Z3_mk_select`]
-    pub fn Z3_mk_store(c: Z3_context, a: Z3_ast, i: Z3_ast, v: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_store(c: Z3_context, a: Z3_ast, i: Z3_ast, v: Z3_ast) -> Option<Z3_ast>;
 
     /// n-ary Array update.
     pub fn Z3_mk_store_n(
@@ -2835,7 +2862,7 @@ unsafe extern "C" {
         n: ::core::ffi::c_uint,
         idxs: *const Z3_ast,
         v: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create the constant array.
     ///
@@ -2845,7 +2872,7 @@ unsafe extern "C" {
     /// - `c`: logical context.
     /// - `domain`: domain sort for the array.
     /// - `v`: value that the array maps to.
-    pub fn Z3_mk_const_array(c: Z3_context, domain: Z3_sort, v: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_const_array(c: Z3_context, domain: Z3_sort, v: Z3_ast) -> Option<Z3_ast>;
 
     /// Map f on the argument arrays.
     ///
@@ -2863,7 +2890,7 @@ unsafe extern "C" {
         f: Z3_func_decl,
         n: ::core::ffi::c_uint,
         args: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Access the array default value.
     /// Produces the default range value, for arrays that can be represented as
@@ -2871,64 +2898,64 @@ unsafe extern "C" {
     ///
     /// - `c`: logical context.
     /// - `array`: array value whose default range value is accessed.
-    pub fn Z3_mk_array_default(c: Z3_context, array: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_array_default(c: Z3_context, array: Z3_ast) -> Option<Z3_ast>;
 
     /// Create array with the same interpretation as a function.
     /// The array satisfies the property (f x) = (select (_ as-array f) x)
     /// for every argument x.
-    pub fn Z3_mk_as_array(c: Z3_context, f: Z3_func_decl) -> Z3_ast;
+    pub fn Z3_mk_as_array(c: Z3_context, f: Z3_func_decl) -> Option<Z3_ast>;
 
     /// Create Set type.
-    pub fn Z3_mk_set_sort(c: Z3_context, ty: Z3_sort) -> Z3_sort;
+    pub fn Z3_mk_set_sort(c: Z3_context, ty: Z3_sort) -> Option<Z3_sort>;
 
     /// Create the empty set.
-    pub fn Z3_mk_empty_set(c: Z3_context, domain: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_empty_set(c: Z3_context, domain: Z3_sort) -> Option<Z3_ast>;
 
     /// Create the full set.
-    pub fn Z3_mk_full_set(c: Z3_context, domain: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_full_set(c: Z3_context, domain: Z3_sort) -> Option<Z3_ast>;
 
     /// Add an element to a set.
     ///
     /// The first argument must be a set, the second an element.
-    pub fn Z3_mk_set_add(c: Z3_context, set: Z3_ast, elem: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_set_add(c: Z3_context, set: Z3_ast, elem: Z3_ast) -> Option<Z3_ast>;
 
     /// Remove an element to a set.
     ///
     /// The first argument must be a set, the second an element.
-    pub fn Z3_mk_set_del(c: Z3_context, set: Z3_ast, elem: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_set_del(c: Z3_context, set: Z3_ast, elem: Z3_ast) -> Option<Z3_ast>;
 
     /// Take the union of a list of sets.
     pub fn Z3_mk_set_union(
         c: Z3_context,
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Take the intersection of a list of sets.
     pub fn Z3_mk_set_intersect(
         c: Z3_context,
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Take the set difference between two sets.
-    pub fn Z3_mk_set_difference(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_set_difference(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Take the complement of a set.
-    pub fn Z3_mk_set_complement(c: Z3_context, arg: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_set_complement(c: Z3_context, arg: Z3_ast) -> Option<Z3_ast>;
 
     /// Check for set membership.
     ///
     /// The first argument should be an element type of the set.
-    pub fn Z3_mk_set_member(c: Z3_context, elem: Z3_ast, set: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_set_member(c: Z3_context, elem: Z3_ast, set: Z3_ast) -> Option<Z3_ast>;
 
     /// Check for subsetness of sets.
-    pub fn Z3_mk_set_subset(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_set_subset(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create array extensionality index given two arrays with the same sort.
     /// The meaning is given by the axiom:
     /// (=> (= (select A (array-ext A B)) (select B (array-ext A B))) (= A B))
-    pub fn Z3_mk_array_ext(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_array_ext(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a numeral of a given sort.
     ///
@@ -2941,7 +2968,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_int`]
     /// - [`Z3_mk_unsigned_int`]
-    pub fn Z3_mk_numeral(c: Z3_context, numeral: Z3_string, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_numeral(c: Z3_context, numeral: Z3_string, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a real from a fraction.
     ///
@@ -2958,7 +2985,11 @@ unsafe extern "C" {
     /// - [`Z3_mk_numeral`]
     /// - [`Z3_mk_int`]
     /// - [`Z3_mk_unsigned_int`]
-    pub fn Z3_mk_real(c: Z3_context, num: ::core::ffi::c_int, den: ::core::ffi::c_int) -> Z3_ast;
+    pub fn Z3_mk_real(
+        c: Z3_context,
+        num: ::core::ffi::c_int,
+        den: ::core::ffi::c_int,
+    ) -> Option<Z3_ast>;
 
     /// Create a numeral of an int, bit-vector, or finite-domain sort.
     ///
@@ -2968,7 +2999,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_int(c: Z3_context, v: ::core::ffi::c_int, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_int(c: Z3_context, v: ::core::ffi::c_int, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
@@ -2978,7 +3009,8 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_unsigned_int(c: Z3_context, v: ::core::ffi::c_uint, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_unsigned_int(c: Z3_context, v: ::core::ffi::c_uint, ty: Z3_sort)
+    -> Option<Z3_ast>;
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
@@ -2988,7 +3020,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_int64(c: Z3_context, v: i64, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_int64(c: Z3_context, v: i64, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
@@ -2998,23 +3030,27 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_unsigned_int64(c: Z3_context, v: u64, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_unsigned_int64(c: Z3_context, v: u64, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// create a bit-vector numeral from a vector of Booleans.
     ///
     /// # See also:
     ///
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_bv_numeral(c: Z3_context, sz: ::core::ffi::c_uint, bits: *const bool) -> Z3_ast;
+    pub fn Z3_mk_bv_numeral(
+        c: Z3_context,
+        sz: ::core::ffi::c_uint,
+        bits: *const bool,
+    ) -> Option<Z3_ast>;
 
     /// Create a sequence sort out of the sort for the elements.
-    pub fn Z3_mk_seq_sort(c: Z3_context, s: Z3_sort) -> Z3_sort;
+    pub fn Z3_mk_seq_sort(c: Z3_context, s: Z3_sort) -> Option<Z3_sort>;
 
     /// Check if `s` is a sequence sort.
     pub fn Z3_is_seq_sort(c: Z3_context, s: Z3_sort) -> bool;
 
     /// Create a regular expression sort out of a sequence sort.
-    pub fn Z3_mk_re_sort(c: Z3_context, seq: Z3_sort) -> Z3_sort;
+    pub fn Z3_mk_re_sort(c: Z3_context, seq: Z3_sort) -> Option<Z3_sort>;
 
     /// Check if `s` is a regular expression sort.
     pub fn Z3_is_re_sort(c: Z3_context, s: Z3_sort) -> bool;
@@ -3023,13 +3059,13 @@ unsafe extern "C" {
     ///
     /// This function creates a sort for ASCII strings.
     /// Each character is 8 bits.
-    pub fn Z3_mk_string_sort(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_string_sort(c: Z3_context) -> Option<Z3_sort>;
 
     /// Check if `s` is a string sort.
     pub fn Z3_is_string_sort(c: Z3_context, s: Z3_sort) -> bool;
 
     /// Create a string constant out of the string that is passed in
-    pub fn Z3_mk_string(c: Z3_context, s: Z3_string) -> Z3_ast;
+    pub fn Z3_mk_string(c: Z3_context, s: Z3_string) -> Option<Z3_ast>;
 
     /// Determine if `s` is a string constant.
     pub fn Z3_is_string(c: Z3_context, s: Z3_ast) -> bool;
@@ -3046,102 +3082,128 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `s` is a sequence sort.
-    pub fn Z3_mk_seq_empty(c: Z3_context, seq: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_seq_empty(c: Z3_context, seq: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a unit sequence of `a`.
-    pub fn Z3_mk_seq_unit(c: Z3_context, a: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_unit(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
 
     /// Concatenate sequences.
     ///
     /// # Preconditions:
     ///
     /// - `n > 0`
-    pub fn Z3_mk_seq_concat(c: Z3_context, n: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_concat(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Check if `prefix` is a prefix of `s`.
     ///
     /// # Preconditions:
     ///
     /// - `prefix` and `s` are the same sequence sorts.
-    pub fn Z3_mk_seq_prefix(c: Z3_context, prefix: Z3_ast, s: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_prefix(c: Z3_context, prefix: Z3_ast, s: Z3_ast) -> Option<Z3_ast>;
 
     /// Check if `suffix` is a suffix of `s`.
     ///
     /// # Preconditions:
     ///
     /// - `suffix` and `s` are the same sequence sorts.
-    pub fn Z3_mk_seq_suffix(c: Z3_context, suffix: Z3_ast, s: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_suffix(c: Z3_context, suffix: Z3_ast, s: Z3_ast) -> Option<Z3_ast>;
 
     /// Check if `container` contains `containee`.
     ///
     /// # Preconditions:
     ///
     /// - `container` and `containee` are the same sequence sorts.
-    pub fn Z3_mk_seq_contains(c: Z3_context, container: Z3_ast, containee: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_contains(
+        c: Z3_context,
+        container: Z3_ast,
+        containee: Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Extract subsequence starting at `offset` of `length`.
-    pub fn Z3_mk_seq_extract(c: Z3_context, s: Z3_ast, offset: Z3_ast, length: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_extract(
+        c: Z3_context,
+        s: Z3_ast,
+        offset: Z3_ast,
+        length: Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Replace the first occurrence of `src` with `dst` in `s`.
-    pub fn Z3_mk_seq_replace(c: Z3_context, s: Z3_ast, src: Z3_ast, dst: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_replace(c: Z3_context, s: Z3_ast, src: Z3_ast, dst: Z3_ast) -> Option<Z3_ast>;
 
     /// Retrieve from `s` the unit sequence positioned at position `index`.
-    pub fn Z3_mk_seq_at(c: Z3_context, s: Z3_ast, index: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_at(c: Z3_context, s: Z3_ast, index: Z3_ast) -> Option<Z3_ast>;
 
     /// Retrieve from `s` the element positioned at position `index`.
     /// The function is under-specified if the index is out of bounds.
-    pub fn Z3_mk_seq_nth(c: Z3_context, s: Z3_ast, index: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_nth(c: Z3_context, s: Z3_ast, index: Z3_ast) -> Option<Z3_ast>;
 
     /// Return the length of the sequence `s`.
-    pub fn Z3_mk_seq_length(c: Z3_context, s: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_length(c: Z3_context, s: Z3_ast) -> Option<Z3_ast>;
 
     /// Return index of first occurrence of `substr` in `s` starting from offset `offset`.
     /// If `s` does not contain `substr`, then the value is -1, if `offset` is the length of `s`, then the value is -1 as well.
     /// The function is under-specified if `offset` is negative or larger than the length of `s`.
-    pub fn Z3_mk_seq_index(c: Z3_context, s: Z3_ast, substr: Z3_ast, offset: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_index(
+        c: Z3_context,
+        s: Z3_ast,
+        substr: Z3_ast,
+        offset: Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Convert string to integer.
-    pub fn Z3_mk_str_to_int(c: Z3_context, s: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_str_to_int(c: Z3_context, s: Z3_ast) -> Option<Z3_ast>;
 
     /// Integer to string conversion.
-    pub fn Z3_mk_int_to_str(c: Z3_context, s: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_int_to_str(c: Z3_context, s: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a regular expression that accepts the sequence `seq`.
-    pub fn Z3_mk_seq_to_re(c: Z3_context, seq: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_to_re(c: Z3_context, seq: Z3_ast) -> Option<Z3_ast>;
 
     /// Check if `seq` is in the language generated by the regular expression `re`.
-    pub fn Z3_mk_seq_in_re(c: Z3_context, seq: Z3_ast, re: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_seq_in_re(c: Z3_context, seq: Z3_ast, re: Z3_ast) -> Option<Z3_ast>;
 
     /// Create the regular language `re+`.
-    pub fn Z3_mk_re_plus(c: Z3_context, re: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_plus(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
 
     /// Create the regular language `re*`.
-    pub fn Z3_mk_re_star(c: Z3_context, re: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_star(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
 
     /// Create the regular language `re?`.
-    pub fn Z3_mk_re_option(c: Z3_context, re: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_option(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
 
     /// Create the union of the regular languages.
     ///
     /// # Preconditions:
     ///
     /// - `n > 0`
-    pub fn Z3_mk_re_union(c: Z3_context, n: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_union(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create the concatenation of the regular languages.
     ///
     /// # Preconditions:
     ///
     /// - `n > 0`
-    pub fn Z3_mk_re_concat(c: Z3_context, n: ::core::ffi::c_uint, args: *const Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_concat(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create the range regular expression over two sequences of length 1.
-    pub fn Z3_mk_re_range(c: Z3_context, lo: Z3_ast, hi: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_range(c: Z3_context, lo: Z3_ast, hi: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a regular expression that accepts all singleton sequences of the regular expression sort.
     ///
     /// Requires Z3 4.8.13 or later.
-    pub fn Z3_mk_re_allchar(c: Z3_context, regex_sort: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_re_allchar(c: Z3_context, regex_sort: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a regular expression loop. The supplied regular expression `r` is repeated
     /// between `lo` and `hi` times. The `lo` should be below `hi` with one execution: when
@@ -3152,42 +3214,45 @@ unsafe extern "C" {
         r: Z3_ast,
         lo: ::core::ffi::c_uint,
         hi: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a power regular expression.
     ///
     /// Requires Z3 4.8.15 or later.
-    pub fn Z3_mk_re_power(c: Z3_context, re: Z3_ast, n: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_mk_re_power(c: Z3_context, re: Z3_ast, n: ::core::ffi::c_uint) -> Option<Z3_ast>;
 
     /// Create the intersection of the regular languages.
     ///
     /// # Preconditions:
     ///
     /// - `n > 0`
-    pub fn Z3_mk_re_intersect(c: Z3_context, n: ::core::ffi::c_uint, args: *const Z3_ast)
-    -> Z3_ast;
+    pub fn Z3_mk_re_intersect(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Create the complement of the regular language `re`.
-    pub fn Z3_mk_re_complement(c: Z3_context, re: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_complement(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
 
     /// Create the difference of regular expressions.
     ///
     /// Requires Z3 4.8.14 or later.
-    pub fn Z3_mk_re_diff(c: Z3_context, re1: Z3_ast, re2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_re_diff(c: Z3_context, re1: Z3_ast, re2: Z3_ast) -> Option<Z3_ast>;
 
     /// Create an empty regular expression of sort `re`.
     ///
     /// # Preconditions:
     ///
     /// - `re` is a regular expression sort.
-    pub fn Z3_mk_re_empty(c: Z3_context, re: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_re_empty(c: Z3_context, re: Z3_sort) -> Option<Z3_ast>;
 
     /// Create an universal regular expression of sort `re`.
     ///
     /// # Preconditions:
     ///
     /// - `re` is a regular expression sort.
-    pub fn Z3_mk_re_full(c: Z3_context, re: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_re_full(c: Z3_context, re: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a pattern for quantifier instantiation.
     ///
@@ -3211,7 +3276,7 @@ unsafe extern "C" {
         c: Z3_context,
         num_patterns: ::core::ffi::c_uint,
         terms: *const Z3_ast,
-    ) -> Z3_pattern;
+    ) -> Option<Z3_pattern>;
 
     /// Create a bound variable.
     ///
@@ -3240,7 +3305,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_forall`]
     /// - [`Z3_mk_exists`]
-    pub fn Z3_mk_bound(c: Z3_context, index: ::core::ffi::c_uint, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_bound(c: Z3_context, index: ::core::ffi::c_uint, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a forall formula. It takes an expression `body` that contains bound variables
     /// of the same sorts as the sorts listed in the array `sorts`. The bound variables are de-Bruijn indices created
@@ -3272,7 +3337,7 @@ unsafe extern "C" {
         sorts: *const Z3_sort,
         decl_names: *const Z3_symbol,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create an exists formula. Similar to [`Z3_mk_forall`].
     ///
@@ -3291,7 +3356,7 @@ unsafe extern "C" {
         sorts: *const Z3_sort,
         decl_names: *const Z3_symbol,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a quantifier - universal or existential, with pattern hints.
     /// See the documentation for [`Z3_mk_forall`] for an explanation of the parameters.
@@ -3322,7 +3387,7 @@ unsafe extern "C" {
         sorts: *const Z3_sort,
         decl_names: *const Z3_symbol,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a quantifier - universal or existential, with pattern hints, no patterns, and attributes
     ///
@@ -3360,7 +3425,7 @@ unsafe extern "C" {
         sorts: *const Z3_sort,
         decl_names: *const Z3_symbol,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a universal quantifier using a list of constants that
     /// will form the set of bound variables.
@@ -3386,7 +3451,7 @@ unsafe extern "C" {
         num_patterns: ::core::ffi::c_uint,
         patterns: *const Z3_pattern,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Similar to [`Z3_mk_forall_const`].
     ///
@@ -3414,7 +3479,7 @@ unsafe extern "C" {
         num_patterns: ::core::ffi::c_uint,
         patterns: *const Z3_pattern,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a universal or existential quantifier using a list of
     /// constants that will form the set of bound variables.
@@ -3427,7 +3492,7 @@ unsafe extern "C" {
         num_patterns: ::core::ffi::c_uint,
         patterns: *const Z3_pattern,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a universal or existential quantifier using a list of
     /// constants that will form the set of bound variables.
@@ -3444,7 +3509,7 @@ unsafe extern "C" {
         num_no_patterns: ::core::ffi::c_uint,
         no_patterns: *const Z3_ast,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a lambda expression.
     ///
@@ -3479,7 +3544,7 @@ unsafe extern "C" {
         sorts: *const Z3_sort,
         decl_names: *const Z3_symbol,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a lambda expression using a list of constants that form the set
     /// of bound variables
@@ -3499,7 +3564,7 @@ unsafe extern "C" {
         num_bound: ::core::ffi::c_uint,
         bound: *const Z3_app,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Return `SymbolKind::Int` if the symbol was constructed
     /// using [`Z3_mk_int_symbol`],
@@ -3534,7 +3599,7 @@ unsafe extern "C" {
     pub fn Z3_get_symbol_string(c: Z3_context, s: Z3_symbol) -> Z3_string;
 
     /// Return the sort name as a symbol.
-    pub fn Z3_get_sort_name(c: Z3_context, d: Z3_sort) -> Z3_symbol;
+    pub fn Z3_get_sort_name(c: Z3_context, d: Z3_sort) -> Option<Z3_symbol>;
 
     /// Return a unique identifier for `s`.
     pub fn Z3_get_sort_id(c: Z3_context, s: Z3_sort) -> ::core::ffi::c_uint;
@@ -3546,7 +3611,7 @@ unsafe extern "C" {
     /// - [`Z3_app_to_ast`]
     /// - [`Z3_func_decl_to_ast`]
     /// - [`Z3_pattern_to_ast`]
-    pub fn Z3_sort_to_ast(c: Z3_context, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_sort_to_ast(c: Z3_context, s: Z3_sort) -> Option<Z3_ast>;
 
     /// compare sorts.
     pub fn Z3_is_eq_sort(c: Z3_context, s1: Z3_sort, s2: Z3_sort) -> bool;
@@ -3587,7 +3652,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_array_sort`]
     /// - [`Z3_get_sort_kind`]
-    pub fn Z3_get_array_sort_domain(c: Z3_context, t: Z3_sort) -> Z3_sort;
+    pub fn Z3_get_array_sort_domain(c: Z3_context, t: Z3_sort) -> Option<Z3_sort>;
 
     /// Return the range of the given array sort.
     ///
@@ -3599,7 +3664,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_array_sort`]
     /// - [`Z3_get_sort_kind`]
-    pub fn Z3_get_array_sort_range(c: Z3_context, t: Z3_sort) -> Z3_sort;
+    pub fn Z3_get_array_sort_range(c: Z3_context, t: Z3_sort) -> Option<Z3_sort>;
 
     /// Return the constructor declaration of the given tuple
     /// sort.
@@ -3612,7 +3677,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_tuple_sort`]
     /// - [`Z3_get_sort_kind`]
-    pub fn Z3_get_tuple_sort_mk_decl(c: Z3_context, t: Z3_sort) -> Z3_func_decl;
+    pub fn Z3_get_tuple_sort_mk_decl(c: Z3_context, t: Z3_sort) -> Option<Z3_func_decl>;
 
     /// Return the number of fields of the given tuple sort.
     ///
@@ -3642,7 +3707,7 @@ unsafe extern "C" {
         c: Z3_context,
         t: Z3_sort,
         i: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Return number of constructors for datatype.
     ///
@@ -3673,7 +3738,7 @@ unsafe extern "C" {
         c: Z3_context,
         t: Z3_sort,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Return idx'th recognizer.
     ///
@@ -3691,7 +3756,7 @@ unsafe extern "C" {
         c: Z3_context,
         t: Z3_sort,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Return `idx_a`'th accessor for the `idx_c`'th constructor.
     ///
@@ -3711,7 +3776,7 @@ unsafe extern "C" {
         t: Z3_sort,
         idx_c: ::core::ffi::c_uint,
         idx_a: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Update record field with a value.
     ///
@@ -3734,7 +3799,7 @@ unsafe extern "C" {
         field_access: Z3_func_decl,
         t: Z3_ast,
         value: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Return arity of relation.
     ///
@@ -3757,7 +3822,11 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_relation_arity`]
-    pub fn Z3_get_relation_column(c: Z3_context, s: Z3_sort, col: ::core::ffi::c_uint) -> Z3_sort;
+    pub fn Z3_get_relation_column(
+        c: Z3_context,
+        s: Z3_sort,
+        col: ::core::ffi::c_uint,
+    ) -> Option<Z3_sort>;
 
     /// Pseudo-Boolean relations.
     ///
@@ -3767,7 +3836,7 @@ unsafe extern "C" {
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
         k: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Pseudo-Boolean relations.
     ///
@@ -3777,7 +3846,7 @@ unsafe extern "C" {
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
         k: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Pseudo-Boolean relations.
     ///
@@ -3788,7 +3857,7 @@ unsafe extern "C" {
         args: *const Z3_ast,
         coeffs: *const ::core::ffi::c_int,
         k: ::core::ffi::c_int,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Pseudo-Boolean relations.
     ///
@@ -3799,7 +3868,7 @@ unsafe extern "C" {
         args: *const Z3_ast,
         coeffs: *const ::core::ffi::c_int,
         k: ::core::ffi::c_int,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Pseudo-Boolean relations.
     ///
@@ -3810,7 +3879,7 @@ unsafe extern "C" {
         args: *const Z3_ast,
         coeffs: *const ::core::ffi::c_int,
         k: ::core::ffi::c_int,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Convert a [`Z3_func_decl`] into [`Z3_ast`]. This is just type casting.
     ///
@@ -3820,7 +3889,7 @@ unsafe extern "C" {
     /// - [`Z3_pattern_to_ast`]
     /// - [`Z3_sort_to_ast`]
     /// - [`Z3_to_func_decl`]
-    pub fn Z3_func_decl_to_ast(c: Z3_context, f: Z3_func_decl) -> Z3_ast;
+    pub fn Z3_func_decl_to_ast(c: Z3_context, f: Z3_func_decl) -> Option<Z3_ast>;
 
     /// Compare terms.
     pub fn Z3_is_eq_func_decl(c: Z3_context, f1: Z3_func_decl, f2: Z3_func_decl) -> bool;
@@ -3829,7 +3898,7 @@ unsafe extern "C" {
     pub fn Z3_get_func_decl_id(c: Z3_context, f: Z3_func_decl) -> ::core::ffi::c_uint;
 
     /// Return the constant declaration name as a symbol.
-    pub fn Z3_get_decl_name(c: Z3_context, d: Z3_func_decl) -> Z3_symbol;
+    pub fn Z3_get_decl_name(c: Z3_context, d: Z3_func_decl) -> Option<Z3_symbol>;
 
     /// Return declaration kind corresponding to declaration.
     pub fn Z3_get_decl_kind(c: Z3_context, d: Z3_func_decl) -> DeclKind;
@@ -3857,13 +3926,14 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_domain_size`]
-    pub fn Z3_get_domain(c: Z3_context, d: Z3_func_decl, i: ::core::ffi::c_uint) -> Z3_sort;
+    pub fn Z3_get_domain(c: Z3_context, d: Z3_func_decl, i: ::core::ffi::c_uint)
+    -> Option<Z3_sort>;
 
     /// Return the range of the given declaration.
     ///
     /// If `d` is a constant (i.e., has zero arguments), then this
     /// function returns the sort of the constant.
-    pub fn Z3_get_range(c: Z3_context, d: Z3_func_decl) -> Z3_sort;
+    pub fn Z3_get_range(c: Z3_context, d: Z3_func_decl) -> Option<Z3_sort>;
 
     /// Return the number of parameters associated with a declaration.
     pub fn Z3_get_decl_num_parameters(c: Z3_context, d: Z3_func_decl) -> ::core::ffi::c_uint;
@@ -3911,7 +3981,7 @@ unsafe extern "C" {
         c: Z3_context,
         d: Z3_func_decl,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_symbol;
+    ) -> Option<Z3_symbol>;
 
     /// Return the sort value associated with a sort parameter.
     ///
@@ -3922,7 +3992,7 @@ unsafe extern "C" {
         c: Z3_context,
         d: Z3_func_decl,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_sort;
+    ) -> Option<Z3_sort>;
 
     /// Return the expression value associated with an expression parameter.
     ///
@@ -3933,7 +4003,7 @@ unsafe extern "C" {
         c: Z3_context,
         d: Z3_func_decl,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Return the expression value associated with an expression parameter.
     ///
@@ -3944,7 +4014,7 @@ unsafe extern "C" {
         c: Z3_context,
         d: Z3_func_decl,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Return the rational value, as a string, associated with a rational parameter.
     ///
@@ -3965,10 +4035,10 @@ unsafe extern "C" {
     /// - [`Z3_func_decl_to_ast`]
     /// - [`Z3_pattern_to_ast`]
     /// - [`Z3_sort_to_ast`]
-    pub fn Z3_app_to_ast(c: Z3_context, a: Z3_app) -> Z3_ast;
+    pub fn Z3_app_to_ast(c: Z3_context, a: Z3_app) -> Option<Z3_ast>;
 
     /// Return the declaration of a constant or function application.
-    pub fn Z3_get_app_decl(c: Z3_context, a: Z3_app) -> Z3_func_decl;
+    pub fn Z3_get_app_decl(c: Z3_context, a: Z3_app) -> Option<Z3_func_decl>;
 
     /// Return the number of argument of an application. If `t`
     /// is an constant, then the number of arguments is 0.
@@ -3987,7 +4057,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_get_app_num_args`]
-    pub fn Z3_get_app_arg(c: Z3_context, a: Z3_app, i: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_get_app_arg(c: Z3_context, a: Z3_app, i: ::core::ffi::c_uint) -> Option<Z3_ast>;
 
     /// Compare terms.
     pub fn Z3_is_eq_ast(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> bool;
@@ -4011,7 +4081,7 @@ unsafe extern "C" {
     /// Return the sort of an AST node.
     ///
     /// The AST node must be a constant, application, numeral, bound variable, or quantifier.
-    pub fn Z3_get_sort(c: Z3_context, a: Z3_ast) -> Z3_sort;
+    pub fn Z3_get_sort(c: Z3_context, a: Z3_ast) -> Option<Z3_sort>;
 
     /// Return true if the given expression `t` is well sorted.
     pub fn Z3_is_well_sorted(c: Z3_context, t: Z3_ast) -> bool;
@@ -4041,7 +4111,7 @@ unsafe extern "C" {
     /// - [`Z3_app_to_ast`]
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::App`]
-    pub fn Z3_to_app(c: Z3_context, a: Z3_ast) -> Z3_app;
+    pub fn Z3_to_app(c: Z3_context, a: Z3_ast) -> Option<Z3_app>;
 
     /// Convert an AST into a [`Z3_func_decl`]. This is just type casting.
     ///
@@ -4054,7 +4124,7 @@ unsafe extern "C" {
     /// - [`Z3_func_decl_to_ast`]
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::FuncDecl`]
-    pub fn Z3_to_func_decl(c: Z3_context, a: Z3_ast) -> Z3_func_decl;
+    pub fn Z3_to_func_decl(c: Z3_context, a: Z3_ast) -> Option<Z3_func_decl>;
 
     /// Return numeral value, as a string of a numeric constant term
     ///
@@ -4107,7 +4177,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::Numeral`]
-    pub fn Z3_get_numerator(c: Z3_context, a: Z3_ast) -> Z3_ast;
+    pub fn Z3_get_numerator(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
 
     /// Return the denominator (as a numeral AST) of a numeral AST of sort Real.
     ///
@@ -4119,7 +4189,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_get_ast_kind`]
     /// - [`AstKind::Numeral`]
-    pub fn Z3_get_denominator(c: Z3_context, a: Z3_ast) -> Z3_ast;
+    pub fn Z3_get_denominator(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
 
     /// Return numeral value, as a pair of 64 bit numbers if the representation fits.
     ///
@@ -4235,7 +4305,7 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         precision: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Return an upper bound for the given real algebraic number.
     ///
@@ -4253,7 +4323,7 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         precision: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Convert a [`Z3_pattern`] into [`Z3_ast`]. This is just type casting.
     ///
@@ -4262,13 +4332,14 @@ unsafe extern "C" {
     /// - [`Z3_app_to_ast`]
     /// - [`Z3_func_decl_to_ast`]
     /// - [`Z3_sort_to_ast`]
-    pub fn Z3_pattern_to_ast(c: Z3_context, p: Z3_pattern) -> Z3_ast;
+    pub fn Z3_pattern_to_ast(c: Z3_context, p: Z3_pattern) -> Option<Z3_ast>;
 
     /// Return number of terms in pattern.
     pub fn Z3_get_pattern_num_terms(c: Z3_context, p: Z3_pattern) -> ::core::ffi::c_uint;
 
     /// Return i'th ast in pattern.
-    pub fn Z3_get_pattern(c: Z3_context, p: Z3_pattern, idx: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_get_pattern(c: Z3_context, p: Z3_pattern, idx: ::core::ffi::c_uint)
+    -> Option<Z3_ast>;
 
     /// Return index of de-Bruijn bound variable.
     ///
@@ -4317,7 +4388,7 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         i: ::core::ffi::c_uint,
-    ) -> Z3_pattern;
+    ) -> Option<Z3_pattern>;
 
     /// Return number of `no_patterns` used in quantifier.
     ///
@@ -4335,7 +4406,7 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         i: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Return number of bound variables of quantifier.
     ///
@@ -4353,7 +4424,7 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         i: ::core::ffi::c_uint,
-    ) -> Z3_symbol;
+    ) -> Option<Z3_symbol>;
 
     /// Return sort of the i'th bound variable.
     ///
@@ -4364,14 +4435,14 @@ unsafe extern "C" {
         c: Z3_context,
         a: Z3_ast,
         i: ::core::ffi::c_uint,
-    ) -> Z3_sort;
+    ) -> Option<Z3_sort>;
 
     /// Return body of quantifier.
     ///
     /// # Preconditions:
     ///
     /// - `Z3_get_ast_kind(a) == AstKind::Quantifier`
-    pub fn Z3_get_quantifier_body(c: Z3_context, a: Z3_ast) -> Z3_ast;
+    pub fn Z3_get_quantifier_body(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
 
     /// Interface to simplifier.
     ///
@@ -4383,7 +4454,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_simplify_ex`]
-    pub fn Z3_simplify(c: Z3_context, a: Z3_ast) -> Z3_ast;
+    pub fn Z3_simplify(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
 
     /// Interface to simplifier.
     ///
@@ -4397,7 +4468,7 @@ unsafe extern "C" {
     /// - [`Z3_simplify`]
     /// - [`Z3_simplify_get_help`]
     /// - [`Z3_simplify_get_param_descrs`]
-    pub fn Z3_simplify_ex(c: Z3_context, a: Z3_ast, p: Z3_params) -> Z3_ast;
+    pub fn Z3_simplify_ex(c: Z3_context, a: Z3_ast, p: Z3_params) -> Option<Z3_ast>;
 
     /// Return a string describing all available parameters.
     ///
@@ -4413,7 +4484,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_simplify_ex`]
     /// - [`Z3_simplify_get_help`]
-    pub fn Z3_simplify_get_param_descrs(c: Z3_context) -> Z3_param_descrs;
+    pub fn Z3_simplify_get_param_descrs(c: Z3_context) -> Option<Z3_param_descrs>;
 
     /// Update the arguments of term `a` using the arguments `args`.
     ///
@@ -4426,7 +4497,7 @@ unsafe extern "C" {
         a: Z3_ast,
         num_args: ::core::ffi::c_uint,
         args: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Substitute every occurrence of `from[i]` in `a` with `to[i]`, for `i`
     /// smaller than `num_exprs`.
@@ -4442,7 +4513,7 @@ unsafe extern "C" {
         num_exprs: ::core::ffi::c_uint,
         from: *const Z3_ast,
         to: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Substitute the free variables in `a` with the expressions in `to`.
     ///
@@ -4453,7 +4524,7 @@ unsafe extern "C" {
         a: Z3_ast,
         num_exprs: ::core::ffi::c_uint,
         to: *const Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Translate/Copy the AST `a` from context `source` to context `target`.
     ///
@@ -4462,10 +4533,10 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `source != target`
-    pub fn Z3_translate(source: Z3_context, a: Z3_ast, target: Z3_context) -> Z3_ast;
+    pub fn Z3_translate(source: Z3_context, a: Z3_ast, target: Z3_context) -> Option<Z3_ast>;
 
     /// Create a fresh model object. It has reference count 0.
-    pub fn Z3_mk_model(c: Z3_context) -> Z3_model;
+    pub fn Z3_mk_model(c: Z3_context) -> Option<Z3_model>;
 
     /// Increment the reference counter of the given model.
     pub fn Z3_model_inc_ref(c: Z3_context, m: Z3_model);
@@ -4510,7 +4581,8 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `Z3_get_arity(c, a) == 0`
-    pub fn Z3_model_get_const_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl) -> Z3_ast;
+    pub fn Z3_model_get_const_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl)
+    -> Option<Z3_ast>;
 
     /// Test if there exists an interpretation (i.e., assignment) for `a` in the model `m`.
     pub fn Z3_model_has_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl) -> bool;
@@ -4527,7 +4599,11 @@ unsafe extern "C" {
     /// NOTE: Reference counting must be used to manage [`Z3_func_interp`]
     /// objects, even when the `Z3_context` was created using
     /// [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
-    pub fn Z3_model_get_func_interp(c: Z3_context, m: Z3_model, f: Z3_func_decl) -> Z3_func_interp;
+    pub fn Z3_model_get_func_interp(
+        c: Z3_context,
+        m: Z3_model,
+        f: Z3_func_decl,
+    ) -> Option<Z3_func_interp>;
 
     /// Return the number of constants assigned by the given model.
     ///
@@ -4550,7 +4626,7 @@ unsafe extern "C" {
         c: Z3_context,
         m: Z3_model,
         i: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Return the number of function interpretations in the given model.
     ///
@@ -4575,7 +4651,7 @@ unsafe extern "C" {
         c: Z3_context,
         m: Z3_model,
         i: ::core::ffi::c_uint,
-    ) -> Z3_func_decl;
+    ) -> Option<Z3_func_decl>;
 
     /// Return the number of uninterpreted sorts that `m` assigns an
     /// interpretation to.
@@ -4600,7 +4676,8 @@ unsafe extern "C" {
     ///
     /// - [`Z3_model_get_num_sorts`]
     /// - [`Z3_model_get_sort_universe`]
-    pub fn Z3_model_get_sort(c: Z3_context, m: Z3_model, i: ::core::ffi::c_uint) -> Z3_sort;
+    pub fn Z3_model_get_sort(c: Z3_context, m: Z3_model, i: ::core::ffi::c_uint)
+    -> Option<Z3_sort>;
 
     /// Return the finite set of distinct values that represent the interpretation for sort `s`.
     ///
@@ -4608,10 +4685,14 @@ unsafe extern "C" {
     ///
     /// - [`Z3_model_get_num_sorts`]
     /// - [`Z3_model_get_sort`]
-    pub fn Z3_model_get_sort_universe(c: Z3_context, m: Z3_model, s: Z3_sort) -> Z3_ast_vector;
+    pub fn Z3_model_get_sort_universe(
+        c: Z3_context,
+        m: Z3_model,
+        s: Z3_sort,
+    ) -> Option<Z3_ast_vector>;
 
     /// Translate model from context `c` to context `dst`.
-    pub fn Z3_model_translate(c: Z3_context, m: Z3_model, dst: Z3_context) -> Z3_model;
+    pub fn Z3_model_translate(c: Z3_context, m: Z3_model, dst: Z3_context) -> Option<Z3_model>;
 
     /// The `(_ as-array f)` AST node is a construct for assigning interpretations
     /// for arrays in Z3.
@@ -4632,7 +4713,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_is_as_array`]
-    pub fn Z3_get_as_array_func_decl(c: Z3_context, a: Z3_ast) -> Z3_func_decl;
+    pub fn Z3_get_as_array_func_decl(c: Z3_context, a: Z3_ast) -> Option<Z3_func_decl>;
 
     /// Create a fresh `func_interp` object, add it to a model for a specified function.
     /// It has reference count 0.
@@ -4646,7 +4727,7 @@ unsafe extern "C" {
         m: Z3_model,
         f: Z3_func_decl,
         default_value: Z3_ast,
-    ) -> Z3_func_interp;
+    ) -> Option<Z3_func_interp>;
 
     /// Add a constant interpretation.
     pub fn Z3_add_const_interp(c: Z3_context, m: Z3_model, f: Z3_func_decl, a: Z3_ast);
@@ -4683,13 +4764,13 @@ unsafe extern "C" {
         c: Z3_context,
         f: Z3_func_interp,
         i: ::core::ffi::c_uint,
-    ) -> Z3_func_entry;
+    ) -> Option<Z3_func_entry>;
 
     /// Return the 'else' value of the given function interpretation.
     ///
     /// A function interpretation is represented as a finite map and an 'else' value.
     /// This procedure returns the 'else' value.
-    pub fn Z3_func_interp_get_else(c: Z3_context, f: Z3_func_interp) -> Z3_ast;
+    pub fn Z3_func_interp_get_else(c: Z3_context, f: Z3_func_interp) -> Option<Z3_ast>;
 
     /// Set the 'else' value of the given function interpretation.
     ///
@@ -4734,7 +4815,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_func_interp_get_entry`]
-    pub fn Z3_func_entry_get_value(c: Z3_context, e: Z3_func_entry) -> Z3_ast;
+    pub fn Z3_func_entry_get_value(c: Z3_context, e: Z3_func_entry) -> Option<Z3_ast>;
 
     /// Return the number of arguments in a `Z3_func_entry` object.
     ///
@@ -4754,8 +4835,11 @@ unsafe extern "C" {
     ///
     /// - [`Z3_func_entry_get_num_args`]
     /// - [`Z3_func_interp_get_entry`]
-    pub fn Z3_func_entry_get_arg(c: Z3_context, e: Z3_func_entry, i: ::core::ffi::c_uint)
-    -> Z3_ast;
+    pub fn Z3_func_entry_get_arg(
+        c: Z3_context,
+        e: Z3_func_entry,
+        i: ::core::ffi::c_uint,
+    ) -> Option<Z3_ast>;
 
     /// Log interaction to a file.
     ///
@@ -4925,7 +5009,7 @@ unsafe extern "C" {
         num_decls: ::core::ffi::c_uint,
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Similar to [`Z3_parse_smtlib2_string`], but reads the benchmark from a file.
     pub fn Z3_parse_smtlib2_file(
@@ -4937,7 +5021,7 @@ unsafe extern "C" {
         num_decls: ::core::ffi::c_uint,
         decl_names: *const Z3_symbol,
         decls: *const Z3_func_decl,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Parse and evaluate and SMT-LIB2 command sequence. The state from a previous
     /// call is saved so the next evaluation builds on top of the previous call.
@@ -5044,7 +5128,12 @@ unsafe extern "C" {
     /// NOTE: Reference counting must be used to manage goals, even
     /// when the [`Z3_context`] was created using
     /// [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
-    pub fn Z3_mk_goal(c: Z3_context, models: bool, unsat_cores: bool, proofs: bool) -> Z3_goal;
+    pub fn Z3_mk_goal(
+        c: Z3_context,
+        models: bool,
+        unsat_cores: bool,
+        proofs: bool,
+    ) -> Option<Z3_goal>;
 
     /// Increment the reference counter of the given goal.
     pub fn Z3_goal_inc_ref(c: Z3_context, g: Z3_goal);
@@ -5091,7 +5180,7 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `idx < Z3_goal_size(c, g)`
-    pub fn Z3_goal_formula(c: Z3_context, g: Z3_goal, idx: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_goal_formula(c: Z3_context, g: Z3_goal, idx: ::core::ffi::c_uint) -> Option<Z3_ast>;
 
     /// Return the number of formulas, subformulas and terms in the given goal.
     pub fn Z3_goal_num_exprs(c: Z3_context, g: Z3_goal) -> ::core::ffi::c_uint;
@@ -5103,12 +5192,13 @@ unsafe extern "C" {
     pub fn Z3_goal_is_decided_unsat(c: Z3_context, g: Z3_goal) -> bool;
 
     /// Copy a goal `g` from the context `source` to the context `target`.
-    pub fn Z3_goal_translate(source: Z3_context, g: Z3_goal, target: Z3_context) -> Z3_goal;
+    pub fn Z3_goal_translate(source: Z3_context, g: Z3_goal, target: Z3_context)
+    -> Option<Z3_goal>;
 
     /// Convert a model of the formulas of a goal to a model of an original goal.
     /// The model may be null, in which case the returned model is valid if the goal was
     /// established satisfiable.
-    pub fn Z3_goal_convert_model(c: Z3_context, g: Z3_goal, m: Z3_model) -> Z3_model;
+    pub fn Z3_goal_convert_model(c: Z3_context, g: Z3_goal, m: Z3_model) -> Option<Z3_model>;
 
     /// Convert a goal into a string.
     pub fn Z3_goal_to_string(c: Z3_context, g: Z3_goal) -> Z3_string;
@@ -5127,7 +5217,7 @@ unsafe extern "C" {
     /// It may also be obtained using the command `(help-tactic)` in the SMT 2.0 front-end.
     ///
     /// Tactics are the basic building block for creating custom solvers for specific problem domains.
-    pub fn Z3_mk_tactic(c: Z3_context, name: Z3_string) -> Z3_tactic;
+    pub fn Z3_mk_tactic(c: Z3_context, name: Z3_string) -> Option<Z3_tactic>;
 
     /// Increment the reference counter of the given tactic.
     pub fn Z3_tactic_inc_ref(c: Z3_context, t: Z3_tactic);
@@ -5141,7 +5231,7 @@ unsafe extern "C" {
     ///
     /// Probes are used to inspect a goal (aka problem) and collect information that may be used to decide
     /// which solver and/or preprocessing step will be used.
-    pub fn Z3_mk_probe(c: Z3_context, name: Z3_string) -> Z3_probe;
+    pub fn Z3_mk_probe(c: Z3_context, name: Z3_string) -> Option<Z3_probe>;
 
     /// Increment the reference counter of the given probe.
     pub fn Z3_probe_inc_ref(c: Z3_context, p: Z3_probe);
@@ -5151,97 +5241,111 @@ unsafe extern "C" {
 
     /// Return a tactic that applies `t1` to a given goal and `t2`
     /// to every subgoal produced by `t1`.
-    pub fn Z3_tactic_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Z3_tactic;
+    pub fn Z3_tactic_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Option<Z3_tactic>;
 
     /// Return a tactic that first applies `t1` to a given goal,
     /// if it fails then returns the result of `t2` applied to the given goal.
-    pub fn Z3_tactic_or_else(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Z3_tactic;
+    pub fn Z3_tactic_or_else(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Option<Z3_tactic>;
 
     /// Return a tactic that applies the given tactics in parallel.
     pub fn Z3_tactic_par_or(
         c: Z3_context,
         num: ::core::ffi::c_uint,
         ts: *const Z3_tactic,
-    ) -> Z3_tactic;
+    ) -> Option<Z3_tactic>;
 
     /// Return a tactic that applies `t1` to a given goal and then `t2`
     /// to every subgoal produced by `t1`. The subgoals are processed in parallel.
-    pub fn Z3_tactic_par_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic) -> Z3_tactic;
+    pub fn Z3_tactic_par_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic)
+    -> Option<Z3_tactic>;
 
     /// Return a tactic that applies `t` to a given goal for `ms` milliseconds.
     /// If `t` does not terminate in `ms` milliseconds, then it fails.
-    pub fn Z3_tactic_try_for(c: Z3_context, t: Z3_tactic, ms: ::core::ffi::c_uint) -> Z3_tactic;
+    pub fn Z3_tactic_try_for(
+        c: Z3_context,
+        t: Z3_tactic,
+        ms: ::core::ffi::c_uint,
+    ) -> Option<Z3_tactic>;
 
     /// Return a tactic that applies `t` to a given goal is the probe `p` evaluates to true.
     /// If `p` evaluates to false, then the new tactic behaves like the skip tactic.
-    pub fn Z3_tactic_when(c: Z3_context, p: Z3_probe, t: Z3_tactic) -> Z3_tactic;
+    pub fn Z3_tactic_when(c: Z3_context, p: Z3_probe, t: Z3_tactic) -> Option<Z3_tactic>;
 
     /// Return a tactic that applies `t1` to a given goal if the probe `p` evaluates to true,
     /// and `t2` if `p` evaluates to false.
-    pub fn Z3_tactic_cond(c: Z3_context, p: Z3_probe, t1: Z3_tactic, t2: Z3_tactic) -> Z3_tactic;
+    pub fn Z3_tactic_cond(
+        c: Z3_context,
+        p: Z3_probe,
+        t1: Z3_tactic,
+        t2: Z3_tactic,
+    ) -> Option<Z3_tactic>;
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
     /// number of iterations `max` is reached.
-    pub fn Z3_tactic_repeat(c: Z3_context, t: Z3_tactic, max: ::core::ffi::c_uint) -> Z3_tactic;
+    pub fn Z3_tactic_repeat(
+        c: Z3_context,
+        t: Z3_tactic,
+        max: ::core::ffi::c_uint,
+    ) -> Option<Z3_tactic>;
 
     /// Return a tactic that just return the given goal.
-    pub fn Z3_tactic_skip(c: Z3_context) -> Z3_tactic;
+    pub fn Z3_tactic_skip(c: Z3_context) -> Option<Z3_tactic>;
 
     /// Return a tactic that always fails.
-    pub fn Z3_tactic_fail(c: Z3_context) -> Z3_tactic;
+    pub fn Z3_tactic_fail(c: Z3_context) -> Option<Z3_tactic>;
 
     /// Return a tactic that fails if the probe `p` evaluates to false.
-    pub fn Z3_tactic_fail_if(c: Z3_context, p: Z3_probe) -> Z3_tactic;
+    pub fn Z3_tactic_fail_if(c: Z3_context, p: Z3_probe) -> Option<Z3_tactic>;
 
     /// Return a tactic that fails if the goal is not trivially satisfiable (i.e., empty) or
     /// trivially unsatisfiable (i.e., contains false).
-    pub fn Z3_tactic_fail_if_not_decided(c: Z3_context) -> Z3_tactic;
+    pub fn Z3_tactic_fail_if_not_decided(c: Z3_context) -> Option<Z3_tactic>;
 
     /// Return a tactic that applies `t` using the given set of parameters.
-    pub fn Z3_tactic_using_params(c: Z3_context, t: Z3_tactic, p: Z3_params) -> Z3_tactic;
+    pub fn Z3_tactic_using_params(c: Z3_context, t: Z3_tactic, p: Z3_params) -> Option<Z3_tactic>;
 
     /// Return a probe that always evaluates to val.
-    pub fn Z3_probe_const(x: Z3_context, val: f64) -> Z3_probe;
+    pub fn Z3_probe_const(x: Z3_context, val: f64) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when the value returned by `p1` is less than the value returned by `p2`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_lt(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_lt(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when the value returned by `p1` is greater than the value returned by `p2`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_gt(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_gt(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when the value returned by `p1` is less than or equal to the value returned by `p2`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_le(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_le(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when the value returned by `p1` is greater than or equal to the value returned by `p2`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_ge(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_ge(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when the value returned by `p1` is equal to the value returned by `p2`.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_eq(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_eq(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when `p1` and `p2` evaluates to true.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_and(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_and(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when `p1` or `p2` evaluates to true.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_or(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_or(x: Z3_context, p1: Z3_probe, p2: Z3_probe) -> Option<Z3_probe>;
 
     /// Return a probe that evaluates to "true" when `p` does not evaluate to true.
     ///
     /// NOTE: For probes, "true" is any value different from 0.0.
-    pub fn Z3_probe_not(x: Z3_context, p: Z3_probe) -> Z3_probe;
+    pub fn Z3_probe_not(x: Z3_context, p: Z3_probe) -> Option<Z3_probe>;
 
     /// Return the number of builtin tactics available in Z3.
     ///
@@ -5283,7 +5387,7 @@ unsafe extern "C" {
     pub fn Z3_tactic_get_help(c: Z3_context, t: Z3_tactic) -> Z3_string;
 
     /// Return the parameter description set for the given tactic object.
-    pub fn Z3_tactic_get_param_descrs(c: Z3_context, t: Z3_tactic) -> Z3_param_descrs;
+    pub fn Z3_tactic_get_param_descrs(c: Z3_context, t: Z3_tactic) -> Option<Z3_param_descrs>;
 
     /// Return a string containing a description of the tactic with the given name.
     pub fn Z3_tactic_get_descr(c: Z3_context, name: Z3_string) -> Z3_string;
@@ -5300,7 +5404,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_tactic_apply_ex`]
-    pub fn Z3_tactic_apply(c: Z3_context, t: Z3_tactic, g: Z3_goal) -> Z3_apply_result;
+    pub fn Z3_tactic_apply(c: Z3_context, t: Z3_tactic, g: Z3_goal) -> Option<Z3_apply_result>;
 
     /// Apply tactic `t` to the goal `g` using the parameter set `p`.
     ///
@@ -5312,7 +5416,7 @@ unsafe extern "C" {
         t: Z3_tactic,
         g: Z3_goal,
         p: Z3_params,
-    ) -> Z3_apply_result;
+    ) -> Option<Z3_apply_result>;
 
     /// Increment the reference counter of the given `Z3_apply_result` object.
     pub fn Z3_apply_result_inc_ref(c: Z3_context, r: Z3_apply_result);
@@ -5346,7 +5450,7 @@ unsafe extern "C" {
         c: Z3_context,
         r: Z3_apply_result,
         i: ::core::ffi::c_uint,
-    ) -> Z3_goal;
+    ) -> Option<Z3_goal>;
 
     /// Create a new solver. This solver is a "combined solver" (see
     /// `combined_solver` module) that internally uses a non-incremental (solver1) and an
@@ -5386,7 +5490,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_simple_solver`]
     /// - [`Z3_mk_solver_for_logic`]
     /// - [`Z3_mk_solver_from_tactic`]
-    pub fn Z3_mk_solver(c: Z3_context) -> Z3_solver;
+    pub fn Z3_mk_solver(c: Z3_context) -> Option<Z3_solver>;
 
     /// Create a new incremental solver.
     ///
@@ -5415,7 +5519,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_solver`]
     /// - [`Z3_mk_solver_for_logic`]
     /// - [`Z3_mk_solver_from_tactic`]
-    pub fn Z3_mk_simple_solver(c: Z3_context) -> Z3_solver;
+    pub fn Z3_mk_simple_solver(c: Z3_context) -> Option<Z3_solver>;
 
     /// Create a new solver customized for the given logic.
     /// It behaves like [`Z3_mk_solver`] if the logic is unknown or unsupported.
@@ -5428,7 +5532,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_solver`]
     /// - [`Z3_mk_simple_solver`]
     /// - [`Z3_mk_solver_from_tactic`]
-    pub fn Z3_mk_solver_for_logic(c: Z3_context, logic: Z3_symbol) -> Z3_solver;
+    pub fn Z3_mk_solver_for_logic(c: Z3_context, logic: Z3_symbol) -> Option<Z3_solver>;
 
     /// Create a new solver that is implemented using the given tactic.
     /// The solver supports the commands [`Z3_solver_push`] and [`Z3_solver_pop`], but it
@@ -5442,10 +5546,14 @@ unsafe extern "C" {
     /// - [`Z3_mk_solver`]
     /// - [`Z3_mk_simple_solver`]
     /// - [`Z3_mk_solver_for_logic`]
-    pub fn Z3_mk_solver_from_tactic(c: Z3_context, t: Z3_tactic) -> Z3_solver;
+    pub fn Z3_mk_solver_from_tactic(c: Z3_context, t: Z3_tactic) -> Option<Z3_solver>;
 
     /// Copy a solver `s` from the context `source` to the context `target`.
-    pub fn Z3_solver_translate(source: Z3_context, s: Z3_solver, target: Z3_context) -> Z3_solver;
+    pub fn Z3_solver_translate(
+        source: Z3_context,
+        s: Z3_solver,
+        target: Z3_context,
+    ) -> Option<Z3_solver>;
 
     /// Ad-hoc method for importing model conversion from solver.
     pub fn Z3_solver_import_model_converter(ctx: Z3_context, src: Z3_solver, dst: Z3_solver);
@@ -5464,7 +5572,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_solver_get_help`]
     /// - [`Z3_solver_set_params`]
-    pub fn Z3_solver_get_param_descrs(c: Z3_context, s: Z3_solver) -> Z3_param_descrs;
+    pub fn Z3_solver_get_param_descrs(c: Z3_context, s: Z3_solver) -> Option<Z3_param_descrs>;
 
     /// Set the given solver using the given parameters.
     ///
@@ -5565,13 +5673,13 @@ unsafe extern "C" {
     pub fn Z3_solver_from_string(c: Z3_context, s: Z3_solver, c_str: Z3_string);
 
     /// Return the set of asserted formulas on the solver.
-    pub fn Z3_solver_get_assertions(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
+    pub fn Z3_solver_get_assertions(c: Z3_context, s: Z3_solver) -> Option<Z3_ast_vector>;
 
     /// Return the set of units modulo model conversion.
-    pub fn Z3_solver_get_units(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
+    pub fn Z3_solver_get_units(c: Z3_context, s: Z3_solver) -> Option<Z3_ast_vector>;
 
     /// Return the set of non units in the solver state.
-    pub fn Z3_solver_get_non_units(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
+    pub fn Z3_solver_get_non_units(c: Z3_context, s: Z3_solver) -> Option<Z3_ast_vector>;
 
     /// Check whether the assertions in a given solver are consistent or not.
     ///
@@ -5660,20 +5768,20 @@ unsafe extern "C" {
         s: Z3_solver,
         vars: Z3_ast_vector,
         backtrack_level: ::core::ffi::c_uint,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Retrieve the model for the last [`Z3_solver_check`]
     ///
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given solver, or if the result was `Z3_L_FALSE`.
-    pub fn Z3_solver_get_model(c: Z3_context, s: Z3_solver) -> Z3_model;
+    pub fn Z3_solver_get_model(c: Z3_context, s: Z3_solver) -> Option<Z3_model>;
 
     /// Retrieve the proof for the last [`Z3_solver_check`]
     ///
     /// The error handler is invoked if proof generation is not enabled,
     /// or if the commands above were not invoked for the given solver,
     /// or if the result was different from `Z3_L_FALSE`.
-    pub fn Z3_solver_get_proof(c: Z3_context, s: Z3_solver) -> Z3_ast;
+    pub fn Z3_solver_get_proof(c: Z3_context, s: Z3_solver) -> Option<Z3_ast>;
 
     /// Retrieve the unsat core for the last [`Z3_solver_check_assumptions`]
     /// The unsat core is a subset of the assumptions `a`.
@@ -5682,7 +5790,7 @@ unsafe extern "C" {
     /// unsat core can be enabled via the `"sat.core.minimize"` and `"smt.core.minimize"`
     /// settings for SAT and SMT cores respectively. Generation of minimized unsat cores
     /// will be more expensive.
-    pub fn Z3_solver_get_unsat_core(c: Z3_context, s: Z3_solver) -> Z3_ast_vector;
+    pub fn Z3_solver_get_unsat_core(c: Z3_context, s: Z3_solver) -> Option<Z3_ast_vector>;
 
     /// Return a brief justification for an "unknown" result (i.e., `Z3_L_UNDEF`) for
     /// the commands [`Z3_solver_check`]
@@ -5691,7 +5799,7 @@ unsafe extern "C" {
     /// Return statistics for the given solver.
     ///
     /// NOTE: User must use [`Z3_stats_inc_ref`] and [`Z3_stats_dec_ref`] to manage [`Z3_stats`] objects.
-    pub fn Z3_solver_get_statistics(c: Z3_context, s: Z3_solver) -> Z3_stats;
+    pub fn Z3_solver_get_statistics(c: Z3_context, s: Z3_solver) -> Option<Z3_stats>;
 
     /// Convert a solver into a string.
     ///
@@ -5759,7 +5867,7 @@ unsafe extern "C" {
     ///
     /// NOTE: Reference counting must be used to manage AST vectors, even when the `Z3_context` was
     /// created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
-    pub fn Z3_mk_ast_vector(c: Z3_context) -> Z3_ast_vector;
+    pub fn Z3_mk_ast_vector(c: Z3_context) -> Option<Z3_ast_vector>;
 
     /// Increment the reference counter of the given AST vector.
     pub fn Z3_ast_vector_inc_ref(c: Z3_context, v: Z3_ast_vector);
@@ -5775,7 +5883,11 @@ unsafe extern "C" {
     /// # Preconditions:
     ///
     /// - `i < Z3_ast_vector_size(c, v)`
-    pub fn Z3_ast_vector_get(c: Z3_context, v: Z3_ast_vector, i: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_ast_vector_get(
+        c: Z3_context,
+        v: Z3_ast_vector,
+        i: ::core::ffi::c_uint,
+    ) -> Option<Z3_ast>;
 
     /// Update position `i` of the AST vector `v` with the AST `a`.
     ///
@@ -5791,8 +5903,11 @@ unsafe extern "C" {
     pub fn Z3_ast_vector_push(c: Z3_context, v: Z3_ast_vector, a: Z3_ast);
 
     /// Translate the AST vector `v` from context `s` into an AST vector in context `t`.
-    pub fn Z3_ast_vector_translate(s: Z3_context, v: Z3_ast_vector, t: Z3_context)
-    -> Z3_ast_vector;
+    pub fn Z3_ast_vector_translate(
+        s: Z3_context,
+        v: Z3_ast_vector,
+        t: Z3_context,
+    ) -> Option<Z3_ast_vector>;
 
     /// Convert AST vector into a string.
     pub fn Z3_ast_vector_to_string(c: Z3_context, v: Z3_ast_vector) -> Z3_string;
@@ -5801,7 +5916,7 @@ unsafe extern "C" {
     ///
     /// NOTE: Reference counting must be used to manage AST maps, even when the `Z3_context` was
     /// created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
-    pub fn Z3_mk_ast_map(c: Z3_context) -> Z3_ast_map;
+    pub fn Z3_mk_ast_map(c: Z3_context) -> Option<Z3_ast_map>;
 
     /// Increment the reference counter of the given AST map.
     pub fn Z3_ast_map_inc_ref(c: Z3_context, m: Z3_ast_map);
@@ -5815,7 +5930,7 @@ unsafe extern "C" {
     /// Return the value associated with the key `k`.
     ///
     /// The procedure invokes the error handler if `k` is not in the map.
-    pub fn Z3_ast_map_find(c: Z3_context, m: Z3_ast_map, k: Z3_ast) -> Z3_ast;
+    pub fn Z3_ast_map_find(c: Z3_context, m: Z3_ast_map, k: Z3_ast) -> Option<Z3_ast>;
 
     /// Store/Replace a new key, value pair in the given map.
     pub fn Z3_ast_map_insert(c: Z3_context, m: Z3_ast_map, k: Z3_ast, v: Z3_ast);
@@ -5830,7 +5945,7 @@ unsafe extern "C" {
     pub fn Z3_ast_map_size(c: Z3_context, m: Z3_ast_map) -> ::core::ffi::c_uint;
 
     /// Return the keys stored in the given map.
-    pub fn Z3_ast_map_keys(c: Z3_context, m: Z3_ast_map) -> Z3_ast_vector;
+    pub fn Z3_ast_map_keys(c: Z3_context, m: Z3_ast_map) -> Option<Z3_ast_vector>;
 
     /// Convert the given map into a string.
     pub fn Z3_ast_map_to_string(c: Z3_context, m: Z3_ast_map) -> Z3_string;
@@ -5897,7 +6012,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`]
-    pub fn Z3_algebraic_add(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
+    pub fn Z3_algebraic_add(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Option<Z3_ast>;
 
     /// Return the value `a - b`.
     ///
@@ -5913,7 +6028,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`]
-    pub fn Z3_algebraic_sub(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
+    pub fn Z3_algebraic_sub(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Option<Z3_ast>;
 
     /// Return the value `a * b`.
     ///
@@ -5929,7 +6044,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`]
-    pub fn Z3_algebraic_mul(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
+    pub fn Z3_algebraic_mul(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Option<Z3_ast>;
 
     /// Return the value `a / b`.
     ///
@@ -5947,7 +6062,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_algebraic_is_value`]
     /// - [`Z3_algebraic_is_zero`]
-    pub fn Z3_algebraic_div(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Z3_ast;
+    pub fn Z3_algebraic_div(c: Z3_context, a: Z3_ast, b: Z3_ast) -> Option<Z3_ast>;
 
     /// Return the `a^(1/k)`
     ///
@@ -5964,7 +6079,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_algebraic_is_neg`]
     /// - [`Z3_algebraic_is_value`]
-    pub fn Z3_algebraic_root(c: Z3_context, a: Z3_ast, k: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_algebraic_root(c: Z3_context, a: Z3_ast, k: ::core::ffi::c_uint) -> Option<Z3_ast>;
 
     /// Return the `a^k`
     ///
@@ -5979,7 +6094,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_algebraic_is_value`]
-    pub fn Z3_algebraic_power(c: Z3_context, a: Z3_ast, k: ::core::ffi::c_uint) -> Z3_ast;
+    pub fn Z3_algebraic_power(c: Z3_context, a: Z3_ast, k: ::core::ffi::c_uint) -> Option<Z3_ast>;
 
     /// Return `true` if `a < b`, and `false` otherwise.
     ///
@@ -6073,7 +6188,7 @@ unsafe extern "C" {
         p: Z3_ast,
         n: ::core::ffi::c_uint,
         a: *mut Z3_ast,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Given a multivariate polynomial `p(x_0, ..., x_{n-1})`, return the
     /// sign of `p(a[0], ..., a[n-1])`.
@@ -6107,25 +6222,25 @@ unsafe extern "C" {
         p: Z3_ast,
         q: Z3_ast,
         x: Z3_ast,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Delete a RCF numeral created using the RCF API.
     pub fn Z3_rcf_del(c: Z3_context, a: Z3_rcf_num);
 
     /// Return a RCF rational using the given string.
-    pub fn Z3_rcf_mk_rational(c: Z3_context, val: Z3_string) -> Z3_rcf_num;
+    pub fn Z3_rcf_mk_rational(c: Z3_context, val: Z3_string) -> Option<Z3_rcf_num>;
 
     /// Return a RCF small integer.
-    pub fn Z3_rcf_mk_small_int(c: Z3_context, val: ::core::ffi::c_int) -> Z3_rcf_num;
+    pub fn Z3_rcf_mk_small_int(c: Z3_context, val: ::core::ffi::c_int) -> Option<Z3_rcf_num>;
 
     /// Return Pi
-    pub fn Z3_rcf_mk_pi(c: Z3_context) -> Z3_rcf_num;
+    pub fn Z3_rcf_mk_pi(c: Z3_context) -> Option<Z3_rcf_num>;
 
     /// Return e (Euler's constant)
-    pub fn Z3_rcf_mk_e(c: Z3_context) -> Z3_rcf_num;
+    pub fn Z3_rcf_mk_e(c: Z3_context) -> Option<Z3_rcf_num>;
 
     /// Return a new infinitesimal that is smaller than all elements in the Z3 field.
-    pub fn Z3_rcf_mk_infinitesimal(c: Z3_context) -> Z3_rcf_num;
+    pub fn Z3_rcf_mk_infinitesimal(c: Z3_context) -> Option<Z3_rcf_num>;
 
     /// Store in roots the roots of the polynomial `a[n-1]*x^{n-1} + ... + a[0]`.
     /// The output vector `roots` must have size `n`.
@@ -6142,25 +6257,26 @@ unsafe extern "C" {
     ) -> ::core::ffi::c_uint;
 
     /// Return the value `a + b`.
-    pub fn Z3_rcf_add(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
+    pub fn Z3_rcf_add(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Option<Z3_rcf_num>;
 
     /// Return the value `a - b`.
-    pub fn Z3_rcf_sub(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
+    pub fn Z3_rcf_sub(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Option<Z3_rcf_num>;
 
     /// Return the value `a * b`.
-    pub fn Z3_rcf_mul(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
+    pub fn Z3_rcf_mul(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Option<Z3_rcf_num>;
 
     /// Return the value `a / b`.
-    pub fn Z3_rcf_div(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Z3_rcf_num;
+    pub fn Z3_rcf_div(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> Option<Z3_rcf_num>;
 
     /// Return the value `-a`.
-    pub fn Z3_rcf_neg(c: Z3_context, a: Z3_rcf_num) -> Z3_rcf_num;
+    pub fn Z3_rcf_neg(c: Z3_context, a: Z3_rcf_num) -> Option<Z3_rcf_num>;
 
     /// Return the value `1/a`.
-    pub fn Z3_rcf_inv(c: Z3_context, a: Z3_rcf_num) -> Z3_rcf_num;
+    pub fn Z3_rcf_inv(c: Z3_context, a: Z3_rcf_num) -> Option<Z3_rcf_num>;
 
     /// Return the value `a^k`.
-    pub fn Z3_rcf_power(c: Z3_context, a: Z3_rcf_num, k: ::core::ffi::c_uint) -> Z3_rcf_num;
+    pub fn Z3_rcf_power(c: Z3_context, a: Z3_rcf_num, k: ::core::ffi::c_uint)
+    -> Option<Z3_rcf_num>;
 
     /// Return `true` if `a < b`.
     pub fn Z3_rcf_lt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
@@ -6209,7 +6325,7 @@ unsafe extern "C" {
     ///
     /// NOTE: User must use [`Z3_fixedpoint_inc_ref`] and [`Z3_fixedpoint_dec_ref`] to manage fixedpoint objects.
     /// Even if the context was created using [`Z3_mk_context`] instead of [`Z3_mk_context_rc`].
-    pub fn Z3_mk_fixedpoint(c: Z3_context) -> Z3_fixedpoint;
+    pub fn Z3_mk_fixedpoint(c: Z3_context) -> Option<Z3_fixedpoint>;
 
     /// Increment the reference counter of the given fixedpoint context
     pub fn Z3_fixedpoint_inc_ref(c: Z3_context, d: Z3_fixedpoint);
@@ -6291,7 +6407,7 @@ unsafe extern "C" {
     ///
     /// When used in Datalog mode the previous call to `Z3_fixedpoint_query` must have returned `Z3_L_TRUE`.
     /// When used with the PDR engine, the previous call must have been either `Z3_L_TRUE` or `Z3_L_FALSE`.
-    pub fn Z3_fixedpoint_get_answer(c: Z3_context, d: Z3_fixedpoint) -> Z3_ast;
+    pub fn Z3_fixedpoint_get_answer(c: Z3_context, d: Z3_fixedpoint) -> Option<Z3_ast>;
 
     /// Retrieve a string that describes the last status returned by [`Z3_fixedpoint_query`].
     ///
@@ -6324,7 +6440,7 @@ unsafe extern "C" {
         d: Z3_fixedpoint,
         level: ::core::ffi::c_int,
         pred: Z3_func_decl,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Add property about the predicate `pred`.
     /// Add a property of predicate `pred` at `level`.
@@ -6343,7 +6459,7 @@ unsafe extern "C" {
     );
 
     /// Retrieve statistics information from the last call to [`Z3_fixedpoint_query`].
-    pub fn Z3_fixedpoint_get_statistics(c: Z3_context, d: Z3_fixedpoint) -> Z3_stats;
+    pub fn Z3_fixedpoint_get_statistics(c: Z3_context, d: Z3_fixedpoint) -> Option<Z3_stats>;
 
     /// Register relation as Fixedpoint defined.
     /// Fixedpoint defined relations have least-fixedpoint semantics.
@@ -6365,10 +6481,10 @@ unsafe extern "C" {
     );
 
     /// Retrieve set of rules from fixedpoint context.
-    pub fn Z3_fixedpoint_get_rules(c: Z3_context, f: Z3_fixedpoint) -> Z3_ast_vector;
+    pub fn Z3_fixedpoint_get_rules(c: Z3_context, f: Z3_fixedpoint) -> Option<Z3_ast_vector>;
 
     /// Retrieve set of background assertions from fixedpoint context.
-    pub fn Z3_fixedpoint_get_assertions(c: Z3_context, f: Z3_fixedpoint) -> Z3_ast_vector;
+    pub fn Z3_fixedpoint_get_assertions(c: Z3_context, f: Z3_fixedpoint) -> Option<Z3_ast_vector>;
 
     /// Set parameters on fixedpoint context.
     ///
@@ -6392,7 +6508,10 @@ unsafe extern "C" {
     ///
     /// - [`Z3_fixedpoint_get_help`]
     /// - [`Z3_fixedpoint_set_params`]
-    pub fn Z3_fixedpoint_get_param_descrs(c: Z3_context, f: Z3_fixedpoint) -> Z3_param_descrs;
+    pub fn Z3_fixedpoint_get_param_descrs(
+        c: Z3_context,
+        f: Z3_fixedpoint,
+    ) -> Option<Z3_param_descrs>;
 
     /// Print the current rules and background axioms as a string.
     /// - `c`: - context.
@@ -6427,7 +6546,7 @@ unsafe extern "C" {
         c: Z3_context,
         f: Z3_fixedpoint,
         s: Z3_string,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Parse an SMT-LIB2 file with fixedpoint rules.
     /// Add the rules to the current fixedpoint context.
@@ -6441,15 +6560,19 @@ unsafe extern "C" {
     ///
     /// - [`Z3_fixedpoint_from_string`]
     /// - [`Z3_fixedpoint_to_string`]
-    pub fn Z3_fixedpoint_from_file(c: Z3_context, f: Z3_fixedpoint, s: Z3_string) -> Z3_ast_vector;
+    pub fn Z3_fixedpoint_from_file(
+        c: Z3_context,
+        f: Z3_fixedpoint,
+        s: Z3_string,
+    ) -> Option<Z3_ast_vector>;
 
     /// String less-than lexicographic comparison operation.
     /// Return a new AST node `Bool`.
-    pub fn Z3_mk_str_lt(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_str_lt(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Option<Z3_ast>;
 
     /// String less-than-or-equal lexicographic comparison operation.
     /// Return a new AST node `Bool`.
-    pub fn Z3_mk_str_le(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_str_le(c: Z3_context, lhs: Z3_ast, rhs: Z3_ast) -> Option<Z3_ast>;
 }
 /// The following utilities allows adding user-defined domains.
 pub type Z3_fixedpoint_reduce_assign_callback_fptr = ::core::option::Option<
@@ -6528,7 +6651,7 @@ unsafe extern "C" {
     /// and [`Z3_optimize_dec_ref`] to manage optimize objects,
     /// even if the context was created using [`Z3_mk_context`]
     /// instead of [`Z3_mk_context_rc`].
-    pub fn Z3_mk_optimize(c: Z3_context) -> Z3_optimize;
+    pub fn Z3_mk_optimize(c: Z3_context) -> Option<Z3_optimize>;
 
     /// Increment the reference counter of the given optimize context
     pub fn Z3_optimize_inc_ref(c: Z3_context, d: Z3_optimize);
@@ -6568,7 +6691,7 @@ unsafe extern "C" {
         o: Z3_optimize,
         a: Z3_ast,
         weight: Z3_string,
-        id: Z3_symbol,
+        id: Option<Z3_symbol>,
     ) -> ::core::ffi::c_uint;
 
     /// Add a maximization constraint.
@@ -6642,12 +6765,12 @@ unsafe extern "C" {
     /// The error handler is invoked if a model is not available because
     /// the commands above were not invoked for the given optimization
     /// solver, or if the result was `Z3_L_FALSE`.
-    pub fn Z3_optimize_get_model(c: Z3_context, o: Z3_optimize) -> Z3_model;
+    pub fn Z3_optimize_get_model(c: Z3_context, o: Z3_optimize) -> Option<Z3_model>;
 
     /// Retrieve the unsat core for the last [`Z3_optimize_check`].
     ///
     /// The unsat core is a subset of the assumptions `a`.
-    pub fn Z3_optimize_get_unsat_core(c: Z3_context, o: Z3_optimize) -> Z3_ast_vector;
+    pub fn Z3_optimize_get_unsat_core(c: Z3_context, o: Z3_optimize) -> Option<Z3_ast_vector>;
 
     /// Set parameters on optimization context.
     ///
@@ -6670,7 +6793,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_optimize_get_help`]
     /// - [`Z3_optimize_set_params`]
-    pub fn Z3_optimize_get_param_descrs(c: Z3_context, o: Z3_optimize) -> Z3_param_descrs;
+    pub fn Z3_optimize_get_param_descrs(c: Z3_context, o: Z3_optimize) -> Option<Z3_param_descrs>;
 
     /// Retrieve lower bound value or approximation for the i'th optimization objective.
     ///
@@ -6683,8 +6806,11 @@ unsafe extern "C" {
     /// - [`Z3_optimize_get_upper`]
     /// - [`Z3_optimize_get_lower_as_vector`]
     /// - [`Z3_optimize_get_upper_as_vector`]
-    pub fn Z3_optimize_get_lower(c: Z3_context, o: Z3_optimize, idx: ::core::ffi::c_uint)
-    -> Z3_ast;
+    pub fn Z3_optimize_get_lower(
+        c: Z3_context,
+        o: Z3_optimize,
+        idx: ::core::ffi::c_uint,
+    ) -> Option<Z3_ast>;
 
     /// Retrieve upper bound value or approximation for the i'th optimization objective.
     ///
@@ -6697,8 +6823,11 @@ unsafe extern "C" {
     /// - [`Z3_optimize_get_lower`]
     /// - [`Z3_optimize_get_lower_as_vector`]
     /// - [`Z3_optimize_get_upper_as_vector`]
-    pub fn Z3_optimize_get_upper(c: Z3_context, o: Z3_optimize, idx: ::core::ffi::c_uint)
-    -> Z3_ast;
+    pub fn Z3_optimize_get_upper(
+        c: Z3_context,
+        o: Z3_optimize,
+        idx: ::core::ffi::c_uint,
+    ) -> Option<Z3_ast>;
 
     /// Retrieve lower bound value or approximation for the i'th optimization objective.
     /// The returned vector is of length 3. It always contains numerals.
@@ -6718,7 +6847,7 @@ unsafe extern "C" {
         c: Z3_context,
         o: Z3_optimize,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Retrieve upper bound value or approximation for the i'th optimization objective.
     ///
@@ -6735,7 +6864,7 @@ unsafe extern "C" {
         c: Z3_context,
         o: Z3_optimize,
         idx: ::core::ffi::c_uint,
-    ) -> Z3_ast_vector;
+    ) -> Option<Z3_ast_vector>;
 
     /// Print the current context as a string.
     /// - `c`: - context.
@@ -6784,10 +6913,10 @@ unsafe extern "C" {
     pub fn Z3_optimize_get_help(c: Z3_context, t: Z3_optimize) -> Z3_string;
 
     /// Retrieve statistics information from the last call to [`Z3_optimize_check`]
-    pub fn Z3_optimize_get_statistics(c: Z3_context, d: Z3_optimize) -> Z3_stats;
+    pub fn Z3_optimize_get_statistics(c: Z3_context, d: Z3_optimize) -> Option<Z3_stats>;
 
     /// Return the set of asserted formulas on the optimization context.
-    pub fn Z3_optimize_get_assertions(c: Z3_context, o: Z3_optimize) -> Z3_ast_vector;
+    pub fn Z3_optimize_get_assertions(c: Z3_context, o: Z3_optimize) -> Option<Z3_ast_vector>;
 
     /// Return objectives on the optimization context.
     /// If the objective function is a max-sat objective it is returned
@@ -6795,7 +6924,7 @@ unsafe extern "C" {
     /// If the objective function is entered as a maximization objective, then return
     /// the corresponding minimization objective. In this way the resulting objective
     /// function is always returned as a minimization objective.
-    pub fn Z3_optimize_get_objectives(c: Z3_context, o: Z3_optimize) -> Z3_ast_vector;
+    pub fn Z3_optimize_get_objectives(c: Z3_context, o: Z3_optimize) -> Option<Z3_ast_vector>;
 
     /// Create the `RoundingMode` sort.
     ///
@@ -6809,7 +6938,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_round_toward_negative`] or [`Z3_mk_fpa_rtn`]
     /// - [`Z3_mk_fpa_round_toward_positive`] or [`Z3_mk_fpa_rtp`]
     /// - [`Z3_mk_fpa_round_toward_zero`] or [`Z3_mk_fpa_rtz`]
-    pub fn Z3_mk_fpa_rounding_mode_sort(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_rounding_mode_sort(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `NearestTiesToEven` rounding mode.
     ///
@@ -6824,7 +6953,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_round_toward_negative`]
     /// - [`Z3_mk_fpa_round_toward_positive`]
     /// - [`Z3_mk_fpa_round_toward_zero`]
-    pub fn Z3_mk_fpa_round_nearest_ties_to_even(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_round_nearest_ties_to_even(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `NearestTiesToEven` rounding mode.
     ///
@@ -6839,7 +6968,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_rtn`]
     /// - [`Z3_mk_fpa_rtp`]
     /// - [`Z3_mk_fpa_rtz`]
-    pub fn Z3_mk_fpa_rne(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_rne(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `NearestTiesToAway` rounding mode.
     ///
@@ -6854,7 +6983,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_round_toward_negative`]
     /// - [`Z3_mk_fpa_round_toward_positive`]
     /// - [`Z3_mk_fpa_round_toward_zero`]
-    pub fn Z3_mk_fpa_round_nearest_ties_to_away(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_round_nearest_ties_to_away(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `NearestTiesToAway` rounding mode.
     ///
@@ -6869,7 +6998,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_rtn`]
     /// - [`Z3_mk_fpa_rtp`]
     /// - [`Z3_mk_fpa_rtz`]
-    pub fn Z3_mk_fpa_rna(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_rna(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `TowardPositive` rounding mode.
     ///
@@ -6884,7 +7013,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
     /// - [`Z3_mk_fpa_round_toward_negative`]
     /// - [`Z3_mk_fpa_round_toward_zero`]
-    pub fn Z3_mk_fpa_round_toward_positive(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_round_toward_positive(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `TowardPositive` rounding mode.
     ///
@@ -6899,7 +7028,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_rne`]
     /// - [`Z3_mk_fpa_rtn`]
     /// - [`Z3_mk_fpa_rtz`]
-    pub fn Z3_mk_fpa_rtp(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_rtp(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `TowardNegative` rounding mode.
     ///
@@ -6914,7 +7043,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
     /// - [`Z3_mk_fpa_round_toward_positive`]
     /// - [`Z3_mk_fpa_round_toward_zero`]
-    pub fn Z3_mk_fpa_round_toward_negative(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_round_toward_negative(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `TowardNegative` rounding mode.
     ///
@@ -6929,7 +7058,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_rne`]
     /// - [`Z3_mk_fpa_rtp`]
     /// - [`Z3_mk_fpa_rtz`]
-    pub fn Z3_mk_fpa_rtn(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_rtn(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `TowardZero` rounding mode.
     ///
@@ -6944,7 +7073,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
     /// - [`Z3_mk_fpa_round_toward_negative`]
     /// - [`Z3_mk_fpa_round_toward_positive`]
-    pub fn Z3_mk_fpa_round_toward_zero(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_round_toward_zero(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a numeral of `RoundingMode` sort which represents the `TowardZero` rounding mode.
     ///
@@ -6959,7 +7088,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_rne`]
     /// - [`Z3_mk_fpa_rtn`]
     /// - [`Z3_mk_fpa_rtp`]
-    pub fn Z3_mk_fpa_rtz(c: Z3_context) -> Z3_ast;
+    pub fn Z3_mk_fpa_rtz(c: Z3_context) -> Option<Z3_ast>;
 
     /// Create a `FloatingPoint` sort.
     ///
@@ -6979,7 +7108,7 @@ unsafe extern "C" {
         c: Z3_context,
         ebits: ::core::ffi::c_uint,
         sbits: ::core::ffi::c_uint,
-    ) -> Z3_sort;
+    ) -> Option<Z3_sort>;
 
     /// Create the half-precision (16-bit) `FloatingPoint` sort.
     ///
@@ -6992,7 +7121,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_single`]
     /// - [`Z3_mk_fpa_sort_double`]
     /// - [`Z3_mk_fpa_sort_quadruple`]
-    pub fn Z3_mk_fpa_sort_half(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_half(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the half-precision (16-bit) `FloatingPoint` sort.
     ///
@@ -7005,7 +7134,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_32`]
     /// - [`Z3_mk_fpa_sort_64`]
     /// - [`Z3_mk_fpa_sort_128`]
-    pub fn Z3_mk_fpa_sort_16(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_16(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the single-precision (32-bit) `FloatingPoint` sort.
     ///
@@ -7018,7 +7147,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_half`]
     /// - [`Z3_mk_fpa_sort_double`]
     /// - [`Z3_mk_fpa_sort_quadruple`]
-    pub fn Z3_mk_fpa_sort_single(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_single(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the single-precision (32-bit) `FloatingPoint` sort.
     ///
@@ -7031,7 +7160,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_16`]
     /// - [`Z3_mk_fpa_sort_64`]
     /// - [`Z3_mk_fpa_sort_128`]
-    pub fn Z3_mk_fpa_sort_32(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_32(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the double-precision (64-bit) `FloatingPoint` sort.
     ///
@@ -7044,7 +7173,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_half`]
     /// - [`Z3_mk_fpa_sort_single`]
     /// - [`Z3_mk_fpa_sort_quadruple`]
-    pub fn Z3_mk_fpa_sort_double(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_double(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the double-precision (64-bit) `FloatingPoint` sort.
     ///
@@ -7057,7 +7186,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_16`]
     /// - [`Z3_mk_fpa_sort_32`]
     /// - [`Z3_mk_fpa_sort_128`]
-    pub fn Z3_mk_fpa_sort_64(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_64(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the quadruple-precision (128-bit) `FloatingPoint` sort.
     ///
@@ -7070,7 +7199,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_half`]
     /// - [`Z3_mk_fpa_sort_single`]
     /// - [`Z3_mk_fpa_sort_double`]
-    pub fn Z3_mk_fpa_sort_quadruple(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_quadruple(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create the quadruple-precision (128-bit) `FloatingPoint` sort.
     ///
@@ -7083,7 +7212,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_sort_16`]
     /// - [`Z3_mk_fpa_sort_32`]
     /// - [`Z3_mk_fpa_sort_64`]
-    pub fn Z3_mk_fpa_sort_128(c: Z3_context) -> Z3_sort;
+    pub fn Z3_mk_fpa_sort_128(c: Z3_context) -> Option<Z3_sort>;
 
     /// Create a floating-point NaN of sort `s`.
     ///
@@ -7095,7 +7224,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_inf`]
     /// - [`Z3_mk_fpa_is_nan`]
     /// - [`Z3_mk_fpa_zero`]
-    pub fn Z3_mk_fpa_nan(c: Z3_context, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_nan(c: Z3_context, s: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a floating-point infinity of sort `s`.
     ///
@@ -7110,7 +7239,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_infinite`]
     /// - [`Z3_mk_fpa_nan`]
     /// - [`Z3_mk_fpa_zero`]
-    pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
+    pub fn Z3_mk_fpa_inf(c: Z3_context, s: Z3_sort, negative: bool) -> Option<Z3_ast>;
 
     /// Create a floating-point zero of sort `s`.
     ///
@@ -7125,7 +7254,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_inf`]
     /// - [`Z3_mk_fpa_is_zero`]
     /// - [`Z3_mk_fpa_nan`]
-    pub fn Z3_mk_fpa_zero(c: Z3_context, s: Z3_sort, negative: bool) -> Z3_ast;
+    pub fn Z3_mk_fpa_zero(c: Z3_context, s: Z3_sort, negative: bool) -> Option<Z3_ast>;
 
     /// Create an expression of `FloatingPoint` sort from three bit-vector expressions.
     ///
@@ -7148,7 +7277,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_numeral_int_uint`]
     /// - [`Z3_mk_fpa_numeral_int64_uint64`]
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_fpa_fp(c: Z3_context, sgn: Z3_ast, exp: Z3_ast, sig: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_fp(c: Z3_context, sgn: Z3_ast, exp: Z3_ast, sig: Z3_ast) -> Option<Z3_ast>;
 
     /// Create a numeral of `FloatingPoint` sort from a float.
     ///
@@ -7169,7 +7298,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_numeral_int_uint`]
     /// - [`Z3_mk_fpa_numeral_int64_uint64`]
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_fpa_numeral_float(c: Z3_context, v: f32, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_numeral_float(c: Z3_context, v: f32, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a numeral of `FloatingPoint` sort from a double.
     ///
@@ -7190,7 +7319,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_numeral_int_uint`]
     /// - [`Z3_mk_fpa_numeral_int64_uint64`]
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_fpa_numeral_double(c: Z3_context, v: f64, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_numeral_double(c: Z3_context, v: f64, ty: Z3_sort) -> Option<Z3_ast>;
 
     /// Create a numeral of `FloatingPoint` sort from a signed integer.
     ///
@@ -7208,7 +7337,11 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_numeral_int_uint`]
     /// - [`Z3_mk_fpa_numeral_int64_uint64`]
     /// - [`Z3_mk_numeral`]
-    pub fn Z3_mk_fpa_numeral_int(c: Z3_context, v: ::core::ffi::c_int, ty: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_numeral_int(
+        c: Z3_context,
+        v: ::core::ffi::c_int,
+        ty: Z3_sort,
+    ) -> Option<Z3_ast>;
 
     /// Create a numeral of `FloatingPoint` sort from a sign bit and two integers.
     ///
@@ -7234,7 +7367,7 @@ unsafe extern "C" {
         exp: ::core::ffi::c_int,
         sig: ::core::ffi::c_uint,
         ty: Z3_sort,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Create a numeral of `FloatingPoint` sort from a sign bit and two 64-bit integers.
     ///
@@ -7260,7 +7393,7 @@ unsafe extern "C" {
         exp: i64,
         sig: u64,
         ty: Z3_sort,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Floating-point absolute value
     ///
@@ -7272,7 +7405,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_negative`]
     /// - [`Z3_mk_fpa_is_positive`]
     /// - [`Z3_mk_fpa_neg`]
-    pub fn Z3_mk_fpa_abs(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_abs(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point negation
     ///
@@ -7284,7 +7417,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_abs`]
     /// - [`Z3_mk_fpa_is_negative`]
     /// - [`Z3_mk_fpa_is_positive`]
-    pub fn Z3_mk_fpa_neg(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_neg(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point addition
     ///
@@ -7294,7 +7427,7 @@ unsafe extern "C" {
     /// - `t2`: term of `FloatingPoint` sort
     ///
     /// `rm` must be of `RoundingMode` sort, `t1` and `t2` must have the same `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_add(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_add(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point subtraction
     ///
@@ -7304,7 +7437,7 @@ unsafe extern "C" {
     /// - `t2`: term of `FloatingPoint` sort
     ///
     /// `rm` must be of `RoundingMode` sort, `t1` and `t2` must have the same `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_sub(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_sub(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point multiplication
     ///
@@ -7314,7 +7447,7 @@ unsafe extern "C" {
     /// - `t2`: term of `FloatingPoint` sort
     ///
     /// `rm` must be of `RoundingMode` sort, `t1` and `t2` must have the same `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_mul(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_mul(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point division
     ///
@@ -7324,7 +7457,7 @@ unsafe extern "C" {
     /// - `t2`: term of `FloatingPoint` sort
     ///
     /// The nodes `rm` must be of `RoundingMode` sort, `t1` and `t2` must have the same `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_div(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_div(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point fused multiply-add.
     ///
@@ -7337,7 +7470,13 @@ unsafe extern "C" {
     /// The result is round((t1 * t2) + t3)
     ///
     /// `rm` must be of `RoundingMode` sort, `t1`, `t2`, and `t3` must have the same `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_fma(c: Z3_context, rm: Z3_ast, t1: Z3_ast, t2: Z3_ast, t3: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_fma(
+        c: Z3_context,
+        rm: Z3_ast,
+        t1: Z3_ast,
+        t2: Z3_ast,
+        t3: Z3_ast,
+    ) -> Option<Z3_ast>;
 
     /// Floating-point square root
     ///
@@ -7346,7 +7485,7 @@ unsafe extern "C" {
     /// - `t`: term of `FloatingPoint` sort
     ///
     /// `rm` must be of `RoundingMode` sort, `t` must have `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_sqrt(c: Z3_context, rm: Z3_ast, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_sqrt(c: Z3_context, rm: Z3_ast, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point remainder
     ///
@@ -7355,7 +7494,7 @@ unsafe extern "C" {
     /// - `t2`: term of `FloatingPoint` sort
     ///
     /// `t1` and `t2` must have the same `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_rem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_rem(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point roundToIntegral. Rounds a floating-point number to
     /// the closest integer, again represented as a floating-point number.
@@ -7365,7 +7504,7 @@ unsafe extern "C" {
     /// - `t`: term of `FloatingPoint` sort
     ///
     /// `t` must be of `FloatingPoint` sort.
-    pub fn Z3_mk_fpa_round_to_integral(c: Z3_context, rm: Z3_ast, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_round_to_integral(c: Z3_context, rm: Z3_ast, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Minimum of floating-point numbers.
     ///
@@ -7378,7 +7517,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_fpa_max`]
-    pub fn Z3_mk_fpa_min(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_min(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Maximum of floating-point numbers.
     ///
@@ -7391,7 +7530,7 @@ unsafe extern "C" {
     /// # See also:
     ///
     /// - [`Z3_mk_fpa_min`]
-    pub fn Z3_mk_fpa_max(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_max(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point less than or equal.
     ///
@@ -7407,7 +7546,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_geq`]
     /// - [`Z3_mk_fpa_gt`]
     /// - [`Z3_mk_fpa_lt`]
-    pub fn Z3_mk_fpa_leq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_leq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point less than.
     ///
@@ -7423,7 +7562,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_geq`]
     /// - [`Z3_mk_fpa_gt`]
     /// - [`Z3_mk_fpa_leq`]
-    pub fn Z3_mk_fpa_lt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_lt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point greater than or equal.
     ///
@@ -7439,7 +7578,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_gt`]
     /// - [`Z3_mk_fpa_leq`]
     /// - [`Z3_mk_fpa_lt`]
-    pub fn Z3_mk_fpa_geq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_geq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point greater than.
     ///
@@ -7455,7 +7594,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_geq`]
     /// - [`Z3_mk_fpa_leq`]
     /// - [`Z3_mk_fpa_lt`]
-    pub fn Z3_mk_fpa_gt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_gt(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Floating-point equality.
     ///
@@ -7473,7 +7612,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_gt`]
     /// - [`Z3_mk_fpa_leq`]
     /// - [`Z3_mk_fpa_lt`]
-    pub fn Z3_mk_fpa_eq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_eq(c: Z3_context, t1: Z3_ast, t2: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a normal floating-point number.
     ///
@@ -7488,7 +7627,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_nan`]
     /// - [`Z3_mk_fpa_is_subnormal`]
     /// - [`Z3_mk_fpa_is_zero`]
-    pub fn Z3_mk_fpa_is_normal(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_normal(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a subnormal floating-point number.
     ///
@@ -7503,7 +7642,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_nan`]
     /// - [`Z3_mk_fpa_is_normal`]
     /// - [`Z3_mk_fpa_is_zero`]
-    pub fn Z3_mk_fpa_is_subnormal(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_subnormal(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a floating-point number with zero value, i.e., +zero or -zero.
     ///
@@ -7520,7 +7659,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_subnormal`]
     /// - [`Z3_mk_fpa_is_zero`]
     /// - [`Z3_mk_fpa_zero`]
-    pub fn Z3_mk_fpa_is_zero(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_zero(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a floating-point number representing +oo or -oo.
     ///
@@ -7537,7 +7676,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_normal`]
     /// - [`Z3_mk_fpa_is_subnormal`]
     /// - [`Z3_mk_fpa_is_zero`]
-    pub fn Z3_mk_fpa_is_infinite(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_infinite(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a NaN.
     ///
@@ -7553,7 +7692,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_is_subnormal`]
     /// - [`Z3_mk_fpa_is_zero`]
     /// - [`Z3_mk_fpa_nan`]
-    pub fn Z3_mk_fpa_is_nan(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_nan(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a negative floating-point number.
     ///
@@ -7567,7 +7706,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_abs`]
     /// - [`Z3_mk_fpa_is_positive`]
     /// - [`Z3_mk_fpa_neg`]
-    pub fn Z3_mk_fpa_is_negative(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_negative(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Predicate indicating whether `t` is a positive floating-point number.
     ///
@@ -7581,7 +7720,7 @@ unsafe extern "C" {
     /// - [`Z3_mk_fpa_abs`]
     /// - [`Z3_mk_fpa_is_negative`]
     /// - [`Z3_mk_fpa_neg`]
-    pub fn Z3_mk_fpa_is_positive(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_is_positive(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Conversion of a single IEEE 754-2008 bit-vector into a floating-point number.
     ///
@@ -7595,7 +7734,7 @@ unsafe extern "C" {
     /// `s` must be a `FloatingPoint` sort, `t` must be of bit-vector sort, and the bit-vector
     /// size of `bv` must be equal to ebits+sbits of `s`. The format of the bit-vector is
     /// as defined by the IEEE 754-2008 interchange format.
-    pub fn Z3_mk_fpa_to_fp_bv(c: Z3_context, bv: Z3_ast, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_fp_bv(c: Z3_context, bv: Z3_ast, s: Z3_sort) -> Option<Z3_ast>;
 
     /// Conversion of a `FloatingPoint` term into another term of different `FloatingPoint` sort.
     ///
@@ -7610,7 +7749,12 @@ unsafe extern "C" {
     ///
     /// `s` must be a `FloatingPoint` sort, `rm` must be of `RoundingMode` sort, `t` must be
     /// of floating-point sort.
-    pub fn Z3_mk_fpa_to_fp_float(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_fp_float(
+        c: Z3_context,
+        rm: Z3_ast,
+        t: Z3_ast,
+        s: Z3_sort,
+    ) -> Option<Z3_ast>;
 
     /// Conversion of a term of real sort into a term of `FloatingPoint` sort.
     ///
@@ -7625,7 +7769,8 @@ unsafe extern "C" {
     ///
     /// `s` must be a `FloatingPoint` sort, `rm` must be of `RoundingMode` sort, `t` must be of
     /// Real sort.
-    pub fn Z3_mk_fpa_to_fp_real(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_fp_real(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort)
+    -> Option<Z3_ast>;
 
     /// Conversion of a 2's complement signed bit-vector term into a term of `FloatingPoint` sort.
     ///
@@ -7641,7 +7786,12 @@ unsafe extern "C" {
     ///
     /// `s` must be a `FloatingPoint` sort, `rm` must be of `RoundingMode` sort, `t` must be
     /// of bit-vector sort.
-    pub fn Z3_mk_fpa_to_fp_signed(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_fp_signed(
+        c: Z3_context,
+        rm: Z3_ast,
+        t: Z3_ast,
+        s: Z3_sort,
+    ) -> Option<Z3_ast>;
 
     /// Conversion of a 2's complement unsigned bit-vector term into a term of `FloatingPoint` sort.
     ///
@@ -7657,7 +7807,12 @@ unsafe extern "C" {
     ///
     /// `s` must be a `FloatingPoint` sort, `rm` must be of `RoundingMode` sort, `t` must be
     /// of bit-vector sort.
-    pub fn Z3_mk_fpa_to_fp_unsigned(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_fp_unsigned(
+        c: Z3_context,
+        rm: Z3_ast,
+        t: Z3_ast,
+        s: Z3_sort,
+    ) -> Option<Z3_ast>;
 
     /// Conversion of a floating-point term into an unsigned bit-vector.
     ///
@@ -7674,7 +7829,7 @@ unsafe extern "C" {
         rm: Z3_ast,
         t: Z3_ast,
         sz: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Conversion of a floating-point term into a signed bit-vector.
     ///
@@ -7691,7 +7846,7 @@ unsafe extern "C" {
         rm: Z3_ast,
         t: Z3_ast,
         sz: ::core::ffi::c_uint,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Conversion of a floating-point term into a real-numbered term.
     ///
@@ -7701,7 +7856,7 @@ unsafe extern "C" {
     ///
     /// - `c`: logical context
     /// - `t`: term of `FloatingPoint` sort
-    pub fn Z3_mk_fpa_to_real(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_real(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Retrieves the number of bits reserved for the exponent in a `FloatingPoint` sort.
     ///
@@ -7814,7 +7969,7 @@ unsafe extern "C" {
     /// - `t`: a floating-point numeral
     ///
     /// Remarks: NaN is an invalid argument.
-    pub fn Z3_fpa_get_numeral_sign_bv(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_fpa_get_numeral_sign_bv(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Retrieves the significand of a floating-point literal as a bit-vector expression.
     ///
@@ -7822,7 +7977,7 @@ unsafe extern "C" {
     /// - `t`: a floating-point numeral
     ///
     /// Remarks: NaN is an invalid argument.
-    pub fn Z3_fpa_get_numeral_significand_bv(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_fpa_get_numeral_significand_bv(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Retrieves the sign of a floating-point literal.
     ///
@@ -7888,7 +8043,8 @@ unsafe extern "C" {
     ///
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid arguments.
-    pub fn Z3_fpa_get_numeral_exponent_bv(c: Z3_context, t: Z3_ast, biased: bool) -> Z3_ast;
+    pub fn Z3_fpa_get_numeral_exponent_bv(c: Z3_context, t: Z3_ast, biased: bool)
+    -> Option<Z3_ast>;
 
     /// Conversion of a floating-point term into a bit-vector term in IEEE 754-2008 format.
     ///
@@ -7901,7 +8057,7 @@ unsafe extern "C" {
     /// Note that IEEE 754-2008 allows multiple different representations of NaN. This conversion
     /// knows only one NaN and it will always produce the same bit-vector representation of
     /// that NaN.
-    pub fn Z3_mk_fpa_to_ieee_bv(c: Z3_context, t: Z3_ast) -> Z3_ast;
+    pub fn Z3_mk_fpa_to_ieee_bv(c: Z3_context, t: Z3_ast) -> Option<Z3_ast>;
 
     /// Conversion of a real-sorted significand and an integer-sorted exponent into a term of `FloatingPoint` sort.
     ///
@@ -7923,7 +8079,7 @@ unsafe extern "C" {
         exp: Z3_ast,
         sig: Z3_ast,
         s: Z3_sort,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Pose a query against the asserted rules at the given level.
     ///
@@ -7948,13 +8104,19 @@ unsafe extern "C" {
     ///
     /// The previous call to [`Z3_fixedpoint_query`]
     /// must have returned `Z3_L_TRUE`.
-    pub fn Z3_fixedpoint_get_ground_sat_answer(c: Z3_context, d: Z3_fixedpoint) -> Z3_ast;
+    pub fn Z3_fixedpoint_get_ground_sat_answer(c: Z3_context, d: Z3_fixedpoint) -> Option<Z3_ast>;
 
     /// Obtain the list of rules along the counterexample trace.
-    pub fn Z3_fixedpoint_get_rules_along_trace(c: Z3_context, d: Z3_fixedpoint) -> Z3_ast_vector;
+    pub fn Z3_fixedpoint_get_rules_along_trace(
+        c: Z3_context,
+        d: Z3_fixedpoint,
+    ) -> Option<Z3_ast_vector>;
 
     /// Obtain the list of rules along the counterexample trace.
-    pub fn Z3_fixedpoint_get_rule_names_along_trace(c: Z3_context, d: Z3_fixedpoint) -> Z3_symbol;
+    pub fn Z3_fixedpoint_get_rule_names_along_trace(
+        c: Z3_context,
+        d: Z3_fixedpoint,
+    ) -> Option<Z3_symbol>;
 
     /// Add an assumed invariant of predicate `pred`.
     ///
@@ -7973,7 +8135,7 @@ unsafe extern "C" {
         c: Z3_context,
         d: Z3_fixedpoint,
         pred: Z3_func_decl,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Project variables given a model
     pub fn Z3_qe_model_project(
@@ -7982,7 +8144,7 @@ unsafe extern "C" {
         num_bounds: ::core::ffi::c_uint,
         bound: *const Z3_app,
         body: Z3_ast,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Project variables given a model
     pub fn Z3_qe_model_project_skolem(
@@ -7992,13 +8154,13 @@ unsafe extern "C" {
         bound: *const Z3_app,
         body: Z3_ast,
         map: Z3_ast_map,
-    ) -> Z3_ast;
+    ) -> Option<Z3_ast>;
 
     /// Extrapolates a model of a formula
-    pub fn Z3_model_extrapolate(c: Z3_context, m: Z3_model, fml: Z3_ast) -> Z3_ast;
+    pub fn Z3_model_extrapolate(c: Z3_context, m: Z3_model, fml: Z3_ast) -> Option<Z3_ast>;
 
     /// Best-effort quantifier elimination
-    pub fn Z3_qe_lite(c: Z3_context, vars: Z3_ast_vector, body: Z3_ast) -> Z3_ast;
+    pub fn Z3_qe_lite(c: Z3_context, vars: Z3_ast_vector, body: Z3_ast) -> Option<Z3_ast>;
 }
 
 #[cfg(not(windows))]

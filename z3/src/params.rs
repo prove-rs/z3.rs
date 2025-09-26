@@ -17,7 +17,7 @@ impl Params {
 
     pub fn new() -> Params {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0)) }
+        unsafe { Self::wrap(ctx, Z3_mk_params(ctx.z3_ctx.0).unwrap()) }
     }
 
     pub fn set_symbol<K: Into<Symbol>, V: Into<Symbol>>(&mut self, k: K, v: V) {

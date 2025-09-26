@@ -15,7 +15,7 @@ impl Bool {
         let sort = Sort::bool();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -27,7 +27,7 @@ impl Bool {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -37,9 +37,9 @@ impl Bool {
         unsafe {
             Self::wrap(ctx, {
                 if b {
-                    Z3_mk_true(ctx.z3_ctx.0)
+                    Z3_mk_true(ctx.z3_ctx.0).unwrap()
                 } else {
-                    Z3_mk_false(ctx.z3_ctx.0)
+                    Z3_mk_false(ctx.z3_ctx.0).unwrap()
                 }
             })
         }
@@ -68,6 +68,7 @@ impl Bool {
                     a.get_z3_ast(),
                     b.get_z3_ast(),
                 )
+                .unwrap()
             })
         }
     }
@@ -101,6 +102,7 @@ impl Bool {
                     coefficients.as_ptr(),
                     k,
                 )
+                .unwrap()
             })
         }
     }
@@ -121,6 +123,7 @@ impl Bool {
                     coefficients.as_ptr(),
                     k,
                 )
+                .unwrap()
             })
         }
     }
@@ -141,6 +144,7 @@ impl Bool {
                     coefficients.as_ptr(),
                     k,
                 )
+                .unwrap()
             })
         }
     }
