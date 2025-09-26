@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-use std::mem::MaybeUninit;
+use std::ptr::NonNull;
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
@@ -153,10 +153,9 @@ impl Sort {
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
         let ctx = &Context::thread_local();
         let enum_names: Vec<Z3_symbol> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
-        let mut enum_consts: Vec<MaybeUninit<Z3_func_decl>> =
-            vec![MaybeUninit::zeroed(); enum_names.len()];
-        let mut enum_testers: Vec<MaybeUninit<Z3_func_decl>> =
-            vec![MaybeUninit::zeroed(); enum_names.len()];
+        let mut enum_consts: Vec<*mut _Z3_func_decl> = vec![std::ptr::null_mut(); enum_names.len()];
+        let mut enum_testers: Vec<*mut _Z3_func_decl> =
+            vec![std::ptr::null_mut(); enum_names.len()];
 
         let sort = unsafe {
             Self::wrap(
@@ -178,7 +177,7 @@ impl Sort {
             unsafe {
                 Z3_inc_ref(
                     ctx.z3_ctx.0,
-                    Z3_func_decl_to_ast(ctx.z3_ctx.0, i.assume_init()).unwrap(),
+                    Z3_func_decl_to_ast(ctx.z3_ctx.0, NonNull::new(*i).unwrap()).unwrap(),
                 );
             }
         }
@@ -186,7 +185,7 @@ impl Sort {
             unsafe {
                 Z3_inc_ref(
                     ctx.z3_ctx.0,
-                    Z3_func_decl_to_ast(ctx.z3_ctx.0, i.assume_init()).unwrap(),
+                    Z3_func_decl_to_ast(ctx.z3_ctx.0, NonNull::new(*i).unwrap()).unwrap(),
                 );
             }
         }
@@ -194,11 +193,11 @@ impl Sort {
         // convert to Rust types
         let enum_consts: Vec<_> = enum_consts
             .into_iter()
-            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, z3_func_decl.assume_init()) })
+            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, NonNull::new(z3_func_decl).unwrap()) })
             .collect();
         let enum_testers: Vec<_> = enum_testers
             .into_iter()
-            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, z3_func_decl.assume_init()) })
+            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, NonNull::new(z3_func_decl).unwrap()) })
             .collect();
 
         (sort, enum_consts, enum_testers)

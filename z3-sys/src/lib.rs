@@ -32,7 +32,6 @@
 #![warn(clippy::doc_markdown)]
 #![no_std]
 
-use core::mem::MaybeUninit;
 use core::ptr::NonNull;
 
 mod generated;
@@ -1938,8 +1937,8 @@ unsafe extern "C" {
         num_fields: ::core::ffi::c_uint,
         field_names: *const Z3_symbol,
         field_sorts: *const Z3_sort,
-        mk_tuple_decl: *mut MaybeUninit<Z3_func_decl>,
-        proj_decl: *mut MaybeUninit<Z3_func_decl>,
+        mk_tuple_decl: *mut *mut _Z3_func_decl,
+        proj_decl: *mut *mut _Z3_func_decl,
     ) -> Option<Z3_sort>;
 
     /// Create a enumeration sort.
@@ -1964,8 +1963,8 @@ unsafe extern "C" {
         name: Z3_symbol,
         n: ::core::ffi::c_uint,
         enum_names: *const Z3_symbol,
-        enum_consts: *mut MaybeUninit<Z3_func_decl>,
-        enum_testers: *mut MaybeUninit<Z3_func_decl>,
+        enum_consts: *mut *mut _Z3_func_decl,
+        enum_testers: *mut *mut _Z3_func_decl,
     ) -> Option<Z3_sort>;
 
     /// Create a list sort
@@ -1986,12 +1985,12 @@ unsafe extern "C" {
         c: Z3_context,
         name: Z3_symbol,
         elem_sort: Z3_sort,
-        nil_decl: *mut MaybeUninit<Z3_func_decl>,
-        is_nil_decl: *mut MaybeUninit<Z3_func_decl>,
-        cons_decl: *mut MaybeUninit<Z3_func_decl>,
-        is_cons_decl: *mut MaybeUninit<Z3_func_decl>,
-        head_decl: *mut MaybeUninit<Z3_func_decl>,
-        tail_decl: *mut MaybeUninit<Z3_func_decl>,
+        nil_decl: *mut *mut _Z3_func_decl,
+        is_nil_decl: *mut *mut _Z3_func_decl,
+        cons_decl: *mut *mut _Z3_func_decl,
+        is_cons_decl: *mut *mut _Z3_func_decl,
+        head_decl: *mut *mut _Z3_func_decl,
+        tail_decl: *mut *mut _Z3_func_decl,
     ) -> Option<Z3_sort>;
 
     /// Create a constructor.
@@ -2116,9 +2115,9 @@ unsafe extern "C" {
         c: Z3_context,
         constr: Z3_constructor,
         num_fields: ::core::ffi::c_uint,
-        constructor: *mut MaybeUninit<Z3_func_decl>,
-        tester: *mut MaybeUninit<Z3_func_decl>,
-        accessors: *mut MaybeUninit<Z3_func_decl>,
+        constructor: *mut *mut _Z3_func_decl,
+        tester: *mut *mut _Z3_func_decl,
+        accessors: *mut *mut _Z3_func_decl,
     );
 
     /// Declare a constant or function.
