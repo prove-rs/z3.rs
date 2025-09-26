@@ -7,7 +7,6 @@ use z3::*;
 
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
-use z3::Translate;
 
 mod objectives;
 mod ops;
@@ -26,7 +25,7 @@ fn test_context() {
     let _ = env_logger::try_init();
     let mut cfg = Config::new();
     cfg.set_proof_generation(true);
-    let _ = Context::new(&cfg);
+    with_z3_config(&cfg, || {});
 }
 
 #[test]
@@ -274,29 +273,29 @@ fn test_solver_translate() {
 }
 
 #[test]
-#[allow(deprecated)]
 fn test_model_translate() {
-    let cfg = Config::new();
     let a = ast::Int::new_const("a");
-
-    let destination = Context::new(&cfg);
-    let translated_a = a.translate(&destination);
-
     let slv = Solver::new();
     slv.assert(a.eq(2));
     assert_eq!(slv.check(), SatResult::Sat);
 
     let model = slv.get_model().unwrap();
     assert_eq!(2, model.eval(&a, true).unwrap().as_i64().unwrap());
-    let translated_model = model.translate(&destination);
-    assert_eq!(
-        2,
-        translated_model
-            .eval(&translated_a, true)
-            .unwrap()
-            .as_i64()
-            .unwrap()
-    );
+
+    let model = model.synchronized();
+    let a = a.synchronized();
+    with_z3_config(&Config::new(), || {
+        let translated_model = model.recover();
+        let translated_a = a.recover();
+        assert_eq!(
+            2,
+            translated_model
+                .eval(&translated_a, true)
+                .unwrap()
+                .as_i64()
+                .unwrap()
+        );
+    })
 }
 
 #[test]
