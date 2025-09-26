@@ -391,7 +391,7 @@ pub struct Statistics {
 /// # See also
 ///
 /// - [`with_z3_config`]
-pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
+pub fn with_z3_context<T: FnOnce() -> R + Send + Sync, R: Send + Sync>(
     ctx: &Context,
     callback: T,
 ) -> R {
@@ -431,6 +431,9 @@ pub fn with_z3_context<T: Fn() -> R + Send + Sync, R: Send + Sync>(
 /// # See also
 ///
 /// - [`with_z3_context`]
-pub fn with_z3_config<T: Fn() -> R + Send + Sync, R: Send + Sync>(cfg: &Config, callback: T) -> R {
+pub fn with_z3_config<T: FnOnce() -> R + Send + Sync, R: Send + Sync>(
+    cfg: &Config,
+    callback: T,
+) -> R {
     with_z3_context(&Context::new(cfg), callback)
 }
