@@ -23,7 +23,7 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
         }
     }
 
-    pub fn new<S: Into<Symbol>>(name: S, domain: &A, range: &Sort<R>) -> Self {
+    pub fn new<S: Into<Symbol>>(name: S, domain: A, range: Sort<R>) -> Self {
         let ctx = &Context::thread_local();
 
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
@@ -213,16 +213,13 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `FuncDecl`.
     pub fn apply(&self, args: A::ApplicationParam) -> R {
-        let a = A::application_args(&args);
-        let refs = a.iter().map(|a| a.as_ref()).collect::<Vec<_>>();
-        let d = self.apply_internal(&refs);
+        let a = A::application_args(args);
+        let d = self.apply_internal(a.into_iter());
         R::process(d)
     }
 
-    fn apply_internal(&self, args: &[&dyn ast::Ast]) -> ast::Dynamic {
-        assert!(args.iter().all(|s| s.get_ctx().z3_ctx == self.ctx.z3_ctx));
-
-        let args: Vec<_> = args.iter().map(|a| a.get_z3_ast()).collect();
+    fn apply_internal<I: Iterator<Item = Dynamic>>(&self, args: I) -> ast::Dynamic {
+        let args: Vec<_> = args.map(|a| a.get_z3_ast()).collect();
 
         unsafe {
             ast::Dynamic::wrap(&self.ctx, {
@@ -303,18 +300,30 @@ unsafe impl<A: FuncDeclDomain, R: FuncDeclReturn> Translate for FuncDecl<A, R> {
 
 #[cfg(test)]
 mod test {
-    use crate::ast::Bool;
+    use crate::ast::{Ast, Bool};
     use crate::{Config, FuncDecl, PrepareSynchronized, Sort, with_z3_config};
 
     #[test]
     pub fn test_translate_func_decl() {
-        let f = FuncDecl::new("foo", &[&Sort::bool()], &Sort::bool());
+        let f = FuncDecl::new("foo", vec![Sort::bool().as_dyn()], Sort::bool());
         let ff = f.synchronized();
         with_z3_config(&Config::new(), || {
             let f = ff.recover();
             assert_eq!(f.name(), "foo");
             assert_eq!(f.arity(), 1);
-            assert!(f.apply(&[&Bool::from_bool(true)]).as_bool().is_some());
+            assert!(f.apply(vec![Bool::from_bool(true).as_dyn()]).as_bool().is_some());
+        });
+    }
+
+    #[test]
+    pub fn test_translate_func_decl2() {
+        let f = FuncDecl::new("foo", Sort::bool(), Sort::bool());
+        let ff = f.synchronized();
+        with_z3_config(&Config::new(), || {
+            let f = ff.recover();
+            assert_eq!(f.name(), "foo");
+            assert_eq!(f.arity(), 1);
+            assert!(f.apply(Bool::from_bool(true)).as_bool().is_some());
         });
     }
 }
@@ -322,7 +331,7 @@ mod test {
 pub trait FuncDeclDomain {
     type ApplicationParam;
 
-    fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>>;
+    fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic>;
 
     fn sorts(&self) -> Vec<Sort<Dynamic>>;
 }
@@ -330,13 +339,23 @@ pub trait FuncDeclDomain {
 impl<A: Ast + Clone + 'static> FuncDeclDomain for Sort<A> {
     type ApplicationParam = A;
 
-    fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>> {
-        let a = a.clone();
-        vec![Box::new(a)]
+    fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
+        vec![a.as_dyn()]
     }
 
     fn sorts(&self) -> Vec<Sort<Dynamic>> {
         vec![self.as_dyn()]
+    }
+}
+impl FuncDeclDomain for Vec<Sort<Dynamic>> {
+    type ApplicationParam = Vec<Dynamic>;
+
+    fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
+        a.iter().map(|x| x.as_dyn()).collect()
+    }
+
+    fn sorts(&self) -> Vec<Sort<Dynamic>> {
+        self.to_vec()
     }
 }
 
@@ -347,7 +366,7 @@ macro_rules! impl_func_decl_domain_for_tuples {
             impl<$($T: FuncDeclDomain),+> FuncDeclDomain for ($($T,)+) {
                 type ApplicationParam = ($($T::ApplicationParam,)+);
 
-                fn application_args(a: &Self::ApplicationParam) -> Vec<Box<dyn Ast>> {
+                fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
                     let ($($T,)+) = a;
                     let mut args = Vec::new();
                     $(
@@ -369,8 +388,21 @@ macro_rules! impl_func_decl_domain_for_tuples {
     };
 }
 
+impl FuncDeclDomain for () {
+    type ApplicationParam = ();
+
+    fn application_args(_a: Self::ApplicationParam) -> Vec<Dynamic> {
+        vec![]
+    }
+
+    fn sorts(&self) -> Vec<Sort<Dynamic>> {
+        vec![]
+    }
+}
+
 // Implement for tuples up to arity 5 (can be extended as needed)
 impl_func_decl_domain_for_tuples!(
+    (A),
     (A, B),
     (A, B, C),
     (A, B, C, D),
@@ -447,7 +479,7 @@ mod duh {
     use crate::{FuncDecl, Sort};
 
     fn test_func_decl() {
-        let a = FuncDecl::new("f", &(Sort::int(), Sort::bitvector(5)), &Sort::int());
+        let a = FuncDecl::new("f", (Sort::int(), Sort::bitvector(5)), Sort::int());
         let i = Int::new_const("sdf");
         let b = BV::new_const("sf", 5);
         let b = a.apply((i, b));

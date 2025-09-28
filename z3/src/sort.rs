@@ -72,7 +72,7 @@ impl<A> Sort<A> {
     pub fn enumeration(
         name: Symbol,
         enum_names: &[Symbol],
-    ) -> (Sort<Dynamic>, Vec<FuncDecl>, Vec<FuncDecl>) {
+    ) -> (Sort<Dynamic>, Vec<FuncDecl<(), Dynamic>>, Vec<FuncDecl<Sort<Dynamic>, Bool>>) {
         let ctx = &Context::thread_local();
         let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
         let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];

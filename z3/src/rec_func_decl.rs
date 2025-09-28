@@ -20,7 +20,7 @@ impl RecFuncDecl {
         }
     }
 
-    pub fn new<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
+    pub fn new<S: Into<Symbol>, A, B>(name: S, domain: &[&Sort<A>], range: &Sort<B>) -> Self {
         let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx.0, range.ctx.z3_ctx.0);

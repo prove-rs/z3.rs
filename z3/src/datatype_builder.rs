@@ -171,6 +171,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
         let sort = Sort {
             ctx: ctx.clone(),
             z3_sort,
+            phantom: Default::default(),
         };
 
         let mut variants: Vec<DatatypeVariant> = Vec::with_capacity(num_cs);
@@ -232,13 +233,13 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
 
 /// Wrapper which can point to a sort (by value) or to a custom datatype (by name).
 #[derive(Debug)]
-pub enum DatatypeAccessor {
-    Sort(Sort),
+pub enum DatatypeAccessor<A> {
+    Sort(Sort<A>),
     Datatype(Symbol),
 }
 
-impl DatatypeAccessor {
-    pub fn sort<S: Into<Sort>>(s: S) -> Self {
+impl<A> DatatypeAccessor<A> {
+    pub fn sort<S: Into<Sort<A>>>(s: S) -> Self {
         Self::Sort(s.into())
     }
 

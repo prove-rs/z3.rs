@@ -180,7 +180,10 @@ pub trait Ast: fmt::Debug {
     }
 
     /// Get the [`Sort`] of the `Ast`.
-    fn get_sort(&self) -> Sort<Self> where Self: Sized {
+    fn get_sort(&self) -> Sort<Self>
+    where
+        Self: Sized,
+    {
         unsafe {
             Sort::wrap(
                 self.get_ctx(),
@@ -330,6 +333,10 @@ pub trait Ast: fmt::Debug {
             );
         }
     }
+
+    fn as_dyn(&self) -> Dynamic {
+        unsafe { Dynamic::wrap(&self.get_ctx(), self.get_z3_ast()) }
+    }
 }
 
 /// Turns a piece of data into a Z3 [`Ast`], with an existing piece
@@ -441,7 +448,10 @@ macro_rules! impl_ast {
             }
 
             #[deprecated = "Please use safe_eq instead"]
-            pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers<Self, Self>>
+            pub fn _safe_eq<T: IntoAst<Self>>(
+                &self,
+                other: T,
+            ) -> Result<Bool, SortDiffers<Self, Self>>
             where
                 Self: Sized,
             {
@@ -450,7 +460,10 @@ macro_rules! impl_ast {
 
             /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
             /// match for the two values.
-            pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers<Self, Self>>
+            pub fn safe_eq<T: IntoAst<Self>>(
+                &self,
+                other: T,
+            ) -> Result<Bool, SortDiffers<Self, Self>>
             where
                 Self: Sized,
             {

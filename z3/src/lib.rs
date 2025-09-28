@@ -209,7 +209,7 @@ pub struct Optimize {
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
-pub struct FuncDecl<A: FuncDeclDomain, R> {
+pub struct FuncDecl<A: FuncDeclDomain=Vec<Sort<Dynamic>>, R=Dynamic> {
     ctx: Context,
     z3_func_decl: Z3_func_decl,
     phantom_a: PhantomData<A>,
@@ -250,7 +250,7 @@ pub struct RecFuncDecl {
 
 pub use z3_sys::DeclKind;
 use crate::ast::{Bool, Datatype, Dynamic};
-use crate::func_decl::FuncDeclDomain;
+use crate::func_decl::{FuncDeclDomain, FuncDeclReturn};
 
 /// Build a custom [datatype sort](DatatypeSort).
 ///
@@ -292,9 +292,9 @@ pub struct DatatypeBuilder {
 
 /// Inner variant for a custom [datatype sort](DatatypeSort).
 #[derive(Debug)]
-pub struct DatatypeVariant<A,R> {
+pub struct DatatypeVariant<A: FuncDeclDomain=Vec<Sort<Dynamic>>,R: FuncDeclReturn=Dynamic> {
     pub constructor: FuncDecl<A,R>,
-    pub tester: FuncDecl<Dynamic, Bool>,
+    pub tester: FuncDecl<Sort<Dynamic>, Bool>,
     pub accessors: Vec<FuncDecl>,
 }
 
