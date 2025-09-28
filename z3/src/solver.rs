@@ -46,7 +46,7 @@ impl Solver {
     /// solver to change its behaviour.
     pub fn new() -> Solver {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0)) }
+        unsafe { Self::wrap(ctx, Z3_mk_solver(ctx.z3_ctx.0).unwrap()) }
     }
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
@@ -63,12 +63,8 @@ impl Solver {
     pub fn new_for_logic<S: Into<Symbol>>(logic: S) -> Option<Solver> {
         let ctx = &Context::thread_local();
         unsafe {
-            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol());
-            if s.is_null() {
-                None
-            } else {
-                Some(Self::wrap(ctx, s))
-            }
+            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.0, logic.into().as_z3_symbol())?;
+            Some(Self::wrap(ctx, s))
         }
     }
 
@@ -184,11 +180,11 @@ impl Solver {
 
     // Return a vector of assumptions in the solver.
     pub fn get_assertions(&self) -> Vec<ast::Bool> {
-        let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx.0, self.z3_slv) };
+        let z3_vec = unsafe { Z3_solver_get_assertions(self.ctx.z3_ctx.0, self.z3_slv) }.unwrap();
 
         (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_vec) })
             .map(|i| unsafe {
-                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_vec, i);
+                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_vec, i).unwrap();
                 ast::Bool::wrap(&self.ctx, z3_ast)
             })
             .collect()
@@ -217,16 +213,17 @@ impl Solver {
     /// - [`Solver::assert_and_track`]
     pub fn get_unsat_core(&self) -> Vec<ast::Bool> {
         let z3_unsat_core = unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx.0, self.z3_slv) };
-        if z3_unsat_core.is_null() {
+        if z3_unsat_core.is_none() {
             return vec![];
         }
+        let z3_unsat_core = z3_unsat_core.unwrap();
 
         let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_unsat_core) };
 
         let mut unsat_core = Vec::with_capacity(len as usize);
 
         for i in 0..len {
-            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i) };
+            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i).unwrap() };
             let elem = unsafe { ast::Bool::wrap(&self.ctx, elem) };
             unsat_core.push(elem);
         }
@@ -241,18 +238,18 @@ impl Solver {
         variables: &[ast::Bool],
     ) -> Vec<ast::Bool> {
         unsafe {
-            let _assumptions = Z3_mk_ast_vector(self.ctx.z3_ctx.0);
+            let _assumptions = Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap();
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx.0, _assumptions);
             assumptions.iter().for_each(|x| {
                 Z3_ast_vector_push(self.ctx.z3_ctx.0, _assumptions, x.z3_ast);
             });
 
-            let _variables = Z3_mk_ast_vector(self.ctx.z3_ctx.0);
+            let _variables = Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap();
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx.0, _variables);
             variables.iter().for_each(|x| {
                 Z3_ast_vector_push(self.ctx.z3_ctx.0, _variables, x.z3_ast);
             });
-            let consequences = Z3_mk_ast_vector(self.ctx.z3_ctx.0);
+            let consequences = Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap();
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx.0, consequences);
 
             Z3_solver_get_consequences(
@@ -264,7 +261,7 @@ impl Solver {
             );
             let mut cons = vec![];
             for i in 0..Z3_ast_vector_size(self.ctx.z3_ctx.0, consequences) {
-                let val = Z3_ast_vector_get(self.ctx.z3_ctx.0, consequences, i);
+                let val = Z3_ast_vector_get(self.ctx.z3_ctx.0, consequences, i).unwrap();
                 cons.push(ast::Bool::wrap(&self.ctx, val));
             }
 
@@ -330,12 +327,8 @@ impl Solver {
     // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
     // have an Ast subtype for yet.
     pub fn get_proof(&self) -> Option<impl Ast> {
-        let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx.0, self.z3_slv) };
-        if !m.is_null() {
-            Some(unsafe { ast::Dynamic::wrap(&self.ctx, m) })
-        } else {
-            None
-        }
+        let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx.0, self.z3_slv) }?;
+        Some(unsafe { ast::Dynamic::wrap(&self.ctx, m) })
     }
 
     /// Return a brief justification for an "unknown" result (i.e.,
@@ -362,7 +355,7 @@ impl Solver {
         unsafe {
             Statistics::wrap(
                 &self.ctx,
-                Z3_solver_get_statistics(self.ctx.z3_ctx.0, self.z3_slv),
+                Z3_solver_get_statistics(self.ctx.z3_ctx.0, self.z3_slv).unwrap(),
             )
         }
     }
@@ -625,7 +618,7 @@ unsafe impl Translate for Solver {
         unsafe {
             Solver::wrap(
                 dest,
-                Z3_solver_translate(self.ctx.z3_ctx.0, self.z3_slv, dest.z3_ctx.0),
+                Z3_solver_translate(self.ctx.z3_ctx.0, self.z3_slv, dest.z3_ctx.0).unwrap(),
             )
         }
     }

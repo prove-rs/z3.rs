@@ -23,7 +23,7 @@ impl Int {
         let sort = Sort::int();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -35,7 +35,7 @@ impl Int {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -43,13 +43,18 @@ impl Int {
     pub fn from_i64(i: i64) -> Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();
-        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort)) }
+        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort).unwrap()) }
     }
 
     pub fn from_u64(u: u64) -> Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();
-        unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort)) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     pub fn as_i64(&self) -> Option<i64> {
@@ -75,7 +80,12 @@ impl Int {
     }
 
     pub fn from_real(ast: &Real) -> Int {
-        unsafe { Self::wrap(&ast.ctx, Z3_mk_real2int(ast.ctx.z3_ctx.0, ast.z3_ast)) }
+        unsafe {
+            Self::wrap(
+                &ast.ctx,
+                Z3_mk_real2int(ast.ctx.z3_ctx.0, ast.z3_ast).unwrap(),
+            )
+        }
     }
 
     /// Create a real from an integer.
@@ -107,7 +117,7 @@ impl Int {
     pub fn from_bv(ast: &BV, signed: bool) -> Int {
         unsafe {
             Self::wrap(&ast.ctx, {
-                Z3_mk_bv2int(ast.ctx.z3_ctx.0, ast.z3_ast, signed)
+                Z3_mk_bv2int(ast.ctx.z3_ctx.0, ast.z3_ast, signed).unwrap()
             })
         }
     }
@@ -195,13 +205,10 @@ impl FromStr for Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();
         let ast = unsafe {
-            let int_cstring = CString::new(value).map_err(|_| ())?;
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, int_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
-                return Err(());
-            }
-            numeral_ptr
-        };
+            let int_cstring = CString::new(value).unwrap();
+            Z3_mk_numeral(ctx.z3_ctx.0, int_cstring.as_ptr(), sort.z3_sort)
+        }
+        .ok_or(())?;
         Ok(unsafe { Int::wrap(ctx, ast) })
     }
 }

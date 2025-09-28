@@ -18,22 +18,14 @@ impl Model {
     pub fn of_solver(slv: &Solver) -> Option<Model> {
         unsafe {
             let m = Z3_solver_get_model(slv.ctx.z3_ctx.0, slv.z3_slv);
-            if m.is_null() {
-                None
-            } else {
-                Some(Self::wrap(&slv.ctx, m))
-            }
+            Some(Self::wrap(&slv.ctx, m?))
         }
     }
 
     pub fn of_optimize(opt: &Optimize) -> Option<Model> {
         unsafe {
             let m = Z3_optimize_get_model(opt.ctx.z3_ctx.0, opt.z3_opt);
-            if m.is_null() {
-                None
-            } else {
-                Some(Self::wrap(&opt.ctx, m))
-            }
+            Some(Self::wrap(&opt.ctx, m?))
         }
     }
 
@@ -44,11 +36,7 @@ impl Model {
 
         let ret =
             unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, func.z3_func_decl) };
-        if ret.is_null() {
-            None
-        } else {
-            Some(unsafe { T::wrap(&self.ctx, ret) })
-        }
+        Some(unsafe { T::wrap(&self.ctx, ret?) })
     }
 
     /// Returns the interpretation of the given `f` in the `Model`
@@ -57,41 +45,33 @@ impl Model {
         if f.arity() == 0 {
             let ret = unsafe {
                 Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl)
+            }?;
+            let sort_kind = unsafe {
+                Z3_get_sort_kind(
+                    self.ctx.z3_ctx.0,
+                    Z3_get_range(self.ctx.z3_ctx.0, f.z3_func_decl).unwrap(),
+                )
             };
-            if ret.is_null() {
-                None
-            } else {
-                let sort_kind = unsafe {
-                    Z3_get_sort_kind(
-                        self.ctx.z3_ctx.0,
-                        Z3_get_range(self.ctx.z3_ctx.0, f.z3_func_decl),
-                    )
-                };
-                match sort_kind {
-                    SortKind::Array => {
-                        if unsafe { Z3_is_as_array(self.ctx.z3_ctx.0, ret) } {
-                            let fd = unsafe {
-                                FuncDecl::wrap(
-                                    &self.ctx,
-                                    Z3_get_as_array_func_decl(self.ctx.z3_ctx.0, ret),
-                                )
-                            };
-                            self.get_func_interp(&fd)
-                        } else {
-                            None
-                        }
+            match sort_kind {
+                SortKind::Array => {
+                    if unsafe { Z3_is_as_array(self.ctx.z3_ctx.0, ret) } {
+                        let fd = unsafe {
+                            FuncDecl::wrap(
+                                &self.ctx,
+                                Z3_get_as_array_func_decl(self.ctx.z3_ctx.0, ret).unwrap(),
+                            )
+                        };
+                        self.get_func_interp(&fd)
+                    } else {
+                        None
                     }
-                    _ => None,
                 }
+                _ => None,
             }
         } else {
             let ret =
                 unsafe { Z3_model_get_func_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl) };
-            if ret.is_null() {
-                None
-            } else {
-                Some(unsafe { FuncInterp::wrap(&self.ctx, ret) })
-            }
+            Some(unsafe { FuncInterp::wrap(&self.ctx, ret?) })
         }
     }
 
@@ -188,6 +168,7 @@ impl Iterator for ModelIter<'_> {
             if self.idx < num_consts {
                 let const_decl = unsafe {
                     Z3_model_get_const_decl(self.model.ctx.z3_ctx.0, self.model.z3_mdl, self.idx)
+                        .unwrap()
                 };
                 self.idx += 1;
                 Some(unsafe { FuncDecl::wrap(&self.model.ctx, const_decl) })
@@ -198,6 +179,7 @@ impl Iterator for ModelIter<'_> {
                         self.model.z3_mdl,
                         self.idx - num_consts,
                     )
+                    .unwrap()
                 };
                 self.idx += 1;
                 Some(unsafe { FuncDecl::wrap(&self.model.ctx, func_decl) })
@@ -216,7 +198,7 @@ unsafe impl Translate for Model {
         unsafe {
             Model::wrap(
                 dest,
-                Z3_model_translate(self.ctx.z3_ctx.0, self.z3_mdl, dest.z3_ctx.0),
+                Z3_model_translate(self.ctx.z3_ctx.0, self.z3_mdl, dest.z3_ctx.0).unwrap(),
             )
         }
     }

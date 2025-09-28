@@ -28,22 +28,22 @@ impl Drop for ContextInternal {
 /// a safe structured abstraction for usage of Z3 objects across threads.
 /// See [`Synchronized`](crate::Synchronized).
 ///
+/// z3.rs uses an implicit thread-local context by default, which is used in all operations.
+/// Most users will not need to create their own contexts or interact with contexts directly.
 ///
+/// To use a context with a customized configuration (e.g. setting timeouts),
+/// use [`with_z3_config`](crate::with_z3_config).
 ///
-/// # Examples:
-///
-/// Creating a context with the default configuration:
-///
-/// ```
-/// use z3::{Config, Context};
-/// let cfg = Config::new();
-/// let ctx = Context::new(&cfg);
-/// ```
+/// Advanced users (e.g. those performing FFI with other Z3 bindings) can unsafely create their
+/// own contexts using [`Context::from_raw`], and then use them with [`with_z3_context`](crate::with_z3_context).
 ///
 /// # See also:
 ///
 /// - [`Config`]
-/// - [`Context::new()`]
+/// - [`with_z3_config`](crate::with_z3_config)
+/// - [`with_z3_context`](crate::with_z3_context)
+/// - [`Synchronized`](crate::Synchronized)
+/// - [`Translate`](crate::Translate)
 #[derive(PartialEq, Eq, Debug, Clone)]
 pub struct Context {
     pub(crate) z3_ctx: Rc<ContextInternal>,
@@ -79,14 +79,10 @@ impl Context {
     }
 
     /// Creates a new Z3 Context using the given configuration.
-    #[deprecated(
-        note = "The z3 crate now uses an implicit thread-local context. To configure the active context,\
-     use `with_z3_config` instead"
-    )]
-    pub fn new(cfg: &Config) -> Context {
+    pub(crate) fn new(cfg: &Config) -> Context {
         Context {
             z3_ctx: unsafe {
-                let p = Z3_mk_context_rc(cfg.z3_cfg);
+                let p = Z3_mk_context_rc(cfg.z3_cfg).unwrap();
                 debug!("new context {p:p}");
                 Z3_set_error_handler(p, None);
                 Rc::new(ContextInternal(p))
@@ -110,8 +106,8 @@ impl Context {
     /// use z3::Context;
     ///
     /// // Create a raw Z3_config using the low-level API
-    /// let cfg = unsafe { Z3_mk_config() };
-    /// let raw_ctx = unsafe { Z3_mk_context_rc(cfg) };
+    /// let cfg = unsafe { Z3_mk_config() }.unwrap();
+    /// let raw_ctx = unsafe { Z3_mk_context_rc(cfg) }.unwrap();
     /// let ctx = unsafe { Context::from_raw(raw_ctx) };
     /// // Use `ctx` as usual...
     /// unsafe { Z3_del_config(cfg) };
@@ -167,18 +163,6 @@ impl Context {
     }
 }
 
-/// The default [`Context`] uses [`Config::default`]
-///
-/// Note: this implementation will be removed in a future release,
-/// when [`Context::new`] and [`with_z3_context`](crate::with_z3_context) are removed.
-#[allow(deprecated)]
-impl Default for Context {
-    fn default() -> Self {
-        let cfg = Config::default();
-        Context::new(&cfg)
-    }
-}
-
 impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
@@ -192,5 +176,5 @@ unsafe impl Sync for ContextHandle<'_> {}
 unsafe impl Send for ContextHandle<'_> {}
 
 thread_local! {
-    static DEFAULT_CONTEXT: RefCell<Context> = RefCell::new(Context::default());
+    static DEFAULT_CONTEXT: RefCell<Context> = RefCell::new(Context::new(&Config::new()));
 }

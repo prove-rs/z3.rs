@@ -11,7 +11,7 @@ impl RecFuncDecl {
         unsafe {
             Z3_inc_ref(
                 ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl),
+                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl).unwrap(),
             );
         }
         Self {
@@ -36,7 +36,8 @@ impl RecFuncDecl {
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,
-                ),
+                )
+                .unwrap(),
             )
         }
     }
@@ -79,7 +80,7 @@ impl RecFuncDecl {
         unsafe {
             assert_eq!(
                 body.get_sort().z3_sort,
-                Z3_get_range(self.ctx.z3_ctx.0, self.z3_func_decl)
+                Z3_get_range(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap()
             );
 
             Z3_add_rec_def(
@@ -117,7 +118,7 @@ impl Drop for RecFuncDecl {
         unsafe {
             Z3_dec_ref(
                 self.ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl),
+                Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap(),
             );
         }
     }

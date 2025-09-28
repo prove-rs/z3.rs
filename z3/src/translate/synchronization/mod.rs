@@ -1,7 +1,7 @@
 mod handle;
 
 pub use crate::translate::synchronization::handle::Synchronized;
-use crate::{Context, Translate};
+use crate::{Config, Context, Translate};
 use std::sync::Mutex;
 
 /// This trait allows a type to opt-in to multithreading through [`Synchronized`].
@@ -103,7 +103,7 @@ impl<T: Translate> PrepareSynchronized for &[T] {
     type Inner = Vec<T>;
 
     fn synchronized(&self) -> Synchronized<Self::Inner> {
-        let ctx = Context::default();
+        let ctx = Context::new(&Config::new());
         let data: Vec<T> = self.iter().map(|t| t.translate(&ctx)).collect();
         Synchronized(Mutex::new(data))
     }

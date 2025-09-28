@@ -20,7 +20,7 @@ impl Array {
         let sort = Sort::array(domain, range);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort)
+                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -32,7 +32,7 @@ impl Array {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -46,7 +46,7 @@ impl Array {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const_array(ctx.z3_ctx.0, domain.z3_sort, val.get_z3_ast())
+                Z3_mk_const_array(ctx.z3_ctx.0, domain.z3_sort, val.get_z3_ast()).unwrap()
             })
         }
     }
@@ -71,7 +71,7 @@ impl Array {
         // This way we also avoid the redundant check every time this method is called.
         unsafe {
             Dynamic::wrap(&self.ctx, {
-                Z3_mk_select(self.ctx.z3_ctx.0, self.z3_ast, index.get_z3_ast())
+                Z3_mk_select(self.ctx.z3_ctx.0, self.z3_ast, index.get_z3_ast()).unwrap()
             })
         }
     }
@@ -89,6 +89,7 @@ impl Array {
                     idxs.len().try_into().unwrap(),
                     idxs.as_ptr() as *const Z3_ast,
                 )
+                .unwrap()
             })
         }
     }
@@ -112,6 +113,7 @@ impl Array {
                     index.get_z3_ast(),
                     value.get_z3_ast(),
                 )
+                .unwrap()
             })
         }
     }

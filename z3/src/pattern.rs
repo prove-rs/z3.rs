@@ -38,8 +38,9 @@ impl Pattern {
                     ctx.z3_ctx.0,
                     terms.len().try_into().unwrap(),
                     terms.as_ptr() as *const Z3_ast,
-                );
-                Z3_inc_ref(ctx.z3_ctx.0, p as Z3_ast);
+                )
+                .unwrap();
+                Z3_inc_ref(ctx.z3_ctx.0, Z3_pattern_to_ast(ctx.z3_ctx.0, p).unwrap());
                 p
             },
         }
@@ -67,8 +68,9 @@ impl fmt::Display for Pattern {
 
 impl Drop for Pattern {
     fn drop(&mut self) {
+        let ast = unsafe { Z3_pattern_to_ast(self.ctx.z3_ctx.0, self.z3_pattern) }.unwrap();
         unsafe {
-            Z3_dec_ref(self.ctx.z3_ctx.0, self.z3_pattern as Z3_ast);
+            Z3_dec_ref(self.ctx.z3_ctx.0, ast);
         }
     }
 }

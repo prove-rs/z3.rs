@@ -51,7 +51,7 @@ macro_rules! unop {
             pub fn $f(&self) -> $retty {
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
-                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast)
+                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast).unwrap()
                     })
                 }
             }
@@ -71,7 +71,7 @@ macro_rules! binop {
                 let ast = other.into_ast(self);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
-                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, ast.z3_ast)
+                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, ast.z3_ast).unwrap()
                     })
                 }
             }
@@ -92,7 +92,7 @@ macro_rules! trinop {
                 let b = b.into_ast(&a);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
-                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast)
+                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, a.z3_ast, b.z3_ast).unwrap()
                     })
                 }
             }
@@ -115,7 +115,7 @@ macro_rules! varop {
                         let tmp: Vec<Self> = values.iter().cloned().map(|x| x.into()).collect();
                         let tmp2: Vec<_> = tmp.iter().map(|x| x.z3_ast).collect();
                         assert!(tmp.len() <= 0xffff_ffff);
-                        $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr())
+                        $z3fn(ctx.z3_ctx.0, tmp.len() as u32, tmp2.as_ptr()).unwrap()
                     })
                 }
             }
@@ -174,7 +174,7 @@ pub trait Ast: fmt::Debug {
                     .iter()
                     .map(|nodes| nodes.borrow().get_z3_ast())
                     .collect();
-                Z3_mk_distinct(ctx.z3_ctx.0, values.len() as u32, values.as_ptr())
+                Z3_mk_distinct(ctx.z3_ctx.0, values.len() as u32, values.as_ptr()).unwrap()
             })
         }
     }
@@ -184,7 +184,7 @@ pub trait Ast: fmt::Debug {
         unsafe {
             Sort::wrap(
                 self.get_ctx(),
-                Z3_get_sort(self.get_ctx().z3_ctx.0, self.get_z3_ast()),
+                Z3_get_sort(self.get_ctx().z3_ctx.0, self.get_z3_ast()).unwrap(),
             )
         }
     }
@@ -198,7 +198,7 @@ pub trait Ast: fmt::Debug {
     {
         unsafe {
             Self::wrap(self.get_ctx(), {
-                Z3_simplify(self.get_ctx().z3_ctx.0, self.get_z3_ast())
+                Z3_simplify(self.get_ctx().z3_ctx.0, self.get_z3_ast()).unwrap()
             })
         }
     }
@@ -236,6 +236,7 @@ pub trait Ast: fmt::Debug {
                     froms.as_ptr(),
                     tos.as_ptr(),
                 )
+                .unwrap()
             })
         }
     }
@@ -246,7 +247,7 @@ pub trait Ast: fmt::Debug {
     fn num_children(&self) -> usize {
         let this_ctx = self.get_ctx().z3_ctx.0;
         unsafe {
-            let this_app = Z3_to_app(this_ctx, self.get_z3_ast());
+            let this_app = Z3_to_app(this_ctx, self.get_z3_ast()).unwrap();
             Z3_get_app_num_args(this_ctx, this_app) as usize
         }
     }
@@ -261,8 +262,8 @@ pub trait Ast: fmt::Debug {
             let idx = u32::try_from(idx).unwrap();
             let this_ctx = self.get_ctx().z3_ctx.0;
             let child_ast = unsafe {
-                let this_app = Z3_to_app(this_ctx, self.get_z3_ast());
-                Z3_get_app_arg(this_ctx, this_app, idx)
+                let this_app = Z3_to_app(this_ctx, self.get_z3_ast()).unwrap();
+                Z3_get_app_arg(this_ctx, this_app, idx).unwrap()
             };
             Some(unsafe { Dynamic::wrap(self.get_ctx(), child_ast) })
         }
@@ -311,9 +312,11 @@ pub trait Ast: fmt::Debug {
         } else {
             let ctx = self.get_ctx();
             let func_decl = unsafe {
-                let app = Z3_to_app(ctx.z3_ctx.0, self.get_z3_ast());
+                let app =
+                    Z3_to_app(ctx.z3_ctx.0, self.get_z3_ast()).ok_or(IsNotApp::new(self.kind()))?;
                 Z3_get_app_decl(ctx.z3_ctx.0, app)
-            };
+            }
+            .unwrap();
             Ok(unsafe { FuncDecl::wrap(ctx, func_decl) })
         }
     }
@@ -353,7 +356,6 @@ macro_rules! impl_ast {
     ($ast:ident) => {
         impl Ast for $ast {
             unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self {
-                assert!(!ast.is_null());
                 Self {
                     ctx: ctx.clone(),
                     z3_ast: {
@@ -464,6 +466,7 @@ macro_rules! impl_ast {
                                 self.get_z3_ast(),
                                 other.get_z3_ast(),
                             )
+                            .unwrap()
                         })
                     }),
                     false => Err(SortDiffers::new(left_sort, right_sort)),
@@ -626,7 +629,8 @@ fn _atmost(args: &[Z3_ast], k: u32) -> Bool {
                 args.len().try_into().unwrap(),
                 args.as_ptr(),
                 k,
-            ),
+            )
+            .unwrap(),
         )
     }
 }
@@ -646,7 +650,8 @@ fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
                 args.len().try_into().unwrap(),
                 args.as_ptr(),
                 k,
-            ),
+            )
+            .unwrap(),
         )
     }
 }
@@ -701,6 +706,7 @@ pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
                 patterns.as_ptr() as *const Z3_pattern,
                 body.get_z3_ast(),
             )
+            .unwrap()
         })
     }
 }
@@ -756,6 +762,7 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
                 patterns.as_ptr() as *const Z3_pattern,
                 body.get_z3_ast(),
             )
+            .unwrap()
         })
     }
 }
@@ -787,11 +794,11 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 ///     true,
 ///     0,
 ///     "def_f",
-///     "",
+///     "sk",
 ///     &[&x],
 ///     &[&f_x_pattern],
 ///     &[],
-///     &x._eq(&f_x)
+///     &x.eq(&f_x)
 /// ).try_into().unwrap();
 /// solver.assert(&forall);
 ///
@@ -842,6 +849,7 @@ pub fn quantifier_const(
                 no_patterns.as_ptr() as *const Z3_ast,
                 body.get_z3_ast(),
             )
+            .unwrap()
         })
     }
 }
@@ -894,7 +902,8 @@ pub fn lambda_const(bounds: &[&dyn Ast], body: &Dynamic) -> Array {
                 bounds.len().try_into().unwrap(),
                 bounds.as_ptr() as *const Z3_app,
                 body.get_z3_ast(),
-            ),
+            )
+            .unwrap(),
         )
     }
 }

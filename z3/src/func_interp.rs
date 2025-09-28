@@ -31,7 +31,7 @@ impl FuncInterp {
     /// Adds an entry to the function interpretation.
     pub fn add_entry(&self, args: &[Dynamic], value: &Dynamic) {
         unsafe {
-            let v = Z3_mk_ast_vector(self.ctx.z3_ctx.0);
+            let v = Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap();
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx.0, v);
             args.iter()
                 .for_each(|a| Z3_ast_vector_push(self.ctx.z3_ctx.0, v, a.z3_ast));
@@ -46,7 +46,7 @@ impl FuncInterp {
             .map(|i| unsafe {
                 FuncEntry::wrap(
                     &self.ctx,
-                    Z3_func_interp_get_entry(self.ctx.z3_ctx.0, self.z3_func_interp, i),
+                    Z3_func_interp_get_entry(self.ctx.z3_ctx.0, self.z3_func_interp, i).unwrap(),
                 )
             })
             .collect()
@@ -58,7 +58,7 @@ impl FuncInterp {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_func_interp_get_else(self.ctx.z3_ctx.0, self.z3_func_interp),
+                Z3_func_interp_get_else(self.ctx.z3_ctx.0, self.z3_func_interp).unwrap(),
             )
         }
     }

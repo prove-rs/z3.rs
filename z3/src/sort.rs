@@ -2,6 +2,7 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::{fmt, mem};
 use std::marker::PhantomData;
+use std::ptr::NonNull;
 use z3_sys::*;
 
 use crate::ast::{Array, BV, Bool, Dynamic, Float, Int, Real, Seq, Set};
@@ -10,7 +11,7 @@ use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 impl<A> Sort<A> {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort<A> {
         unsafe {
-            Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort));
+            Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort).unwrap());
         }
         Sort {
             ctx: ctx.clone(),
@@ -29,7 +30,7 @@ impl<A> Sort<A> {
         unsafe {
             Sort::wrap(
                 ctx,
-                Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol()),
+                Z3_mk_uninterpreted_sort(ctx.z3_ctx.0, name.as_z3_symbol()).unwrap(),
             )
         }
     }
@@ -87,36 +88,37 @@ impl<A> Sort<A> {
                     enum_names.as_ptr(),
                     enum_consts.as_mut_ptr(),
                     enum_testers.as_mut_ptr(),
-                ),
+                )
+                .unwrap(),
             )
         };
 
         // increase ref counts
         for i in &enum_consts {
             unsafe {
-                Z3_inc_ref(ctx.z3_ctx.0, *i as Z3_ast);
+                Z3_inc_ref(
+                    ctx.z3_ctx.0,
+                    Z3_func_decl_to_ast(ctx.z3_ctx.0, NonNull::new(*i).unwrap()).unwrap(),
+                );
             }
         }
         for i in &enum_testers {
             unsafe {
-                Z3_inc_ref(ctx.z3_ctx.0, *i as Z3_ast);
+                Z3_inc_ref(
+                    ctx.z3_ctx.0,
+                    Z3_func_decl_to_ast(ctx.z3_ctx.0, NonNull::new(*i).unwrap()).unwrap(),
+                );
             }
         }
 
         // convert to Rust types
         let enum_consts: Vec<_> = enum_consts
-            .iter()
-            .map(|z3_func_decl| FuncDecl {
-                ctx: ctx.clone(),
-                z3_func_decl: *z3_func_decl,
-            })
+            .into_iter()
+            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, NonNull::new(z3_func_decl).unwrap()) })
             .collect();
         let enum_testers: Vec<_> = enum_testers
-            .iter()
-            .map(|z3_func_decl| FuncDecl {
-                ctx: ctx.clone(),
-                z3_func_decl: *z3_func_decl,
-            })
+            .into_iter()
+            .map(|z3_func_decl| unsafe { FuncDecl::wrap(ctx, NonNull::new(z3_func_decl).unwrap()) })
             .collect();
 
         (sort, enum_consts, enum_testers)
@@ -183,12 +185,8 @@ impl<A> Sort<A> {
     pub fn array_domain(&self) -> Option<Sort<Dynamic>> {
         if self.is_array() {
             unsafe {
-                let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort);
-                if domain_sort.is_null() {
-                    None
-                } else {
-                    Some(Sort::wrap(&self.ctx, domain_sort))
-                }
+                let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort)?;
+                Some(Sort::wrap(&self.ctx, domain_sort))
             }
         } else {
             None
@@ -215,12 +213,8 @@ impl<A> Sort<A> {
     pub fn array_range(&self) -> Option<Sort<Dynamic>> {
         if self.is_array() {
             unsafe {
-                let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.0, self.z3_sort);
-                if range_sort.is_null() {
-                    None
-                } else {
-                    Some(Sort::wrap(&self.ctx, range_sort))
-                }
+                let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.0, self.z3_sort)?;
+                Some(Sort::wrap(&self.ctx, range_sort))
             }
         } else {
             None
@@ -232,7 +226,7 @@ impl Sort<Bool>{
     pub fn bool() -> Self {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0))
+            Sort::wrap(ctx, Z3_mk_bool_sort(ctx.z3_ctx.0).unwrap())
         }
     }
 }
@@ -241,7 +235,7 @@ impl Sort<Int>{
     pub fn int() -> Self {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0))
+            Sort::wrap(ctx, Z3_mk_int_sort(ctx.z3_ctx.0).unwrap())
         }
     }
 }
@@ -250,7 +244,7 @@ impl Sort<Real>{
     pub fn real() -> Sort<Real> {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0))
+            Sort::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.0).unwrap())
         }
     }
 }
@@ -259,20 +253,20 @@ impl Sort<Float>{
     pub fn float(ebits: u32, sbits: u32) -> Sort<Float> {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits))
+            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, ebits, sbits).unwrap())
         }
     }
 
     pub fn float32() -> Sort<Float> {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24))
+            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 8, 24).unwrap())
         }
     }
     pub fn double() -> Sort<Float> {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53))
+            Sort::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.0, 11, 53).unwrap())
         }
     }
 
@@ -285,7 +279,7 @@ impl Sort<BV>{
         unsafe {
             Sort::wrap(
                 ctx,
-                Z3_mk_bv_sort(ctx.z3_ctx.0, sz as ::std::os::raw::c_uint),
+                Z3_mk_bv_sort(ctx.z3_ctx.0, sz as ::std::os::raw::c_uint).unwrap(),
             )
         }
     }
@@ -295,7 +289,7 @@ impl Sort<String>{
     pub fn string() -> Sort<crate::ast::String> {
         unsafe {
             let ctx = &Context::thread_local();
-            Sort::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0))
+            Sort::wrap(ctx, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap())
         }
     }
 }
@@ -304,7 +298,7 @@ impl Sort<Seq>{
     pub fn seq<B>(elt: &Sort<B>) -> Sort<Seq> {
         let ctx = &Context::thread_local();
 
-        unsafe { Sort::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort)) }
+        unsafe { Sort::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.0, elt.z3_sort).unwrap()) }
     }
 }
 
@@ -312,7 +306,7 @@ impl Sort<Set>{
     pub fn set<B>(elt: &Sort<B>) -> Sort<Set> {
         let ctx = &Context::thread_local();
 
-        unsafe { Sort::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort)) }
+        unsafe { Sort::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort).unwrap()) }
     }
 }
 
@@ -323,7 +317,7 @@ impl Sort<Array>{
         unsafe {
             Sort::wrap(
                 ctx,
-                Z3_mk_array_sort(ctx.z3_ctx.0, domain.z3_sort, range.z3_sort),
+                Z3_mk_array_sort(ctx.z3_ctx.0, domain.z3_sort, range.z3_sort).unwrap(),
             )
         }
     }
@@ -401,7 +395,7 @@ impl<A> Drop for Sort<A> {
         unsafe {
             Z3_dec_ref(
                 self.ctx.z3_ctx.0,
-                Z3_sort_to_ast(self.ctx.z3_ctx.0, self.z3_sort),
+                Z3_sort_to_ast(self.ctx.z3_ctx.0, self.z3_sort).unwrap(),
             );
         }
     }
