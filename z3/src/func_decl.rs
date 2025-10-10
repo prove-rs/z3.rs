@@ -196,11 +196,11 @@ impl FuncDecl {
     /// [user_propagator]: super::user_propagator
     /// [UserPropagator]: super::user_propagator::UserPropagator
     pub fn new_up<S: Into<Symbol>>(
-        ctx: &'ctx Context,
         name: S,
-        domain: &[&Sort<'ctx>],
-        range: &Sort<'ctx>,
+        domain: &[&Sort],
+        range: &Sort,
     ) -> Self {
+        let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
 
@@ -210,8 +210,8 @@ impl FuncDecl {
             Self::wrap(
                 ctx,
                 Z3_solver_propagate_declare(
-                    ctx.z3_ctx,
-                    name.into().as_z3_symbol(ctx),
+                    ctx.z3_ctx.0,
+                    name.into().as_z3_symbol(),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
                     range.z3_sort,

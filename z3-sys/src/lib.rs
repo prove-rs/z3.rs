@@ -8239,7 +8239,7 @@ unsafe extern "C" {
         c: Z3_context,
         cb: Z3_solver_callback,
         t: Z3_ast,
-        idx: ::std::os::raw::c_uint,
+        idx: ::core::ffi::c_uint,
         phase: Z3_lbool,
     ) -> bool;
 
@@ -8269,9 +8269,9 @@ unsafe extern "C" {
     pub fn Z3_solver_propagate_consequence(
         c: Z3_context,
         cb: Z3_solver_callback,
-        num_fixed: ::std::os::raw::c_uint,
+        num_fixed: ::core::ffi::c_uint,
         fixed: *const Z3_ast,
-        num_eqs: ::std::os::raw::c_uint,
+        num_eqs: ::core::ffi::c_uint,
         eq_lhs: *const Z3_ast,
         eq_rhs: *const Z3_ast,
         conseq: Z3_ast,
@@ -8299,7 +8299,7 @@ unsafe extern "C" {
     pub fn Z3_solver_propagate_declare(
         c: Z3_context,
         name: Z3_symbol,
-        n: ::core::os::raw::c_uint,
+        n: ::core::ffi::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort,
     ) -> Z3_func_decl;
