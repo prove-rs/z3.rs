@@ -4,26 +4,26 @@ use z3_sys::*;
 #[test]
 fn smoketest() {
     unsafe {
-        let cfg = Z3_mk_config();
-        let ctx = Z3_mk_context(cfg);
+        let cfg = Z3_mk_config().unwrap();
+        let ctx = Z3_mk_context(cfg).unwrap();
 
         let str_x = CString::new("x").unwrap();
         let str_y = CString::new("y").unwrap();
 
-        let sym_x = Z3_mk_string_symbol(ctx, str_x.as_ptr());
-        let sym_y = Z3_mk_string_symbol(ctx, str_y.as_ptr());
+        let sym_x = Z3_mk_string_symbol(ctx, str_x.as_ptr()).unwrap();
+        let sym_y = Z3_mk_string_symbol(ctx, str_y.as_ptr()).unwrap();
 
-        let int_sort = Z3_mk_int_sort(ctx);
+        let int_sort = Z3_mk_int_sort(ctx).unwrap();
 
-        let const_x = Z3_mk_const(ctx, sym_x, int_sort);
-        let const_y = Z3_mk_const(ctx, sym_y, int_sort);
-        let gt = Z3_mk_gt(ctx, const_x, const_y);
+        let const_x = Z3_mk_const(ctx, sym_x, int_sort).unwrap();
+        let const_y = Z3_mk_const(ctx, sym_y, int_sort).unwrap();
+        let gt = Z3_mk_gt(ctx, const_x, const_y).unwrap();
 
-        let solver = Z3_mk_simple_solver(ctx);
+        let solver = Z3_mk_simple_solver(ctx).unwrap();
         Z3_solver_assert(ctx, solver, gt);
         assert_eq!(Z3_solver_check(ctx, solver), Z3_L_TRUE);
 
-        let model = Z3_solver_get_model(ctx, solver);
+        let model = Z3_solver_get_model(ctx, solver).unwrap();
 
         // Check that the string-value of the model is as expected
         let model_s = Z3_model_to_string(ctx, model);
