@@ -1573,7 +1573,7 @@ pub type Z3_pop_eh = ::core::option::Option<
     unsafe extern "C" fn(
         ctx: *mut ::core::ffi::c_void,
         cb: Z3_solver_callback,
-        num_scopes: ::core::os::raw::c_uint,
+        num_scopes: ::core::ffi::c_uint,
     ),
 >;
 pub type Z3_fresh_eh = ::core::option::Option<
@@ -1609,7 +1609,7 @@ pub type Z3_decide_eh = ::core::option::Option<
         cyx: *mut ::core::ffi::c_void,
         cd: Z3_solver_callback,
         t: Z3_ast,
-        idx: ::core::os::raw::c_uint,
+        idx: ::core::ffi::c_uint,
         phase: bool,
     ),
 >;
@@ -1617,75 +1617,8 @@ pub type Z3_on_clause_eh = ::core::option::Option<
     unsafe extern "C" fn(
         ctx: *mut ::core::ffi::c_void,
         proof_hint: Z3_ast,
-        n: ::core::os::raw::c_uint,
-        deps: *const ::core::os::raw::c_uint,
-        literals: Z3_ast_vector,
-    ),
->;
-
-#[doc(hidden)]
-#[repr(C)]
-#[derive(Debug, Copy, Clone)]
-pub struct _Z3_solver_callback {
-    _unused: [u8; 0],
-}
-
-/// Type of callback functions for the User Propagator
-pub type Z3_solver_callback = *mut _Z3_solver_callback;
-
-pub type Z3_push_eh = ::std::option::Option<
-    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cd: Z3_solver_callback),
->;
-pub type Z3_pop_eh = ::std::option::Option<
-    unsafe extern "C" fn(
-        ctx: *mut ::std::ffi::c_void,
-        cb: Z3_solver_callback,
-        num_scopes: ::std::os::raw::c_uint,
-    ),
->;
-pub type Z3_fresh_eh = ::std::option::Option<
-    unsafe extern "C" fn(
-        ctx: *mut ::std::ffi::c_void,
-        new_context: Z3_context,
-    ) -> *mut ::std::ffi::c_void,
->;
-pub type Z3_fixed_eh = ::std::option::Option<
-    unsafe extern "C" fn(
-        ctx: *mut ::std::ffi::c_void,
-        cb: Z3_solver_callback,
-        t: Z3_ast,
-        value: Z3_ast,
-    ),
->;
-pub type Z3_eq_eh = ::std::option::Option<
-    unsafe extern "C" fn(
-        ctx: *mut ::std::ffi::c_void,
-        cb: Z3_solver_callback,
-        s: Z3_ast,
-        t: Z3_ast,
-    ),
->;
-pub type Z3_final_eh = ::std::option::Option<
-    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cb: Z3_solver_callback),
->;
-pub type Z3_created_eh = ::std::option::Option<
-    unsafe extern "C" fn(cyx: *mut ::std::ffi::c_void, cb: Z3_solver_callback, t: Z3_ast),
->;
-pub type Z3_decide_eh = ::std::option::Option<
-    unsafe extern "C" fn(
-        cyx: *mut ::std::ffi::c_void,
-        cd: Z3_solver_callback,
-        t: Z3_ast,
-        idx: ::std::os::raw::c_uint,
-        phase: bool,
-    ),
->;
-pub type Z3_on_clause_eh = ::std::option::Option<
-    unsafe extern "C" fn(
-        ctx: *mut ::std::ffi::c_void,
-        proof_hint: Z3_ast,
-        n: ::std::os::raw::c_uint,
-        deps: *const ::std::os::raw::c_uint,
+        n: ::core::ffi::c_uint,
+        deps: *const ::core::ffi::c_uint,
         literals: Z3_ast_vector,
     ),
 >;
@@ -8366,7 +8299,7 @@ unsafe extern "C" {
     pub fn Z3_solver_propagate_declare(
         c: Z3_context,
         name: Z3_symbol,
-        n: ::std::os::raw::c_uint,
+        n: ::core::os::raw::c_uint,
         domain: *const Z3_sort,
         range: Z3_sort,
     ) -> Z3_func_decl;
@@ -8413,7 +8346,7 @@ unsafe extern "C" {
     pub fn Z3_solver_propagate_init(
         c: Z3_context,
         s: Z3_solver,
-        user_context: *mut ::std::ffi::c_void,
+        user_context: *mut ::core::ffi::c_void,
         push_eh: Z3_push_eh,
         pop_eh: Z3_pop_eh,
         fresh_eh: Z3_fresh_eh,
@@ -8443,7 +8376,7 @@ unsafe extern "C" {
     pub fn Z3_solver_register_on_clause(
         c: Z3_context,
         s: Z3_solver,
-        user_context: *mut ::std::ffi::c_void,
+        user_context: *mut ::core::ffi::c_void,
         on_clause_eh: Z3_on_clause_eh,
     );
 }
