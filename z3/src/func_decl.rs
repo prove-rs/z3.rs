@@ -1,7 +1,7 @@
-use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
+use std::{borrow::Borrow, ffi::c_uint};
 use z3_sys::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
@@ -245,6 +245,37 @@ impl FuncDecl {
                     .into_owned(),
                 SymbolKind::Int => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol)),
             }
+        }
+    }
+
+    /// Returns the kind of the `i`-th domain (parameter) of this `FuncDecl`.
+    ///
+    /// Returns `None` if `i >= |domain|`.
+    pub fn domain(&self, i: usize) -> Option<SortKind> {
+        let z3_ctx = self.ctx.z3_ctx.0;
+        let i = c_uint::try_from(i).unwrap();
+
+        let domain_size = unsafe { Z3_get_domain_size(z3_ctx, self.z3_func_decl) };
+        if i >= domain_size {
+            return None;
+        }
+
+        Some(unsafe {
+            Z3_get_sort_kind(
+                z3_ctx,
+                Z3_get_domain(z3_ctx, self.z3_func_decl, i).expect("cannot get domain of FuncDecl"),
+            )
+        })
+    }
+
+    /// Returns the kind of range (output) of this `FuncDecl`.
+    pub fn range(&self) -> SortKind {
+        let z3_ctx = self.ctx.z3_ctx.0;
+        unsafe {
+            Z3_get_sort_kind(
+                z3_ctx,
+                Z3_get_range(z3_ctx, self.z3_func_decl).expect("cannot get range of FuncDecl"),
+            )
         }
     }
 }

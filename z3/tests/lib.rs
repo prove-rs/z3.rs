@@ -794,6 +794,17 @@ fn test_datatype_builder() {
         .unwrap();
     solver.assert(five.eq(&five_two));
 
+    let four = ast::Int::from_i64(4);
+    let just_four = just_five
+        .as_datatype()
+        .unwrap()
+        .update_field(&maybe_int.variants[1].accessors[0], &four);
+    let four_two = maybe_int.variants[1].accessors[0]
+        .apply(&[&just_four])
+        .as_int()
+        .unwrap();
+    solver.assert(four.eq(four_two));
+
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -1464,6 +1475,9 @@ fn test_ast_safe_decl() {
     assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
 
     let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    assert_eq!(f.domain(0), Some(SortKind::Int));
+    assert_eq!(f.range(), SortKind::Int);
+
     let x = ast::Int::new_const("x");
     let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
     let f_x_pattern: Pattern = Pattern::new(&[&f_x]);
