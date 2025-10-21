@@ -557,6 +557,12 @@ impl Solver {
     }
 }
 
+impl Default for Solver {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 struct SolverIterator<T> {
     solver: Solver,
     ast: T,
