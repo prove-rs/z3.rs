@@ -283,6 +283,12 @@ impl Optimize {
     }
 }
 
+impl Default for Optimize {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 impl fmt::Display for Optimize {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_optimize_to_string(self.ctx.z3_ctx.0, self.z3_opt) };
