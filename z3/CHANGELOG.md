@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.1...z3-v0.19.2) - 2025-10-21
+
+### Added
+
+- Add `Datatype::update_field`, `FuncDecl::domain`, `FuncDecl::range` ([#455](https://github.com/prove-rs/z3.rs/pull/455)) (by @willcrichton) - #455
+- impl Default for Solver, Optimize, and Parser ([#456](https://github.com/prove-rs/z3.rs/pull/456)) (by @toolCHAINZ) - #456
+
+### Contributors
+
+* @willcrichton
+* @toolCHAINZ
+
 ## [0.19.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.0...z3-v0.19.1) - 2025-09-26
 
 ### Added
