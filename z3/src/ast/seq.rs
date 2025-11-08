@@ -1,5 +1,5 @@
+use crate::ast::{Array, Bool, IntoAst};
 use crate::ast::{Ast, Dynamic, Int, varop};
-use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -122,6 +122,36 @@ impl Seq {
             Bool::wrap(
                 &self.ctx,
                 Z3_mk_seq_contains(self.ctx.z3_ctx.0, self.z3_ast, containee.z3_ast).unwrap(),
+            )
+        }
+    }
+
+    /// Create a fold of the function `f` over the sequence with accumulator `a`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Config, Context, Solver, Sort};
+    /// # use z3::ast::{Seq, Int, Dynamic, lambda_const};
+    /// #
+    /// # let solver = Solver::new();
+    /// #
+    /// let seq = Seq::new_const("seq", &Sort::int());
+    /// let accumulator = Int::new_const("acc");
+    /// let item = Int::new_const("item");
+    /// let sum = lambda_const(
+    ///     &[&accumulator, &item],
+    ///     &Dynamic::from_ast(&Int::add(&[&accumulator, &item])),
+    /// );
+    ///
+    /// seq.foldl(&sum, &Dynamic::from_ast(&Int::from_u64(0)));
+    /// ```
+    pub fn foldl(&self, f: &Array, a: &Dynamic) -> Dynamic {
+        let ctx = &Context::thread_local();
+
+        unsafe {
+            Dynamic::wrap(
+                ctx,
+                Z3_mk_seq_foldl(self.ctx.z3_ctx.0, f.z3_ast, a.z3_ast, self.z3_ast),
             )
         }
     }
