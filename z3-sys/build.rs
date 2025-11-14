@@ -322,11 +322,12 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
     }
 }
 
-/// Build z3 with bundled source codes.
 #[cfg(feature = "bundled")]
 use gh_release::{download_unzip, get_github_client};
+#[cfg(feature = "bundled")]
 use reqwest::blocking::Client;
 
+#[cfg(feature = "bundled")]
 fn get_z3_submodule_url(client: &Client, z3_sys_version: &str) -> String {
     let submodule_extract_url = format!(
         "https://api.github.com/repos/prove-rs/z3.rs/contents/z3-sys/z3?ref=z3-sys-v{z3_sys_version}"
@@ -349,6 +350,7 @@ fn get_z3_submodule_url(client: &Client, z3_sys_version: &str) -> String {
         + ".zip"
 }
 
+#[cfg(feature = "bundled")]
 fn build_bundled_z3() {
     let z3_sys_version = env!("CARGO_PKG_VERSION");
     let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3"));
