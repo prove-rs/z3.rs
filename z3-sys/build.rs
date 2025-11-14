@@ -353,8 +353,9 @@ fn build_bundled_z3() {
     let z3_sys_version = env!("CARGO_PKG_VERSION");
     let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3"));
 
-    let bundled_path =
-        PathBuf::from(env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or(z3_dir.display().to_string()));
+    let bundled_path = PathBuf::from(
+        env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or(z3_dir.display().to_string()),
+    );
 
     if !bundled_path.exists() {
         let client = get_github_client();
