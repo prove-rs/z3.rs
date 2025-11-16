@@ -5,8 +5,9 @@ use crate::{
     Context, FuncEntry,
     ast::{Ast, Dynamic},
 };
+use crate::func_decl::{DomainFromDynamic, FuncDeclDomain, FuncDeclReturn};
 
-impl FuncEntry {
+impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncEntry<A,R> {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Z3_func_entry) -> Self {
         unsafe {
             Z3_func_entry_inc_ref(ctx.z3_ctx.0, z3_func_entry);
@@ -14,13 +15,15 @@ impl FuncEntry {
         Self {
             ctx: ctx.clone(),
             z3_func_entry,
+            phantom_a: Default::default(),
+            phantom_r: Default::default(),
         }
     }
 
     /// Returns the value of the function.
-    pub fn get_value(&self) -> Dynamic {
+    pub fn get_value(&self) -> R {
         unsafe {
-            Dynamic::wrap(
+            R::wrap(
                 &self.ctx,
                 Z3_func_entry_get_value(self.ctx.z3_ctx.0, self.z3_func_entry).unwrap(),
             )
@@ -33,15 +36,16 @@ impl FuncEntry {
     }
 
     /// Returns the arguments of the function entry.
-    pub fn get_args(&self) -> Vec<Dynamic> {
-        (0..self.get_num_args())
+    pub fn get_args(&self) -> A::ApplicationParam {
+        let v: Vec<_> = (0..self.get_num_args())
             .map(|i| unsafe {
                 Dynamic::wrap(
                     &self.ctx,
                     Z3_func_entry_get_arg(self.ctx.z3_ctx.0, self.z3_func_entry, i).unwrap(),
                 )
             })
-            .collect()
+            .collect();
+        A::ApplicationParam::from_dynamic(v).unwrap()
     }
 }
 
@@ -62,7 +66,7 @@ impl fmt::Debug for FuncEntry {
     }
 }
 
-impl Drop for FuncEntry {
+impl<A: FuncDeclDomain,R> Drop for FuncEntry<A,R> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_entry_dec_ref(self.ctx.z3_ctx.0, self.z3_func_entry);

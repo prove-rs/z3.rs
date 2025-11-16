@@ -1,12 +1,13 @@
 use std::fmt;
 use z3_sys::*;
 
+use crate::func_decl::{FuncDeclDomain, FuncDeclReturn};
 use crate::{
     Context, FuncEntry, FuncInterp,
     ast::{Ast, Dynamic},
 };
 
-impl FuncInterp {
+impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncInterp<A, R> {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_interp: Z3_func_interp) -> Self {
         unsafe {
             Z3_func_interp_inc_ref(ctx.z3_ctx.0, z3_func_interp);
@@ -15,6 +16,8 @@ impl FuncInterp {
         Self {
             ctx: ctx.clone(),
             z3_func_interp,
+            phantom_a: Default::default(),
+            phantom_r: Default::default(),
         }
     }
 
@@ -29,14 +32,14 @@ impl FuncInterp {
     }
 
     /// Adds an entry to the function interpretation.
-    pub fn add_entry(&self, args: &[Dynamic], value: &Dynamic) {
+    pub fn add_entry(&self, args: A::ApplicationParam, value: R) {
         unsafe {
             let v = Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap();
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx.0, v);
-            args.iter()
+            A::application_args(args).iter()
                 .for_each(|a| Z3_ast_vector_push(self.ctx.z3_ctx.0, v, a.z3_ast));
 
-            Z3_func_interp_add_entry(self.ctx.z3_ctx.0, self.z3_func_interp, v, value.z3_ast);
+            Z3_func_interp_add_entry(self.ctx.z3_ctx.0, self.z3_func_interp, v, value.get_z3_ast());
         }
     }
 
@@ -54,9 +57,9 @@ impl FuncInterp {
 
     /// Returns the else value of the function interpretation.
     /// Returns None if the else value is not set by Z3.
-    pub fn get_else(&self) -> Dynamic {
+    pub fn get_else(&self) -> R {
         unsafe {
-            Dynamic::wrap(
+            R::wrap(
                 &self.ctx,
                 Z3_func_interp_get_else(self.ctx.z3_ctx.0, self.z3_func_interp).unwrap(),
             )
@@ -64,8 +67,8 @@ impl FuncInterp {
     }
 
     /// Sets the else value of the function interpretation.
-    pub fn set_else(&self, ast: &Dynamic) {
-        unsafe { Z3_func_interp_set_else(self.ctx.z3_ctx.0, self.z3_func_interp, ast.z3_ast) }
+    pub fn set_else(&self, ast: R) {
+        unsafe { Z3_func_interp_set_else(self.ctx.z3_ctx.0, self.z3_func_interp, ast.get_z3_ast()) }
     }
 }
 
@@ -102,7 +105,7 @@ impl fmt::Debug for FuncInterp {
     }
 }
 
-impl Drop for FuncInterp {
+impl<A: FuncDeclDomain,R> Drop for FuncInterp<A,R> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_interp_dec_ref(self.ctx.z3_ctx.0, self.z3_func_interp);

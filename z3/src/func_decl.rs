@@ -329,14 +329,29 @@ mod test {
 }
 
 pub trait FuncDeclDomain {
-    type ApplicationParam;
+    type ApplicationParam: DomainFromDynamic;
 
     fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic>;
 
     fn sorts(&self) -> Vec<Sort<Dynamic>>;
 }
 
-impl<A: Ast + Clone + 'static> FuncDeclDomain for Sort<A> {
+pub trait DomainFromDynamic: Sized{
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self>;
+}
+
+impl DomainFromDynamic for () {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        Some(())
+    }
+}
+impl DomainFromDynamic for Vec<Dynamic> {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        Some(v)
+    }
+}
+
+impl<A: Ast + DomainFromDynamic + Clone + 'static> FuncDeclDomain for Sort<A> {
     type ApplicationParam = A;
 
     fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
@@ -363,6 +378,13 @@ impl FuncDeclDomain for Vec<Sort<Dynamic>> {
 macro_rules! impl_func_decl_domain_for_tuples {
     ($(($($T:ident),+)),+) => {
         $(
+            impl<$($T: DomainFromDynamic),+> DomainFromDynamic for ($($T,)+){
+                fn from_dynamic(v: Vec<Dynamic>) -> Option<Self>{
+                    let [$($T,)+, ..] = v[..];
+                    let a = ($($T::from_dynamic(vec![$T]).unwrap(),)+);
+                    Some(a)
+                }
+            }
             impl<$($T: FuncDeclDomain),+> FuncDeclDomain for ($($T,)+) {
                 type ApplicationParam = ($($T::ApplicationParam,)+);
 
@@ -410,7 +432,7 @@ impl_func_decl_domain_for_tuples!(
     (A, B, C, D, E, F)
 );
 
-pub trait FuncDeclReturn {
+pub trait FuncDeclReturn: Ast {
     fn process(d: ast::Dynamic) -> Self;
 }
 

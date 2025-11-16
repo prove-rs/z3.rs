@@ -159,7 +159,7 @@ pub struct Sort<A> {
 
 /// A struct to represent when two sorts are of different types.
 #[derive(Debug)]
-pub struct SortDiffers<A,B> {
+pub struct SortDiffers<A, B> {
     left: Sort<A>,
     right: Sort<B>,
 }
@@ -209,7 +209,7 @@ pub struct Optimize {
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
-pub struct FuncDecl<A: FuncDeclDomain=Vec<Sort<Dynamic>>, R=Dynamic> {
+pub struct FuncDecl<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R = Dynamic> {
     ctx: Context,
     z3_func_decl: Z3_func_decl,
     phantom_a: PhantomData<A>,
@@ -218,16 +218,20 @@ pub struct FuncDecl<A: FuncDeclDomain=Vec<Sort<Dynamic>>, R=Dynamic> {
 
 /// Stores the interpretation of a function in a Z3 model.
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_interp.html>
-pub struct FuncInterp {
+pub struct FuncInterp<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R = Dynamic> {
     ctx: Context,
     z3_func_interp: Z3_func_interp,
+    phantom_a: PhantomData<A>,
+    phantom_r: PhantomData<R>,
 }
 
 /// Store the value of the interpretation of a function in a particular point.
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
-pub struct FuncEntry {
+pub struct FuncEntry<A: FuncDeclDomain= Vec<Sort<Dynamic>>, R = Dynamic> {
     ctx: Context,
     z3_func_entry: Z3_func_entry,
+    phantom_a: PhantomData<A>,
+    phantom_r: PhantomData<R>,
 }
 
 /// Recursive function declaration. Every function has an associated declaration.
@@ -248,9 +252,9 @@ pub struct RecFuncDecl {
     z3_func_decl: Z3_func_decl,
 }
 
-pub use z3_sys::DeclKind;
 use crate::ast::{Bool, Datatype, Dynamic};
 use crate::func_decl::{FuncDeclDomain, FuncDeclReturn};
+pub use z3_sys::DeclKind;
 
 /// Build a custom [datatype sort](DatatypeSort).
 ///
@@ -292,8 +296,8 @@ pub struct DatatypeBuilder {
 
 /// Inner variant for a custom [datatype sort](DatatypeSort).
 #[derive(Debug)]
-pub struct DatatypeVariant<A: FuncDeclDomain=Vec<Sort<Dynamic>>,R: FuncDeclReturn=Dynamic> {
-    pub constructor: FuncDecl<A,R>,
+pub struct DatatypeVariant<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R: FuncDeclReturn = Dynamic> {
+    pub constructor: FuncDecl<A, R>,
     pub tester: FuncDecl<Sort<Dynamic>, Bool>,
     pub accessors: Vec<FuncDecl>,
 }

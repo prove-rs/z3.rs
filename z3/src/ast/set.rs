@@ -2,16 +2,18 @@ use crate::ast::IntoAst;
 use crate::ast::{Ast, Bool, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use std::marker::PhantomData;
 use z3_sys::*;
 
 /// [`Ast`] node representing a set value.
-pub struct Set {
+pub struct Set<A> {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
+    inner: PhantomData<A>
 }
 
-impl Set {
-    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Set {
+impl<A: Ast> Set<A> {
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort<A>) -> Set<A> {
         let ctx = &Context::thread_local();
         let sort = Sort::set(eltype);
         unsafe {

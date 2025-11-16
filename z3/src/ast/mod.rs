@@ -598,6 +598,16 @@ macro_rules! impl_from_try_into_dynamic {
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
         }
+
+        impl DomainFromDynamic for $ast {
+            fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+                if v.len() == 1{
+                    Self::try_from(v[0].clone()).ok()
+                }else{
+                    None
+                }
+            }
+        }
     };
 }
 
@@ -942,3 +952,4 @@ impl fmt::Display for IsNotApp {
 }
 
 pub(crate) use {binop, trinop, unop, varop};
+use crate::func_decl::DomainFromDynamic;
