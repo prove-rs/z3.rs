@@ -340,7 +340,7 @@ fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> io::Result<()> {
         let entry = entry?;
         let file_type = entry.file_type()?;
         let src_path = entry.path();
-        if src_path.ends_with(".git"){
+        if src_path.ends_with(".git") {
             continue;
         }
         let dst_path = dst.join(entry.file_name());
@@ -385,13 +385,15 @@ fn build_bundled_z3() {
         env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or(z3_dir.display().to_string()),
     );
 
-    let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
-        .join("z3");
+    let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("z3");
 
-        dbg!(submodule_path.display());
+    dbg!(submodule_path.display());
     if !bundled_path.exists() {
         if submodule_path.exists() {
-            println!("Using local z3-sys/z3 submodule at {}", submodule_path.display());
+            println!(
+                "Using local z3-sys/z3 submodule at {}",
+                submodule_path.display()
+            );
             copy_dir_recursive(&submodule_path, &bundled_path)
                 .expect("Failed to copy z3 submodule to build directory");
         } else {
