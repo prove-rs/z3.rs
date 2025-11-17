@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.0...z3-sys-v0.10.1) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
 ## [0.10.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.10...z3-sys-v0.10.0) - 2025-09-26
 
 ### Added
