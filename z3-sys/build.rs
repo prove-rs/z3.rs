@@ -326,6 +326,29 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
 use gh_release::{download_unzip, get_github_client};
 #[cfg(feature = "bundled")]
 use reqwest::blocking::Client;
+#[cfg(feature = "bundled")]
+use std::fs;
+#[cfg(feature = "bundled")]
+use std::io;
+
+#[cfg(feature = "bundled")]
+fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> io::Result<()> {
+    if !dst.exists() {
+        fs::create_dir_all(dst)?;
+    }
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let src_path = entry.path();
+        let dst_path = dst.join(entry.file_name());
+        if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path)?;
+        }
+    }
+    Ok(())
+}
 
 #[cfg(feature = "bundled")]
 fn get_z3_submodule_url(client: &Client, z3_sys_version: &str) -> String {
@@ -353,25 +376,32 @@ fn get_z3_submodule_url(client: &Client, z3_sys_version: &str) -> String {
 #[cfg(feature = "bundled")]
 fn build_bundled_z3() {
     let z3_sys_version = env!("CARGO_PKG_VERSION");
-    let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3"));
+    let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join("z3");
 
     let bundled_path = PathBuf::from(
         env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or(z3_dir.display().to_string()),
     );
 
+    let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
+        .join("z3-sys").join("z3");
+
     if !bundled_path.exists() {
-        let client = get_github_client();
-
-        let url = get_z3_submodule_url(&client, &z3_sys_version);
-
-        println!("{}", z3_dir.display());
-        if let Err(err) = download_unzip(&client, url, &bundled_path) {
-            println!("error: {err}");
-            panic!(
-                "Could not get submodule asset for z3-sys-{}",
-                z3_sys_version
-            );
-        };
+        if submodule_path.exists() {
+            println!("Using local z3-sys/z3 submodule at {}", submodule_path.display());
+            copy_dir_recursive(&submodule_path, &bundled_path)
+                .expect("Failed to copy z3 submodule to build directory");
+        } else {
+            let client = get_github_client();
+            let url = get_z3_submodule_url(&client, &z3_sys_version);
+            println!("{}", z3_dir.display());
+            if let Err(err) = download_unzip(&client, url, &bundled_path) {
+                println!("error: {err}");
+                panic!(
+                    "Could not get submodule asset for z3-sys-{}",
+                    z3_sys_version
+                );
+            };
+        }
     } else {
         println!("Found cached z3 at {}", bundled_path.display());
     }
