@@ -340,6 +340,9 @@ fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> io::Result<()> {
         let entry = entry?;
         let file_type = entry.file_type()?;
         let src_path = entry.path();
+        if src_path.ends_with(".git"){
+            continue;
+        }
         let dst_path = dst.join(entry.file_name());
         if file_type.is_dir() {
             copy_dir_recursive(&src_path, &dst_path)?;
@@ -383,17 +386,18 @@ fn build_bundled_z3() {
     );
 
     let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap())
-        .join("z3-sys").join("z3");
+        .join("z3");
 
+        dbg!(submodule_path.display());
     if !bundled_path.exists() {
         if submodule_path.exists() {
-            println!("Using local z3-sys/z3 submodule at {}", submodule_path.display());
+            eprintln!("Using local z3-sys/z3 submodule at {}", submodule_path.display());
             copy_dir_recursive(&submodule_path, &bundled_path)
                 .expect("Failed to copy z3 submodule to build directory");
         } else {
             let client = get_github_client();
             let url = get_z3_submodule_url(&client, &z3_sys_version);
-            println!("{}", z3_dir.display());
+            eprintln!("downloading to {}", z3_dir.display());
             if let Err(err) = download_unzip(&client, url, &bundled_path) {
                 println!("error: {err}");
                 panic!(
@@ -403,7 +407,7 @@ fn build_bundled_z3() {
             };
         }
     } else {
-        println!("Found cached z3 at {}", bundled_path.display());
+        eprintln!("Found cached z3 at {}", bundled_path.display());
     }
 
     let mut cfg = cmake::Config::new(bundled_path);
