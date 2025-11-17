@@ -387,7 +387,6 @@ fn build_bundled_z3() {
 
     let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("z3");
 
-    dbg!(submodule_path.display());
     if !bundled_path.exists() {
         if submodule_path.exists() {
             println!(
