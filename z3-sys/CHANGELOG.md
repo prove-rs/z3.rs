@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.2](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.1...z3-sys-v0.10.2) - 2025-11-17
+
+### Fixed
+
+- do not scrape GitHub when submodule exists ([#468](https://github.com/prove-rs/z3.rs/pull/468)) (by @toolCHAINZ) - #468
+
+### Other
+
+- bump bundled z3 ([#470](https://github.com/prove-rs/z3.rs/pull/470)) (by @toolCHAINZ) - #470
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.10.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.0...z3-sys-v0.10.1) - 2025-11-16
 
 ### Added
