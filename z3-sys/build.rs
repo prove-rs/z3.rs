@@ -391,15 +391,15 @@ fn build_bundled_z3() {
         dbg!(submodule_path.display());
     if !bundled_path.exists() {
         if submodule_path.exists() {
-            eprintln!("Using local z3-sys/z3 submodule at {}", submodule_path.display());
+            println!("Using local z3-sys/z3 submodule at {}", submodule_path.display());
             copy_dir_recursive(&submodule_path, &bundled_path)
                 .expect("Failed to copy z3 submodule to build directory");
         } else {
             let client = get_github_client();
             let url = get_z3_submodule_url(&client, &z3_sys_version);
-            eprintln!("downloading to {}", z3_dir.display());
+            println!("downloading to {}", z3_dir.display());
             if let Err(err) = download_unzip(&client, url, &bundled_path) {
-                println!("error: {err}");
+                eprintln!("error: {err}");
                 panic!(
                     "Could not get submodule asset for z3-sys-{}",
                     z3_sys_version
@@ -407,7 +407,7 @@ fn build_bundled_z3() {
             };
         }
     } else {
-        eprintln!("Found cached z3 at {}", bundled_path.display());
+        println!("Found cached z3 at {}", bundled_path.display());
     }
 
     let mut cfg = cmake::Config::new(bundled_path);
