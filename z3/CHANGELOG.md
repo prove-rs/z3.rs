@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.5](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.4...z3-v0.19.5) - 2025-11-20
+
+### Other
+
+- remove unused imports in z3::ast and use absolute paths in macros ([#471](https://github.com/prove-rs/z3.rs/pull/471)) (by @lixitrixi) - #471
+
+### Contributors
+
+* @lixitrixi
+
 ## [0.19.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.3...z3-v0.19.4) - 2025-11-17
 
 ### Other
