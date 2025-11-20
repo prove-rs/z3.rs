@@ -67,7 +67,7 @@ macro_rules! binop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<T: IntoAst<Self>>(&self, other: T) -> $retty {
+            pub fn $f<T: crate::ast::IntoAst<Self>>(&self, other: T) -> $retty {
                 let ast = other.into_ast(self);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
@@ -87,7 +87,7 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: Into<$retty>, B: IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
+            pub fn $f<A: Into<$retty>, B: crate::ast::IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
                 let a = a.into();
                 let b = b.into_ast(&a);
                 unsafe {
