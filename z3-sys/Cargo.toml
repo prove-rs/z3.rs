@@ -1,7 +1,7 @@
 [package]
 name = "z3-sys"
 rust-version = "1.85.0"
-version = "0.10.2"
+version = "0.10.3"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>", "Mark DenHoed <mark.denhoed@cs.ox.ac.uk>"]
 build = "build.rs"
 edition = "2024"
