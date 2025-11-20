@@ -1,6 +1,5 @@
 use crate::Context;
-use crate::ast::{Ast, binop, varop};
-use crate::ast::{IntoAst, unop};
+use crate::ast::Ast;
 use std::ffi::CString;
 use z3_sys::*;
 
@@ -131,7 +130,7 @@ impl Regexp {
         }
     }
 
-    unop! {
+    crate::ast::unop! {
        /// Creates a regular expression that recognizes this regular expression one or more times (e.g. `a+`)
        plus(Z3_mk_re_plus, Self);
        /// Creates a regular expression that recognizes this regular expression any number of times
@@ -144,12 +143,12 @@ impl Regexp {
        option(Z3_mk_re_option, Self);
     }
     #[cfg(feature = "z3_4_8_14")]
-    binop! {
+    crate::ast::binop! {
         /// Creates a difference regular expression
         /// Requires Z3 4.8.14 or later.
         diff(Z3_mk_re_diff, Self);
     }
-    varop! {
+    crate::ast::varop! {
        /// Concatenates regular expressions
         concat(Z3_mk_re_concat, Self);
        /// Creates a regular expression that recognizes sequences that any of the regular

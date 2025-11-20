@@ -1,4 +1,4 @@
-use crate::ast::{Ast, IntoAst};
+use crate::ast::Ast;
 use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigRational;
