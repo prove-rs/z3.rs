@@ -752,7 +752,7 @@ fn test_datatype_builder() {
     let solver = Solver::new();
 
     let maybe_int = DatatypeBuilder::new("MaybeInt")
-        .variant("Nothing", vec![])
+        .variant::<&str>("Nothing", vec![])
         .variant("Just", vec![("int", DatatypeAccessor::Sort(Sort::int()))])
         .finish();
 
@@ -815,7 +815,7 @@ fn test_recursive_datatype() {
     let solver = Solver::new();
 
     let list_sort = DatatypeBuilder::new("List")
-        .variant("nil", vec![])
+        .variant::<&str>("nil", vec![])
         .variant(
             "cons",
             vec![
@@ -887,7 +887,7 @@ fn test_mutually_recursive_datatype() {
         );
 
     let tree_list_builder = DatatypeBuilder::new("TreeList")
-        .variant("nil", vec![])
+        .variant::<&str>("nil", vec![])
         .variant(
             "cons",
             vec![

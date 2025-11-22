@@ -253,7 +253,7 @@ pub use z3_sys::DeclKind;
 /// # let solver = Solver::new();
 /// // Like Rust's Option<int> type
 /// let option_int = DatatypeBuilder::new("OptionInt")
-/// .variant("None", vec![])
+/// .variant::<&str>("None", vec![])
 /// .variant(
 ///     "Some",
 ///     vec![("value", DatatypeAccessor::Sort(Sort::int()))],
