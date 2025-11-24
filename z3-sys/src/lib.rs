@@ -1554,7 +1554,7 @@ pub enum ErrorCode {
 
 /// Z3 custom error handler (See [`Z3_set_error_handler`]).
 pub type Z3_error_handler =
-    ::core::option::Option<unsafe extern "C" fn(c: Z3_context, e: ErrorCode)>;
+::core::option::Option<unsafe extern "C" fn(c: Z3_context, e: ErrorCode)>;
 
 /// Precision of a given goal. Some goals can be transformed using over/under approximations.
 ///
@@ -3010,7 +3010,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_numeral`]
     pub fn Z3_mk_unsigned_int(c: Z3_context, v: ::core::ffi::c_uint, ty: Z3_sort)
-    -> Option<Z3_ast>;
+                              -> Option<Z3_ast>;
 
     /// Create a numeral of a int, bit-vector, or finite-domain sort.
     ///
@@ -3801,6 +3801,13 @@ unsafe extern "C" {
         value: Z3_ast,
     ) -> Option<Z3_ast>;
 
+    /// Create a type variable.
+    ///
+    /// Functions using type variables can be applied to instantiations that match the signature
+    /// of the function. Assertions using type variables correspond to assertions over all possible
+    /// instantiations.
+    pub fn Z3_mk_type_variable(c: Z3_context, s: Z3_symbol) -> Option<Z3_sort>;
+
     /// Return arity of relation.
     ///
     /// # Preconditions:
@@ -3927,7 +3934,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_get_domain_size`]
     pub fn Z3_get_domain(c: Z3_context, d: Z3_func_decl, i: ::core::ffi::c_uint)
-    -> Option<Z3_sort>;
+                         -> Option<Z3_sort>;
 
     /// Return the range of the given declaration.
     ///
@@ -4339,7 +4346,7 @@ unsafe extern "C" {
 
     /// Return i'th ast in pattern.
     pub fn Z3_get_pattern(c: Z3_context, p: Z3_pattern, idx: ::core::ffi::c_uint)
-    -> Option<Z3_ast>;
+                          -> Option<Z3_ast>;
 
     /// Return index of de-Bruijn bound variable.
     ///
@@ -4582,7 +4589,7 @@ unsafe extern "C" {
     ///
     /// - `Z3_get_arity(c, a) == 0`
     pub fn Z3_model_get_const_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl)
-    -> Option<Z3_ast>;
+                                     -> Option<Z3_ast>;
 
     /// Test if there exists an interpretation (i.e., assignment) for `a` in the model `m`.
     pub fn Z3_model_has_interp(c: Z3_context, m: Z3_model, a: Z3_func_decl) -> bool;
@@ -4677,7 +4684,7 @@ unsafe extern "C" {
     /// - [`Z3_model_get_num_sorts`]
     /// - [`Z3_model_get_sort_universe`]
     pub fn Z3_model_get_sort(c: Z3_context, m: Z3_model, i: ::core::ffi::c_uint)
-    -> Option<Z3_sort>;
+                             -> Option<Z3_sort>;
 
     /// Return the finite set of distinct values that represent the interpretation for sort `s`.
     ///
@@ -5193,7 +5200,7 @@ unsafe extern "C" {
 
     /// Copy a goal `g` from the context `source` to the context `target`.
     pub fn Z3_goal_translate(source: Z3_context, g: Z3_goal, target: Z3_context)
-    -> Option<Z3_goal>;
+                             -> Option<Z3_goal>;
 
     /// Convert a model of the formulas of a goal to a model of an original goal.
     /// The model may be null, in which case the returned model is valid if the goal was
@@ -5257,7 +5264,7 @@ unsafe extern "C" {
     /// Return a tactic that applies `t1` to a given goal and then `t2`
     /// to every subgoal produced by `t1`. The subgoals are processed in parallel.
     pub fn Z3_tactic_par_and_then(c: Z3_context, t1: Z3_tactic, t2: Z3_tactic)
-    -> Option<Z3_tactic>;
+                                  -> Option<Z3_tactic>;
 
     /// Return a tactic that applies `t` to a given goal for `ms` milliseconds.
     /// If `t` does not terminate in `ms` milliseconds, then it fails.
@@ -6276,7 +6283,7 @@ unsafe extern "C" {
 
     /// Return the value `a^k`.
     pub fn Z3_rcf_power(c: Z3_context, a: Z3_rcf_num, k: ::core::ffi::c_uint)
-    -> Option<Z3_rcf_num>;
+                        -> Option<Z3_rcf_num>;
 
     /// Return `true` if `a < b`.
     pub fn Z3_rcf_lt(c: Z3_context, a: Z3_rcf_num, b: Z3_rcf_num) -> bool;
@@ -6623,9 +6630,9 @@ pub type Z3_fixedpoint_new_lemma_eh = ::core::option::Option<
     ),
 >;
 pub type Z3_fixedpoint_predecessor_eh =
-    ::core::option::Option<unsafe extern "C" fn(state: *mut ::core::ffi::c_void)>;
+::core::option::Option<unsafe extern "C" fn(state: *mut ::core::ffi::c_void)>;
 pub type Z3_fixedpoint_unfold_eh =
-    ::core::option::Option<unsafe extern "C" fn(state: *mut ::core::ffi::c_void)>;
+::core::option::Option<unsafe extern "C" fn(state: *mut ::core::ffi::c_void)>;
 
 unsafe extern "C" {
     /// Set export callback for lemmas.
@@ -7770,7 +7777,7 @@ unsafe extern "C" {
     /// `s` must be a `FloatingPoint` sort, `rm` must be of `RoundingMode` sort, `t` must be of
     /// Real sort.
     pub fn Z3_mk_fpa_to_fp_real(c: Z3_context, rm: Z3_ast, t: Z3_ast, s: Z3_sort)
-    -> Option<Z3_ast>;
+                                -> Option<Z3_ast>;
 
     /// Conversion of a 2's complement signed bit-vector term into a term of `FloatingPoint` sort.
     ///
@@ -8044,7 +8051,7 @@ unsafe extern "C" {
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid arguments.
     pub fn Z3_fpa_get_numeral_exponent_bv(c: Z3_context, t: Z3_ast, biased: bool)
-    -> Option<Z3_ast>;
+                                          -> Option<Z3_ast>;
 
     /// Conversion of a floating-point term into a bit-vector term in IEEE 754-2008 format.
     ///
