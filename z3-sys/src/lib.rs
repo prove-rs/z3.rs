@@ -548,6 +548,8 @@ pub enum DeclKind {
     /// produces an index, such that the arrays
     /// are different if they are different on the index.
     ARRAY_EXT = generated::Z3_decl_kind::Z3_OP_ARRAY_EXT as u32,
+    SET_HAS_SIZE = generated::Z3_decl_kind::Z3_OP_SET_HAS_SIZE as u32,
+    SET_CARD = generated::Z3_decl_kind::Z3_OP_SET_CARD as u32,
     /// Bit-vector numeral.
     BNUM = generated::Z3_decl_kind::Z3_OP_BNUM as u32,
     /// One bit bit-vector.
@@ -1265,24 +1267,51 @@ pub enum DeclKind {
     SEQ_CONTAINS = generated::Z3_decl_kind::Z3_OP_SEQ_CONTAINS as u32,
     SEQ_EXTRACT = generated::Z3_decl_kind::Z3_OP_SEQ_EXTRACT as u32,
     SEQ_REPLACE = generated::Z3_decl_kind::Z3_OP_SEQ_REPLACE as u32,
+    SEQ_REPLACE_RE = generated::Z3_decl_kind::Z3_OP_SEQ_REPLACE_RE as u32,
+    SEQ_REPLACE_ALL = generated::Z3_decl_kind::Z3_OP_SEQ_REPLACE_ALL as u32,
     SEQ_AT = generated::Z3_decl_kind::Z3_OP_SEQ_AT as u32,
     SEQ_LENGTH = generated::Z3_decl_kind::Z3_OP_SEQ_LENGTH as u32,
     SEQ_INDEX = generated::Z3_decl_kind::Z3_OP_SEQ_INDEX as u32,
+    SEQ_LAST_INDEX = generated::Z3_decl_kind::Z3_OP_SEQ_LAST_INDEX as u32,
     SEQ_TO_RE = generated::Z3_decl_kind::Z3_OP_SEQ_TO_RE as u32,
     SEQ_IN_RE = generated::Z3_decl_kind::Z3_OP_SEQ_IN_RE as u32,
+    SEQ_MAP = generated::Z3_decl_kind::Z3_OP_SEQ_MAP as u32,
+    SEQ_MAPI = generated::Z3_decl_kind::Z3_OP_SEQ_MAPI as u32,
+    SEQ_FOLDL = generated::Z3_decl_kind::Z3_OP_SEQ_FOLDL as u32,
+    SEQ_FOLDLI = generated::Z3_decl_kind::Z3_OP_SEQ_FOLDLI as u32,
     STR_TO_INT = generated::Z3_decl_kind::Z3_OP_STR_TO_INT as u32,
     INT_TO_STR = generated::Z3_decl_kind::Z3_OP_INT_TO_STR as u32,
+    UBV_TO_STR = generated::Z3_decl_kind::Z3_OP_UBV_TO_STR as u32,
+    SBV_TO_STR = generated::Z3_decl_kind::Z3_OP_SBV_TO_STR as u32,
+    STR_TO_CODE = generated::Z3_decl_kind::Z3_OP_STR_TO_CODE as u32,
+    STR_FROM_CODE = generated::Z3_decl_kind::Z3_OP_STR_FROM_CODE as u32,
+    STRING_LT = generated::Z3_decl_kind::Z3_OP_STRING_LT as u32,
+    STRING_LE = generated::Z3_decl_kind::Z3_OP_STRING_LE as u32,
     RE_PLUS = generated::Z3_decl_kind::Z3_OP_RE_PLUS as u32,
     RE_STAR = generated::Z3_decl_kind::Z3_OP_RE_STAR as u32,
     RE_OPTION = generated::Z3_decl_kind::Z3_OP_RE_OPTION as u32,
     RE_CONCAT = generated::Z3_decl_kind::Z3_OP_RE_CONCAT as u32,
     RE_UNION = generated::Z3_decl_kind::Z3_OP_RE_UNION as u32,
     RE_RANGE = generated::Z3_decl_kind::Z3_OP_RE_RANGE as u32,
-    RE_LOOP = generated::Z3_decl_kind::Z3_OP_RE_LOOP as u32,
+    RE_DIFF = generated::Z3_decl_kind::Z3_OP_RE_DIFF as u32,
     RE_INTERSECT = generated::Z3_decl_kind::Z3_OP_RE_INTERSECT as u32,
+    RE_LOOP = generated::Z3_decl_kind::Z3_OP_RE_LOOP as u32,
+    RE_POWER = generated::Z3_decl_kind::Z3_OP_RE_POWER as u32,
+    RE_COMPLEMENT = generated::Z3_decl_kind::Z3_OP_RE_COMPLEMENT as u32,
     RE_EMPTY_SET = generated::Z3_decl_kind::Z3_OP_RE_EMPTY_SET as u32,
     RE_FULL_SET = generated::Z3_decl_kind::Z3_OP_RE_FULL_SET as u32,
-    RE_COMPLEMENT = generated::Z3_decl_kind::Z3_OP_RE_COMPLEMENT as u32,
+    RE_FULL_CHAR_SET = generated::Z3_decl_kind::Z3_OP_RE_FULL_CHAR_SET as u32,
+    RE_OF_PRED = generated::Z3_decl_kind::Z3_OP_RE_OF_PRED as u32,
+    RE_REVERSE = generated::Z3_decl_kind::Z3_OP_RE_REVERSE as u32,
+    RE_DERIVATIVE = generated::Z3_decl_kind::Z3_OP_RE_DERIVATIVE as u32,
+
+    CHAR_CONST = generated::Z3_decl_kind::Z3_OP_CHAR_CONST as u32,
+    CHAR_LE = generated::Z3_decl_kind::Z3_OP_CHAR_LE as u32,
+    CHAR_TO_INT = generated::Z3_decl_kind::Z3_OP_CHAR_TO_INT as u32,
+    CHAR_TO_BV = generated::Z3_decl_kind::Z3_OP_CHAR_TO_BV as u32,
+    CHAR_FROM_BV = generated::Z3_decl_kind::Z3_OP_CHAR_FROM_BV as u32,
+    CHAR_IS_DIGIT = generated::Z3_decl_kind::Z3_OP_CHAR_IS_DIGIT as u32,
+
     /// A label (used by the Boogie Verification condition generator).
     ///
     /// The label has two parameters, a string and a Boolean polarity.
@@ -1323,6 +1352,14 @@ pub enum DeclKind {
     ///
     /// Example: `2*x + 1*y + 2*z + 1*u = 4`
     PB_EQ = generated::Z3_decl_kind::Z3_OP_PB_EQ as u32,
+
+    SPECIAL_RELATION_LO = generated::Z3_decl_kind::Z3_OP_SPECIAL_RELATION_LO as u32,
+    SPECIAL_RELATION_PO = generated::Z3_decl_kind::Z3_OP_SPECIAL_RELATION_PO as u32,
+    SPECIAL_RELATION_PLO = generated::Z3_decl_kind::Z3_OP_SPECIAL_RELATION_PLO as u32,
+    SPECIAL_RELATION_TO = generated::Z3_decl_kind::Z3_OP_SPECIAL_RELATION_TO as u32,
+    SPECIAL_RELATION_TC = generated::Z3_decl_kind::Z3_OP_SPECIAL_RELATION_TC as u32,
+    SPECIAL_RELATION_TRC = generated::Z3_decl_kind::Z3_OP_SPECIAL_RELATION_TRC as u32,
+
     /// Floating-point rounding mode RNE
     FPA_RM_NEAREST_TIES_TO_EVEN = generated::Z3_decl_kind::Z3_OP_FPA_RM_NEAREST_TIES_TO_EVEN as u32,
     /// Floating-point rounding mode RNA
@@ -1427,6 +1464,7 @@ pub enum DeclKind {
     /// representation of the function declaration to obtain
     /// more information.
     INTERNAL = generated::Z3_decl_kind::Z3_OP_INTERNAL as u32,
+    RECURSIVE = generated::Z3_decl_kind::Z3_OP_RECURSIVE as u32,
     /// Kind used for uninterpreted symbols.
     UNINTERPRETED = generated::Z3_decl_kind::Z3_OP_UNINTERPRETED as u32,
 }
