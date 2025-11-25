@@ -32,6 +32,38 @@ impl Sort {
         }
     }
 
+    /// Creates a type-variable `Sort` from anything that can convert into a `Symbol`.
+    ///
+    /// # Examples
+    ///
+    /// ```
+    /// # use z3::{Sort, Symbol};
+    ///
+    /// // Accepts &str via Into<Symbol>
+    /// let t1 = Sort::type_variable("T");
+    /// // Accepts Symbol explicitly
+    /// let t2 = Sort::type_variable(Symbol::from("T"));
+    ///
+    /// // Same name → same type variable
+    /// assert_eq!(t1, t2);
+    ///
+    /// // Different names → different type variables
+    /// let u = Sort::type_variable("U");
+    /// assert_ne!(t1, u);
+    /// ```
+    #[cfg(feature = "z3_4_12_13")]
+    pub fn type_variable<T: Into<Symbol>>(name: T) -> Sort {
+        let ctx = &Context::thread_local();
+        let name = name.into();
+
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_type_variable(ctx.z3_ctx.0, name.as_z3_symbol()).unwrap(),
+            )
+        }
+    }
+
     pub fn bool() -> Sort {
         unsafe {
             let ctx = &Context::thread_local();
