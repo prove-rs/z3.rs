@@ -442,7 +442,7 @@ fn test_int_sum() {
     assert_eq!(sum.simplify(), 15);
 
     // Test Sum for borrowed Int values
-    let ints = vec![Int::from_i64(10), Int::from_i64(20), Int::from_i64(30)];
+    let ints = [Int::from_i64(10), Int::from_i64(20), Int::from_i64(30)];
     let sum: Int = ints.iter().sum();
     assert_eq!(sum.simplify(), 60);
 
@@ -470,7 +470,7 @@ fn test_int_product() {
     assert_eq!(product.simplify(), 24);
 
     // Test Product for borrowed Int values
-    let ints = vec![Int::from_i64(5), Int::from_i64(6)];
+    let ints = [Int::from_i64(5), Int::from_i64(6)];
     let product: Int = ints.iter().product();
     assert_eq!(product.simplify(), 30);
 
@@ -501,11 +501,9 @@ fn test_real_sum() {
     assert_eq!(sum.simplify(), Real::from_rational(1, 1));
 
     // Test Sum for borrowed Real values
-    let reals = vec![
-        Real::from_rational(2, 1),
+    let reals = [Real::from_rational(2, 1),
         Real::from_rational(3, 1),
-        Real::from_rational(5, 1),
-    ];
+        Real::from_rational(5, 1)];
     let sum: Real = reals.iter().sum();
     assert_eq!(sum.simplify(), Real::from_rational(10, 1));
 
@@ -536,7 +534,7 @@ fn test_real_product() {
     assert_eq!(product.simplify(), Real::from_rational(24, 1));
 
     // Test Product for borrowed Real values
-    let reals = vec![Real::from_rational(1, 2), Real::from_rational(1, 3)];
+    let reals = [Real::from_rational(1, 2), Real::from_rational(1, 3)];
     let product: Real = reals.iter().product();
     assert_eq!(product.simplify(), Real::from_rational(1, 6));
 
