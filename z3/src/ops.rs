@@ -1,6 +1,6 @@
+use crate::ast::{Bool, Float, IntoAst};
 use std::iter::Product;
 use std::iter::Sum;
-use crate::ast::{Bool, Float, IntoAst};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
@@ -180,7 +180,6 @@ impl_trait_number_types!(BV, Mul::mul, [u8, i8, u16, i16, u32, i32, u64, i64]);
 impl_trait_number_types!(BV, BitXor::bitxor, [u8, i8, u16, i16, u32, i32, u64, i64]);
 impl_trait_number_types!(BV, BitAnd::bitand, [u8, i8, u16, i16, u32, i32, u64, i64]);
 impl_trait_number_types!(BV, BitOr::bitor, [u8, i8, u16, i16, u32, i32, u64, i64]);
-
 
 macro_rules! integer_sum_product {
     ($zero:expr, $one:expr, $($a:ty)*) => ($(
