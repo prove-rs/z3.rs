@@ -185,37 +185,33 @@ macro_rules! integer_sum_product {
     ($zero:expr, $one:expr, $($a:ty)*) => ($(
         impl Sum for $a {
             fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
-                iter.fold(
-                    $zero,
+                iter.reduce(
                     |a, b| a + b,
-                )
+                ).unwrap_or($zero)
             }
         }
 
         impl Product for $a {
             fn product<I: Iterator<Item=Self>>(iter: I) -> Self {
-                iter.fold(
-                    $one,
+                iter.reduce(
                     |a, b| a * b,
-                )
+                ).unwrap_or($one)
             }
         }
 
         impl<'a> Sum<&'a $a> for $a {
             fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-                iter.fold(
-                    $zero,
+                iter.cloned().reduce(
                     |a, b| a + b,
-                )
+                ).unwrap_or($zero)
             }
         }
 
         impl<'a> Product<&'a $a> for $a {
             fn product<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
-                iter.fold(
-                    $one,
+                iter.cloned().reduce(
                     |a, b| a * b,
-                )
+                ).unwrap_or($one)
             }
         }
     )*);

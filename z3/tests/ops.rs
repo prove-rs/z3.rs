@@ -449,7 +449,7 @@ fn test_int_sum() {
     // Test empty iterator gives zero
     let empty: Vec<Int> = vec![];
     let sum: Int = empty.into_iter().sum();
-    assert_eq!(sum.simplify(), 0);
+    assert_eq!(sum, 0);
 
     // Test with symbolic values
     let x = Int::new_const("x");
@@ -459,7 +459,7 @@ fn test_int_sum() {
     let sum: Int = ints.into_iter().sum();
     // sum should be x + y + z
     let expected = &(&x + &y) + &z;
-    assert_eq!(sum.simplify(), expected.simplify());
+    assert_eq!(sum, expected);
 }
 
 #[test]
@@ -477,7 +477,7 @@ fn test_int_product() {
     // Test empty iterator gives one
     let empty: Vec<Int> = vec![];
     let product: Int = empty.into_iter().product();
-    assert_eq!(product.simplify(), 1);
+    assert_eq!(product, 1);
 
     // Test with symbolic values
     let x = Int::new_const("x");
@@ -486,7 +486,7 @@ fn test_int_product() {
     let product: Int = ints.into_iter().product();
     // product should be x * y * 2
     let expected = &(&x * &y) * 2;
-    assert_eq!(product.simplify(), expected.simplify());
+    assert_eq!(product, expected);
 }
 
 #[test]
@@ -512,7 +512,7 @@ fn test_real_sum() {
     // Test empty iterator gives zero
     let empty: Vec<Real> = vec![];
     let sum: Real = empty.into_iter().sum();
-    assert_eq!(sum.simplify(), Real::from_rational(0, 1));
+    assert_eq!(sum, Real::from_rational(0, 1));
 
     // Test with symbolic values
     let x = Real::new_const("x");
@@ -521,7 +521,7 @@ fn test_real_sum() {
     let sum: Real = reals.into_iter().sum();
     // sum should be x + y + 1
     let expected = &(&x + &y) + &Real::from_rational(1, 1);
-    assert_eq!(sum.simplify(), expected.simplify());
+    assert_eq!(sum, expected);
 }
 
 #[test]
@@ -543,7 +543,7 @@ fn test_real_product() {
     // Test empty iterator gives one
     let empty: Vec<Real> = vec![];
     let product: Real = empty.into_iter().product();
-    assert_eq!(product.simplify(), Real::from_rational(1, 1));
+    assert_eq!(product, Real::from_rational(1, 1));
 
     // Test with symbolic values
     let x = Real::new_const("x");
@@ -552,5 +552,5 @@ fn test_real_product() {
     let product: Real = reals.into_iter().product();
     // product should be x * y * 2
     let expected = &(&x * &y) * &Real::from_rational(2, 1);
-    assert_eq!(product.simplify(), expected.simplify());
+    assert_eq!(product, expected);
 }
