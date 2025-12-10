@@ -1,3 +1,5 @@
+use std::iter::Product;
+use std::iter::Sum;
 use crate::ast::{Bool, Float, IntoAst};
 use std::ops::{
     Add, AddAssign, BitAnd, BitAndAssign, BitOr, BitOrAssign, BitXor, BitXorAssign, Div, DivAssign,
@@ -178,3 +180,47 @@ impl_trait_number_types!(BV, Mul::mul, [u8, i8, u16, i16, u32, i32, u64, i64]);
 impl_trait_number_types!(BV, BitXor::bitxor, [u8, i8, u16, i16, u32, i32, u64, i64]);
 impl_trait_number_types!(BV, BitAnd::bitand, [u8, i8, u16, i16, u32, i32, u64, i64]);
 impl_trait_number_types!(BV, BitOr::bitor, [u8, i8, u16, i16, u32, i32, u64, i64]);
+
+
+macro_rules! integer_sum_product {
+    ($zero:expr, $one:expr, $($a:ty)*) => ($(
+        impl Sum for $a {
+            fn sum<I: Iterator<Item=Self>>(iter: I) -> Self {
+                iter.fold(
+                    $zero,
+                    |a, b| a + b,
+                )
+            }
+        }
+
+        impl Product for $a {
+            fn product<I: Iterator<Item=Self>>(iter: I) -> Self {
+                iter.fold(
+                    $one,
+                    |a, b| a * b,
+                )
+            }
+        }
+
+        impl<'a> Sum<&'a $a> for $a {
+            fn sum<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+                iter.fold(
+                    $zero,
+                    |a, b| a + b,
+                )
+            }
+        }
+
+        impl<'a> Product<&'a $a> for $a {
+            fn product<I: Iterator<Item=&'a Self>>(iter: I) -> Self {
+                iter.fold(
+                    $one,
+                    |a, b| a * b,
+                )
+            }
+        }
+    )*);
+}
+
+integer_sum_product!(Int::from_u64(0), Int::from_u64(1), Int);
+integer_sum_product!(Real::from_rational(0, 1), Real::from_rational(1, 1), Real);
