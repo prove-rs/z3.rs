@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.6](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.5...z3-v0.19.6) - 2025-12-10
+
+### Added
+
+- impl Sum and Product for Int and Real ([#479](https://github.com/prove-rs/z3.rs/pull/479)) (by @toolCHAINZ) - #479
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.19.5](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.4...z3-v0.19.5) - 2025-11-20
 
 ### Other
