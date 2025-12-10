@@ -427,3 +427,130 @@ fn test_float_ops() {
     assert!(abs(t.mul_towards_zero(2.0).simplify().as_f64() - 20.0) < 0.1);
     assert!(abs(t.div_towards_zero(2.0).simplify().as_f64() - 5.0) < 0.1);
 }
+
+#[test]
+fn test_int_sum() {
+    // Test Sum for owned Int values
+    let ints = vec![
+        Int::from_i64(1),
+        Int::from_i64(2),
+        Int::from_i64(3),
+        Int::from_i64(4),
+        Int::from_i64(5),
+    ];
+    let sum: Int = ints.into_iter().sum();
+    assert_eq!(sum.simplify(), 15);
+
+    // Test Sum for borrowed Int values
+    let ints = [Int::from_i64(10), Int::from_i64(20), Int::from_i64(30)];
+    let sum: Int = ints.iter().sum();
+    assert_eq!(sum.simplify(), 60);
+
+    // Test empty iterator gives zero
+    let empty: Vec<Int> = vec![];
+    let sum: Int = empty.into_iter().sum();
+    assert_eq!(sum, 0);
+
+    // Test with symbolic values
+    let x = Int::new_const("x");
+    let y = Int::new_const("y");
+    let z = Int::new_const("z");
+    let ints = vec![x.clone(), y.clone(), z.clone()];
+    let sum: Int = ints.into_iter().sum();
+    // sum should be x + y + z
+    let expected = &(&x + &y) + &z;
+    assert_eq!(sum, expected);
+}
+
+#[test]
+fn test_int_product() {
+    // Test Product for owned Int values
+    let ints = vec![Int::from_i64(2), Int::from_i64(3), Int::from_i64(4)];
+    let product: Int = ints.into_iter().product();
+    assert_eq!(product.simplify(), 24);
+
+    // Test Product for borrowed Int values
+    let ints = [Int::from_i64(5), Int::from_i64(6)];
+    let product: Int = ints.iter().product();
+    assert_eq!(product.simplify(), 30);
+
+    // Test empty iterator gives one
+    let empty: Vec<Int> = vec![];
+    let product: Int = empty.into_iter().product();
+    assert_eq!(product, 1);
+
+    // Test with symbolic values
+    let x = Int::new_const("x");
+    let y = Int::new_const("y");
+    let ints = vec![x.clone(), y.clone(), Int::from_i64(2)];
+    let product: Int = ints.into_iter().product();
+    // product should be x * y * 2
+    let expected = &(&x * &y) * 2;
+    assert_eq!(product, expected);
+}
+
+#[test]
+fn test_real_sum() {
+    // Test Sum for owned Real values
+    let reals = vec![
+        Real::from_rational(1, 2),
+        Real::from_rational(1, 3),
+        Real::from_rational(1, 6),
+    ];
+    let sum: Real = reals.into_iter().sum();
+    assert_eq!(sum.simplify(), Real::from_rational(1, 1));
+
+    // Test Sum for borrowed Real values
+    let reals = [
+        Real::from_rational(2, 1),
+        Real::from_rational(3, 1),
+        Real::from_rational(5, 1),
+    ];
+    let sum: Real = reals.iter().sum();
+    assert_eq!(sum.simplify(), Real::from_rational(10, 1));
+
+    // Test empty iterator gives zero
+    let empty: Vec<Real> = vec![];
+    let sum: Real = empty.into_iter().sum();
+    assert_eq!(sum, Real::from_rational(0, 1));
+
+    // Test with symbolic values
+    let x = Real::new_const("x");
+    let y = Real::new_const("y");
+    let reals = vec![x.clone(), y.clone(), Real::from_rational(1, 1)];
+    let sum: Real = reals.into_iter().sum();
+    // sum should be x + y + 1
+    let expected = &(&x + &y) + &Real::from_rational(1, 1);
+    assert_eq!(sum, expected);
+}
+
+#[test]
+fn test_real_product() {
+    // Test Product for owned Real values
+    let reals = vec![
+        Real::from_rational(2, 1),
+        Real::from_rational(3, 1),
+        Real::from_rational(4, 1),
+    ];
+    let product: Real = reals.into_iter().product();
+    assert_eq!(product.simplify(), Real::from_rational(24, 1));
+
+    // Test Product for borrowed Real values
+    let reals = [Real::from_rational(1, 2), Real::from_rational(1, 3)];
+    let product: Real = reals.iter().product();
+    assert_eq!(product.simplify(), Real::from_rational(1, 6));
+
+    // Test empty iterator gives one
+    let empty: Vec<Real> = vec![];
+    let product: Real = empty.into_iter().product();
+    assert_eq!(product, Real::from_rational(1, 1));
+
+    // Test with symbolic values
+    let x = Real::new_const("x");
+    let y = Real::new_const("y");
+    let reals = vec![x.clone(), y.clone(), Real::from_rational(2, 1)];
+    let product: Real = reals.into_iter().product();
+    // product should be x * y * 2
+    let expected = &(&x * &y) * &Real::from_rational(2, 1);
+    assert_eq!(product, expected);
+}
