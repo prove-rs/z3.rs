@@ -501,9 +501,11 @@ fn test_real_sum() {
     assert_eq!(sum.simplify(), Real::from_rational(1, 1));
 
     // Test Sum for borrowed Real values
-    let reals = [Real::from_rational(2, 1),
+    let reals = [
+        Real::from_rational(2, 1),
         Real::from_rational(3, 1),
-        Real::from_rational(5, 1)];
+        Real::from_rational(5, 1),
+    ];
     let sum: Real = reals.iter().sum();
     assert_eq!(sum.simplify(), Real::from_rational(10, 1));
 
