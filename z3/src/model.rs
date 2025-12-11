@@ -5,6 +5,14 @@ use z3_sys::*;
 use crate::{Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Translate, ast::Ast};
 
 impl Model {
+    /// A new instance of an empty model, not tied to any particular solver.
+    pub fn new_empty(ctx: &Context) -> Model {
+        unsafe {
+            let m = Z3_mk_model(ctx.z3_ctx.0).expect("Cannot allocate new Z3_model.");
+            Self::wrap(ctx, m)
+        }
+    }
+
     unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
         unsafe {
             Z3_model_inc_ref(ctx.z3_ctx.0, z3_mdl);

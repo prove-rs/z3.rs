@@ -32,6 +32,7 @@
 #![warn(clippy::doc_markdown)]
 #![no_std]
 
+use core::ffi::c_void;
 use core::ptr::NonNull;
 
 mod generated;
@@ -1555,6 +1556,7 @@ pub enum ErrorCode {
 /// Z3 custom error handler (See [`Z3_set_error_handler`]).
 pub type Z3_error_handler =
     ::core::option::Option<unsafe extern "C" fn(c: Z3_context, e: ErrorCode)>;
+pub type Z3_model_handler = unsafe extern "C" fn(c: *const c_void);
 
 /// Precision of a given goal. Some goals can be transformed using over/under approximations.
 ///
@@ -1583,6 +1585,14 @@ pub enum GoalPrec {
 }
 
 unsafe extern "C" {
+    pub fn Z3_optimize_register_model_eh(
+        c: Z3_context,
+        o: Z3_optimize,
+        m: Z3_model,
+        ctx: *const c_void,
+        h: Z3_model_handler,
+    );
+
     /// Set a global (or module) parameter.
     /// This setting is shared by all Z3 contexts.
     ///

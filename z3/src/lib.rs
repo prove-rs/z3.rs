@@ -80,6 +80,8 @@
 #![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
 
+use std::cell::RefCell;
+use std::collections::BTreeSet;
 use std::ffi::CString;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
@@ -192,6 +194,8 @@ pub struct Model {
 pub struct Optimize {
     ctx: Context,
     z3_opt: Z3_optimize,
+    // RefCell is used to hide interior mutability that is not relevant to outside users.
+    registered_handlers: RefCell<BTreeSet<u32>>,
 }
 
 /// Function declaration. Every constant and function have an associated declaration.
