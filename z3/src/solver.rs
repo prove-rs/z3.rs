@@ -555,6 +555,42 @@ impl Solver {
         }
         .fuse()
     }
+
+    /// Check the solver and, if satisfiable, return a single model instance for `t`.
+    ///
+    /// This is a convenience that combines `check()` + `get_model()` + `Solvable::read_from_model`.
+    /// If the check returns `SatResult::Sat` and model construction and extraction succeed, this
+    /// method returns `Some(instance)`. For any other result (`Unsat`, `Unknown`) or if model
+    /// construction/reading fails, it returns `None`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::Solver;
+    /// # use z3::ast::*;
+    ///  let s = Solver::new();
+    ///  let a = Int::new_const("a");
+    ///  s.assert(a.ge(0));
+    ///  s.assert(a.le(2));
+    ///  let concrete_a = s.check_and_get_model(a, true).unwrap();
+    ///  // `concrete_a` is an `Int` value extracted from the model
+    ///  let val = concrete_a.as_u64().unwrap();
+    ///  assert!(val <= 2);
+    /// ```
+    pub fn check_and_get_model<T: Solvable>(
+        self,
+        t: T,
+        model_completion: bool,
+    ) -> Option<T::ModelInstance> {
+        match self.check() {
+            SatResult::Sat => {
+                let model = self.get_model()?;
+                let instance = t.read_from_model(&model, model_completion)?;
+                Some(instance)
+            }
+            _ => None,
+        }
+    }
 }
 
 impl Default for Solver {
