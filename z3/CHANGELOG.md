@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.7](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.6...z3-v0.19.7) - 2025-12-27
+
+### Added
+
+- Add check_and_get_model method to Solver ([#484](https://github.com/prove-rs/z3.rs/pull/484)) (by @toolCHAINZ) - #484
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.19.6](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.5...z3-v0.19.6) - 2025-12-10
 
 ### Added

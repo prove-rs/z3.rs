@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.3...z3-sys-v0.10.4) - 2025-12-27
+
+### Added
+
+- allow configuring tls provider for `gh-release` and `bundled` ([#486](https://github.com/prove-rs/z3.rs/pull/486)) (by @toolCHAINZ) - #486
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.10.3](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.2...z3-sys-v0.10.3) - 2025-11-20
 
 ### Added
