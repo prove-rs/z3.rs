@@ -26,10 +26,10 @@ serde_json = { version = "1.0.140", optional = true }
 vcpkg = { version = "0.2.15", optional = true }
 
 [features]
-# Default features: enable reqwest's vendored native-tls implementation by default.
-# This feature controls the `native-tls-vendored` feature on the optional build-dependency `reqwest`
-# and can be turned off by disabling default features or by explicitly turning this feature off.
-default = ["reqwest-native-tls-vendored"]
+# Default features: enable reqwest's rusttls-tls implementation by default.
+# By omitting default features, you can use the `default-tls` impl,
+# and by specifying `reqwest-native-tls-vendored` you can use the vendored OpenSSL version
+default = ["reqwest-rustls"]
 reqwest-native-tls-vendored = ["reqwest/native-tls-vendored"]
 reqwest-rustls = ["reqwest/rustls-tls"]
 
