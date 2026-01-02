@@ -22,11 +22,11 @@
 //! ```rust
 //! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol, datatype_builder::create_datatypes};
 //! let my_tree = DatatypeBuilder::new("my_tree")
-//!     .variant("leaf", vec![])
+//!     .variant::<&str>("leaf", vec![])
 //!     .variant("node", vec![("children", DatatypeAccessor::datatype("my_list"))]);
 //!
 //! let my_list = DatatypeBuilder::new("my_list")
-//!     .variant("nil", vec![])
+//!     .variant::<&str>("nil", vec![])
 //!     .variant("cons", vec![("hd", DatatypeAccessor::datatype("my_tree")), ("tl", DatatypeAccessor::datatype("my_list"))]);
 //!
 //! let dts = create_datatypes(vec![my_tree, my_list]);
@@ -47,7 +47,7 @@ impl DatatypeBuilder {
         }
     }
 
-    pub fn variant(mut self, name: &str, fields: Vec<(&str, DatatypeAccessor)>) -> Self {
+    pub fn variant<S: ToString>(mut self, name: &str, fields: Vec<(S, DatatypeAccessor)>) -> Self {
         let mut accessor_vec: Vec<(String, DatatypeAccessor)> = Vec::new();
         for (accessor_name, accessor) in fields {
             accessor_vec.push((accessor_name.to_string(), accessor));
