@@ -3,6 +3,7 @@ use std::borrow::Borrow;
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::iter::FusedIterator;
+use std::sync::Mutex;
 use z3_sys::*;
 
 use crate::ast::Bool;
@@ -655,8 +656,16 @@ impl Clone for Solver {
     }
 }
 
+// Global mutex to ensure that all calls to `Z3_solver_translate` are serialized
+// across threads. Z3 seems to have a race condition involving this API
+// (https://github.com/Z3Prover/z3/issues/8035).
+static Z3_SOLVER_TRANSLATE_MUTEX: Mutex<()> = Mutex::new(());
+
 unsafe impl Translate for Solver {
     fn translate(&self, dest: &Context) -> Solver {
+        // Lock the global mutex before calling into Z3 to translate the solver.
+        // The lock is held only for the duration of the FFI call.
+        let _guard = Z3_SOLVER_TRANSLATE_MUTEX.lock().unwrap();
         unsafe {
             Solver::wrap(
                 dest,
@@ -844,3 +853,89 @@ impl<A: Solvable, B: Solvable, C: Solvable> Solvable for (A, B, C) {
 // todo: there may be a way to do this with a macro, but I can't figure it out, without needing
 // to bring in the `paste` crate. Since this is niche anyway, I'm just going to do these two and
 // we can add more later if needed.
+
+#[cfg(test)]
+mod tests {
+    use std::sync::Mutex;
+
+    use z3_sys::Z3_solver_translate;
+
+    use crate::{Context, SatResult, Solver, Translate, ast::Int};
+    /// The mutex is necessary as we're testing for a race condition
+    /// in Z3 so we need to ensure these two tests are run in isolation
+    /// from each other
+    static TEST_MUTEX: Mutex<()> = Mutex::new(());
+
+    /// https://github.com/Z3Prover/z3/issues/8035
+    /// Ensure our fix works
+    #[test]
+    fn test_issue_8035() {
+        let _lock = TEST_MUTEX.lock().unwrap();
+        let mut handles = Vec::new();
+
+        // Fails for > 12 threads (on my machine)
+        for _ in 0..13 {
+            handles.push(std::thread::spawn(move || {
+                let s = Solver::new();
+
+                let x = Int::fresh_const("x");
+                let y = Int::fresh_const("y");
+
+                // Passes without an arbitrary inequality bound on a variable
+                s.assert(y.lt(Int::from_i64(2)));
+
+                // Fails with mul, passes with e.g. add
+                s.assert(Int::mul(&[&x, &y]).eq(Int::from_i64(-2)));
+
+                let ctx = Context::thread_local();
+                let s = s.translate(&ctx);
+
+                // This block should never panic
+                assert_eq!(s.check(), SatResult::Sat);
+            }));
+        }
+        for h in handles.into_iter() {
+            h.join().unwrap();
+        }
+    }
+
+    /// https://github.com/Z3Prover/z3/issues/8035
+    /// Ensure our fix is stil necessary
+    #[test]
+    #[should_panic]
+    fn test_issue_8035_panic() {
+        let _lock = TEST_MUTEX.lock().unwrap();
+        let mut handles = Vec::new();
+
+        // Fails for > 12 threads (on my machine)
+        for _ in 0..13 {
+            handles.push(std::thread::spawn(move || {
+                let s = Solver::new();
+
+                let x = Int::fresh_const("x");
+                let y = Int::fresh_const("y");
+
+                // Passes without an arbitrary inequality bound on a variable
+                s.assert(y.lt(Int::from_i64(2)));
+
+                // Fails with mul, passes with e.g. add
+                s.assert(Int::mul(&[&x, &y]).eq(Int::from_i64(-2)));
+
+                let ctx = Context::thread_local();
+
+                let s = unsafe {
+                    Solver::wrap(
+                        &ctx,
+                        Z3_solver_translate(ctx.z3_ctx.0, s.z3_slv, ctx.z3_ctx.0).unwrap(),
+                    )
+                };
+
+                // This block should never panic
+                assert_eq!(s.check(), SatResult::Sat);
+            }));
+        }
+        for h in handles.into_iter() {
+            h.join().unwrap();
+        }
+    }
+}
