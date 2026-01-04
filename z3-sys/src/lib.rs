@@ -3801,6 +3801,13 @@ unsafe extern "C" {
         value: Z3_ast,
     ) -> Option<Z3_ast>;
 
+    /// Create a type variable.
+    ///
+    /// Functions using type variables can be applied to instantiations that match the signature
+    /// of the function. Assertions using type variables correspond to assertions over all possible
+    /// instantiations.
+    pub fn Z3_mk_type_variable(c: Z3_context, s: Z3_symbol) -> Option<Z3_sort>;
+
     /// Return arity of relation.
     ///
     /// # Preconditions:
