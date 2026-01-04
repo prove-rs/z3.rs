@@ -866,7 +866,7 @@ mod tests {
     /// from each other
     static TEST_MUTEX: Mutex<()> = Mutex::new(());
 
-    /// https://github.com/Z3Prover/z3/issues/8035
+    /// <https://github.com/Z3Prover/z3/issues/8035>
     /// Ensure our fix works
     #[test]
     fn test_issue_8035() {
@@ -899,7 +899,7 @@ mod tests {
         }
     }
 
-    /// https://github.com/Z3Prover/z3/issues/8035
+    /// <https://github.com/Z3Prover/z3/issues/8035>
     /// Ensure our fix is stil necessary
     #[test]
     #[should_panic]
@@ -908,7 +908,7 @@ mod tests {
         let mut handles = Vec::new();
 
         // Fails for > 12 threads (on my machine)
-        for _ in 0..13 {
+        for _ in 0..33 {
             handles.push(std::thread::spawn(move || {
                 let s = Solver::new();
 
