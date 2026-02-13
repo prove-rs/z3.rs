@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.5](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.4...z3-sys-v0.10.5) - 2026-02-13
+
+### Fixed
+
+- Z3_SYS_BUNDLED_DIR_OVERRIDE had extra z3 ([#491](https://github.com/prove-rs/z3.rs/pull/491)) (by @toolCHAINZ) - #491
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.10.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.3...z3-sys-v0.10.4) - 2025-12-27
 
 ### Added
