@@ -265,14 +265,17 @@ fn find_library_header_by_vcpkg() -> String {
 fn find_header_by_env() -> String {
     const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
-        PathBuf::from(
-            env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE")
-                .or_else(|_| env::var("OUT_DIR"))
-                .unwrap_or_default(),
-        )
-        .join("z3/src/api/z3.h")
-        .display()
-        .to_string()
+        if let Ok(dir) = env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE") {
+            PathBuf::from(dir)
+                .join("src/api/z3.h")
+                .display()
+                .to_string()
+        } else {
+            PathBuf::from(env::var("OUT_DIR").unwrap_or_default())
+                .join("z3/src/api/z3.h")
+                .display()
+                .to_string()
+        }
     } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
         header_path
     } else {
