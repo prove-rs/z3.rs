@@ -1,5 +1,8 @@
 use std::{env, path::PathBuf};
 
+const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
+const Z3_OVERRIDE_VAR: &str = "Z3_SYS_BUNDLED_DIR_OVERRIDE";
+
 macro_rules! assert_one_of_features {
     ($($feature:literal),*) => {{
         let mut active_count = 0;
@@ -263,9 +266,8 @@ fn find_library_header_by_vcpkg() -> String {
 }
 
 fn find_header_by_env() -> String {
-    const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
-        if let Ok(dir) = env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE") {
+        if let Ok(dir) = env::var(Z3_OVERRIDE_VAR) {
             PathBuf::from(dir)
                 .join("src/api/z3.h")
                 .display()
@@ -282,7 +284,7 @@ fn find_header_by_env() -> String {
         "wrapper.h".to_string()
     };
     println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
-    println!("cargo:rerun-if-env-changed=Z3_SYS_BUNDLED_DIR_OVERRIDE");
+    println!("cargo:rerun-if-env-changed={Z3_OVERRIDE_VAR}");
     println!("cargo:rerun-if-changed={header}");
     header
 }
@@ -385,9 +387,8 @@ fn build_bundled_z3() {
     let z3_sys_version = env!("CARGO_PKG_VERSION");
     let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join("z3");
 
-    let bundled_path = PathBuf::from(
-        env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or(z3_dir.display().to_string()),
-    );
+    let bundled_path =
+        PathBuf::from(env::var(Z3_OVERRIDE_VAR).unwrap_or(z3_dir.display().to_string()));
 
     let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("z3");
 
