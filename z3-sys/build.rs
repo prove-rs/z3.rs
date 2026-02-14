@@ -282,6 +282,7 @@ fn find_header_by_env() -> String {
         "wrapper.h".to_string()
     };
     println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
+    println!("cargo:rerun-if-env-changed=Z3_SYS_BUNDLED_DIR_OVERRIDE");
     println!("cargo:rerun-if-changed={header}");
     header
 }
