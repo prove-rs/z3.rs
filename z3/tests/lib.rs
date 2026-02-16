@@ -1769,6 +1769,35 @@ fn test_model_iter() {
 }
 
 #[test]
+fn test_int_i128_u128() {
+    let cfg = Config::new();
+    let ctx = Context::new(&cfg);
+
+    let cases_i128: [i128; 4] = [0, 42, -1234567890123456789, i128::MAX];
+    let cases_u128: [u128; 3] = [0, 42, u128::MAX];
+
+    // Check i128
+    for &val in &cases_i128 {
+        let int_ast = Int::from_i128(&ctx, val);
+        let back = int_ast.as_i128().unwrap();
+        assert_eq!(back, val, "i128 failed for {}", val);
+    }
+
+    // Check u128
+    for &val in &cases_u128 {
+        let int_ast = Int::from_u128(&ctx, val);
+        let back = int_ast.as_u128().unwrap();
+        assert_eq!(back, val, "u128 failed for {}", val);
+    }
+
+    let val: i128 = 12345;
+    let int_i = Int::from_i128(&ctx, val);
+    let int_u = Int::from_u128(&ctx, val as u128);
+    // Both should print the same SMT-LIB numeral string
+    assert_eq!(int_i.to_string(), int_u.to_string());
+}
+
+#[test]
 fn test_round_towards_nearest_away() {
     let solver = Solver::new();
 
