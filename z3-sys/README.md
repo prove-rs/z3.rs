@@ -35,10 +35,37 @@ There are 4 ways for this crate to currently find Z3:
   the environment variable `Z3_LIBRARY_PATH_OVERRIDE` to manually
   specify the library search path.
 * Enabling the `bundled` feature will use `cmake` to build and statically
-  link Z3. Users wishing to use this feature with the release of Z3 of
-  their choice must set   `Z3_SYS_BUNDLED_DIR_OVERRIDE` to point to their
-  own checkout of Z3. Alternatively, it will download the Z3 submodule and
-  build from there.
+  link Z3 from source. Despite the name, **Z3 source is not included in the
+  crate tarball**. On a first build from crates.io, the build script queries
+  the GitHub Contents API to find which Z3 commit the `z3-sys` submodule
+  pointed to at release time (via the `z3-sys-vX.Y.Z` git tag), then
+  downloads and extracts that Z3 source archive. The result is cached in
+  Cargo's build output directory and reused until `cargo clean`.
+
+  **Using your own Z3 checkout:** Set `Z3_SYS_BUNDLED_DIR_OVERRIDE` to the
+  **absolute path** of a Z3 source tree to build from that instead:
+
+  ```bash
+  Z3_SYS_BUNDLED_DIR_OVERRIDE=/absolute/path/to/z3 cargo build
+  ```
+
+  To use a path relative to your project root, add the following to your
+  project's `.cargo/config.toml`. The `relative = true` key tells Cargo to
+  resolve the path relative to the config file's location rather than as an
+  absolute path:
+
+  ```toml
+  [env]
+  Z3_SYS_BUNDLED_DIR_OVERRIDE = { value = "path/to/z3", relative = true }
+  ```
+
+  **Note:** A `z3` directory in your own project or workspace is **not**
+  picked up automatically. Even if you have a Z3 git submodule in your repo,
+  you must point `Z3_SYS_BUNDLED_DIR_OVERRIDE` at it explicitly.
+
+  **Pinning a Z3 version without a source checkout:** The `gh-release` feature
+  (see below) lets you pin a specific Z3 version via `Z3_SYS_Z3_VERSION`
+  without managing a source tree yourself.
 * Enabling the `vcpkg` feature will use `vcpkg` to build and
   install a copy of Z3 which is then used.
 * Enabling the `gh-release` feature will download a pre-compiled
