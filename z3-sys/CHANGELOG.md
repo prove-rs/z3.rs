@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.5...z3-sys-v0.10.6) - 2026-02-21
+
+### Fixed
+
+- add rerun-if-env-changed for Z3_SYS_BUNDLED_DIR_OVERRIDE ([#496](https://github.com/prove-rs/z3.rs/pull/496)) (by @toolCHAINZ) - #496
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.10.5](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.4...z3-sys-v0.10.5) - 2026-02-13
 
 ### Fixed
