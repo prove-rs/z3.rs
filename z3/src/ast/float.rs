@@ -224,12 +224,122 @@ impl Float {
         is_subnormal(Z3_mk_fpa_is_subnormal, Bool);
         is_zero(Z3_mk_fpa_is_zero, Bool);
         is_nan(Z3_mk_fpa_is_nan, Bool);
+        is_negative(Z3_mk_fpa_is_negative, Bool);
+        is_positive(Z3_mk_fpa_is_positive, Bool);
     }
     binop! {
         lt(Z3_mk_fpa_lt, Bool);
         le(Z3_mk_fpa_leq, Bool);
         gt(Z3_mk_fpa_gt, Bool);
         ge(Z3_mk_fpa_geq, Bool);
+        eq_fpa(Z3_mk_fpa_eq, Bool);
+        min(Z3_mk_fpa_min, Self);
+        max(Z3_mk_fpa_max, Self);
+        rem(Z3_mk_fpa_rem, Self);
+    }
+
+    /// Square root with default rounding mode (nearest ties to even).
+    pub fn sqrt(&self) -> Float {
+        self.sqrt_with_rounding_mode(&RoundingMode::round_nearest_ties_to_even())
+    }
+
+    /// Square root with specified rounding mode.
+    pub fn sqrt_with_rounding_mode(&self, rm: &RoundingMode) -> Float {
+        unsafe {
+            Float::wrap(
+                &self.ctx,
+                Z3_mk_fpa_sqrt(self.ctx.z3_ctx.0, rm.z3_ast, self.z3_ast).unwrap(),
+            )
+        }
+    }
+
+    /// Round to integer with default rounding mode.
+    pub fn round_to_integral(&self) -> Float {
+        self.round_to_integral_with_rounding_mode(&RoundingMode::round_nearest_ties_to_even())
+    }
+
+    /// Round to integer with specified rounding mode.
+    pub fn round_to_integral_with_rounding_mode(&self, rm: &RoundingMode) -> Float {
+        unsafe {
+            Float::wrap(
+                &self.ctx,
+                Z3_mk_fpa_round_to_integral(self.ctx.z3_ctx.0, rm.z3_ast, self.z3_ast).unwrap(),
+            )
+        }
+    }
+
+    /// Fused multiply-add operation: (self * y) + z with specified rounding mode.
+    pub fn fma_with_rounding_mode<T: IntoAst<Self>, U: IntoAst<Self>>(
+        &self,
+        y: T,
+        z: U,
+        rm: &RoundingMode,
+    ) -> Float {
+        let y = y.into_ast(self);
+        let z = z.into_ast(self);
+        unsafe {
+            Float::wrap(
+                &self.ctx,
+                Z3_mk_fpa_fma(
+                    self.ctx.z3_ctx.0,
+                    rm.z3_ast,
+                    self.z3_ast,
+                    y.z3_ast,
+                    z.z3_ast,
+                ).unwrap(),
+            )
+        }
+    }
+
+    /// Fused multiply-add operation with default rounding mode.
+    pub fn fma<T: IntoAst<Self>, U: IntoAst<Self>>(&self, y: T, z: U) -> Float {
+        self.fma_with_rounding_mode(y, z, &RoundingMode::round_nearest_ties_to_even())
+    }
+
+    /// Convert float to signed bit-vector with specified rounding mode.
+    pub fn to_sbv_with_rounding_mode(&self, rm: &RoundingMode, size: u32) -> BV {
+        unsafe {
+            BV::wrap(
+                &self.ctx,
+                Z3_mk_fpa_to_sbv(self.ctx.z3_ctx.0, rm.z3_ast, self.z3_ast, size).unwrap(),
+            )
+        }
+    }
+
+    /// Convert float to unsigned bit-vector with specified rounding mode.
+    pub fn to_ubv_with_rounding_mode(&self, rm: &RoundingMode, size: u32) -> BV {
+        unsafe {
+            BV::wrap(
+                &self.ctx,
+                Z3_mk_fpa_to_ubv(self.ctx.z3_ctx.0, rm.z3_ast, self.z3_ast, size).unwrap(),
+            )
+        }
+    }
+
+    /// Convert float to real number.
+    pub fn to_real(&self) -> crate::ast::Real {
+        unsafe {
+            crate::ast::Real::wrap(
+                &self.ctx,
+                Z3_mk_fpa_to_real(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
+            )
+        }
+    }
+
+    /// Convert float to another floating-point sort with specified rounding mode.
+    pub fn to_fp_with_rounding_mode(&self, rm: &RoundingMode, target_sort: &crate::Sort) -> Float {
+        assert!(matches!(target_sort.kind(), crate::SortKind::FloatingPoint));
+        unsafe {
+            Float::wrap(
+                &self.ctx,
+                Z3_mk_fpa_to_fp_float(
+                    self.ctx.z3_ctx.0,
+                    rm.z3_ast,
+                    self.z3_ast,
+                    target_sort.z3_sort,
+                ).unwrap(),
+            )
+        }
     }
 }
 

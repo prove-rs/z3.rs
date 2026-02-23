@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.9](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.8...z3-v0.19.9) - 2026-02-21
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.19.8](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.7...z3-v0.19.8) - 2026-02-13
 
 ### Other
