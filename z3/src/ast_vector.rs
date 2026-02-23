@@ -130,13 +130,6 @@ impl AstVector {
         }
     }
 
-    /// Convert the vector to a string representation.
-    pub fn to_string(&self) -> String {
-        unsafe {
-            let s = Z3_ast_vector_to_string(self.ctx.z3_ctx.0, self.z3_ast_vector);
-            std::ffi::CStr::from_ptr(s).to_string_lossy().into_owned()
-        }
-    }
 }
 
 impl Default for AstVector {
@@ -147,7 +140,11 @@ impl Default for AstVector {
 
 impl std::fmt::Display for AstVector {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        write!(f, "{}", self.to_string())
+        let s = unsafe {
+            let raw = Z3_ast_vector_to_string(self.ctx.z3_ctx.0, self.z3_ast_vector);
+            std::ffi::CStr::from_ptr(raw).to_string_lossy().into_owned()
+        };
+        write!(f, "{s}")
     }
 }
 

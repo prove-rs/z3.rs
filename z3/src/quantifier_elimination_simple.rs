@@ -6,7 +6,7 @@ use z3_sys::*;
 pub struct QuantifierElimination;
 
 impl QuantifierElimination {
-    /// Light quantifier elimination using Z3_qe_lite.
+    /// Light quantifier elimination using `Z3_qe_lite`.
     pub fn lite(vars: &crate::AstVector, formula: &impl Ast) -> Bool {
         let ctx = formula.get_ctx();
         unsafe {
