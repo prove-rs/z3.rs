@@ -48,8 +48,12 @@ fn collect_roundtrip_through_iter() {
 fn collect_filter_map_selects_typed_elements() {
     // Build a mixed Bool+Real vector, then filter_map only the Bools back into
     // a new AstVector.
-    let bools: Vec<Bool> = (0..2).map(|i| Bool::new_const(format!("fm_b{i}"))).collect();
-    let reals: Vec<Real> = (0..3).map(|i| Real::new_const(format!("fm_r{i}"))).collect();
+    let bools: Vec<Bool> = (0..2)
+        .map(|i| Bool::new_const(format!("fm_b{i}")))
+        .collect();
+    let reals: Vec<Real> = (0..3)
+        .map(|i| Real::new_const(format!("fm_r{i}")))
+        .collect();
 
     let mixed: AstVector = bools
         .iter()
