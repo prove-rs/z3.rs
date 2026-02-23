@@ -8,8 +8,15 @@ use z3_sys::*;
 
 /// Vector of Z3 AST nodes.
 ///
-/// Provides a container for managing collections of Z3 AST objects
-/// with proper reference counting and memory management.
+/// This wraps a Z3-ref-counted vector of asts. This type exists
+/// mainly as a high-level compatibility layer for these types from Rust.
+/// As this type wraps heterogenous asts, it is analagous to `Vec<Dynamic>`.
+///
+/// Most users will usually be better off using a [Vec]; this type primarily
+/// exists as a compatibility shim.
+///
+/// Many standard rust collection and iteration traits are implemented on it
+/// for convenience.
 #[derive(Debug)]
 pub struct AstVector {
     pub(crate) ctx: Context,

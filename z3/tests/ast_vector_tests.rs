@@ -1,6 +1,78 @@
 use std::convert::TryInto;
-use z3::ast::{Bool, Dynamic, Int, Real};
+use z3::ast::{Ast, Bool, Dynamic, Int, Real};
 use z3::{AstVector, Solver};
+
+// ---------------------------------------------------------------------------
+// Collect from iterator/map expressions directly into AstVector
+// ---------------------------------------------------------------------------
+
+#[test]
+fn collect_from_range_map_creates_asts_inline() {
+    // The most natural pattern: build ASTs inside the map closure and collect.
+    let v: AstVector = (0..6).map(|i| Bool::new_const(format!("rm{i}"))).collect();
+    assert_eq!(v.len(), 6);
+}
+
+#[test]
+fn collect_from_chained_iterators() {
+    let xs: Vec<Int> = (0..3).map(|i| Int::new_const(format!("cx{i}"))).collect();
+    let ys: Vec<Int> = (0..2).map(|i| Int::new_const(format!("cy{i}"))).collect();
+    // Chain two separate sources into one AstVector in one collect() call.
+    let v: AstVector = xs.into_iter().chain(ys).collect();
+    assert_eq!(v.len(), 5);
+}
+
+#[test]
+fn collect_mapped_ast_transformations() {
+    // Map .not() over Bool AST nodes and collect the results directly.
+    let bools: Vec<Bool> = (0..4).map(|i| Bool::new_const(format!("nb{i}"))).collect();
+    let negated: AstVector = bools.iter().map(|b| b.not()).collect();
+    assert_eq!(negated.len(), 4);
+    // Verify they are still Bool elements.
+    let typed: Vec<Bool> = negated.try_into().expect("negations are Bool");
+    assert_eq!(typed.len(), 4);
+}
+
+#[test]
+fn collect_roundtrip_through_iter() {
+    // AstVector → borrowing iter → collect → AstVector preserves elements.
+    let src: AstVector = (0..4).map(|i| Int::new_const(format!("rt{i}"))).collect();
+    let dst: AstVector = src.iter().collect();
+    assert_eq!(dst.len(), src.len());
+    for (a, b) in src.iter().zip(dst.iter()) {
+        assert_eq!(a, b);
+    }
+}
+
+#[test]
+fn collect_filter_map_selects_typed_elements() {
+    // Build a mixed Bool+Real vector, then filter_map only the Bools back into
+    // a new AstVector.
+    let bools: Vec<Bool> = (0..2).map(|i| Bool::new_const(format!("fm_b{i}"))).collect();
+    let reals: Vec<Real> = (0..3).map(|i| Real::new_const(format!("fm_r{i}"))).collect();
+
+    let mixed: AstVector = bools
+        .iter()
+        .cloned()
+        .map(Dynamic::from)
+        .chain(reals.iter().cloned().map(Dynamic::from))
+        .collect();
+    assert_eq!(mixed.len(), 5);
+
+    let bools_only: AstVector = mixed.iter().filter_map(|d| d.as_bool()).collect();
+    assert_eq!(bools_only.len(), 2);
+
+    let reals_only: AstVector = mixed.iter().filter_map(|d| d.as_real()).collect();
+    assert_eq!(reals_only.len(), 3);
+}
+
+#[test]
+fn collect_map_over_simplify() {
+    // .simplify() on each Int AST, collect results into a new AstVector.
+    let src: Vec<Int> = (0..3).map(|i| Int::new_const(format!("si{i}"))).collect();
+    let simplified: AstVector = src.iter().map(|x| x.simplify()).collect();
+    assert_eq!(simplified.len(), 3);
+}
 
 // ---------------------------------------------------------------------------
 // Iterator trait coverage
