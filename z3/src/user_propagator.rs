@@ -3,12 +3,18 @@
 // I am following quite closly this: https://z3prover.github.io/api/html/classz3_1_1user__propagator__base.html
 
 use crate::{
+    Context, Solver,
     ast::Ast,
     ast::{self, Dynamic},
-    Context, Solver,
 };
 use log::debug;
-use std::{cell::RefCell, convert::TryInto, default, fmt::Debug, pin::Pin, rc::Weak};
+use std::{
+    cell::RefCell,
+    convert::TryInto,
+    fmt::Debug,
+    pin::Pin,
+    rc::{Rc, Weak},
+};
 use z3_sys::*;
 
 /// Interface to build a custom [User
@@ -67,25 +73,35 @@ pub trait UserPropagator: Debug {
 
     /// Generate a new subsolver using the new `ctx`.
     /// 
-    /// The garabage collection of said context will be handeled by [UPSolver].
-    fn fresh<'a>(
-        &mut self,
-        ctx: Context,
-    ) -> Option<Box<dyn UserPropagator + 'a>> where Self: 'a {
+    /// ## Safety
+    /// 
+    /// Note that the return [`UserPropagator`] will live for as long as the
+    /// [`UPSolver`]. It is a bit unclear currently if the context lives that
+    /// long. I recommand to avoid derefencing `z3` types within the
+    /// implementation of [`Drop`] for [`Self`].
+    fn fresh<'a>(&mut self, ctx: Context) -> Option<Box<dyn UserPropagator + 'a>>
+    where
+        Self: 'a,
+    {
         None
     }
 }
 
-
+/// Tool to use `z3` user propagator callbacks.
+/// 
+/// This should not be used outside of a callback.
 #[derive(Debug)]
-pub struct CallBack{
+pub struct CallBack {
     cb: Z3_solver_callback,
     ctx: Context,
 }
 
 impl CallBack {
     pub fn new(cb: Z3_solver_callback, ctx: &Context) -> Self {
-        Self { cb, ctx: ctx.clone() }
+        Self {
+            cb,
+            ctx: ctx.clone(),
+        }
     }
 
     /// Sets the next (registered) expression to split on. The function returns
@@ -149,13 +165,7 @@ impl CallBack {
     /// length.
     ///
     /// see [`Z3_solver_propagate_consequence`]
-    pub fn propagate<'b, I, J, A>(
-        &'b self,
-        fixed: I,
-        lhs: J,
-        rhs: J,
-        conseq: &'b ast::Bool,
-    ) -> bool
+    pub fn propagate<'b, I, J, A>(&'b self, fixed: I, lhs: J, rhs: J, conseq: &'b ast::Bool) -> bool
     where
         I: IntoIterator<Item = &'b ast::Bool>,
         J: IntoIterator<Item = &'b A>,
@@ -164,7 +174,7 @@ impl CallBack {
         /* using generics because I need to map on the arguments anyway and it will turn
         the other functions defined from `propagate` into the same things as the C++
         API this is based on */
-        fn into_vec_and_check< 'b, A: Ast + 'b>(
+        fn into_vec_and_check<'b, A: Ast + 'b>(
             ctx: &Context,
             iter: impl IntoIterator<Item = &'b A>,
         ) -> Vec<Z3_ast> {
@@ -277,7 +287,7 @@ where
     f: F,
 }
 
-impl<'ctx, F> ClausureOnClause< F>
+impl<F> ClausureOnClause<F>
 where
     F: FnMut(&Dynamic, &[u32], &[Dynamic]),
 {
@@ -285,7 +295,7 @@ where
         Self { ctx, f }
     }
 }
-impl<'ctx, F> Debug for ClausureOnClause< F>
+impl< F> Debug for ClausureOnClause<F>
 where
     F: FnMut(&Dynamic, &[u32], &[Dynamic]),
 {
@@ -297,7 +307,7 @@ where
     }
 }
 
-impl<'ctx, F> OnClause for ClausureOnClause<F>
+impl< F> OnClause for ClausureOnClause<F>
 where
     F: FnMut(&Dynamic, &[u32], &[Dynamic]),
 {
@@ -310,26 +320,73 @@ where
     }
 }
 
+// =========================================================
+// ====================== wrappers =========================
+// =========================================================
+
+// technically I don't need `Rc<Self>` but it makes things easier (otherwise
+// `PropagatorWrapper::new` would need to return `NonNull`).
+type PropagatorContainer<U> = RefCell<Vec<Pin<Rc<U>>>>;
+
+/// Wrapper around (usually) a [`UserPropagator`].
+/// 
+/// This is the struct passed to `z3`. It notably keeps a pointer to the list of
+/// user propagators. This way it can register new user propagator on the fly in
+/// a [`UserPropagator::fresh`] callback.
 #[derive(Debug)]
-struct PropagatorWrapper<'a, U: ?Sized> {
-    parent: Weak<RefCell<Pin<Box<Self>>>>,
-    propagator: U
+pub(crate) struct PropagatorWrapper<U: ?Sized> {
+    // The list of `U` register to the same solver
+    // `Weak` is needed because  this loops.
+    parent: Weak<PropagatorContainer<Self>>,
+    propagator: Box<U>,
 }
+
+impl<U: ?Sized> PropagatorWrapper<U> {
+    pub fn new(parent: &Weak<PropagatorContainer<Self>>, propagator: Box<U>) -> Pin<Rc<Self>> {
+        let true_parents = parent.upgrade().expect("`parent` should still exist");
+        let nself = Self {
+            parent: parent.clone(),
+            propagator,
+        };
+        let nself = Rc::pin(nself);
+        true_parents.borrow_mut().push(nself.clone());
+        nself
+    }
+
+    /// Register a child `U` as its sibling in the `parent` list
+    pub fn register_child(&self,  child: Box<U>) -> Pin<Rc<Self>> {
+        Self::new(&self.parent, child)
+    }
+}
+
+impl<U: ?Sized> AsRef<U> for PropagatorWrapper<U> {
+    fn as_ref(&self) -> &U {
+        &self.propagator
+    }
+}
+
+impl<U: ?Sized> AsMut<U> for PropagatorWrapper<U> {
+    fn as_mut(&mut self) -> &mut U {
+        &mut self.propagator
+    }
+}
+
+pub(crate) type UPWrapper<'a> = PropagatorWrapper<dyn UserPropagator + 'a>;
 
 /// Wrapper around a solver to ensure the [`UserPropagator`]s live long enough
 ///
-/// `'ctx` is the liftime of the [Context] and `'a` the commun liftime of the
-/// [`UserPropagator`]s
+/// `'a` is at least lifetime of the solver, letting [`UserPropagator`]s and
+/// [`OnClause`] propagator borrow things for this long.
 ///
 /// [Context]: crate::Context
 #[derive(Debug)]
 pub struct UPSolver<'a> {
     solver: Solver,
-    user_propagators: Vec<Pin<Box<dyn UserPropagator + 'a>>>,
+    user_propagators: Rc<PropagatorContainer<UPWrapper<'a>>>,
     on_clause_propagators: Vec<Pin<Box<dyn OnClause + 'a>>>,
 }
 
-impl<'ctx, 'a> UPSolver<'a> {
+impl<'a> UPSolver<'a> {
     pub fn new(solver: Solver) -> Self {
         Self {
             solver,
@@ -350,12 +407,12 @@ impl<'ctx, 'a> UPSolver<'a> {
     }
 
     /// Registers a [`UserPropagator`] to [`Self::solver`]
-    pub fn register_user_propagator<U: UserPropagator + 'a>(&mut self, up: U) {
-        let pin = Box::pin(up);
+    pub fn register_user_propagator<U: UserPropagator + 'a>(&self, up: U) {
+        let pin = PropagatorWrapper::new(&Rc::downgrade(&self.user_propagators), Box::new(up));
         unsafe { z3_user_propagator_init(pin.as_ref(), self.solver().z3_slv) }
-        self.user_propagators.push(pin);
     }
 
+    /// Registers a [`OnClause`] to [`Self::solver`]
     pub fn register_on_clause<U: OnClause + 'a>(&mut self, up: U) {
         let pin = Box::pin(up);
         let s = self.z3_slv;
@@ -367,12 +424,12 @@ impl<'ctx, 'a> UPSolver<'a> {
         self.on_clause_propagators.push(pin);
     }
 
+    /// Registers the clausure `f` to [`Self::solver`] as an [`OnClause`].
     pub fn quick_register_on_clause<F>(&mut self, f: F)
     where
         F: FnMut(&Dynamic, &[u32], &[Dynamic]) + 'a,
-        'ctx: 'a,
     {
-        let ctx= self.solver().get_context();
+        let ctx = self.solver().get_context();
         // let up: ClausureOnClause<'ctx, F> = ;
         self.register_on_clause(ClausureOnClause::new(ctx.clone(), f));
     }
@@ -384,7 +441,7 @@ impl From<Solver> for UPSolver<'_> {
     }
 }
 
-impl std::ops::Deref for UPSolver< '_> {
+impl std::ops::Deref for UPSolver<'_> {
     type Target = Solver;
 
     fn deref(&self) -> &Self::Target {
@@ -402,174 +459,178 @@ impl std::ops::Deref for UPSolver< '_> {
 /// [`super::UPSolver`] to solve the liftetime problems, hence why to
 /// function is `unsafe`.
 #[allow(unsafe_op_in_unsafe_fn)] // <- litterally everything is unsafe in it
-pub(crate) unsafe fn z3_user_propagator_init<'ctx, U: UserPropagator>(
-    up: Pin<&U>,
+pub(crate) unsafe fn z3_user_propagator_init<'a>(
+    up: Pin<&UPWrapper<'a>>,
     z3_slv: Z3_solver,
 ) {
-    let z3_ctx = up.get_context().z3_ctx.0;
+    let z3_ctx = up.propagator.get_context().z3_ctx.0;
     debug!("Z3_solver_propagate_init");
     Z3_solver_propagate_init(
         z3_ctx,
         z3_slv,
         up.get_ref() as *const _ as *mut ::std::ffi::c_void,
-        Some(callbacks::push_eh::<U>),
-        Some(callbacks::pop_eh::<U>),
-        Some(callbacks::fresh_eh::<U>),
+        Some(callbacks::push_eh),
+        Some(callbacks::pop_eh),
+        Some(callbacks::fresh_eh),
     );
     // we register all callbacks
     // fixed
     debug!("Z3_solver_propagate_fixed");
-    Z3_solver_propagate_fixed(z3_ctx, z3_slv, Some(callbacks::fixed_eh::<U>));
+    Z3_solver_propagate_fixed(z3_ctx, z3_slv, Some(callbacks::fixed_eh));
     // eq
     debug!("Z3_solver_propagate_eq");
-    Z3_solver_propagate_eq(z3_ctx, z3_slv, Some(callbacks::eq_eh::<U>));
+    Z3_solver_propagate_eq(z3_ctx, z3_slv, Some(callbacks::eq_eh));
     // eq
     debug!("Z3_solver_propagate_diseq");
-    Z3_solver_propagate_diseq(z3_ctx, z3_slv, Some(callbacks::neq_eh::<U>));
+    Z3_solver_propagate_diseq(z3_ctx, z3_slv, Some(callbacks::neq_eh));
     // final
     debug!("Z3_solver_propagate_final");
-    Z3_solver_propagate_final(z3_ctx, z3_slv, Some(callbacks::final_eh::<U>));
+    Z3_solver_propagate_final(z3_ctx, z3_slv, Some(callbacks::final_eh));
     // created
     debug!("Z3_solver_propagate_created");
-    Z3_solver_propagate_created(z3_ctx, z3_slv, Some(callbacks::created_eh::<U>));
+    Z3_solver_propagate_created(z3_ctx, z3_slv, Some(callbacks::created_eh));
     // decide
     debug!("Z3_solver_propagate_decide");
-    Z3_solver_propagate_decide(z3_ctx, z3_slv, Some(callbacks::decide_eh::<U>));
+    Z3_solver_propagate_decide(z3_ctx, z3_slv, Some(callbacks::decide_eh));
 }
 
 /// all the callbacks used in this file
 mod callbacks {
     use crate::{
-        Context, ast::{Ast, Dynamic}, user_propagator::{CallBack, OnClause, UserPropagator}
+        Context,
+        ast::{Ast, Dynamic},
+        user_propagator::{CallBack, OnClause, UPWrapper, UserPropagator},
     };
     use log::debug;
     use std::convert::TryInto;
     use z3_sys::*;
+    /// Turns a `void*` into a `&mut Self`.
+    ///
+    /// This is highly unsafe! It panics if the pointer is `null`, no other checks are made!
+    unsafe fn wapper_from_user_context<'a, 'b>(
+        ptr: *mut ::std::ffi::c_void,
+    ) -> Option<&'b mut UPWrapper<'a>> {
+        unsafe { (ptr as *mut UPWrapper<'a>).as_mut() }
+    }
 
     /// Turns a `void*` into a `&mut Self`.
     ///
     /// This is highly unsafe! It panics if the pointer is `null`, no other checks are made!
-    unsafe fn mut_from_user_context<'ctx, 'b, U: UserPropagator>(
+    unsafe fn mut_from_user_context<'a, 'b>(
         ptr: *mut ::std::ffi::c_void,
-    ) -> Option<&'b mut U> {
-        unsafe { (ptr as *mut U).as_mut() }
+    ) -> Option<&'b mut (dyn UserPropagator + 'a)> {
+        Some(unsafe { wapper_from_user_context(ptr) }?.as_mut())
     }
 
-    pub(crate) extern "C" fn push_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
-        cb: Z3_solver_callback,
-    ) {
+    pub(crate) extern "C" fn push_eh(ctx: *mut ::std::ffi::c_void, cb: Z3_solver_callback) {
         debug!("push_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
+        if let Some(up) = unsafe { mut_from_user_context(ctx) } {
             up.push(&CallBack::new(cb, up.get_context()));
         }
     }
 
-    pub(crate) extern "C" fn pop_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn pop_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         num_scopes: ::std::os::raw::c_uint,
     ) {
         debug!("pop_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        up.pop(&CallBack::new(cb, up.get_context()), num_scopes);}
-    }
-
-    #[allow(unused_variables)]
-    #[allow(clippy::extra_unused_type_parameters)]
-    pub(crate) extern "C" fn fresh_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
-        new_context: Z3_context,
-    ) -> *mut ::std::ffi::c_void {
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-            let ctx = unsafe { Context::from_raw(new_context) }; // hopefully it doesn't die...
-            let ret = up.fresh(ctx);
-            // match ret {
-            //     Some(nup) => 
-            //     None => ::std::ptr::null_mut(),
-            // }
-            todo!()
-
-        } else {
-        ::std::ptr::null_mut()
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            up.pop(&CallBack::new(cb, up.get_context()), num_scopes);
         }
     }
 
-    pub(crate) extern "C" fn fixed_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn fresh_eh(
+        uctx: *mut ::std::ffi::c_void,
+        new_context: Z3_context,
+    ) -> *mut ::std::ffi::c_void {
+        if let Some(upw) = unsafe { wapper_from_user_context(uctx) } {
+            let ctx = unsafe { Context::from_raw(new_context) }; // hopefully it doesn't die...
+            let Some(child) = upw.as_mut().fresh(ctx) else {
+                return ::std::ptr::null_mut();
+            };
+            let child = upw.register_child(child);
+            child.as_ref().get_ref() as *const _ as *mut ::std::ffi::c_void
+        } else {
+            ::std::ptr::null_mut()
+        }
+    }
+
+    pub(crate) extern "C" fn fixed_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         var: Z3_ast,
         value: Z3_ast,
     ) {
         debug!("fixed_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        let var = unsafe { Dynamic::wrap(up.get_context(), var) };
-        let value = unsafe { Dynamic::wrap(up.get_context(), value) };
-        up.fixed(&CallBack::new(cb, up.get_context()), &var, &value);
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            let var = unsafe { Dynamic::wrap(up.get_context(), var) };
+            let value = unsafe { Dynamic::wrap(up.get_context(), value) };
+            up.fixed(&CallBack::new(cb, up.get_context()), &var, &value);
         }
     }
 
-    pub(crate) extern "C" fn eq_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn eq_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         x: Z3_ast,
         y: Z3_ast,
     ) {
         debug!("eq_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        let x = unsafe { Dynamic::wrap(up.get_context(), x) };
-        let y = unsafe { Dynamic::wrap(up.get_context(), y) };
-        up.eq(&CallBack::new(cb, up.get_context()), &x, &y);
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            let x = unsafe { Dynamic::wrap(up.get_context(), x) };
+            let y = unsafe { Dynamic::wrap(up.get_context(), y) };
+            up.eq(&CallBack::new(cb, up.get_context()), &x, &y);
         }
     }
 
-    pub(crate) extern "C" fn neq_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn neq_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         x: Z3_ast,
         y: Z3_ast,
     ) {
         debug!("neq_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        let x = unsafe { Dynamic::wrap(up.get_context(), x) };
-        let y = unsafe { Dynamic::wrap(up.get_context(), y) };
-        up.neq(&CallBack::new(cb, up.get_context()), &x, &y);
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            let x = unsafe { Dynamic::wrap(up.get_context(), x) };
+            let y = unsafe { Dynamic::wrap(up.get_context(), y) };
+            up.neq(&CallBack::new(cb, up.get_context()), &x, &y);
         }
     }
 
-    pub(crate) extern "C" fn final_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn final_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
     ) {
         debug!("final_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        up.final_(&CallBack::new(cb, up.get_context()));
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            up.final_(&CallBack::new(cb, up.get_context()));
         }
     }
 
-    pub(crate) extern "C" fn created_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn created_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         e: Z3_ast,
     ) {
         debug!("created_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        let e = unsafe { Dynamic::wrap(up.get_context(), e) };
-        up.created(&CallBack::new(cb, up.get_context()), &e);
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            let e = unsafe { Dynamic::wrap(up.get_context(), e) };
+            up.created(&CallBack::new(cb, up.get_context()), &e);
         }
     }
 
-    pub(crate) extern "C" fn decide_eh<'ctx, U: UserPropagator>(
-        ctx: *mut ::std::ffi::c_void,
+    pub(crate) extern "C" fn decide_eh(
+        uctx: *mut ::std::ffi::c_void,
         cb: Z3_solver_callback,
         val: Z3_ast,
         bit: ::std::os::raw::c_uint,
         is_pos: bool,
     ) {
         debug!("decide_eh");
-        if let Some(up) = unsafe { mut_from_user_context::<U>(ctx) } {
-        let val = unsafe { Dynamic::wrap(up.get_context(), val) };
-        up.decide(&CallBack::new(cb, up.get_context()), &val, bit, is_pos);
+        if let Some(up) = unsafe { mut_from_user_context(uctx) } {
+            let val = unsafe { Dynamic::wrap(up.get_context(), val) };
+            up.decide(&CallBack::new(cb, up.get_context()), &val, bit, is_pos);
         }
     }
 
@@ -581,21 +642,22 @@ mod callbacks {
         literals: Z3_ast_vector,
     ) {
         debug!("clause_eh {n} {deps:?}");
-        let oc = unsafe {(ctx as *mut U).as_mut()}.unwrap();
+        let oc = unsafe { (ctx as *mut U).as_mut() }.unwrap();
         let n: usize = n.try_into().unwrap();
         let deps = if n == 0 {
             &[]
         } else {
             unsafe { std::slice::from_raw_parts(deps, n) }
         };
-        let literals: Vec<_> = unsafe{0..Z3_ast_vector_size(oc.get_ctx().get_z3_context(), literals)}
-            .map(|i| {
-                unsafe { Dynamic::wrap(
-                    oc.get_ctx(),
-                    Z3_ast_vector_get(oc.get_ctx().get_z3_context(), literals, i).unwrap(),
-                ) }
-            })
-            .collect();
+        let literals: Vec<_> =
+            unsafe { 0..Z3_ast_vector_size(oc.get_ctx().get_z3_context(), literals) }
+                .map(|i| unsafe {
+                    Dynamic::wrap(
+                        oc.get_ctx(),
+                        Z3_ast_vector_get(oc.get_ctx().get_z3_context(), literals, i).unwrap(),
+                    )
+                })
+                .collect();
         let proof_hint = unsafe { Dynamic::wrap(oc.get_ctx(), proof_hint) };
         oc.on_clause(&proof_hint, deps, &literals);
     }
@@ -606,9 +668,9 @@ mod test {
     use std::convert::TryInto;
 
     use crate::{
+        Config, Context, FuncDecl, Solver, Sort,
         ast::{self, Ast, Dynamic},
         user_propagator::{CallBack, UPSolver, UserPropagator},
-        Config, Context, FuncDecl, Solver, Sort,
     };
 
     #[test]
@@ -617,11 +679,10 @@ mod test {
         let mut cfg = Config::default();
         cfg.set_model_generation(true);
         cfg.set_proof_generation(true);
-        let ctx = Context::new(&cfg);
-        let s_sort = Sort::uninterpreted( "S".into());
-        let f = FuncDecl::new( "f", &[&s_sort], &s_sort);
-        let g = FuncDecl::new( "g", &[&s_sort], &Sort::bool());
-        let x = FuncDecl::new( "x", &[], &s_sort).apply(&[]);
+        let s_sort = Sort::uninterpreted("S".into());
+        let f = FuncDecl::new("f", &[&s_sort], &s_sort);
+        let g = FuncDecl::new("g", &[&s_sort], &Sort::bool());
+        let x = FuncDecl::new("x", &[], &s_sort).apply(&[]);
 
         let mut y: String = "I am a non-static lifetime check".to_owned();
         {
@@ -637,7 +698,7 @@ mod test {
 
             s.assert(&!(&gx & &gxx));
             s.assert(&(&gx | &gxx));
-            s.assert(&f.apply(&[&x]).eq(&x));
+            s.assert(f.apply(&[&x]).eq(&x));
             s.check();
             println!("result: {:?}", s.check());
             println!("{:?}", s.get_model());
@@ -652,15 +713,15 @@ mod test {
         let mut cfg = Config::default();
         cfg.set_model_generation(true);
         let ctx = Context::new(&cfg);
-        let s_sort = Sort::uninterpreted( "S".into());
-        let f = FuncDecl::new_up( "f", &[&s_sort], &s_sort);
-        let x = FuncDecl::new( "x", &[], &s_sort).apply(&[]);
+        let s_sort = Sort::uninterpreted("S".into());
+        let f = FuncDecl::new_up("f", &[&s_sort], &s_sort);
+        let x = FuncDecl::new("x", &[], &s_sort).apply(&[]);
         let s = Solver::new();
 
         #[derive(Debug)]
         struct UP<'a> {
-            pub f:  &'a FuncDecl,
-            pub ctx:  Context,
+            pub f: &'a FuncDecl,
+            pub ctx: Context,
         }
 
         impl<'a> UP<'a> {
@@ -681,22 +742,22 @@ mod test {
         impl<'a> UserPropagator for UP<'a> {
             fn eq(&mut self, upw: &CallBack, x: &Dynamic, y: &Dynamic) {
                 println!("eq: {x} = {y}");
-                for e in [x, y] {
-                    let Some(nt) = self.generate_next_term(e) else {
-                        continue;
-                    };
-                    upw.propagate_one(&[], &e._eq(&nt));
-                }
+                // for e in [x, y] {
+                //     let Some(nt) = self.generate_next_term(e) else {
+                //         continue;
+                //     };
+                //     upw.propagate_one(&[], &e.eq(&nt));
+                // }
             }
 
             fn neq(&mut self, upw: &CallBack, x: &Dynamic, y: &Dynamic) {
                 println!("neq: {x} != {y}");
-                for e in [x, y] {
-                    let Some(nt) = self.generate_next_term(e) else {
-                        continue;
-                    };
-                    upw.propagate_one(&[], &e._eq(&nt));
-                }
+                // for e in [x, y] {
+                //     let Some(nt) = self.generate_next_term(e) else {
+                //         continue;
+                //     };
+                //     upw.propagate_one(&[], &e.eq(&nt));
+                // }
             }
 
             fn created(&mut self, _: &CallBack, e: &ast::Dynamic) {
@@ -711,22 +772,11 @@ mod test {
                 println!("push")
             }
 
-            fn decide(
-                &mut self,
-                _: &CallBack,
-                val: &ast::Dynamic,
-                bit: u32,
-                is_pos: bool,
-            ) {
+            fn decide(&mut self, _: &CallBack, val: &ast::Dynamic, bit: u32, is_pos: bool) {
                 println!("decide: {val}, {bit:} {is_pos}")
             }
 
-            fn fixed(
-                &mut self,
-                _: &CallBack,
-                id: &ast::Dynamic,
-                e: &ast::Dynamic,
-            ) {
+            fn fixed(&mut self, _: &CallBack, id: &ast::Dynamic, e: &ast::Dynamic) {
                 println!("fixed: {id} {e}")
             }
 
@@ -739,9 +789,12 @@ mod test {
             }
         }
 
-        let mut s = UPSolver::new(s);
+        let s = UPSolver::new(s);
         // let up = Box::pin(UP { f: &f, ctx: &ctx });
-        s.register_user_propagator(UP { f:& f, ctx: ctx.clone() });
+        s.register_user_propagator(UP {
+            f: &f,
+            ctx: ctx.clone(),
+        });
         s.assert(
             f.apply(&[&f.apply(&[&f.apply(&[&f.apply(&[&x])])])])
                 .eq(f.apply(&[&x]))
