@@ -7,6 +7,80 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.9](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.8...z3-v0.19.9) - 2026-02-21
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.8](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.7...z3-v0.19.8) - 2026-02-13
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.7](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.6...z3-v0.19.7) - 2025-12-27
+
+### Added
+
+- Add check_and_get_model method to Solver ([#484](https://github.com/prove-rs/z3.rs/pull/484)) (by @toolCHAINZ) - #484
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.6](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.5...z3-v0.19.6) - 2025-12-10
+
+### Added
+
+- impl Sum and Product for Int and Real ([#479](https://github.com/prove-rs/z3.rs/pull/479)) (by @toolCHAINZ) - #479
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.5](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.4...z3-v0.19.5) - 2025-11-20
+
+### Other
+
+- remove unused imports in z3::ast and use absolute paths in macros ([#471](https://github.com/prove-rs/z3.rs/pull/471)) (by @lixitrixi) - #471
+
+### Contributors
+
+* @lixitrixi
+
+## [0.19.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.3...z3-v0.19.4) - 2025-11-17
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.2...z3-v0.19.3) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
+## [0.19.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.1...z3-v0.19.2) - 2025-10-21
+
+### Added
+
+- Add `Datatype::update_field`, `FuncDecl::domain`, `FuncDecl::range` ([#455](https://github.com/prove-rs/z3.rs/pull/455)) (by @willcrichton) - #455
+- impl Default for Solver, Optimize, and Parser ([#456](https://github.com/prove-rs/z3.rs/pull/456)) (by @toolCHAINZ) - #456
+
+### Contributors
+
+* @willcrichton
+* @toolCHAINZ
+
 ## [0.19.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.0...z3-v0.19.1) - 2025-09-26
 
 ### Added

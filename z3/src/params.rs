@@ -65,6 +65,12 @@ impl Params {
     }
 }
 
+impl Default for Params {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
 /// Get a global (or module) parameter.
 ///
 /// # See also

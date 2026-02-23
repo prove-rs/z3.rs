@@ -1,5 +1,5 @@
 use crate::ast::Ast;
-use crate::{Context, Sort, Symbol};
+use crate::{Context, FuncDecl, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
 
@@ -33,6 +33,32 @@ impl Datatype {
                 let p = pp.as_ptr();
                 Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
             })
+        }
+    }
+
+    /// Update the field of the given datatype.
+    ///
+    /// The accessor should be taken from the datatype definition.
+    pub fn update_field(&self, accessor: &FuncDecl, value: &impl Ast) -> Self {
+        let c = self.ctx.get_z3_context();
+        let field_access = accessor.z3_func_decl;
+        let t = self.z3_ast;
+        let v = value.get_z3_ast();
+
+        // The Z3 docs say that the 1-indexed param should be a datatype,
+        // but that seems like a typo.
+        let domain = accessor.domain(0).expect("accessor lacks domain");
+        assert_eq!(domain, SortKind::Datatype);
+
+        let range = accessor.range();
+        assert_eq!(value.get_sort().kind(), range);
+
+        unsafe {
+            Self::wrap(
+                &self.ctx,
+                Z3_datatype_update_field(c, field_access, t, v)
+                    .expect("failed to update field of struct"),
+            )
         }
     }
 }

@@ -7,6 +7,74 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.5...z3-sys-v0.10.6) - 2026-02-21
+
+### Fixed
+
+- add rerun-if-env-changed for Z3_SYS_BUNDLED_DIR_OVERRIDE ([#496](https://github.com/prove-rs/z3.rs/pull/496)) (by @toolCHAINZ) - #496
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.5](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.4...z3-sys-v0.10.5) - 2026-02-13
+
+### Fixed
+
+- Z3_SYS_BUNDLED_DIR_OVERRIDE had extra z3 ([#491](https://github.com/prove-rs/z3.rs/pull/491)) (by @toolCHAINZ) - #491
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.3...z3-sys-v0.10.4) - 2025-12-27
+
+### Added
+
+- allow configuring tls provider for `gh-release` and `bundled` ([#486](https://github.com/prove-rs/z3.rs/pull/486)) (by @toolCHAINZ) - #486
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.3](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.2...z3-sys-v0.10.3) - 2025-11-20
+
+### Added
+
+- Use native-tls-vendored feature of reqwest dependency ([#472](https://github.com/prove-rs/z3.rs/pull/472)) (by @grebnetiew) - #472
+
+### Contributors
+
+* @grebnetiew
+
+## [0.10.2](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.1...z3-sys-v0.10.2) - 2025-11-17
+
+### Fixed
+
+- do not scrape GitHub when submodule exists ([#468](https://github.com/prove-rs/z3.rs/pull/468)) (by @toolCHAINZ) - #468
+
+### Other
+
+- bump bundled z3 ([#470](https://github.com/prove-rs/z3.rs/pull/470)) (by @toolCHAINZ) - #470
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.0...z3-sys-v0.10.1) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
 ## [0.10.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.10...z3-sys-v0.10.0) - 2025-09-26
 
 ### Added
