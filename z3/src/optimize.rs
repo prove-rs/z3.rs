@@ -158,9 +158,7 @@ impl Optimize {
             return vec![];
         };
         let av = unsafe { AstVector::wrap(&self.ctx, raw) };
-        (0..av.len())
-            .map(|i| unsafe { Bool::wrap(&self.ctx, av.get(i).get_z3_ast()) })
-            .collect()
+        av.try_into_typed_vec().expect("unsat core contains only Bool")
     }
 
     /// Create a backtracking point.

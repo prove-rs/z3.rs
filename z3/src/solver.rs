@@ -179,7 +179,7 @@ impl Solver {
         }
     }
 
-    // Return a vector of assumptions in the solver.
+    /// Return all assertions currently in the solver.
     pub fn get_assertions(&self) -> Vec<Bool> {
         let av = unsafe {
             AstVector::wrap(
@@ -187,9 +187,7 @@ impl Solver {
                 Z3_solver_get_assertions(self.ctx.z3_ctx.0, self.z3_slv).unwrap(),
             )
         };
-        (0..av.len())
-            .map(|i| unsafe { Bool::wrap(&self.ctx, av.get(i).get_z3_ast()) })
-            .collect()
+        av.try_into_typed_vec().expect("solver assertions are always Bool")
     }
 
     /// Return a subset of the assumptions provided to either the last
@@ -219,23 +217,14 @@ impl Solver {
             return vec![];
         };
         let av = unsafe { AstVector::wrap(&self.ctx, raw) };
-        (0..av.len())
-            .map(|i| unsafe { Bool::wrap(&self.ctx, av.get(i).get_z3_ast()) })
-            .collect()
+        av.try_into_typed_vec().expect("unsat core contains only Bool")
     }
 
     /// Retrieve consequences from the solver given a set of assumptions.
     pub fn get_consequences(&self, assumptions: &[Bool], variables: &[Bool]) -> Vec<Bool> {
-        let assumptions_vec =
-            unsafe { AstVector::wrap(&self.ctx, Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap()) };
-        assumptions.iter().for_each(|x| assumptions_vec.push(x));
-
-        let variables_vec =
-            unsafe { AstVector::wrap(&self.ctx, Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap()) };
-        variables.iter().for_each(|x| variables_vec.push(x));
-
-        let consequences_vec =
-            unsafe { AstVector::wrap(&self.ctx, Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap()) };
+        let assumptions_vec = AstVector::from(assumptions);
+        let variables_vec = AstVector::from(variables);
+        let consequences_vec = AstVector::new();
 
         unsafe {
             Z3_solver_get_consequences(
@@ -247,9 +236,9 @@ impl Solver {
             );
         }
 
-        (0..consequences_vec.len())
-            .map(|i| unsafe { Bool::wrap(&self.ctx, consequences_vec.get(i).get_z3_ast()) })
-            .collect()
+        consequences_vec
+            .try_into_typed_vec()
+            .expect("consequences are always Bool")
     }
 
     /// Create a backtracking point.
