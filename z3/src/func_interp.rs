@@ -33,7 +33,12 @@ impl FuncInterp {
         let v = unsafe { AstVector::wrap(&self.ctx, Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap()) };
         args.iter().for_each(|a| v.push(a));
         unsafe {
-            Z3_func_interp_add_entry(self.ctx.z3_ctx.0, self.z3_func_interp, v.z3_ast_vector, value.z3_ast);
+            Z3_func_interp_add_entry(
+                self.ctx.z3_ctx.0,
+                self.z3_func_interp,
+                v.z3_ast_vector,
+                value.z3_ast,
+            );
         }
     }
 

@@ -8,14 +8,14 @@ pub struct Polynomial;
 
 impl Polynomial {
     /// Compute the nonzero subresultants of polynomials `p` and `q` with respect to variable `x`.
-    /// 
-    /// Both `p` and `q` are arithmetic terms where any subterm that cannot be viewed 
+    ///
+    /// Both `p` and `q` are arithmetic terms where any subterm that cannot be viewed
     /// as a polynomial is assumed to be a variable.
-    /// 
+    ///
     /// For example, `f(a)` is considered to be a variable in the polynomial `f(a)*f(a) + 2*f(a) + 1`.
-    /// 
+    ///
     /// Returns an [`AstVector`] containing the nonzero subresultants.
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// let x = Int::new_const("x");
@@ -27,7 +27,7 @@ impl Polynomial {
     pub fn subresultants(p: &impl Ast, q: &impl Ast, x: &impl Ast) -> AstVector {
         assert_eq!(p.get_ctx().z3_ctx, q.get_ctx().z3_ctx);
         assert_eq!(p.get_ctx().z3_ctx, x.get_ctx().z3_ctx);
-        
+
         let ctx = p.get_ctx();
         unsafe {
             AstVector::wrap(
@@ -37,7 +37,8 @@ impl Polynomial {
                     p.get_z3_ast(),
                     q.get_z3_ast(),
                     x.get_z3_ast(),
-                ).unwrap(),
+                )
+                .unwrap(),
             )
         }
     }

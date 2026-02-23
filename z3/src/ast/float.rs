@@ -286,7 +286,8 @@ impl Float {
                     self.z3_ast,
                     y.z3_ast,
                     z.z3_ast,
-                ).unwrap(),
+                )
+                .unwrap(),
             )
         }
     }
@@ -337,7 +338,8 @@ impl Float {
                     rm.z3_ast,
                     self.z3_ast,
                     target_sort.z3_sort,
-                ).unwrap(),
+                )
+                .unwrap(),
             )
         }
     }

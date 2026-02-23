@@ -1,5 +1,5 @@
-use crate::ast::{Ast, Real, Bool};
 use crate::Context;
+use crate::ast::{Ast, Bool, Real};
 use z3_sys::*;
 
 /// [`Ast`] node representing an algebraic number value.
@@ -15,7 +15,7 @@ impl Algebraic {
     }
 
     /// Check if the algebraic number is positive.
-    /// 
+    ///
     /// # Precondition
     /// The AST must be a valid algebraic value (check with `is_value` first).
     pub fn is_positive(&self) -> bool {
@@ -23,7 +23,7 @@ impl Algebraic {
     }
 
     /// Check if the algebraic number is negative.
-    /// 
+    ///
     /// # Precondition
     /// The AST must be a valid algebraic value (check with `is_value` first).
     pub fn is_negative(&self) -> bool {
@@ -31,7 +31,7 @@ impl Algebraic {
     }
 
     /// Check if the algebraic number is zero.
-    /// 
+    ///
     /// # Precondition
     /// The AST must be a valid algebraic value (check with `is_value` first).
     pub fn is_zero(&self) -> bool {
@@ -40,7 +40,7 @@ impl Algebraic {
 
     /// Return the sign of the algebraic number.
     /// Returns: -1 if negative, 0 if zero, 1 if positive.
-    /// 
+    ///
     /// # Precondition
     /// The AST must be a valid algebraic value (check with `is_value` first).
     pub fn sign(&self) -> i32 {
@@ -48,7 +48,7 @@ impl Algebraic {
     }
 
     /// Add two algebraic numbers.
-    /// 
+    ///
     /// # Precondition
     /// Both `a` and `b` must be valid algebraic values.
     pub fn add(a: &impl Ast, b: &impl Ast) -> Real {
@@ -63,7 +63,7 @@ impl Algebraic {
     }
 
     /// Subtract two algebraic numbers.
-    /// 
+    ///
     /// # Precondition
     /// Both `a` and `b` must be valid algebraic values.
     pub fn sub(a: &impl Ast, b: &impl Ast) -> Real {
@@ -78,7 +78,7 @@ impl Algebraic {
     }
 
     /// Multiply two algebraic numbers.
-    /// 
+    ///
     /// # Precondition
     /// Both `a` and `b` must be valid algebraic values.
     pub fn mul(a: &impl Ast, b: &impl Ast) -> Real {
@@ -93,7 +93,7 @@ impl Algebraic {
     }
 
     /// Divide two algebraic numbers.
-    /// 
+    ///
     /// # Precondition
     /// Both `a` and `b` must be valid algebraic values.
     pub fn div(a: &impl Ast, b: &impl Ast) -> Real {
@@ -108,7 +108,7 @@ impl Algebraic {
     }
 
     /// Return the k-th root of the algebraic number.
-    /// 
+    ///
     /// # Precondition
     /// The AST must be a valid algebraic value and k > 0.
     pub fn root(&self, k: u32) -> Real {
@@ -121,7 +121,7 @@ impl Algebraic {
     }
 
     /// Return the algebraic number that is the k-th power of the given number.
-    /// 
+    ///
     /// # Precondition
     /// The AST must be a valid algebraic value.
     pub fn power(&self, k: u32) -> Real {
@@ -153,8 +153,6 @@ impl Algebraic {
         let ctx = a.get_ctx();
         unsafe { Z3_algebraic_eq(ctx.z3_ctx.0, a.get_z3_ast(), b.get_z3_ast()) }
     }
-
-
 }
 
 impl Ast for Algebraic {
@@ -196,7 +194,8 @@ impl Ast for Algebraic {
 
 impl std::fmt::Display for Algebraic {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
-        let s = unsafe { std::ffi::CStr::from_ptr(Z3_ast_to_string(self.ctx.z3_ctx.0, self.z3_ast)) };
+        let s =
+            unsafe { std::ffi::CStr::from_ptr(Z3_ast_to_string(self.ctx.z3_ctx.0, self.z3_ast)) };
         write!(f, "{}", s.to_string_lossy())
     }
 }

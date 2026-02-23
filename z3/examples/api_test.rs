@@ -17,7 +17,7 @@ fn main() {
     let a = Real::from_rational(3, 2);
     let b = Real::from_rational(5, 3);
     println!("a = {}, b = {}", a, b);
-    
+
     let sum = Algebraic::add(&a, &b);
     println!("a + b = {}", sum);
 
@@ -25,7 +25,7 @@ fn main() {
     println!("\n✓ Testing enhanced Float operations...");
     let f1 = Float::from_f64(std::f64::consts::PI);
     let f2 = Float::from_f64(std::f64::consts::E);
-    
+
     println!("f1 = {}", f1);
     println!("f1 is positive: {}", f1.is_positive());
     println!("f1 min f2 = {}", f1.min(&f2));
