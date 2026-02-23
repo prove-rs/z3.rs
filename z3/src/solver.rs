@@ -187,7 +187,7 @@ impl Solver {
                 Z3_solver_get_assertions(self.ctx.z3_ctx.0, self.z3_slv).unwrap(),
             )
         };
-        av.try_into_typed_vec().expect("solver assertions are always Bool")
+        av.try_into().expect("solver assertions are always Bool")
     }
 
     /// Return a subset of the assumptions provided to either the last
@@ -217,7 +217,7 @@ impl Solver {
             return vec![];
         };
         let av = unsafe { AstVector::wrap(&self.ctx, raw) };
-        av.try_into_typed_vec().expect("unsat core contains only Bool")
+        av.try_into().expect("unsat core contains only Bool")
     }
 
     /// Retrieve consequences from the solver given a set of assumptions.
@@ -237,7 +237,7 @@ impl Solver {
         }
 
         consequences_vec
-            .try_into_typed_vec()
+            .try_into()
             .expect("consequences are always Bool")
     }
 

@@ -154,11 +154,12 @@ impl Optimize {
     ///
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) }) else {
+        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) })
+        else {
             return vec![];
         };
         let av = unsafe { AstVector::wrap(&self.ctx, raw) };
-        av.try_into_typed_vec().expect("unsat core contains only Bool")
+        av.try_into().expect("unsat core contains only Bool")
     }
 
     /// Create a backtracking point.

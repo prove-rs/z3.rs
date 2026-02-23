@@ -136,7 +136,7 @@ impl AstVector {
     ///
     /// Returns `Err` with the first conversion failure message if any element
     /// cannot be cast to `T`.
-    pub(crate) fn try_into_typed_vec<T>(self) -> Result<Vec<T>, String>
+    fn try_into_typed_vec<T>(self) -> Result<Vec<T>, String>
     where
         T: TryFrom<Dynamic, Error = String>,
     {
