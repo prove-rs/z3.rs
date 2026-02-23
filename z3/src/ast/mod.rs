@@ -621,6 +621,7 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
+impl_ast!(Algebraic);
 
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
