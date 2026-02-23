@@ -72,9 +72,9 @@ pub trait UserPropagator: Debug {
     fn decide(&mut self, cb: &CallBack, val: &Dynamic, bit: u32, is_pos: bool) {}
 
     /// Generate a new subsolver using the new `ctx`.
-    /// 
+    ///
     /// ## Safety
-    /// 
+    ///
     /// Note that the return [`UserPropagator`] will live for as long as the
     /// [`UPSolver`]. It is a bit unclear currently if the context lives that
     /// long. I recommand to avoid derefencing `z3` types within the
@@ -88,7 +88,7 @@ pub trait UserPropagator: Debug {
 }
 
 /// Tool to use `z3` user propagator callbacks.
-/// 
+///
 /// This should not be used outside of a callback.
 #[derive(Debug)]
 pub struct CallBack {
@@ -165,6 +165,7 @@ impl CallBack {
     /// length.
     ///
     /// see [`Z3_solver_propagate_consequence`]
+    #[allow(clippy::doc_overindented_list_items)]
     pub fn propagate<'b, I, J, A>(&'b self, fixed: I, lhs: J, rhs: J, conseq: &'b ast::Bool) -> bool
     where
         I: IntoIterator<Item = &'b ast::Bool>,
@@ -295,7 +296,7 @@ where
         Self { ctx, f }
     }
 }
-impl< F> Debug for ClausureOnClause<F>
+impl<F> Debug for ClausureOnClause<F>
 where
     F: FnMut(&Dynamic, &[u32], &[Dynamic]),
 {
@@ -307,7 +308,7 @@ where
     }
 }
 
-impl< F> OnClause for ClausureOnClause<F>
+impl<F> OnClause for ClausureOnClause<F>
 where
     F: FnMut(&Dynamic, &[u32], &[Dynamic]),
 {
@@ -329,7 +330,7 @@ where
 type PropagatorContainer<U> = RefCell<Vec<Pin<Rc<U>>>>;
 
 /// Wrapper around (usually) a [`UserPropagator`].
-/// 
+///
 /// This is the struct passed to `z3`. It notably keeps a pointer to the list of
 /// user propagators. This way it can register new user propagator on the fly in
 /// a [`UserPropagator::fresh`] callback.
@@ -354,7 +355,7 @@ impl<U: ?Sized> PropagatorWrapper<U> {
     }
 
     /// Register a child `U` as its sibling in the `parent` list
-    pub fn register_child(&self,  child: Box<U>) -> Pin<Rc<Self>> {
+    pub fn register_child(&self, child: Box<U>) -> Pin<Rc<Self>> {
         Self::new(&self.parent, child)
     }
 }
@@ -459,10 +460,7 @@ impl std::ops::Deref for UPSolver<'_> {
 /// [`super::UPSolver`] to solve the liftetime problems, hence why to
 /// function is `unsafe`.
 #[allow(unsafe_op_in_unsafe_fn)] // <- litterally everything is unsafe in it
-pub(crate) unsafe fn z3_user_propagator_init<'a>(
-    up: Pin<&UPWrapper<'a>>,
-    z3_slv: Z3_solver,
-) {
+pub(crate) unsafe fn z3_user_propagator_init<'a>(up: Pin<&UPWrapper<'a>>, z3_slv: Z3_solver) {
     let z3_ctx = up.propagator.get_context().z3_ctx.0;
     debug!("Z3_solver_propagate_init");
     Z3_solver_propagate_init(
@@ -598,10 +596,7 @@ mod callbacks {
         }
     }
 
-    pub(crate) extern "C" fn final_eh(
-        uctx: *mut ::std::ffi::c_void,
-        cb: Z3_solver_callback,
-    ) {
+    pub(crate) extern "C" fn final_eh(uctx: *mut ::std::ffi::c_void, cb: Z3_solver_callback) {
         debug!("final_eh");
         if let Some(up) = unsafe { mut_from_user_context(uctx) } {
             up.final_(&CallBack::new(cb, up.get_context()));
@@ -742,22 +737,22 @@ mod test {
         impl<'a> UserPropagator for UP<'a> {
             fn eq(&mut self, upw: &CallBack, x: &Dynamic, y: &Dynamic) {
                 println!("eq: {x} = {y}");
-                // for e in [x, y] {
-                //     let Some(nt) = self.generate_next_term(e) else {
-                //         continue;
-                //     };
-                //     upw.propagate_one(&[], &e.eq(&nt));
-                // }
+                for e in [x, y] {
+                    let Some(nt) = self.generate_next_term(e) else {
+                        continue;
+                    };
+                    upw.propagate_one(&[], &e.eq(&nt));
+                }
             }
 
             fn neq(&mut self, upw: &CallBack, x: &Dynamic, y: &Dynamic) {
                 println!("neq: {x} != {y}");
-                // for e in [x, y] {
-                //     let Some(nt) = self.generate_next_term(e) else {
-                //         continue;
-                //     };
-                //     upw.propagate_one(&[], &e.eq(&nt));
-                // }
+                for e in [x, y] {
+                    let Some(nt) = self.generate_next_term(e) else {
+                        continue;
+                    };
+                    upw.propagate_one(&[], &e.eq(&nt));
+                }
             }
 
             fn created(&mut self, _: &CallBack, e: &ast::Dynamic) {

@@ -8345,6 +8345,7 @@ unsafe extern "C" {
     ///
     /// Assume the callback has the signature:
     ///     `propagate_consequence_eh(context, solver_cb, num_ids, ids, num_eqs, lhs, rhs, consequence)`.
+    #[allow(clippy::doc_overindented_list_items)]
     pub fn Z3_solver_propagate_consequence(
         c: Z3_context,
         cb: Z3_solver_callback,

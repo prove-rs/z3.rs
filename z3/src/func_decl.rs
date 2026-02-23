@@ -195,11 +195,7 @@ impl FuncDecl {
     ///
     /// [user_propagator]: super::user_propagator
     /// [UserPropagator]: super::user_propagator::UserPropagator
-    pub fn new_up<S: Into<Symbol>>(
-        name: S,
-        domain: &[&Sort],
-        range: &Sort,
-    ) -> Self {
+    pub fn new_up<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
         let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
         assert_eq!(ctx.z3_ctx, range.ctx.z3_ctx);
