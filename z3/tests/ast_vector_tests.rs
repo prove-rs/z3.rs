@@ -130,7 +130,7 @@ fn collect_after_map() {
 fn try_into_typed_vec_bool_success() {
     let bools: Vec<Bool> = (0..3).map(|i| Bool::new_const(format!("t{i}"))).collect();
     let v = AstVector::from(bools.clone());
-    let result: Result<Vec<Bool>, _> = v.try_into_typed_vec();
+    let result: Result<Vec<Bool>, _> = v.try_into();
     assert!(result.is_ok());
     let got = result.unwrap();
     assert_eq!(got.len(), 3);
@@ -143,7 +143,7 @@ fn try_into_typed_vec_bool_success() {
 fn try_into_typed_vec_wrong_type_fails() {
     let ints: Vec<Int> = (0..2).map(|i| Int::new_const(format!("w{i}"))).collect();
     let v = AstVector::from(ints);
-    let result: Result<Vec<Bool>, _> = v.try_into_typed_vec();
+    let result: Result<Vec<Bool>, _> = v.try_into();
     assert!(result.is_err());
 }
 
@@ -176,7 +176,7 @@ fn try_from_ast_vector_type_mismatch_error() {
 #[test]
 fn try_into_typed_vec_empty() {
     let v = AstVector::new();
-    let result: Result<Vec<Bool>, _> = v.try_into_typed_vec();
+    let result: Result<Vec<Bool>, _> = v.try_into();
     assert!(result.is_ok());
     assert!(result.unwrap().is_empty());
 }

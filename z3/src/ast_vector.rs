@@ -1,9 +1,9 @@
 use std::convert::TryFrom;
 use std::iter::FusedIterator;
 
-use crate::ast::{Array, Ast, Bool, Dynamic, Float, Int, Real, Seq, Set, BV};
-use crate::ast::{Datatype, String as AstString};
 use crate::Context;
+use crate::ast::{Array, Ast, BV, Bool, Dynamic, Float, Int, Real, Seq, Set};
+use crate::ast::{Datatype, String as AstString};
 use z3_sys::*;
 
 /// Vector of Z3 AST nodes.
@@ -117,12 +117,8 @@ impl AstVector {
         unsafe {
             AstVector::wrap(
                 target_ctx,
-                Z3_ast_vector_translate(
-                    self.ctx.z3_ctx.0,
-                    self.z3_ast_vector,
-                    target_ctx.z3_ctx.0,
-                )
-                .unwrap(),
+                Z3_ast_vector_translate(self.ctx.z3_ctx.0, self.z3_ast_vector, target_ctx.z3_ctx.0)
+                    .unwrap(),
             )
         }
     }
@@ -140,7 +136,7 @@ impl AstVector {
     ///
     /// Returns `Err` with the first conversion failure message if any element
     /// cannot be cast to `T`.
-    pub fn try_into_typed_vec<T>(self) -> Result<Vec<T>, String>
+    pub(crate) fn try_into_typed_vec<T>(self) -> Result<Vec<T>, String>
     where
         T: TryFrom<Dynamic, Error = String>,
     {
