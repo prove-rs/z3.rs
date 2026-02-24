@@ -1,5 +1,5 @@
 use std::convert::TryFrom;
-use z3::ast::{Algebraic, AstKind, Ast, Bool, Real};
+use z3::ast::{Algebraic, Ast, AstKind, Bool, Real};
 use z3::{SatResult, Solver, Sort};
 
 /// Build an `Algebraic` from a small rational.
