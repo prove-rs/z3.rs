@@ -30,6 +30,7 @@ impl Fixedpoint {
     ///
     /// # Example
     /// ```
+    /// # use z3::ast::*
     /// let fp = Fixedpoint::new();
     /// let p = Bool::new_const("p");
     /// let q = Bool::new_const("q");

@@ -18,6 +18,7 @@ impl Polynomial {
     ///
     /// # Example
     /// ```
+    /// # use z3::ast::*;
     /// let x = Int::new_const("x");
     /// let y = Int::new_const("y");
     /// let p1 = &x * &x + &x + 1;  // x^2 + x + 1
