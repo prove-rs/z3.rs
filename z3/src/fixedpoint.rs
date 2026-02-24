@@ -195,7 +195,9 @@ impl Fixedpoint {
     pub fn get_help(&self) -> String {
         unsafe {
             let help = Z3_fixedpoint_get_help(self.ctx.z3_ctx.0, self.z3_fp);
-            std::ffi::CStr::from_ptr(help).to_string_lossy().into_owned()
+            std::ffi::CStr::from_ptr(help)
+                .to_string_lossy()
+                .into_owned()
         }
     }
 
@@ -233,8 +235,7 @@ impl Default for Fixedpoint {
 impl fmt::Display for Fixedpoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let s = unsafe {
-            let s =
-                Z3_fixedpoint_to_string(self.ctx.z3_ctx.0, self.z3_fp, 0, std::ptr::null_mut());
+            let s = Z3_fixedpoint_to_string(self.ctx.z3_ctx.0, self.z3_fp, 0, std::ptr::null_mut());
             std::ffi::CStr::from_ptr(s).to_string_lossy().into_owned()
         };
         write!(f, "{s}")
