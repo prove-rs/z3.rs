@@ -88,6 +88,7 @@ pub mod ast;
 mod config;
 mod context;
 pub mod datatype_builder;
+mod fixedpoint;
 mod func_decl;
 mod func_entry;
 mod func_interp;
@@ -196,6 +197,17 @@ pub struct Model {
 pub struct Optimize {
     ctx: Context,
     z3_opt: Z3_optimize,
+}
+
+/// Context for Horn clause / Datalog solving.
+///
+/// # See also
+///
+/// - [`Fixedpoint::add_rule`]
+/// - [`Fixedpoint::query`]
+pub struct Fixedpoint {
+    ctx: Context,
+    z3_fp: Z3_fixedpoint,
 }
 
 /// Function declaration. Every constant and function have an associated declaration.

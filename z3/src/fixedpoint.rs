@@ -1,17 +1,8 @@
 use crate::ast::{Ast, Bool};
-use crate::{Context, Statistics, Params};
+use crate::{Context, Fixedpoint, FuncDecl, Params, SatResult, Statistics};
 use std::ffi::CString;
+use std::fmt;
 use z3_sys::*;
-
-/// Fixedpoint context for Horn clause solving.
-/// 
-/// Fixedpoint provides facilities for solving Horn clauses and recursive predicates.
-/// It supports both bottom-up (Datalog) and top-down (PDR/IC3) solving strategies.
-#[derive(Debug)]
-pub struct Fixedpoint {
-    pub(crate) ctx: Context,
-    pub(crate) z3_fp: Z3_fixedpoint,
-}
 
 impl Drop for Fixedpoint {
     fn drop(&mut self) {
@@ -26,7 +17,7 @@ impl Fixedpoint {
     pub fn new() -> Fixedpoint {
         let ctx = Context::thread_local();
         unsafe {
-            let fp = Z3_mk_fixedpoint(ctx.z3_ctx.0);
+            let fp = Z3_mk_fixedpoint(ctx.z3_ctx.0).unwrap();
             Z3_fixedpoint_inc_ref(ctx.z3_ctx.0, fp);
             Fixedpoint {
                 ctx: ctx.clone(),
@@ -36,13 +27,13 @@ impl Fixedpoint {
     }
 
     /// Add a Horn clause rule to the fixedpoint context.
-    /// 
+    ///
     /// # Example
     /// ```ignore
     /// let fp = Fixedpoint::new();
     /// let p = Bool::new_const("p");
     /// let q = Bool::new_const("q");
-    /// 
+    ///
     /// // Add rule: p => q
     /// fp.add_rule(&p.implies(&q), None);
     /// ```
@@ -51,24 +42,27 @@ impl Fixedpoint {
             let name_sym = match name {
                 Some(n) => {
                     let cname = CString::new(n).unwrap();
-                    Z3_mk_string_symbol(self.ctx.z3_ctx.0, cname.as_ptr())
-                },
-                None => std::ptr::null_mut(),
+                    Z3_mk_string_symbol(self.ctx.z3_ctx.0, cname.as_ptr()).unwrap()
+                }
+                None => {
+                    let empty = CString::new("").unwrap();
+                    Z3_mk_string_symbol(self.ctx.z3_ctx.0, empty.as_ptr()).unwrap()
+                }
             };
             Z3_fixedpoint_add_rule(self.ctx.z3_ctx.0, self.z3_fp, rule.get_z3_ast(), name_sym);
         }
     }
 
     /// Add a fact (ground assertion) to the fixedpoint context.
-    pub fn add_fact(&self, pred: &impl Ast, args: &[&dyn Ast]) {
-        let args_z3: Vec<Z3_ast> = args.iter().map(|a| a.get_z3_ast()).collect();
+    pub fn add_fact(&self, pred: &FuncDecl, args: &[u32]) {
+        let mut args: Vec<u32> = args.to_vec();
         unsafe {
             Z3_fixedpoint_add_fact(
                 self.ctx.z3_ctx.0,
                 self.z3_fp,
-                pred.get_z3_ast(),
-                args_z3.len() as u32,
-                args_z3.as_ptr(),
+                pred.z3_func_decl,
+                args.len() as u32,
+                args.as_mut_ptr(),
             );
         }
     }
@@ -81,22 +75,32 @@ impl Fixedpoint {
     }
 
     /// Query the fixedpoint context for satisfiability.
-    /// 
+    ///
     /// Returns the result of the query (satisfiable, unsatisfiable, or unknown).
-    pub fn query(&self, query: &impl Ast) -> Z3_lbool {
-        unsafe { Z3_fixedpoint_query(self.ctx.z3_ctx.0, self.z3_fp, query.get_z3_ast()) }
+    pub fn query(&self, query: &impl Ast) -> SatResult {
+        unsafe {
+            match Z3_fixedpoint_query(self.ctx.z3_ctx.0, self.z3_fp, query.get_z3_ast()) {
+                Z3_L_TRUE => SatResult::Sat,
+                Z3_L_FALSE => SatResult::Unsat,
+                _ => SatResult::Unknown,
+            }
+        }
     }
 
     /// Query the fixedpoint context with multiple relations.
-    pub fn query_relations(&self, relations: &[&dyn Ast]) -> Z3_lbool {
-        let relations_z3: Vec<Z3_ast> = relations.iter().map(|r| r.get_z3_ast()).collect();
+    pub fn query_relations(&self, relations: &[&FuncDecl]) -> SatResult {
+        let decls: Vec<Z3_func_decl> = relations.iter().map(|r| r.z3_func_decl).collect();
         unsafe {
-            Z3_fixedpoint_query_relations(
+            match Z3_fixedpoint_query_relations(
                 self.ctx.z3_ctx.0,
                 self.z3_fp,
-                relations_z3.len() as u32,
-                relations_z3.as_ptr(),
-            )
+                decls.len() as u32,
+                decls.as_ptr(),
+            ) {
+                Z3_L_TRUE => SatResult::Sat,
+                Z3_L_FALSE => SatResult::Unsat,
+                _ => SatResult::Unknown,
+            }
         }
     }
 
@@ -117,49 +121,47 @@ impl Fixedpoint {
     pub fn get_reason_unknown(&self) -> String {
         unsafe {
             let reason = Z3_fixedpoint_get_reason_unknown(self.ctx.z3_ctx.0, self.z3_fp);
-            std::ffi::CStr::from_ptr(reason).to_string_lossy().into_owned()
+            std::ffi::CStr::from_ptr(reason)
+                .to_string_lossy()
+                .into_owned()
         }
     }
 
-    /// Update a named parameter in the fixedpoint context.
+    /// Update a named rule.
     pub fn update_rule(&self, rule: &impl Ast, name: &str) {
         unsafe {
             let cname = CString::new(name).unwrap();
-            let name_sym = Z3_mk_string_symbol(self.ctx.z3_ctx.0, cname.as_ptr());
+            let name_sym = Z3_mk_string_symbol(self.ctx.z3_ctx.0, cname.as_ptr()).unwrap();
             Z3_fixedpoint_update_rule(self.ctx.z3_ctx.0, self.z3_fp, rule.get_z3_ast(), name_sym);
         }
     }
 
     /// Get the number of levels explored during the last query.
-    pub fn get_num_levels(&self) -> u32 {
-        unsafe { Z3_fixedpoint_get_num_levels(self.ctx.z3_ctx.0, self.z3_fp) }
+    pub fn get_num_levels(&self, pred: &FuncDecl) -> u32 {
+        unsafe { Z3_fixedpoint_get_num_levels(self.ctx.z3_ctx.0, self.z3_fp, pred.z3_func_decl) }
     }
 
     /// Get the cover (approximation) at a given level.
-    pub fn get_cover_delta(&self, level: i32, predicate: &impl Ast) -> Option<Bool> {
+    pub fn get_cover_delta(&self, level: i32, predicate: &FuncDecl) -> Option<Bool> {
         unsafe {
-            let delta = Z3_fixedpoint_get_cover_delta(
+            Z3_fixedpoint_get_cover_delta(
                 self.ctx.z3_ctx.0,
                 self.z3_fp,
                 level,
-                predicate.get_z3_ast(),
-            );
-            if delta.is_some() {
-                Some(Bool::wrap(&self.ctx, delta.unwrap()))
-            } else {
-                None
-            }
+                predicate.z3_func_decl,
+            )
+            .map(|d| Bool::wrap(&self.ctx, d))
         }
     }
 
     /// Add a cover for a predicate at a given level.
-    pub fn add_cover(&self, level: i32, predicate: &impl Ast, property: &impl Ast) {
+    pub fn add_cover(&self, level: i32, predicate: &FuncDecl, property: &impl Ast) {
         unsafe {
             Z3_fixedpoint_add_cover(
                 self.ctx.z3_ctx.0,
                 self.z3_fp,
                 level,
-                predicate.get_z3_ast(),
+                predicate.z3_func_decl,
                 property.get_z3_ast(),
             );
         }
@@ -175,6 +177,13 @@ impl Fixedpoint {
         }
     }
 
+    /// Register a relation as fixedpoint-defined (least-fixedpoint semantics).
+    pub fn register_relation(&self, pred: &FuncDecl) {
+        unsafe {
+            Z3_fixedpoint_register_relation(self.ctx.z3_ctx.0, self.z3_fp, pred.z3_func_decl);
+        }
+    }
+
     /// Set parameters for the fixedpoint context.
     pub fn set_params(&self, params: &Params) {
         unsafe {
@@ -183,21 +192,10 @@ impl Fixedpoint {
     }
 
     /// Get the help string for fixedpoint parameters.
-    pub fn get_help() -> String {
-        let ctx = Context::thread_local();
-        let fp = unsafe { Z3_mk_fixedpoint(ctx.z3_ctx.0) };
+    pub fn get_help(&self) -> String {
         unsafe {
-            let help = Z3_fixedpoint_get_help(ctx.z3_ctx.0, fp);
+            let help = Z3_fixedpoint_get_help(self.ctx.z3_ctx.0, self.z3_fp);
             std::ffi::CStr::from_ptr(help).to_string_lossy().into_owned()
-        }
-    }
-
-    /// Convert the fixedpoint context to a string representation.
-    /// This includes all rules, facts, and assertions.
-    pub fn to_string(&self) -> String {
-        unsafe {
-            let s = Z3_fixedpoint_to_string(self.ctx.z3_ctx.0, self.z3_fp, 0, std::ptr::null_mut());
-            std::ffi::CStr::from_ptr(s).to_string_lossy().into_owned()
         }
     }
 
@@ -224,11 +222,27 @@ impl Fixedpoint {
             }
         }
     }
-
 }
 
 impl Default for Fixedpoint {
     fn default() -> Self {
         Self::new()
+    }
+}
+
+impl fmt::Display for Fixedpoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let s = unsafe {
+            let s =
+                Z3_fixedpoint_to_string(self.ctx.z3_ctx.0, self.z3_fp, 0, std::ptr::null_mut());
+            std::ffi::CStr::from_ptr(s).to_string_lossy().into_owned()
+        };
+        write!(f, "{s}")
+    }
+}
+
+impl fmt::Debug for Fixedpoint {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
     }
 }

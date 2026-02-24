@@ -32,6 +32,36 @@ fn test_context() {
 }
 
 #[test]
+fn test_fixedpoint_horn_clauses() {
+    let _ = env_logger::try_init();
+
+    let fp = Fixedpoint::new();
+    let bool_sort = Sort::bool();
+
+    // Three 0-ary predicates (propositions in the Horn clause system).
+    let p_decl = FuncDecl::new("p", &[], &bool_sort);
+    let q_decl = FuncDecl::new("q", &[], &bool_sort);
+    let r_decl = FuncDecl::new("r", &[], &bool_sort);
+
+    fp.register_relation(&p_decl);
+    fp.register_relation(&q_decl);
+    fp.register_relation(&r_decl);
+
+    let p = p_decl.apply(&[]).as_bool().unwrap();
+    let q = q_decl.apply(&[]).as_bool().unwrap();
+    let r = r_decl.apply(&[]).as_bool().unwrap();
+
+    // Rules: p => q, q => r
+    fp.add_rule(&p.implies(&q), Some("p_to_q"));
+    fp.add_rule(&q.implies(&r), Some("q_to_r"));
+    // Fact: p is always true.
+    fp.add_rule(&p, Some("fact_p"));
+
+    // r is derivable via p => q => r.
+    assert_eq!(fp.query(&r), SatResult::Sat);
+}
+
+#[test]
 fn test_sorts_and_symbols() {
     let _ = env_logger::try_init();
 
