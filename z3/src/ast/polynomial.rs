@@ -17,7 +17,7 @@ impl Polynomial {
     /// Returns an [`AstVector`] containing the nonzero subresultants.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
     /// let x = Int::new_const("x");
     /// let y = Int::new_const("y");
     /// let p1 = &x * &x + &x + 1;  // x^2 + x + 1

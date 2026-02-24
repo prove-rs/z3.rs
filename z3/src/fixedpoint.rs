@@ -29,7 +29,7 @@ impl Fixedpoint {
     /// Add a Horn clause rule to the fixedpoint context.
     ///
     /// # Example
-    /// ```ignore
+    /// ```
     /// let fp = Fixedpoint::new();
     /// let p = Bool::new_const("p");
     /// let q = Bool::new_const("q");
