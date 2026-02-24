@@ -109,11 +109,7 @@ impl Fixedpoint {
     pub fn get_answer(&self) -> Option<Bool> {
         unsafe {
             let answer = Z3_fixedpoint_get_answer(self.ctx.z3_ctx.0, self.z3_fp);
-            if answer.is_some() {
-                Some(Bool::wrap(&self.ctx, answer.unwrap()))
-            } else {
-                None
-            }
+            answer.map(|answer| Bool::wrap(&self.ctx, answer))
         }
     }
 
