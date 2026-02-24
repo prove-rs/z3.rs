@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.7](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.6...z3-sys-v0.10.7) - 2026-02-24
+
+### Added
+
+- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ) - #500
+
+### Other
+
+- bump Z3 default version to 4.16.0 ([#504](https://github.com/prove-rs/z3.rs/pull/504)) (by @toolCHAINZ) - #504
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.10.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.5...z3-sys-v0.10.6) - 2026-02-21
 
 ### Fixed
