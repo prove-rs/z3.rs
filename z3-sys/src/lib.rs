@@ -6420,7 +6420,12 @@ unsafe extern "C" {
     /// |  (=> atoms horn_rule)
     /// |  atom
     /// ```
-    pub fn Z3_fixedpoint_add_rule(c: Z3_context, d: Z3_fixedpoint, rule: Z3_ast, name: Z3_symbol);
+    pub fn Z3_fixedpoint_add_rule(
+        c: Z3_context,
+        d: Z3_fixedpoint,
+        rule: Z3_ast,
+        name: Option<Z3_symbol>,
+    );
 
     /// Add a Database fact.
     ///

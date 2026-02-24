@@ -6,7 +6,7 @@ use std::fmt;
 use z3_sys::*;
 
 use crate::{
-    Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
+    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
     ast::{Ast, Bool, Dynamic},
 };
 
@@ -154,24 +154,12 @@ impl Optimize {
     ///
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        if let Some(z3_unsat_core) =
-            unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) }
-        {
-            let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_unsat_core) };
-
-            let mut unsat_core = Vec::with_capacity(len as usize);
-
-            for i in 0..len {
-                let elem =
-                    unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i).unwrap() };
-                let elem = unsafe { Bool::wrap(&self.ctx, elem) };
-                unsat_core.push(elem);
-            }
-
-            unsat_core
-        } else {
-            vec![]
-        }
+        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) })
+        else {
+            return vec![];
+        };
+        let av = unsafe { AstVector::wrap(&self.ctx, raw) };
+        av.try_into().expect("unsat core contains only Bool")
     }
 
     /// Create a backtracking point.
@@ -236,21 +224,8 @@ impl Optimize {
     ///
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic> {
-        let (z3_objectives, len) = unsafe {
-            let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt).unwrap();
-            let len = Z3_ast_vector_size(self.ctx.z3_ctx.0, objectives);
-            (objectives, len)
-        };
-
-        let mut objectives = Vec::with_capacity(len as usize);
-
-        for i in 0..len {
-            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_objectives, i).unwrap() };
-            let elem = unsafe { Dynamic::wrap(&self.ctx, elem) };
-            objectives.push(elem);
-        }
-
-        objectives
+        let raw = unsafe { Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt).unwrap() };
+        unsafe { AstVector::wrap(&self.ctx, raw) }.to_vec()
     }
 
     /// Retrieve a string that describes the last status returned by [`Optimize::check()`].

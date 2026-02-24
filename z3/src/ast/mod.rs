@@ -26,6 +26,10 @@ mod seq;
 mod set;
 mod string;
 
+// New AST modules for extended API coverage
+pub mod algebraic;
+pub mod polynomial;
+
 pub use array::Array;
 pub use bool::Bool;
 pub use bv::BV;
@@ -39,6 +43,10 @@ pub use rounding_mode::RoundingMode;
 pub use seq::Seq;
 pub use set::Set;
 pub use string::String;
+
+// Export new AST types
+pub use algebraic::Algebraic;
+pub use polynomial::Polynomial;
 
 macro_rules! unop {
     (
@@ -613,6 +621,7 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
+impl_ast!(Algebraic);
 
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
