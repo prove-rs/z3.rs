@@ -88,6 +88,7 @@ pub mod ast;
 mod config;
 mod context;
 pub mod datatype_builder;
+mod fixedpoint;
 mod func_decl;
 mod func_entry;
 mod func_interp;
@@ -108,11 +109,15 @@ mod translate;
 pub mod user_propagator;
 mod version;
 
+pub mod ast_vector;
+pub mod quantifier_elimination;
+
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
 pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
+pub use ast_vector::AstVector;
 pub use context::Context;
 pub use datatype_builder::DatatypeAccessor;
 pub use solver::Solvable;
@@ -193,6 +198,17 @@ pub struct Model {
 pub struct Optimize {
     ctx: Context,
     z3_opt: Z3_optimize,
+}
+
+/// Context for Horn clause / Datalog solving.
+///
+/// # See also
+///
+/// - [`Fixedpoint::add_rule`]
+/// - [`Fixedpoint::query`]
+pub struct Fixedpoint {
+    ctx: Context,
+    z3_fp: Z3_fixedpoint,
 }
 
 /// Function declaration. Every constant and function have an associated declaration.
