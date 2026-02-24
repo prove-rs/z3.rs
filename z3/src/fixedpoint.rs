@@ -30,7 +30,8 @@ impl Fixedpoint {
     ///
     /// # Example
     /// ```
-    /// # use z3::ast::*
+    /// # use z3::ast::*;
+    /// # use z3::Fixedpoint;
     /// let fp = Fixedpoint::new();
     /// let p = Bool::new_const("p");
     /// let q = Bool::new_const("q");
@@ -39,17 +40,11 @@ impl Fixedpoint {
     /// fp.add_rule(&p.implies(&q), None);
     /// ```
     pub fn add_rule(&self, rule: &impl Ast, name: Option<&str>) {
+        let name_sym = name.map(|name| {
+            let cname = CString::new(name).unwrap();
+            unsafe { Z3_mk_string_symbol(self.ctx.z3_ctx.0, cname.as_ptr()).unwrap() }
+        });
         unsafe {
-            let name_sym = match name {
-                Some(n) => {
-                    let cname = CString::new(n).unwrap();
-                    Z3_mk_string_symbol(self.ctx.z3_ctx.0, cname.as_ptr()).unwrap()
-                }
-                None => {
-                    let empty = CString::new("").unwrap();
-                    Z3_mk_string_symbol(self.ctx.z3_ctx.0, empty.as_ptr()).unwrap()
-                }
-            };
             Z3_fixedpoint_add_rule(self.ctx.z3_ctx.0, self.z3_fp, rule.get_z3_ast(), name_sym);
         }
     }
