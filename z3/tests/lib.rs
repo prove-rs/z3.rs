@@ -8,6 +8,7 @@ use z3::*;
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 
+mod algebraic_tests;
 mod ast_vector_tests;
 mod objectives;
 mod ops;
