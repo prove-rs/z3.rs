@@ -11,11 +11,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
-- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ) - #500
+- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ, @NikolajBjorner) - #500
 
 ### Contributors
 
 * @toolCHAINZ
+* @NikolajBjorner
 
 ## [0.19.9](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.8...z3-v0.19.9) - 2026-02-21
 
