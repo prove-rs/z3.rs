@@ -107,21 +107,18 @@ mod tactic;
 mod translate;
 mod version;
 
-// New modules for extended API coverage
 pub mod ast_vector;
-pub mod quantifier_elimination_simple;
+pub mod quantifier_elimination;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
 pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
+pub use ast_vector::AstVector;
 pub use context::Context;
 pub use datatype_builder::DatatypeAccessor;
 pub use solver::Solvable;
-
-// Export new modules for extended API coverage
-pub use ast_vector::AstVector;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:

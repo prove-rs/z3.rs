@@ -12,6 +12,7 @@ mod algebraic_tests;
 mod ast_vector_tests;
 mod objectives;
 mod ops;
+mod quantifier_elimination_tests;
 mod semver_tests;
 
 #[test]
