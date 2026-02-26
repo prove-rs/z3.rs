@@ -346,6 +346,18 @@ impl Optimize {
             );
         }
     }
+
+    // Return a vector of assumptions in the solver.
+    pub fn get_assertions(&self) -> Vec<Bool> {
+        let z3_vec = unsafe { Z3_optimize_get_assertions(self.ctx.z3_ctx.0, self.z3_opt) }.unwrap();
+
+        (0..unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_vec) })
+            .map(|i| unsafe {
+                let z3_ast = Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_vec, i).unwrap();
+                Bool::wrap(&self.ctx, z3_ast)
+            })
+            .collect()
+    }
 }
 
 /// The type of model handlers that can be registered in [`THREAD_MODEL_HANDLER_REGISTRY`].
