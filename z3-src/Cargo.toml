@@ -1,0 +1,8 @@
+[package]
+name = "z3-src"
+version = "0.1.0"
+edition = "2024"
+description = "The z3 source distribution"
+license = "MIT"
+
+[dependencies]
