@@ -1,5 +1,5 @@
-use std::ffi::CStr;
 use std::fmt;
+use std::{ffi::CStr, iter::FusedIterator};
 use z3_sys::*;
 
 use crate::{
@@ -256,6 +256,9 @@ impl Iterator for SortIter<'_> {
         (len, Some(len))
     }
 }
+
+impl FusedIterator for SortIter<'_> {}
+impl ExactSizeIterator for SortIter<'_> {}
 
 unsafe impl Translate for Model {
     fn translate(&self, dest: &Context) -> Model {
