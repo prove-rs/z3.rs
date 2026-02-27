@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.11](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.10...z3-v0.19.11) - 2026-02-27
+
+### Added
+
+- add high-level API for model sorts/sort universes ([#506](https://github.com/prove-rs/z3.rs/pull/506)) (by @toolCHAINZ) - #506
+
+### Fixed
+
+- standardize AstVector display/debug impl ([#508](https://github.com/prove-rs/z3.rs/pull/508)) (by @toolCHAINZ) - #508
+
+### Other
+
+- FusedIterator and ExactSizeIterator for model/SortIter ([#509](https://github.com/prove-rs/z3.rs/pull/509)) (by @toolCHAINZ) - #509
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.19.10](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.9...z3-v0.19.10) - 2026-02-24
 
 ### Added
