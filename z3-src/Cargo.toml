@@ -2,7 +2,12 @@
 name = "z3-src"
 version = "0.1.0"
 edition = "2024"
-description = "The z3 source distribution"
+description = "Source distribution of the Z3 SMT solver, for use as a build dependency"
 license = "MIT"
+keywords = ["SMT", "satisfiability", "solver", "build"]
+categories = ["development-tools::build-utils"]
+repository = "https://github.com/prove-rs/z3.rs.git"
+include = ["src/**/*", "z3/**/*", "Cargo.toml"]
 
 [dependencies]
+cmake = "0.1.54"
