@@ -90,7 +90,8 @@ fn build_cmake(src_dir: &Path) -> PathBuf {
 
     cfg.define("Z3_BUILD_LIBZ3_SHARED", "false")
         .define("Z3_BUILD_EXECUTABLE", "false")
-        .define("Z3_BUILD_TEST_EXECUTABLES", "false");
+        .define("Z3_BUILD_TEST_EXECUTABLES", "false")
+        .define("Z3_ENABLE_EXAMPLE_TARGETS", "false");
 
     if cfg!(target_os = "windows") {
         // -MP and -m enable parallel compilation, measurably faster for Z3.

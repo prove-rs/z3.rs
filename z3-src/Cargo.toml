@@ -7,7 +7,35 @@ license = "MIT"
 keywords = ["SMT", "satisfiability", "solver", "build"]
 categories = ["development-tools::build-utils"]
 repository = "https://github.com/prove-rs/z3.rs.git"
-include = ["src/**/*", "z3/**/*", "Cargo.toml"]
+exclude = [
+    # Build system alternatives (not cmake)
+    "z3/.bazelrc",
+    "z3/BUILD.bazel",
+    "z3/MODULE.bazel",
+    "z3/build_z3.bat",
+    "z3/configure",
+    # Language bindings (all default OFF, require shared lib)
+    "z3/src/api/python",
+    "z3/src/api/java",
+    "z3/src/api/dotnet",
+    "z3/src/api/go",
+    "z3/src/api/julia",
+    "z3/src/api/ml",
+    "z3/src/api/js",
+    # Never built by cmake
+    "z3/examples",
+    "z3/doc",
+    "z3/scripts",
+    "z3/docker",
+    "z3/.github",
+    "z3/contrib",
+    "z3/codeql",
+    "z3/a3",
+    "z3/noarch",
+    # Misc non-build files
+    "z3/z3guide.jpeg",
+    "z3/RELEASE_NOTES.md",
+]
 
 [dependencies]
 cmake = "0.1.54"
