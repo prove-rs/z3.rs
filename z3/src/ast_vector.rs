@@ -1,4 +1,5 @@
 use std::convert::TryFrom;
+use std::fmt;
 use std::iter::FusedIterator;
 
 use crate::Context;
@@ -17,7 +18,6 @@ use z3_sys::*;
 ///
 /// Many standard rust collection and iteration traits are implemented on it
 /// for convenience.
-#[derive(Debug)]
 pub struct AstVector {
     pub(crate) ctx: Context,
     pub(crate) z3_ast_vector: Z3_ast_vector,
@@ -157,13 +157,19 @@ impl Default for AstVector {
     }
 }
 
-impl std::fmt::Display for AstVector {
-    fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
+impl fmt::Display for AstVector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let s = unsafe {
             let raw = Z3_ast_vector_to_string(self.ctx.z3_ctx.0, self.z3_ast_vector);
             std::ffi::CStr::from_ptr(raw).to_string_lossy().into_owned()
         };
         write!(f, "{s}")
+    }
+}
+
+impl fmt::Debug for AstVector {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
     }
 }
 
