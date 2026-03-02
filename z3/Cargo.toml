@@ -28,6 +28,7 @@ static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]
 # By default we use features present in 4.8.13 and up, but these features
 # allow for turning off these bindings.
 # Once ubuntu stops distributing 4.8.12, we can remove this for convenience.
+z3_4_12_13 = ["z3_4_8_15"]
 z3_4_8_15 = ["z3_4_8_14"]
 z3_4_8_14 = ["z3_4_8_13"]
 z3_4_8_13 = []
