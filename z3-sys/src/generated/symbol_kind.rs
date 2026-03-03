@@ -1,0 +1,6 @@
+#[repr(u32)]
+#[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
+pub enum Z3_symbol_kind {
+    Z3_INT_SYMBOL = 0,
+    Z3_STRING_SYMBOL = 1,
+}

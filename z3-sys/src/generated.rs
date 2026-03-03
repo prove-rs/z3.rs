@@ -1,28 +1,42 @@
-macro_rules! declare_generated_mods {
-    ($($mod_name: ident),*) => {
-        $(
-            // Allow dead code in the generated module as varying versions
-            // of Z3 in use might mean that we don't have the exact same
-            // symbols available, so not all will be used by our mapping
-            // code.
-            #[allow(dead_code)]
-            mod $mod_name {
-                include!(concat!(env!("OUT_DIR"), "/", stringify!($mod_name), ".rs"));
-            }
-        )*
-    };
+// These files are pre-generated from the pinned Z3 source in z3-src/z3.
+// To regenerate after bumping the z3-src submodule, run:
+//   ./scripts/gen-bindings.sh
+// Requires: cargo install bindgen-cli
+#[allow(dead_code)]
+mod ast_kind {
+    include!("generated/ast_kind.rs");
 }
-
-declare_generated_mods! {
-    ast_kind,
-    ast_print_mode,
-    decl_kind,
-    error_code,
-    goal_prec,
-    param_kind,
-    parameter_kind,
-    sort_kind,
-    symbol_kind
+#[allow(dead_code)]
+mod ast_print_mode {
+    include!("generated/ast_print_mode.rs");
+}
+#[allow(dead_code)]
+mod decl_kind {
+    include!("generated/decl_kind.rs");
+}
+#[allow(dead_code)]
+mod error_code {
+    include!("generated/error_code.rs");
+}
+#[allow(dead_code)]
+mod goal_prec {
+    include!("generated/goal_prec.rs");
+}
+#[allow(dead_code)]
+mod param_kind {
+    include!("generated/param_kind.rs");
+}
+#[allow(dead_code)]
+mod parameter_kind {
+    include!("generated/parameter_kind.rs");
+}
+#[allow(dead_code)]
+mod sort_kind {
+    include!("generated/sort_kind.rs");
+}
+#[allow(dead_code)]
+mod symbol_kind {
+    include!("generated/symbol_kind.rs");
 }
 
 pub use self::ast_kind::Z3_ast_kind;
