@@ -153,8 +153,8 @@ impl Sort {
     ) -> (Sort, Vec<FuncDecl>, Vec<FuncDecl>) {
         let ctx = &Context::thread_local();
         let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
-        let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
-        let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
+        let mut enum_consts = vec![std::ptr::null_mut::<_Z3_func_decl>(); enum_names.len()];
+        let mut enum_testers = vec![std::ptr::null_mut::<_Z3_func_decl>(); enum_names.len()];
 
         let sort = unsafe {
             Self::wrap(
@@ -164,8 +164,8 @@ impl Sort {
                     name.as_z3_symbol(),
                     enum_names.len().try_into().unwrap(),
                     enum_names.as_ptr(),
-                    enum_consts.as_mut_ptr(),
-                    enum_testers.as_mut_ptr(),
+                    enum_consts.as_mut_ptr() as *mut Z3_func_decl,
+                    enum_testers.as_mut_ptr() as *mut Z3_func_decl,
                 )
                 .unwrap(),
             )
@@ -203,7 +203,7 @@ impl Sort {
     }
 
     pub fn kind(&self) -> SortKind {
-        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.0, self.z3_sort) }
+        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.0, self.z3_sort).into() }
     }
 
     /// Returns `Some(e)` where `e` is the number of exponent bits if the sort

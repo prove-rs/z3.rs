@@ -105,7 +105,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -126,7 +126,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -147,7 +147,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -165,7 +165,7 @@ impl FuncDecl {
     pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap()) }
+        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap()) }
     }
 
     /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].
@@ -228,7 +228,7 @@ impl FuncDecl {
 
     /// Return the `DeclKind` of this `FuncDecl`.
     pub fn kind(&self) -> DeclKind {
-        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx.0, self.z3_func_decl) }
+        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx.0, self.z3_func_decl).into() }
     }
 
     /// Return the name of this `FuncDecl`.
@@ -239,7 +239,7 @@ impl FuncDecl {
         unsafe {
             let z3_ctx = self.ctx.z3_ctx.0;
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl).unwrap();
-            match Z3_get_symbol_kind(z3_ctx, symbol) {
+            match SymbolKind::from(Z3_get_symbol_kind(z3_ctx, symbol)) {
                 SymbolKind::String => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
                     .to_string_lossy()
                     .into_owned(),
@@ -265,6 +265,7 @@ impl FuncDecl {
                 z3_ctx,
                 Z3_get_domain(z3_ctx, self.z3_func_decl, i).expect("cannot get domain of FuncDecl"),
             )
+            .into()
         })
     }
 
@@ -276,6 +277,7 @@ impl FuncDecl {
                 z3_ctx,
                 Z3_get_range(z3_ctx, self.z3_func_decl).expect("cannot get range of FuncDecl"),
             )
+            .into()
         }
     }
 }

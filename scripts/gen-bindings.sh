@@ -4,17 +4,15 @@
 #
 # Generates:
 #   - z3-sys/src/generated/{enum}.rs  — rustified enum types (committed)
-#   - z3-sys/src/generated/functions_check.rs  — transformed function signatures
-#     for drift detection (not committed; see .gitignore)
+#   - z3-sys/src/generated/functions.rs  — transformed function signatures (committed)
 #
-# Requires: bindgen CLI (cargo install bindgen-cli)
+# Requires: bindgen CLI (cargo install bindgen-cli), libclang
 set -euo pipefail
 
 REPO_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 HEADER="${REPO_ROOT}/z3-src/z3/src/api/z3.h"
 INCLUDE_DIR="${REPO_ROOT}/z3-src/z3/src/api"
 OUT_DIR="${REPO_ROOT}/z3-sys/src/generated"
-TRANSFORM="${REPO_ROOT}/scripts/bindgen-transform"
 
 if ! command -v bindgen &>/dev/null; then
     echo "error: bindgen not found. Install it with: cargo install bindgen-cli" >&2
@@ -39,17 +37,10 @@ for x in ast_kind ast_print_mode decl_kind error_code goal_prec param_kind param
     echo "Generated ${x}.rs"
 done
 
-echo "Generating functions_check.rs..."
-bindgen "${HEADER}" \
-    --use-core \
-    --disable-header-comment \
-    --allowlist-function "Z3_.*" \
-    --blocklist-type "Z3_.*" \
-    --blocklist-type "_Z3_.*" \
-    -- "-I${INCLUDE_DIR}" \
-    | cargo run --manifest-path "${TRANSFORM}/Cargo.toml" --quiet \
-    > "${OUT_DIR}/functions_check.rs"
-echo "Generated functions_check.rs"
+echo "Generating functions.rs via bindgen feature..."
+Z3_SYS_Z3_HEADER="${HEADER}" Z3_SYS_UPDATE_GENERATED=1 \
+    cargo build -p z3-sys --features bindgen -q
+echo "Generated functions.rs"
 
 echo ""
 echo "Done. Review enum diffs with: git diff z3-sys/src/generated/"

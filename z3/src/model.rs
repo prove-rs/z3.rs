@@ -54,7 +54,7 @@ impl Model {
                     Z3_get_range(self.ctx.z3_ctx.0, f.z3_func_decl).unwrap(),
                 )
             };
-            match sort_kind {
+            match SortKind::from(sort_kind) {
                 SortKind::Array => {
                     if unsafe { Z3_is_as_array(self.ctx.z3_ctx.0, ret) } {
                         let fd = unsafe {

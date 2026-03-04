@@ -41,6 +41,7 @@ impl Dynamic {
                 self.ctx.z3_ctx.0,
                 Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
             )
+            .into()
         }
     }
 
@@ -111,13 +112,13 @@ impl Dynamic {
         unsafe {
             match self.sort_kind() {
                 SortKind::Array => {
-                    match Z3_get_sort_kind(
+                    match SortKind::from(Z3_get_sort_kind(
                         self.ctx.z3_ctx.0,
                         Z3_get_array_sort_range(
                             self.ctx.z3_ctx.0,
                             Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
                         )?,
-                    ) {
+                    )) {
                         SortKind::Bool => Some(Set::wrap(&self.ctx, self.z3_ast)),
                         _ => None,
                     }

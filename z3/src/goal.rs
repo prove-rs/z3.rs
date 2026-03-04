@@ -78,7 +78,7 @@ impl Goal {
 
     /// Return the "precision" of the given goal. Goals can be transformed using over and under approximations.
     pub fn get_precision(&self) -> GoalPrec {
-        unsafe { Z3_goal_precision(self.ctx.z3_ctx.0, self.z3_goal) }
+        unsafe { Z3_goal_precision(self.ctx.z3_ctx.0, self.z3_goal).into() }
     }
 
     pub fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a

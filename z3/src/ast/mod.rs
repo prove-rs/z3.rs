@@ -287,7 +287,7 @@ pub trait Ast: fmt::Debug {
     fn kind(&self) -> AstKind {
         unsafe {
             let z3_ctx = self.get_ctx().z3_ctx.0;
-            Z3_get_ast_kind(z3_ctx, self.get_z3_ast())
+            Z3_get_ast_kind(z3_ctx, self.get_z3_ast()).into()
         }
     }
 
