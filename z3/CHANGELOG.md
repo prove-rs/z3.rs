@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.12](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.11...z3-v0.19.12) - 2026-03-04
+
+### Added
+
+- add `with` method to Tactic ([#511](https://github.com/prove-rs/z3.rs/pull/511)) (by @longlinh123456) - #511
+
+### Contributors
+
+* @longlinh123456
+
 ## [0.19.11](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.10...z3-v0.19.11) - 2026-02-27
 
 ### Added
