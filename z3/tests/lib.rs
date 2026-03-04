@@ -1298,6 +1298,32 @@ fn test_tactic_or_else() {
 }
 
 #[test]
+fn test_tactic_with() {
+    let mut params = Params::new();
+    params.set_u32("add_bound_lower", 1);
+    params.set_u32("add_bound_upper", 1000);
+
+    let x = ast::Int::new_const("x");
+
+    let goal = Goal::new(false, false, false);
+    goal.assert(&x.eq(&x));
+
+    let tactic = Tactic::new("add-bounds").with(&params);
+
+    // Test that `with` succesfully applied the parameter set
+    let apply_results = tactic.apply(&goal, Some(&Params::new()));
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
+    assert_eq!(
+        format!("{goal_result}"),
+        "(goal\n  (= x x)\n  (<= x 1000)\n  (>= x 1))"
+    );
+}
+
+#[test]
 fn test_goal_apply_tactic() {
     pub fn test_apply_tactic(goal: Goal, before_formulas: Vec<Bool>, after_formulas: Vec<Bool>) {
         assert_eq!(goal.get_formulas(), before_formulas);
