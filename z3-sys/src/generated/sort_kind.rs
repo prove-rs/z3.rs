@@ -1,4 +1,5 @@
 #[repr(u32)]
+#[doc = "\\brief The different kinds of Z3 types (See #Z3_get_sort_kind)."]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
 pub enum Z3_sort_kind {
     Z3_UNINTERPRETED_SORT = 0,

@@ -4,3 +4,4 @@ Cargo.lock
 .z3-trace
 *.sln
 .DS_Store
+z3-sys/src/generated/functions_check.rs

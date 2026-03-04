@@ -1,0 +1,17 @@
+[package]
+name = "bindgen-transform"
+version = "0.1.0"
+edition = "2021"
+publish = false
+
+[workspace]
+
+[[bin]]
+name = "bindgen-transform"
+path = "src/main.rs"
+
+[dependencies]
+proc-macro2 = "1"
+prettyplease = "0.2"
+quote = "1"
+syn = { version = "2", features = ["full"] }
