@@ -472,7 +472,7 @@ fn compute_strip_component(variants: &[&str]) -> StripKind {
     if variants.is_empty() {
         return StripKind::None;
     }
-    let threshold = variants.len().div_ceil(2); // ceil(n/2), covers ≥50%
+    let threshold = variants.len() / 2 + 1; // strictly more than half
 
     // Count frequency of each first component (part before first `_`).
     let mut prefix_counts: HashMap<&str, usize> = HashMap::new();

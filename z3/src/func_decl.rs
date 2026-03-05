@@ -245,10 +245,10 @@ impl FuncDecl {
             let z3_ctx = self.ctx.z3_ctx.0;
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl).unwrap();
             match Z3_get_symbol_kind(z3_ctx, symbol) {
-                SymbolKind::Symbol => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
+                SymbolKind::String => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
                     .to_string_lossy()
                     .into_owned(),
-                SymbolKind::IntSymbol => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol)),
+                SymbolKind::Int => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol)),
             }
         }
     }
