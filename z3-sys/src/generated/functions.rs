@@ -403,7 +403,6 @@ unsafe extern "C" {
         head_decl: *mut Z3_func_decl,
         tail_decl: *mut Z3_func_decl,
     ) -> Option<Z3_sort>;
-    // Z3_mk_constructor is hand-written in functions_patched.rs (nullable sorts param).
     /// Retrieve the number of fields of a constructor
     ///
     /// - `c`: logical context.
@@ -1844,7 +1843,7 @@ unsafe extern "C" {
     /// the meaning of de-Bruijn indices by indicating the compilation process from
     /// non-de-Bruijn formulas to de-Bruijn format.
     ///
-    /// ```text
+    /// ```
     /// abs(forall (x1) phi) = forall (x1) abs1(phi, x1, 0)
     /// abs(forall (x1, x2) phi) = abs(forall (x1) abs(forall (x2) phi))
     /// abs1(x, x, n) = b_n
@@ -4906,7 +4905,6 @@ unsafe extern "C" {
     pub fn Z3_fixedpoint_inc_ref(c: Z3_context, d: Z3_fixedpoint);
     /// Decrement the reference counter of the given fixedpoint context.
     pub fn Z3_fixedpoint_dec_ref(c: Z3_context, d: Z3_fixedpoint);
-    // Z3_fixedpoint_add_rule is hand-written in functions_patched.rs (nullable name param).
     /// Add a Database fact.
     ///
     /// - `c`: - context
@@ -5197,7 +5195,6 @@ unsafe extern "C" {
         a: Z3_ast,
         t: Z3_ast,
     );
-    // Z3_optimize_assert_soft is hand-written in functions_patched.rs (nullable id param).
     /// Add a maximization constraint.
     /// - `c`: - context
     /// - `o`: - optimization context

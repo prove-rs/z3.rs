@@ -122,9 +122,11 @@ pub use generated::*;
 pub use types::*;
 
 #[cfg(not(feature = "bindgen"))]
+#[cfg(not(doctest))]
 include!("generated/functions.rs");
 
 #[cfg(feature = "bindgen")]
+#[cfg(not(doctest))]
 include!(concat!(env!("OUT_DIR"), "/functions.rs"));
 
 include!("functions_patched.rs");
