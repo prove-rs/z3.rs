@@ -29,7 +29,10 @@ jobs:
       - uses: actions/checkout@v4
       - name: Install Z3 (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
-        run: sudo apt-get install libz3-dev
+        id: z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          add_to_library_path: true
       - name: Install Z3 (macOS)
         if: matrix.os == 'macos-latest'
         run: brew install z3
