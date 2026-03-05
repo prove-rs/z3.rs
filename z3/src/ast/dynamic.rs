@@ -41,7 +41,6 @@ impl Dynamic {
                 self.ctx.z3_ctx.0,
                 Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
             )
-            .into()
         }
     }
 
@@ -94,7 +93,7 @@ impl Dynamic {
     /// Returns `None` if the `Dynamic` is not actually a `BV`
     pub fn as_bv(&self) -> Option<BV> {
         match self.sort_kind() {
-            SortKind::BV => Some(unsafe { BV::wrap(&self.ctx, self.z3_ast) }),
+            SortKind::Bv => Some(unsafe { BV::wrap(&self.ctx, self.z3_ast) }),
             _ => None,
         }
     }
@@ -112,13 +111,13 @@ impl Dynamic {
         unsafe {
             match self.sort_kind() {
                 SortKind::Array => {
-                    match SortKind::from(Z3_get_sort_kind(
+                    match Z3_get_sort_kind(
                         self.ctx.z3_ctx.0,
                         Z3_get_array_sort_range(
                             self.ctx.z3_ctx.0,
                             Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
                         )?,
-                    )) {
+                    ) {
                         SortKind::Bool => Some(Set::wrap(&self.ctx, self.z3_ast)),
                         _ => None,
                     }

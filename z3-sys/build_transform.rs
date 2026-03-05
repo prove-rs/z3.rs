@@ -1,8 +1,10 @@
-//! Transform raw bindgen output into z3-sys–compatible function declarations.
+//! Transform raw bindgen output into z3-sys–compatible declarations.
 //!
 //! Reads bindgen-generated Rust source and writes transformed Rust to stdout.
 //!
-//! Transformations applied to each `extern "C"` function:
+//! ## Function transformations
+//!
+//! Applied to each `extern "C"` function:
 //!
 //! **Nullability:** Pointer parameters are left as-is (they use `Z3_X` type
 //! aliases, which are `NonNull<_Z3_X>` in the hand-written code). Return types
@@ -22,11 +24,26 @@
 //! - `def_API(...)`, `@name`, `@{`, `@}` lines stripped entirely
 //!
 //! All `extern "C"` blocks in the input are merged into a single block.
+//!
+//! ## Enum transformations
+//!
+//! Applied to each `pub enum Z3_xxx` definition:
+//!
+//! - Enum name: strip `Z3_` prefix, PascalCase the rest
+//!   (`Z3_sort_kind` → `SortKind`, `Z3_decl_kind` → `DeclKind`)
+//! - Variant names: strip `Z3_` prefix, strip common prefix/suffix component
+//!   (e.g. `OP_` for `Z3_OP_*`, `_SORT` for `Z3_*_SORT`), then PascalCase
+//! - `#[doc(alias = "Z3_original_name")]` added to enum and each variant
+//! - Per-variant docs extracted from enum-level bullet-list (`- Z3_X desc`);
+//!   variants not in the list fall back to "Corresponds to `Z3_X` in the C API."
+//! - A `pub type Z3_original_name = NewName;` type alias is emitted after the enum
+
+use std::collections::HashMap;
 
 use quote::quote;
 use syn::{
-    Attribute, Expr, ExprLit, ForeignItem, ForeignItemFn, Item, Lit, Meta, MetaNameValue,
-    ReturnType, Type,
+    Attribute, Expr, ExprLit, ForeignItem, ForeignItemFn, Item, ItemEnum, Lit, Meta, MetaNameValue,
+    ReturnType, Type, Variant,
 };
 
 // ---------------------------------------------------------------------------
@@ -238,7 +255,11 @@ fn process_doc_string(raw: &str) -> String {
         // Inside a code or verbatim block — pass lines through until the closer.
         if block != DocBlock::Normal {
             let t = line.trim();
-            let end_tag = if block == DocBlock::Code { r"\endcode" } else { r"\endverbatim" };
+            let end_tag = if block == DocBlock::Code {
+                r"\endcode"
+            } else {
+                r"\endverbatim"
+            };
             if t == end_tag {
                 out.push("```".to_string());
                 block = DocBlock::Normal;
@@ -292,16 +313,18 @@ fn process_doc_string(raw: &str) -> String {
         }
 
         // Block-level Doxygen commands.
-        if let Some(rest) = t.strip_prefix(r"\remark ").or_else(|| {
-            if t == r"\remark" { Some("") } else { None }
-        }) {
+        if let Some(rest) = t
+            .strip_prefix(r"\remark ")
+            .or_else(|| if t == r"\remark" { Some("") } else { None })
+        {
             out.push(format!("**Remark:** {}", apply_inline(rest.trim_end())));
             continue;
         }
 
-        if let Some(rest) = t.strip_prefix(r"\note ").or_else(|| {
-            if t == r"\note" { Some("") } else { None }
-        }) {
+        if let Some(rest) = t
+            .strip_prefix(r"\note ")
+            .or_else(|| if t == r"\note" { Some("") } else { None })
+        {
             out.push(format!("**Note:** {}", apply_inline(rest.trim_end())));
             continue;
         }
@@ -357,7 +380,9 @@ fn doc_string(attr: &Attribute) -> Option<String> {
         return None;
     }
     if let Meta::NameValue(MetaNameValue {
-        value: Expr::Lit(ExprLit { lit: Lit::Str(s), .. }),
+        value: Expr::Lit(ExprLit {
+            lit: Lit::Str(s), ..
+        }),
         ..
     }) = &attr.meta
     {
@@ -411,39 +436,283 @@ fn transform_fn(mut func: ForeignItemFn) -> ForeignItemFn {
 }
 
 // ---------------------------------------------------------------------------
-// Public entry point
+// Enum transformation helpers
 // ---------------------------------------------------------------------------
 
-/// Transform raw bindgen output into a single merged `unsafe extern "C"` block.
-///
-/// Parses the input as a Rust source file, extracts all `ForeignItemFn` from
-/// any `extern "C"` blocks, applies Doxygen-to-Markdown doc comment conversion
-/// and opaque-handle `Option<>` wrapping, then returns the result as a
-/// `prettyplease`-formatted Rust source string.
-pub fn transform(input: &str) -> String {
-    let file: syn::File = syn::parse_str(input).expect("failed to parse bindgen output as Rust");
-
-    let functions: Vec<ForeignItemFn> = file
-        .items
-        .into_iter()
-        .filter_map(|item| match item {
-            Item::ForeignMod(foreign_mod) => Some(foreign_mod.items),
-            _ => None,
+/// Convert SCREAMING_SNAKE_CASE to PascalCase.
+/// Each `_`-separated component has its first char uppercased, rest lowercased.
+fn pascal_case(s: &str) -> String {
+    s.split('_')
+        .map(|part| {
+            let mut chars = part.chars();
+            match chars.next() {
+                None => String::new(),
+                Some(first) => {
+                    let upper = first.to_uppercase().to_string();
+                    let rest = chars.as_str().to_lowercase();
+                    upper + &rest
+                }
+            }
         })
-        .flatten()
-        .filter_map(|foreign_item| match foreign_item {
-            ForeignItem::Fn(func) => Some(transform_fn(func)),
-            _ => None,
+        .collect()
+}
+
+/// Describes what prefix or suffix to strip from a variant name.
+#[derive(Debug)]
+enum StripKind {
+    Prefix(String), // e.g. "OP_" — strip from start
+    Suffix(String), // e.g. "_SORT" — strip from end
+    None,
+}
+
+/// Find a common prefix or suffix component (≥50% of variants) to strip.
+///
+/// Input: variant names AFTER stripping the leading `Z3_` prefix.
+fn compute_strip_component(variants: &[&str]) -> StripKind {
+    if variants.is_empty() {
+        return StripKind::None;
+    }
+    let threshold = variants.len().div_ceil(2); // ceil(n/2), covers ≥50%
+
+    // Count frequency of each first component (part before first `_`).
+    let mut prefix_counts: HashMap<&str, usize> = HashMap::new();
+    for v in variants {
+        let first = v.split('_').next().unwrap_or(v);
+        *prefix_counts.entry(first).or_insert(0) += 1;
+    }
+    if let Some((best, &count)) = prefix_counts.iter().max_by_key(|&(_, &c)| c) {
+        if count >= threshold {
+            return StripKind::Prefix(format!("{best}_"));
+        }
+    }
+
+    // Count frequency of each last component (part after last `_`).
+    let mut suffix_counts: HashMap<&str, usize> = HashMap::new();
+    for v in variants {
+        if let Some(idx) = v.rfind('_') {
+            let last = &v[idx + 1..];
+            *suffix_counts.entry(last).or_insert(0) += 1;
+        }
+    }
+    if let Some((best, &count)) = suffix_counts.iter().max_by_key(|&(_, &c)| c) {
+        if count >= threshold {
+            return StripKind::Suffix(format!("_{best}"));
+        }
+    }
+
+    StripKind::None
+}
+
+/// Apply the strip component to a variant name (already has `Z3_` stripped).
+fn apply_strip<'a>(variant: &'a str, strip: &StripKind) -> &'a str {
+    match strip {
+        StripKind::Prefix(p) => variant.strip_prefix(p.as_str()).unwrap_or(variant),
+        StripKind::Suffix(s) => variant.strip_suffix(s.as_str()).unwrap_or(variant),
+        StripKind::None => variant,
+    }
+}
+
+/// Parse per-variant docs from an enum-level doc string.
+///
+/// Scans for bullet-list lines of the form `- Z3_VARIANT_NAME desc`,
+/// handling `:` and `is` separators.  Returns `{ "Z3_VARIANT_NAME" => "desc" }`.
+fn parse_variant_docs(doc: &str) -> HashMap<String, String> {
+    let mut map = HashMap::new();
+    for line in doc.lines() {
+        let t = line.trim();
+        let Some(rest) = t.strip_prefix("- Z3_") else {
+            continue;
+        };
+        // rest = "OP_TRUE The constant true." or "APP_AST: constant and apps" etc.
+        // Find end of the identifier portion: first char that isn't [A-Z0-9_].
+        let name_end = rest
+            .find(|c: char| !c.is_ascii_uppercase() && !c.is_ascii_digit() && c != '_')
+            .unwrap_or(rest.len());
+        if name_end == 0 {
+            continue;
+        }
+        let variant_name = format!("Z3_{}", &rest[..name_end]);
+        let after = rest[name_end..].trim_start_matches([' ', ':', '\t']);
+        let desc = after.strip_prefix("is ").unwrap_or(after).trim();
+        if !desc.is_empty() {
+            map.insert(variant_name, apply_inline(desc));
+        }
+    }
+    map
+}
+
+/// Return the enum-level doc with variant bullet-list lines removed.
+fn strip_variant_bullets(doc: &str) -> String {
+    doc.lines()
+        .filter(|line| !line.trim().starts_with("- Z3_"))
+        .collect::<Vec<_>>()
+        .join("\n")
+}
+
+/// Transform a `Z3_xxx_kind` enum to an idiomatic Rust enum plus a type alias.
+///
+/// Returns `(renamed_enum, type_alias_item)`.
+fn transform_enum(mut item: ItemEnum) -> (ItemEnum, proc_macro2::TokenStream) {
+    let original_name = item.ident.to_string();
+
+    // 1. Derive new enum name.
+    let new_name_str = original_name
+        .strip_prefix("Z3_")
+        .map(pascal_case)
+        .unwrap_or_else(|| original_name.clone());
+    let new_ident: syn::Ident = syn::parse_str(&new_name_str).expect("valid enum ident");
+
+    // 2. Collect enum-level doc and build variant-doc map.
+    let raw_doc: String = item
+        .attrs
+        .iter()
+        .filter_map(doc_string)
+        .collect::<Vec<_>>()
+        .join("\n");
+    let variant_docs = parse_variant_docs(&raw_doc);
+    let enum_doc_processed = process_doc_string(&strip_variant_bullets(&raw_doc));
+
+    // 3. Compute strip component from variant names (after stripping Z3_ prefix).
+    let variant_names_no_z3: Vec<String> = item
+        .variants
+        .iter()
+        .map(|v| {
+            let s = v.ident.to_string();
+            s.strip_prefix("Z3_").unwrap_or(&s).to_string()
+        })
+        .collect();
+    let variant_refs: Vec<&str> = variant_names_no_z3.iter().map(String::as_str).collect();
+    let strip = compute_strip_component(&variant_refs);
+
+    // 4. Transform each variant.
+    let new_variants: Vec<Variant> = item
+        .variants
+        .iter()
+        .cloned()
+        .map(|mut variant| {
+            let orig_name = variant.ident.to_string();
+            let no_z3 = orig_name.strip_prefix("Z3_").unwrap_or(&orig_name);
+            let stripped = apply_strip(no_z3, &strip);
+            let new_variant_name = pascal_case(stripped);
+            let new_variant_ident: syn::Ident =
+                syn::parse_str(&new_variant_name).expect("valid variant ident");
+
+            // Build variant doc: from bullet list or fallback.
+            let variant_doc = variant_docs
+                .get(&orig_name)
+                .cloned()
+                .unwrap_or_else(|| format!("Corresponds to `{orig_name}` in the C API."));
+
+            // Build #[doc(alias = "ORIG_NAME")] attribute.
+            let alias_attr: Attribute = syn::parse_quote!(#[doc(alias = #orig_name)]);
+
+            let mut new_attrs = doc_attrs(&variant_doc);
+            new_attrs.push(alias_attr);
+            variant.attrs = new_attrs;
+            variant.ident = new_variant_ident;
+            variant
         })
         .collect();
 
-    let output = quote! {
+    // 5. Build new enum attributes: doc + #[doc(alias)] + existing non-doc attrs.
+    let orig_name_str = &original_name;
+    let mut new_attrs: Vec<Attribute> = Vec::new();
+    if !enum_doc_processed.is_empty() {
+        new_attrs.extend(doc_attrs(&enum_doc_processed));
+    }
+    new_attrs.push(syn::parse_quote!(#[doc(alias = #orig_name_str)]));
+    // Carry through non-doc attributes (e.g. #[repr(u32)], #[derive(...)]).
+    for attr in &item.attrs {
+        if doc_string(attr).is_none() {
+            new_attrs.push(attr.clone());
+        }
+    }
+
+    item.ident = new_ident.clone();
+    item.attrs = new_attrs;
+    item.variants = new_variants.into_iter().collect();
+
+    // 6. Build type alias: `pub type Z3_original_name = NewName;`
+    let orig_ident: syn::Ident = syn::parse_str(&original_name).expect("valid alias ident");
+    let alias_tokens = quote! {
+        pub type #orig_ident = #new_ident;
+    };
+
+    (item, alias_tokens)
+}
+
+// ---------------------------------------------------------------------------
+// Output type
+// ---------------------------------------------------------------------------
+
+/// Output of [`transform`].
+pub struct TransformOutput {
+    /// Transformed `extern "C"` function declarations (content of `functions.rs`).
+    pub functions: String,
+    /// Transformed enum definitions and type aliases (content of `enums.rs`).
+    pub enums: String,
+}
+
+// ---------------------------------------------------------------------------
+// Public entry point
+// ---------------------------------------------------------------------------
+
+/// Transform raw bindgen output into z3-sys–compatible declarations.
+///
+/// Parses the input as a Rust source file, then:
+/// - Extracts all `ForeignItemFn` from any `extern "C"` blocks, applies
+///   Doxygen-to-Markdown doc comment conversion and opaque-handle `Option<>`
+///   wrapping, and returns them as a `prettyplease`-formatted `functions` string.
+/// - Extracts all `enum` items, renames them from `Z3_xxx_kind` to `XxxKind`
+///   style, PascalCases their variants, extracts per-variant docs from
+///   enum-level bullet lists, and returns them plus type aliases as a
+///   `prettyplease`-formatted `enums` string.
+pub fn transform(input: &str) -> TransformOutput {
+    let file: syn::File = syn::parse_str(input).expect("failed to parse bindgen output as Rust");
+
+    let mut functions: Vec<ForeignItemFn> = Vec::new();
+    let mut enum_items: Vec<proc_macro2::TokenStream> = Vec::new();
+
+    for item in file.items {
+        match item {
+            Item::ForeignMod(foreign_mod) => {
+                for foreign_item in foreign_mod.items {
+                    if let ForeignItem::Fn(func) = foreign_item {
+                        functions.push(transform_fn(func));
+                    }
+                }
+            }
+            Item::Enum(enum_item) => {
+                let (transformed, alias) = transform_enum(enum_item);
+                enum_items.push(quote! {
+                    #transformed
+                    #alias
+                });
+            }
+            _ => {}
+        }
+    }
+
+    // Format functions output.
+    let funcs_tokens = quote! {
         unsafe extern "C" {
             #(#functions)*
         }
     };
+    let funcs_file: syn::File =
+        syn::parse2(funcs_tokens).expect("failed to parse transformed functions");
+    let functions_str = prettyplease::unparse(&funcs_file);
 
-    let output_file: syn::File =
-        syn::parse2(output).expect("failed to parse transformed output");
-    prettyplease::unparse(&output_file)
+    // Format enums output.
+    let enums_tokens = quote! {
+        #(#enum_items)*
+    };
+    let enums_file: syn::File =
+        syn::parse2(enums_tokens).expect("failed to parse transformed enums");
+    let enums_str = prettyplease::unparse(&enums_file);
+
+    TransformOutput {
+        functions: functions_str,
+        enums: enums_str,
+    }
 }

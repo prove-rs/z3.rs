@@ -83,7 +83,7 @@
 //! | Variable | Feature | Description |
 //! |----------|---------|-------------|
 //! | `Z3_SYS_Z3_HEADER` | `bindgen` | Path to `z3.h`; defaults to `z3-src/z3/src/api/z3.h` |
-//! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions.rs` |
+//! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions.rs` and `src/generated/enums.rs` |
 //! | `Z3_LIBRARY_PATH_OVERRIDE` | default | Add an extra library search path for the linker |
 //! | `Z3_SYS_Z3_VERSION` | `gh-release` | Z3 version to download (e.g. `4.13.0`) |
 //! | `READ_ONLY_GITHUB_TOKEN` | `bundled`, `gh-release` | GitHub PAT to avoid API rate limits in CI |
@@ -110,14 +110,14 @@
 
 #![allow(non_camel_case_types)]
 #![allow(clippy::unreadable_literal)]
-#![warn(clippy::doc_markdown)]
+// Generated C API docs don't conform to Rust doc formatting conventions.
+#![allow(clippy::doc_markdown)]
+#![allow(clippy::doc_lazy_continuation)]
 #![no_std]
 
 mod generated;
 mod types;
-mod enums;
 
-pub use enums::*;
 pub use generated::*;
 pub use types::*;
 
@@ -126,6 +126,8 @@ include!("generated/functions.rs");
 
 #[cfg(feature = "bindgen")]
 include!(concat!(env!("OUT_DIR"), "/functions.rs"));
+
+include!("functions_patched.rs");
 
 #[cfg(not(windows))]
 #[link(name = "z3")]

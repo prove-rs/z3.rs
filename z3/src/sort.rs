@@ -203,7 +203,7 @@ impl Sort {
     }
 
     pub fn kind(&self) -> SortKind {
-        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.0, self.z3_sort).into() }
+        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.0, self.z3_sort) }
     }
 
     /// Returns `Some(e)` where `e` is the number of exponent bits if the sort
