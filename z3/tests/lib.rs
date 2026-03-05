@@ -1531,7 +1531,7 @@ fn test_ast_safe_eq() {
 fn test_ast_safe_decl() {
     let x: ast::Bool = ast::Bool::new_const("x");
     let x_not = x.not();
-    assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::NOT);
+    assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::Not);
 
     let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
     assert_eq!(f.domain(0), Some(SortKind::Int));

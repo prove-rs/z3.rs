@@ -105,7 +105,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -126,7 +126,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -147,7 +147,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -165,7 +165,12 @@ impl FuncDecl {
     pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+            )
+        }
     }
 
     /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].

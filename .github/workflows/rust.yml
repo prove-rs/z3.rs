@@ -2,9 +2,9 @@ name: Rust
 
 on:
   push:
-    branches: [ master ]
+    branches: [master]
   pull_request:
-    branches: [ master ]
+    branches: [master]
 
 env:
   CARGO_INCREMENTAL: 0
@@ -16,9 +16,9 @@ jobs:
   check-formatting:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Check formatting
-      run: cargo fmt -- --check
+      - uses: actions/checkout@v4
+      - name: Check formatting
+        run: cargo fmt -- --check
 
   build:
     strategy:
@@ -26,45 +26,61 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Z3 (Ubuntu)
-      if: matrix.os == 'ubuntu-latest'
-      run: sudo apt-get install libz3-dev
-    - name: Install Z3 (macOS)
-      if: matrix.os == 'macos-latest'
-      run: brew install z3
-    - name: Run tests
-      run: cargo test --workspace
+      - uses: actions/checkout@v4
+      - name: Remove preinstalled Z3 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # Remove any z3 package installed via apt/dpkg (including library packages)
+          sudo apt-get remove -y z3 libz3-4 libz3-dev || true
+          # Remove common binary locations in case z3 is baked into the image or toolcache
+          sudo rm -f /usr/bin/z3 /usr/local/bin/z3 || true
+          sudo rm -rf /opt/hostedtoolcache/*/z3* || true
+          # Refresh shell cache
+          hash -r || true
+      - name: Install Z3 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        id: z3
+        uses: cda-tum/setup-z3@v1
+        with:
+          version: "4.16.0"
+          add_to_library_path: true
+      - name: Install Z3 (macOS)
+        if: matrix.os == 'macos-latest'
+        run: brew install z3
+      - name: Z3 version
+        run: z3 --version
+      - name: Run tests
+        run: cargo test --workspace
 
   build_on_wasm:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v4
-      with:
-        submodules: recursive
-    - name: Install emscripten
-      run: |
-        cd ~
-        git clone https://github.com/emscripten-core/emsdk.git
-        cd emsdk
-        git pull
-        ./emsdk install ${{ env.EMSCRIPTEN_VERSION }}
-        ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}
-        source ./emsdk_env.sh
-    - name: Install wasm32-unknown-emscripten target
-      run: rustup target add wasm32-unknown-emscripten
-    - name: Run sccache-cache
-      uses: mozilla-actions/sccache-action@v0.0.9
-    - name: Build z3-sys and z3 with bundled Z3
-      run: |
-        source ~/emsdk/emsdk_env.sh
-        cargo build --target=wasm32-unknown-emscripten --features bundled
-      env:
-        SCCACHE_GHA_ENABLED: "true"
-        RUSTC_WRAPPER: "sccache"
-        _EM_CCACHE: "true"
-        EM_COMPILER_WRAPPER: "sccache"
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+      - name: Install emscripten
+        run: |
+          cd ~
+          git clone https://github.com/emscripten-core/emsdk.git
+          cd emsdk
+          git pull
+          ./emsdk install ${{ env.EMSCRIPTEN_VERSION }}
+          ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}
+          source ./emsdk_env.sh
+      - name: Install wasm32-unknown-emscripten target
+        run: rustup target add wasm32-unknown-emscripten
+      - name: Run sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.9
+      - name: Build z3-sys and z3 with bundled Z3
+        run: |
+          source ~/emsdk/emsdk_env.sh
+          cargo build --target=wasm32-unknown-emscripten --features bundled
+        env:
+          SCCACHE_GHA_ENABLED: "true"
+          RUSTC_WRAPPER: "sccache"
+          _EM_CCACHE: "true"
+          EM_COMPILER_WRAPPER: "sccache"
 
   build_with_bundled_z3:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
@@ -151,11 +167,11 @@ jobs:
   run_clippy:
     runs-on: macos-latest
     steps:
-    - uses: actions/checkout@v4
-    - name: Install Z3
-      run: brew install z3
-    - name: Run clippy
-      run: cargo clippy --workspace --all-targets
+      - uses: actions/checkout@v4
+      - name: Install Z3
+        run: brew install z3
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets
 
   build_with_gh_release_z3:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
