@@ -24,10 +24,7 @@ impl Artifacts {
 
     /// Emit `cargo:rustc-link-*` directives. Call this from your `build.rs`.
     pub fn print_cargo_metadata(&self) {
-        println!(
-            "cargo:rustc-link-search=native={}",
-            self.lib_dir.display()
-        );
+        println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
         // Windows uses "libz3", Unix uses "z3"
         if cfg!(target_os = "windows") {
             println!("cargo:rustc-link-lib=static=libz3");
@@ -80,9 +77,7 @@ fn resolve_source() -> PathBuf {
         return submodule;
     }
 
-    panic!(
-        "Z3 source not found — run `git submodule update --init` or set {Z3_SRC_SOURCE_DIR}"
-    );
+    panic!("Z3 source not found — run `git submodule update --init` or set {Z3_SRC_SOURCE_DIR}");
 }
 
 fn build_cmake(src_dir: &Path) -> PathBuf {
