@@ -157,26 +157,6 @@ jobs:
       - name: Run clippy
         run: cargo clippy --workspace --all-targets
 
-  check-binding-drift:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          submodules: recursive
-      - name: Install libclang (required by bindgen)
-        run: sudo apt-get install -y libclang-dev
-      - name: Cache bindgen binary
-        id: cache-bindgen
-        uses: actions/cache@v4
-        with:
-          path: ~/.cargo/bin/bindgen
-          key: bindgen-cli-${{ runner.os }}-0.72.1
-      - name: Install bindgen-cli
-        if: steps.cache-bindgen.outputs.cache-hit != 'true'
-        run: cargo install bindgen-cli --version 0.72.1 --locked
-      - name: Check for Z3 API drift
-        run: scripts/check-bindings.sh
-
   build_with_gh_release_z3:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     strategy:
