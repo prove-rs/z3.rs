@@ -27,6 +27,16 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+      - name: Remove preinstalled Z3 (Ubuntu)
+        if: matrix.os == 'ubuntu-latest'
+        run: |
+          # Remove any z3 package installed via apt/dpkg
+          sudo apt-get remove -y z3 || true
+          # Remove common binary locations in case z3 is baked into the image or toolcache
+          sudo rm -f /usr/bin/z3 /usr/local/bin/z3 || true
+          sudo rm -rf /opt/hostedtoolcache/*/z3* || true
+          # Refresh shell cache
+          hash -r || true
       - name: Install Z3 (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         id: z3
