@@ -1,5 +1,5 @@
 use std::env;
-#[cfg(any(feature = "gh-release"))]
+#[cfg(feature = "gh-release")]
 use std::path::PathBuf;
 
 macro_rules! assert_one_of_features {
