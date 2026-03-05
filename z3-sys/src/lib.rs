@@ -120,19 +120,15 @@ mod types;
 pub use types::*;
 
 #[cfg(not(feature = "bindgen"))]
-#[cfg(not(doctest))]
 include!("generated/functions.rs");
 
 #[cfg(not(feature = "bindgen"))]
-#[cfg(not(doctest))]
 include!("generated/enums.rs");
 
 #[cfg(feature = "bindgen")]
-#[cfg(not(doctest))]
 include!(concat!(env!("OUT_DIR"), "/functions.rs"));
 
 #[cfg(feature = "bindgen")]
-#[cfg(not(doctest))]
 include!(concat!(env!("OUT_DIR"), "/enums.rs"));
 
 include!("functions_patched.rs");
