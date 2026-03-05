@@ -115,7 +115,6 @@
 #![allow(clippy::doc_lazy_continuation)]
 #![no_std]
 
-mod generated;
 mod types;
 
 pub use types::*;

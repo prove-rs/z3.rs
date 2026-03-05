@@ -1,6 +1,6 @@
 use core::ptr::NonNull;
 
-use crate::generated::Z3_error_code;
+use crate::Z3_error_code;
 
 #[doc(hidden)]
 #[repr(C)]
