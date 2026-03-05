@@ -36,6 +36,8 @@ jobs:
       - name: Install Z3 (macOS)
         if: matrix.os == 'macos-latest'
         run: brew install z3
+      - name: Z3 version
+        run: z3 --version
       - name: Run tests
         run: cargo test --workspace
 
