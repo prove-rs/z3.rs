@@ -13,10 +13,10 @@
 pub enum SymbolKind {
     /// Corresponds to `Z3_INT_SYMBOL` in the C API.
     #[doc(alias = "Z3_INT_SYMBOL")]
-    Symbol = 0,
+    IntSymbol = 0,
     /// Corresponds to `Z3_STRING_SYMBOL` in the C API.
     #[doc(alias = "Z3_STRING_SYMBOL")]
-    StringSymbol = 1,
+    Symbol = 1,
 }
 pub type Z3_symbol_kind = SymbolKind;
 /// The different kinds of parameters that can be associated with function symbols.
