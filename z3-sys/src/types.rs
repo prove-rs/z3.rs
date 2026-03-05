@@ -429,5 +429,4 @@ pub type Z3_on_binding_eh = ::core::option::Option<
 >;
 
 /// Callback invoked when an optimization model is found.
-pub type Z3_model_eh =
-    ::core::option::Option<unsafe extern "C" fn(ctx: *mut ::core::ffi::c_void)>;
+pub type Z3_model_eh = ::core::option::Option<unsafe extern "C" fn(ctx: *mut ::core::ffi::c_void)>;

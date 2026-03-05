@@ -165,7 +165,12 @@ impl FuncDecl {
     pub fn tree_order<A: Borrow<Sort>>(a: A, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+            )
+        }
     }
 
     /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].
@@ -240,10 +245,10 @@ impl FuncDecl {
             let z3_ctx = self.ctx.z3_ctx.0;
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl).unwrap();
             match Z3_get_symbol_kind(z3_ctx, symbol) {
-                SymbolKind::StringSymbol => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
+                SymbolKind::Symbol => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
                     .to_string_lossy()
                     .into_owned(),
-                SymbolKind::Symbol => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol)),
+                SymbolKind::IntSymbol => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol)),
             }
         }
     }
