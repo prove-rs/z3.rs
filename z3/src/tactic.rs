@@ -199,6 +199,17 @@ impl Tactic {
         }
     }
 
+    /// Return a tactic that applies the current tactic using the given set of parameters.
+    pub fn with(&self, params: &Params) -> Tactic {
+        unsafe {
+            Self::wrap(
+                &self.ctx,
+                Z3_tactic_using_params(self.ctx.z3_ctx.0, self.z3_tactic, params.z3_params)
+                    .unwrap(),
+            )
+        }
+    }
+
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns
     /// `Ok(_)` with a `ApplyResult`. If the tactic fails, returns `Err(_)` with
     /// an error message describing why.
