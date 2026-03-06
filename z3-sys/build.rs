@@ -89,6 +89,7 @@ fn link_against_cxx_stdlib() {
 #[cfg(any(feature = "gh-release", feature = "bundled"))]
 mod gh_release {
     use std::path::Path;
+    use std::time::Duration;
 
     use super::*;
     use reqwest::blocking::{Client, ClientBuilder};
@@ -226,7 +227,9 @@ mod gh_release {
     }
 
     pub fn get_github_client() -> Client {
-        let client = ClientBuilder::new().user_agent("z3-sys");
+        let client = ClientBuilder::new()
+            .user_agent("z3-sys")
+            .timeout(Duration::from_secs(300));
         let mut headers = HeaderMap::new();
         if let Ok(val) = env::var("READ_ONLY_GITHUB_TOKEN") {
             headers.insert(AUTHORIZATION, format!("Bearer {val}").parse().unwrap());
