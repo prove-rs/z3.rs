@@ -1,7 +1,6 @@
-use std::{env, path::PathBuf};
-
-const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
-const Z3_OVERRIDE_VAR: &str = "Z3_SYS_BUNDLED_DIR_OVERRIDE";
+use std::env;
+#[cfg(feature = "gh-release")]
+use std::path::PathBuf;
 
 macro_rules! assert_one_of_features {
     ($($feature:literal),*) => {{
@@ -26,26 +25,18 @@ fn main() {
 
     println!("cargo:rerun-if-changed=build.rs");
 
-    let (header, search_paths) = match active_feature {
-        Some("bundled") => {
-            build_bundled_z3();
-            (find_header_by_env(), vec![])
-        }
-        Some("gh-release") => (install_from_gh_release(), vec![]),
-        Some("vcpkg") => (find_library_header_by_vcpkg(), vec![]),
+    match active_feature {
+        Some("bundled") => build_from_source(),
+        Some("gh-release") => install_from_gh_release(),
+        Some("vcpkg") => find_library_by_vcpkg(),
         _ => {
-            let search_paths = if let Ok(lib) = pkg_config::Config::new().probe("z3") {
-                lib.include_paths
-            } else {
-                vec![]
-            };
+            pkg_config::Config::new().probe("z3").ok();
             println!("cargo:rerun-if-env-changed=Z3_LIBRARY_PATH_OVERRIDE");
             if let Ok(lib_path) = env::var("Z3_LIBRARY_PATH_OVERRIDE") {
-                println!("cargo:rustc-link-search=native={lib_path}")
+                println!("cargo:rustc-link-search=native={lib_path}");
             }
-            (find_header_by_env(), search_paths)
         }
-    };
+    }
 
     #[cfg(feature = "deprecated-static-link-z3")]
     println!(
@@ -54,7 +45,19 @@ fn main() {
 
     link_against_cxx_stdlib();
 
-    generate_binding(&header, &search_paths);
+    #[cfg(feature = "bindgen")]
+    generate_bindings();
+}
+
+#[cfg(feature = "bundled")]
+fn build_from_source() {
+    let artifacts = z3_src::build();
+    artifacts.print_cargo_metadata();
+}
+
+#[cfg(not(feature = "bundled"))]
+fn build_from_source() {
+    unreachable!()
 }
 
 fn link_against_cxx_stdlib() {
@@ -86,7 +89,7 @@ fn link_against_cxx_stdlib() {
     }
 }
 
-#[cfg(any(feature = "gh-release", feature = "bundled"))]
+#[cfg(feature = "gh-release")]
 mod gh_release {
     use std::path::Path;
     use std::time::Duration;
@@ -97,11 +100,10 @@ mod gh_release {
     use zip::ZipArchive;
     use zip::read::root_dir_common_filter;
 
-    #[cfg(feature = "gh-release")]
-    pub(super) fn install_from_gh_release() -> String {
+    pub(super) fn install_from_gh_release() {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-        let (header, lib) = retrieve_gh_release_z3(&target_os, &target_arch);
+        let lib = retrieve_gh_release_z3(&target_os, &target_arch);
         println!(
             "cargo:rustc-link-search=native={}",
             lib.parent().unwrap().display()
@@ -111,11 +113,9 @@ mod gh_release {
         } else {
             println!("cargo:rustc-link-lib=static=z3");
         }
-        header.to_string_lossy().to_string()
     }
 
-    #[cfg(feature = "gh-release")]
-    fn retrieve_gh_release_z3(target_os: &str, target_arch: &str) -> (PathBuf, PathBuf) {
+    fn retrieve_gh_release_z3(target_os: &str, target_arch: &str) -> PathBuf {
         let arch = match target_arch {
             "aarch64" => "arm64",
             "x86_64" => "x64",
@@ -150,7 +150,6 @@ mod gh_release {
             println!("Found cached z3 at {}", z3_dir.display());
         }
 
-        let header = z3_dir.join("include/z3.h");
         let lib = if cfg!(target_os = "windows") {
             z3_dir.join("bin/libz3.lib")
         } else {
@@ -158,17 +157,12 @@ mod gh_release {
         };
 
         assert!(
-            header.exists(),
-            "could not find z3.h in downloaded archive at {}",
-            z3_dir.display()
-        );
-        assert!(
             lib.exists(),
             "could not find static libz3 in downloaded archive at {}",
             z3_dir.display()
         );
 
-        (header, lib)
+        lib
     }
 
     pub fn download_unzip(client: &Client, url: String, dir: &Path) -> reqwest::Result<()> {
@@ -185,7 +179,6 @@ mod gh_release {
         Ok(())
     }
 
-    #[cfg(feature = "gh-release")]
     fn get_release_asset_url(
         client: &Client,
         z3_version: &str,
@@ -241,238 +234,110 @@ mod gh_release {
 use gh_release::install_from_gh_release;
 
 #[cfg(not(feature = "gh-release"))]
-fn install_from_gh_release() -> String {
+fn install_from_gh_release() {
     unreachable!()
 }
 
 #[cfg(feature = "vcpkg")]
-fn find_library_header_by_vcpkg() -> String {
-    let lib = vcpkg::Config::new()
+fn find_library_by_vcpkg() {
+    vcpkg::Config::new()
         .emit_includes(true)
         .find_package("z3")
-        .unwrap();
-    for include in &lib.include_paths {
-        let mut include = include.clone();
-        include.push("z3.h");
-        if include.exists() {
-            let header = include.to_str().unwrap().to_owned();
-            println!("cargo:rerun-if-changed={header}");
-            return header;
-        }
-    }
-    panic!("z3.h is not found in include path of installed z3.");
+        .expect("vcpkg could not find z3");
 }
 
 #[cfg(not(feature = "vcpkg"))]
-fn find_library_header_by_vcpkg() -> String {
+fn find_library_by_vcpkg() {
     unreachable!()
 }
 
-fn find_header_by_env() -> String {
-    let header = if cfg!(feature = "bundled") {
-        if let Ok(dir) = env::var(Z3_OVERRIDE_VAR) {
-            PathBuf::from(dir)
-                .join("src/api/z3.h")
-                .display()
-                .to_string()
-        } else {
-            PathBuf::from(env::var("OUT_DIR").unwrap_or_default())
-                .join("z3/src/api/z3.h")
-                .display()
-                .to_string()
-        }
-    } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
-        header_path
+#[cfg(feature = "bindgen")]
+#[path = "build_transform.rs"]
+mod bindgen_transform;
+
+#[cfg(feature = "bindgen")]
+fn generate_bindings() {
+    use std::fs;
+    use std::path::PathBuf;
+
+    let header = if let Ok(h) = env::var("Z3_SYS_Z3_HEADER") {
+        PathBuf::from(h)
     } else {
-        "wrapper.h".to_string()
+        #[cfg(feature = "bundled")]
+        {
+            z3_src::build().include_dir().join("z3.h")
+        }
+        #[cfg(not(feature = "bundled"))]
+        panic!(
+            "Set Z3_SYS_Z3_HEADER to the path of z3.h, \
+             or enable the `bundled` feature to use the bundled Z3 source"
+        )
     };
-    println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
-    println!("cargo:rerun-if-env-changed={Z3_OVERRIDE_VAR}");
-    println!("cargo:rerun-if-changed={header}");
-    header
-}
+    let include_dir = header.parent().unwrap();
 
-fn generate_binding(header: &str, search_paths: &[PathBuf]) {
-    let out_path = PathBuf::from(env::var("OUT_DIR").unwrap());
+    println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_HEADER");
+    println!("cargo:rerun-if-env-changed=Z3_SYS_UPDATE_GENERATED");
 
-    for x in &[
-        "ast_kind",
-        "ast_print_mode",
-        "decl_kind",
-        "error_code",
-        "goal_prec",
-        "param_kind",
-        "parameter_kind",
-        "sort_kind",
-        "symbol_kind",
-    ] {
-        #[allow(unused_mut)]
-        let mut enum_bindings = bindgen::Builder::default()
-            .header(header)
-            .generate_comments(false)
-            .rustified_enum(format!("Z3_{x}"))
-            .allowlist_type(format!("Z3_{x}"))
-            .clang_args(search_paths.iter().map(|p| format!("-I{}", p.display())));
-        // Deactivate bindgen cargo-rerun-if generation for gh-release (unnecessary)
-        #[cfg(not(feature = "gh-release"))]
-        let mut enum_bindings =
-            enum_bindings.parse_callbacks(Box::new(bindgen::CargoCallbacks::new()));
-        if env::var("TARGET").unwrap() == "wasm32-unknown-emscripten" {
-            enum_bindings = enum_bindings.clang_arg(format!(
-                "--sysroot={}/upstream/emscripten/cache/sysroot",
-                env::var("EMSDK").expect("$EMSDK env var missing. Is emscripten installed?")
-            ));
-        }
-        enum_bindings
-            .generate()
-            .expect("Unable to generate bindings")
-            .write_to_file(out_path.join(format!("{x}.rs")))
-            .expect("Couldn't write bindings!");
+    // Generate function declarations (types blocklisted — hand-written in types.rs).
+    // Functions with nullable parameters that require Option<T> signatures are blocklisted
+    // here and hand-written in src/functions_patched.rs instead.
+    let funcs_raw = bindgen::Builder::default()
+        .use_core()
+        .disable_header_comment()
+        .allowlist_function("Z3_.*")
+        .blocklist_type("Z3_.*")
+        .blocklist_type("_Z3_.*")
+        .blocklist_function("Z3_mk_constructor")
+        .blocklist_function("Z3_fixedpoint_add_rule")
+        .blocklist_function("Z3_optimize_assert_soft")
+        .header(header.to_str().unwrap())
+        .clang_arg(format!("-I{}", include_dir.display()))
+        .generate()
+        .expect("bindgen failed (functions)")
+        .to_string();
+
+    // Generate enum type definitions (rustified, one invocation for all enums).
+    let enums_raw = bindgen::Builder::default()
+        .use_core()
+        .disable_header_comment()
+        .allowlist_type("Z3_sort_kind")
+        .allowlist_type("Z3_ast_kind")
+        .allowlist_type("Z3_decl_kind")
+        .allowlist_type("Z3_symbol_kind")
+        .allowlist_type("Z3_goal_prec")
+        .allowlist_type("Z3_parameter_kind")
+        .allowlist_type("Z3_param_kind")
+        .allowlist_type("Z3_ast_print_mode")
+        .allowlist_type("Z3_error_code")
+        .rustified_enum("Z3_.*")
+        .header(header.to_str().unwrap())
+        .clang_arg(format!("-I{}", include_dir.display()))
+        .generate()
+        .expect("bindgen failed (enums)")
+        .to_string();
+
+    // Combine and transform.  transform() dispatches Item::Enum and Item::ForeignMod.
+    let combined = format!("{funcs_raw}\n{enums_raw}");
+    let output = bindgen_transform::transform(&combined);
+
+    let header_comment = "// Auto-generated by z3-sys bindgen feature — do not edit manually.\n\n";
+    let funcs_src = format!("{header_comment}{}", output.functions);
+    let enums_src = format!("{header_comment}{}", output.enums);
+
+    let out = PathBuf::from(env::var("OUT_DIR").unwrap());
+    fs::write(out.join("functions.rs"), &funcs_src).expect("write functions.rs to OUT_DIR");
+    fs::write(out.join("enums.rs"), &enums_src).expect("write enums.rs to OUT_DIR");
+
+    if env::var("Z3_SYS_UPDATE_GENERATED").is_ok() {
+        let manifest = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap());
+        let r#gen = manifest.join("src/generated");
+
+        let committed_funcs = r#gen.join("functions.rs");
+        fs::write(&committed_funcs, &funcs_src).expect("write committed functions.rs");
+        println!("cargo:warning=Updated {}", committed_funcs.display());
+
+        let committed_enums = r#gen.join("enums.rs");
+        fs::write(&committed_enums, &enums_src).expect("write committed enums.rs");
+        println!("cargo:warning=Updated {}", committed_enums.display());
     }
-}
-
-#[cfg(feature = "bundled")]
-use gh_release::{download_unzip, get_github_client};
-#[cfg(feature = "bundled")]
-use reqwest::blocking::Client;
-#[cfg(feature = "bundled")]
-use std::fs;
-#[cfg(feature = "bundled")]
-use std::io;
-
-#[cfg(feature = "bundled")]
-fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> io::Result<()> {
-    if !dst.exists() {
-        fs::create_dir_all(dst)?;
-    }
-    for entry in fs::read_dir(src)? {
-        let entry = entry?;
-        let file_type = entry.file_type()?;
-        let src_path = entry.path();
-        if src_path.ends_with(".git") {
-            continue;
-        }
-        let dst_path = dst.join(entry.file_name());
-        if file_type.is_dir() {
-            copy_dir_recursive(&src_path, &dst_path)?;
-        } else {
-            fs::copy(&src_path, &dst_path)?;
-        }
-    }
-    Ok(())
-}
-
-#[cfg(feature = "bundled")]
-fn get_z3_submodule_url(client: &Client, z3_sys_version: &str) -> String {
-    let submodule_extract_url = format!(
-        "https://api.github.com/repos/prove-rs/z3.rs/contents/z3-sys/z3?ref=z3-sys-v{z3_sys_version}"
-    );
-    let Ok(response) = client.get(submodule_extract_url).send() else {
-        panic!("Could not find Z3 submodule for z3-sys-v{}", z3_sys_version);
-    };
-
-    assert_eq!(response.status(), 200);
-
-    let submodule_json: serde_json::Value =
-        serde_json::from_str(&response.text().unwrap()).unwrap();
-
-    submodule_json
-        .get("html_url")
-        .unwrap()
-        .to_string()
-        .replace("\"", "")
-        .replace("tree", "archive")
-        + ".zip"
-}
-
-#[cfg(feature = "bundled")]
-fn build_bundled_z3() {
-    let z3_sys_version = env!("CARGO_PKG_VERSION");
-    let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join("z3");
-
-    let bundled_path =
-        PathBuf::from(env::var(Z3_OVERRIDE_VAR).unwrap_or(z3_dir.display().to_string()));
-
-    let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("z3");
-
-    if !bundled_path.exists() {
-        if submodule_path.exists() {
-            println!(
-                "Using local z3-sys/z3 submodule at {}",
-                submodule_path.display()
-            );
-            copy_dir_recursive(&submodule_path, &bundled_path)
-                .expect("Failed to copy z3 submodule to build directory");
-        } else {
-            let client = get_github_client();
-            let url = get_z3_submodule_url(&client, &z3_sys_version);
-            println!("downloading to {}", z3_dir.display());
-            if let Err(err) = download_unzip(&client, url, &bundled_path) {
-                eprintln!("error: {err}");
-                panic!(
-                    "Could not get submodule asset for z3-sys-{}",
-                    z3_sys_version
-                );
-            };
-        }
-    } else {
-        println!("Found cached z3 at {}", bundled_path.display());
-    }
-
-    let mut cfg = cmake::Config::new(bundled_path);
-    // Don't build `libz3.so`, build `libz3.a` instead.
-    cfg.define("Z3_BUILD_LIBZ3_SHARED", "false")
-        // Don't build the Z3 repl.
-        .define("Z3_BUILD_EXECUTABLE", "false")
-        // Don't build the tests.
-        .define("Z3_BUILD_TEST_EXECUTABLES", "false");
-
-    if cfg!(target_os = "windows") {
-        // The compiler option -MP and the msbuild option -m
-        // can sometimes make builds slower but is measurably
-        // faster building Z3 with many cores.
-        cfg.cxxflag("-MP");
-        cfg.build_arg("-m");
-        cfg.cxxflag("-DWIN32");
-        cfg.cxxflag("-D_WINDOWS");
-        cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
-    } else if env::var("TARGET").unwrap().starts_with("wasm") {
-        // for wasm targets, ensure we allow exceptions
-        // because z3 has some exceptions
-        cfg.no_default_flags(true).cxxflag("-fexceptions");
-    }
-
-    let dst = cfg.build();
-
-    let mut found_lib_dir = false;
-    for lib_dir in &[
-        "lib",
-        // Fedora builds seem to use `lib64` rather than `lib` for 64-bit
-        // builds.
-        "lib64",
-    ] {
-        let full_lib_dir = dst.join(lib_dir);
-        if full_lib_dir.exists() {
-            if *lib_dir == "lib64" {
-                assert_eq!(env::var("CARGO_CFG_TARGET_POINTER_WIDTH").unwrap(), "64");
-            }
-            println!("cargo:rustc-link-search=native={}", full_lib_dir.display());
-            found_lib_dir = true;
-            break;
-        }
-    }
-    assert!(
-        found_lib_dir,
-        "Should have found the lib directory for our built Z3"
-    );
-
-    if cfg!(target_os = "windows") {
-        println!("cargo:rustc-link-lib=static=libz3");
-    } else {
-        println!("cargo:rustc-link-lib=static=z3");
-    }
-}
-#[cfg(not(feature = "bundled"))]
-fn build_bundled_z3() {
-    unreachable!()
 }
