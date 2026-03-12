@@ -26,6 +26,10 @@ mod seq;
 mod set;
 mod string;
 
+// New AST modules for extended API coverage
+pub mod algebraic;
+pub mod polynomial;
+
 pub use array::Array;
 pub use bool::Bool;
 pub use bv::BV;
@@ -39,6 +43,10 @@ pub use rounding_mode::RoundingMode;
 pub use seq::Seq;
 pub use set::Set;
 pub use string::String;
+
+// Export new AST types
+pub use algebraic::Algebraic;
+pub use polynomial::Polynomial;
 
 macro_rules! unop {
     (
@@ -67,7 +75,7 @@ macro_rules! binop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<T: IntoAst<Self>>(&self, other: T) -> $retty {
+            pub fn $f<T: crate::ast::IntoAst<Self>>(&self, other: T) -> $retty {
                 let ast = other.into_ast(self);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
@@ -87,7 +95,7 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: Into<$retty>, B: IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
+            pub fn $f<A: Into<$retty>, B: crate::ast::IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
                 let a = a.into();
                 let b = b.into_ast(&a);
                 unsafe {
@@ -613,6 +621,7 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
+impl_ast!(Algebraic);
 
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();

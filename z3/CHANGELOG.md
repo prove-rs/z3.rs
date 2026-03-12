@@ -7,6 +7,113 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.13](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.12...z3-v0.19.13) - 2026-03-06
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.12](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.11...z3-v0.19.12) - 2026-03-04
+
+### Added
+
+- add `with` method to Tactic ([#511](https://github.com/prove-rs/z3.rs/pull/511)) (by @longlinh123456) - #511
+
+### Contributors
+
+* @longlinh123456
+
+## [0.19.11](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.10...z3-v0.19.11) - 2026-02-27
+
+### Added
+
+- add high-level API for model sorts/sort universes ([#506](https://github.com/prove-rs/z3.rs/pull/506)) (by @toolCHAINZ) - #506
+
+### Fixed
+
+- standardize AstVector display/debug impl ([#508](https://github.com/prove-rs/z3.rs/pull/508)) (by @toolCHAINZ) - #508
+
+### Other
+
+- FusedIterator and ExactSizeIterator for model/SortIter ([#509](https://github.com/prove-rs/z3.rs/pull/509)) (by @toolCHAINZ) - #509
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.10](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.9...z3-v0.19.10) - 2026-02-24
+
+### Added
+
+- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ, @NikolajBjorner) - #500
+
+### Contributors
+
+* @toolCHAINZ
+* @NikolajBjorner
+
+## [0.19.9](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.8...z3-v0.19.9) - 2026-02-21
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.8](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.7...z3-v0.19.8) - 2026-02-13
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.7](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.6...z3-v0.19.7) - 2025-12-27
+
+### Added
+
+- Add check_and_get_model method to Solver ([#484](https://github.com/prove-rs/z3.rs/pull/484)) (by @toolCHAINZ) - #484
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.6](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.5...z3-v0.19.6) - 2025-12-10
+
+### Added
+
+- impl Sum and Product for Int and Real ([#479](https://github.com/prove-rs/z3.rs/pull/479)) (by @toolCHAINZ) - #479
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.5](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.4...z3-v0.19.5) - 2025-11-20
+
+### Other
+
+- remove unused imports in z3::ast and use absolute paths in macros ([#471](https://github.com/prove-rs/z3.rs/pull/471)) (by @lixitrixi) - #471
+
+### Contributors
+
+* @lixitrixi
+
+## [0.19.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.3...z3-v0.19.4) - 2025-11-17
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.2...z3-v0.19.3) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
 ## [0.19.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.1...z3-v0.19.2) - 2025-10-21
 
 ### Added

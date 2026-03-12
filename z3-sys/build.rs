@@ -1,5 +1,7 @@
-use std::path::Path;
 use std::{env, path::PathBuf};
+
+const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
+const Z3_OVERRIDE_VAR: &str = "Z3_SYS_BUNDLED_DIR_OVERRIDE";
 
 macro_rules! assert_one_of_features {
     ($($feature:literal),*) => {{
@@ -84,9 +86,10 @@ fn link_against_cxx_stdlib() {
     }
 }
 
-#[cfg(feature = "gh-release")]
+#[cfg(any(feature = "gh-release", feature = "bundled"))]
 mod gh_release {
     use std::path::Path;
+    use std::time::Duration;
 
     use super::*;
     use reqwest::blocking::{Client, ClientBuilder};
@@ -94,6 +97,7 @@ mod gh_release {
     use zip::ZipArchive;
     use zip::read::root_dir_common_filter;
 
+    #[cfg(feature = "gh-release")]
     pub(super) fn install_from_gh_release() -> String {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
@@ -110,6 +114,7 @@ mod gh_release {
         header.to_string_lossy().to_string()
     }
 
+    #[cfg(feature = "gh-release")]
     fn retrieve_gh_release_z3(target_os: &str, target_arch: &str) -> (PathBuf, PathBuf) {
         let arch = match target_arch {
             "aarch64" => "arm64",
@@ -127,7 +132,7 @@ mod gh_release {
             }
         };
         println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
-        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("4.15.2".to_string());
+        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("4.16.0".to_string());
         let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{z3_version}"));
 
         if !z3_dir.exists() {
@@ -166,7 +171,7 @@ mod gh_release {
         (header, lib)
     }
 
-    fn download_unzip(client: &Client, url: String, dir: &Path) -> reqwest::Result<()> {
+    pub fn download_unzip(client: &Client, url: String, dir: &Path) -> reqwest::Result<()> {
         let response = client.get(url).send()?;
         assert_eq!(response.status(), 200);
         let ziplib = response.bytes()?;
@@ -180,6 +185,7 @@ mod gh_release {
         Ok(())
     }
 
+    #[cfg(feature = "gh-release")]
     fn get_release_asset_url(
         client: &Client,
         z3_version: &str,
@@ -220,8 +226,10 @@ mod gh_release {
             .to_owned()
     }
 
-    fn get_github_client() -> Client {
-        let client = ClientBuilder::new().user_agent("z3-sys");
+    pub fn get_github_client() -> Client {
+        let client = ClientBuilder::new()
+            .user_agent("z3-sys")
+            .timeout(Duration::from_secs(300));
         let mut headers = HeaderMap::new();
         if let Ok(val) = env::var("READ_ONLY_GITHUB_TOKEN") {
             headers.insert(AUTHORIZATION, format!("Bearer {val}").parse().unwrap());
@@ -261,25 +269,25 @@ fn find_library_header_by_vcpkg() -> String {
 }
 
 fn find_header_by_env() -> String {
-    const Z3_HEADER_VAR: &str = "Z3_SYS_Z3_HEADER";
     let header = if cfg!(feature = "bundled") {
-        env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE")
-            .map(|a| {
-                Path::new(&a)
-                    .join("src")
-                    .join("api")
-                    .join("z3.h")
-                    .to_str()
-                    .unwrap()
-                    .to_string()
-            })
-            .unwrap_or("z3/src/api/z3.h".to_string())
+        if let Ok(dir) = env::var(Z3_OVERRIDE_VAR) {
+            PathBuf::from(dir)
+                .join("src/api/z3.h")
+                .display()
+                .to_string()
+        } else {
+            PathBuf::from(env::var("OUT_DIR").unwrap_or_default())
+                .join("z3/src/api/z3.h")
+                .display()
+                .to_string()
+        }
     } else if let Ok(header_path) = env::var(Z3_HEADER_VAR) {
         header_path
     } else {
         "wrapper.h".to_string()
     };
     println!("cargo:rerun-if-env-changed={Z3_HEADER_VAR}");
+    println!("cargo:rerun-if-env-changed={Z3_OVERRIDE_VAR}");
     println!("cargo:rerun-if-changed={header}");
     header
 }
@@ -323,10 +331,94 @@ fn generate_binding(header: &str, search_paths: &[PathBuf]) {
     }
 }
 
-/// Build z3 with bundled source codes.
+#[cfg(feature = "bundled")]
+use gh_release::{download_unzip, get_github_client};
+#[cfg(feature = "bundled")]
+use reqwest::blocking::Client;
+#[cfg(feature = "bundled")]
+use std::fs;
+#[cfg(feature = "bundled")]
+use std::io;
+
+#[cfg(feature = "bundled")]
+fn copy_dir_recursive(src: &PathBuf, dst: &PathBuf) -> io::Result<()> {
+    if !dst.exists() {
+        fs::create_dir_all(dst)?;
+    }
+    for entry in fs::read_dir(src)? {
+        let entry = entry?;
+        let file_type = entry.file_type()?;
+        let src_path = entry.path();
+        if src_path.ends_with(".git") {
+            continue;
+        }
+        let dst_path = dst.join(entry.file_name());
+        if file_type.is_dir() {
+            copy_dir_recursive(&src_path, &dst_path)?;
+        } else {
+            fs::copy(&src_path, &dst_path)?;
+        }
+    }
+    Ok(())
+}
+
+#[cfg(feature = "bundled")]
+fn get_z3_submodule_url(client: &Client, z3_sys_version: &str) -> String {
+    let submodule_extract_url = format!(
+        "https://api.github.com/repos/prove-rs/z3.rs/contents/z3-sys/z3?ref=z3-sys-v{z3_sys_version}"
+    );
+    let Ok(response) = client.get(submodule_extract_url).send() else {
+        panic!("Could not find Z3 submodule for z3-sys-v{}", z3_sys_version);
+    };
+
+    assert_eq!(response.status(), 200);
+
+    let submodule_json: serde_json::Value =
+        serde_json::from_str(&response.text().unwrap()).unwrap();
+
+    submodule_json
+        .get("html_url")
+        .unwrap()
+        .to_string()
+        .replace("\"", "")
+        .replace("tree", "archive")
+        + ".zip"
+}
+
 #[cfg(feature = "bundled")]
 fn build_bundled_z3() {
-    let bundled_path = env::var("Z3_SYS_BUNDLED_DIR_OVERRIDE").unwrap_or("z3".to_string());
+    let z3_sys_version = env!("CARGO_PKG_VERSION");
+    let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join("z3");
+
+    let bundled_path =
+        PathBuf::from(env::var(Z3_OVERRIDE_VAR).unwrap_or(z3_dir.display().to_string()));
+
+    let submodule_path = PathBuf::from(env::var("CARGO_MANIFEST_DIR").unwrap()).join("z3");
+
+    if !bundled_path.exists() {
+        if submodule_path.exists() {
+            println!(
+                "Using local z3-sys/z3 submodule at {}",
+                submodule_path.display()
+            );
+            copy_dir_recursive(&submodule_path, &bundled_path)
+                .expect("Failed to copy z3 submodule to build directory");
+        } else {
+            let client = get_github_client();
+            let url = get_z3_submodule_url(&client, &z3_sys_version);
+            println!("downloading to {}", z3_dir.display());
+            if let Err(err) = download_unzip(&client, url, &bundled_path) {
+                eprintln!("error: {err}");
+                panic!(
+                    "Could not get submodule asset for z3-sys-{}",
+                    z3_sys_version
+                );
+            };
+        }
+    } else {
+        println!("Found cached z3 at {}", bundled_path.display());
+    }
+
     let mut cfg = cmake::Config::new(bundled_path);
     // Don't build `libz3.so`, build `libz3.a` instead.
     cfg.define("Z3_BUILD_LIBZ3_SHARED", "false")

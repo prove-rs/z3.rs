@@ -8,8 +8,11 @@ use z3::*;
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 
+mod algebraic_tests;
+mod ast_vector_tests;
 mod objectives;
 mod ops;
+mod quantifier_elimination_tests;
 mod semver_tests;
 
 #[test]
@@ -26,6 +29,36 @@ fn test_context() {
     let mut cfg = Config::new();
     cfg.set_proof_generation(true);
     with_z3_config(&cfg, || {});
+}
+
+#[test]
+fn test_fixedpoint_horn_clauses() {
+    let _ = env_logger::try_init();
+
+    let fp = Fixedpoint::new();
+    let bool_sort = Sort::bool();
+
+    // Three 0-ary predicates (propositions in the Horn clause system).
+    let p_decl = FuncDecl::new("p", &[], &bool_sort);
+    let q_decl = FuncDecl::new("q", &[], &bool_sort);
+    let r_decl = FuncDecl::new("r", &[], &bool_sort);
+
+    fp.register_relation(&p_decl);
+    fp.register_relation(&q_decl);
+    fp.register_relation(&r_decl);
+
+    let p = p_decl.apply(&[]).as_bool().unwrap();
+    let q = q_decl.apply(&[]).as_bool().unwrap();
+    let r = r_decl.apply(&[]).as_bool().unwrap();
+
+    // Rules: p => q, q => r
+    fp.add_rule(&p.implies(&q), Some("p_to_q"));
+    fp.add_rule(&q.implies(&r), Some("q_to_r"));
+    // Fact: p is always true.
+    fp.add_rule(&p, Some("fact_p"));
+
+    // r is derivable via p => q => r.
+    assert_eq!(fp.query(&r), SatResult::Sat);
 }
 
 #[test]
@@ -1262,6 +1295,32 @@ fn test_tactic_or_else() {
         .collect::<Vec<Goal>>();
     let goal_result = goal_results.first().unwrap();
     assert_eq!(goal_result.get_formulas(), vec![a, b]);
+}
+
+#[test]
+fn test_tactic_with() {
+    let mut params = Params::new();
+    params.set_u32("add_bound_lower", 1);
+    params.set_u32("add_bound_upper", 1000);
+
+    let x = ast::Int::new_const("x");
+
+    let goal = Goal::new(false, false, false);
+    goal.assert(&x.eq(&x));
+
+    let tactic = Tactic::new("add-bounds").with(&params);
+
+    // Test that `with` succesfully applied the parameter set
+    let apply_results = tactic.apply(&goal, Some(&Params::new()));
+    let goal_results = apply_results
+        .unwrap()
+        .list_subgoals()
+        .collect::<Vec<Goal>>();
+    let goal_result = goal_results.first().unwrap();
+    assert_eq!(
+        format!("{goal_result}"),
+        "(goal\n  (= x x)\n  (<= x 1000)\n  (>= x 1))"
+    );
 }
 
 #[test]
