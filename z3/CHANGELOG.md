@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.13](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.12...z3-v0.19.13) - 2026-03-06
+
+### Other
+
+- updated the following local packages: z3-sys
+
 ## [0.19.12](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.11...z3-v0.19.12) - 2026-03-04
 
 ### Added
