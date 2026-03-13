@@ -96,18 +96,18 @@ fn test_create_datatypes_with_explicit_accessors_and_constructors() {
 
     // Assert that accessing children of node yields the list we constructed.
     let children = tree_sort.variants[1].accessors[0].apply(&[&node]);
-    solver.assert(&children.eq(&cons_ten_cons_twenty_nil));
+    solver.assert(children.eq(&cons_ten_cons_twenty_nil));
 
     // Assert that the first element of that list (car) is leaf_ten
     let first = list_sort.variants[1].accessors[0].apply(&[&cons_ten_cons_twenty_nil]);
-    solver.assert(&first.eq(&leaf_ten));
+    solver.assert(first.eq(&leaf_ten));
 
     // Assert that accessing val from leaf_ten gives 10
     let val_from_leaf = tree_sort.variants[0].accessors[0]
         .apply(&[&leaf_ten])
         .as_int()
         .unwrap();
-    solver.assert(&val_from_leaf.eq(&ten));
+    solver.assert(val_from_leaf.eq(&ten));
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
