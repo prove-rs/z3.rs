@@ -125,10 +125,9 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     let num = datatype_builders.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
-    // todo: should we check that all the contexts are the same? (Currently
-    // not necessary since one can only use the thread local to construct a
-    // datatype builder)
     let ctx: Context = datatype_builders[0].ctx.clone();
+    // Ensure all builders share the same context (should always be the case unless someone abused unsafe)
+    assert!(datatype_builders.iter().all(|d| d.ctx == ctx));
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
 
     // Raw Z3 sorts to be filled by Z3_mk_datatypes

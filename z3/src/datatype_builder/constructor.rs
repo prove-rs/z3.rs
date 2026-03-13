@@ -17,9 +17,6 @@ pub struct Constructor {
 
 impl Constructor {
     /// Create a wrapper around a raw `Z3_constructor`.
-    ///
-    /// This does not allocate a new Z3 constructor; it wraps an existing raw
-    /// handle and will call `Z3_del_constructor` when dropped.
     pub unsafe fn wrap(ctx: &Context, z3_constructor: Z3_constructor) -> Self {
         Self {
             ctx: ctx.clone(),
@@ -34,12 +31,6 @@ impl Constructor {
     /// of `DatatypeBuilder`s so that recursive references can be resolved to
     /// indices required by the Z3 API. The function constructs the temporary
     /// arrays required by `Z3_mk_constructor` internally.
-    ///
-    /// # Safety
-    ///
-    /// This mirrors the safety requirements of `Z3_mk_constructor`. The
-    /// returned `Constructor` will own the Z3 constructor handle and free it
-    /// on Drop.
     pub fn new(
         ctx: &Context,
         cname: Symbol,
@@ -81,9 +72,6 @@ impl Constructor {
             }
         }
 
-        // Call the unsafe FFI function inside an inner `unsafe` block to avoid
-        // the `unsafe_op_in_unsafe_fn` warning and to make the unsafe region
-        // explicit.
         let z3_constructor = unsafe {
             Z3_mk_constructor(
                 ctx.z3_ctx.0,
@@ -122,9 +110,6 @@ pub struct ConstructorList {
 
 impl ConstructorList {
     /// Create a wrapper around a raw `Z3_constructor_list`.
-    ///
-    /// This does not allocate a new Z3 constructor list; it wraps an existing
-    /// raw handle and will call `Z3_del_constructor_list` when dropped.
     pub unsafe fn wrap(ctx: &Context, z3_constructor_list: Z3_constructor_list) -> Self {
         Self {
             ctx: ctx.clone(),
@@ -141,9 +126,6 @@ impl ConstructorList {
         let mut cs_handles: Vec<Z3_constructor> =
             ctors.iter().map(|c| c.z3_constructor()).collect();
 
-        // Call the unsafe FFI function inside an inner `unsafe` block to avoid
-        // the `unsafe_op_in_unsafe_fn` warning and to make the unsafe region
-        // explicit.
         let z3_constructor_list = unsafe {
             Z3_mk_constructor_list(
                 ctx.z3_ctx.0,
