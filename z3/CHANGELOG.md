@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.14](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.13...z3-v0.19.14) - 2026-03-13
+
+### Other
+
+- internal refactoring of datatype builder ([#517](https://github.com/prove-rs/z3.rs/pull/517)) (by @toolCHAINZ) - #517
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.19.13](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.12...z3-v0.19.13) - 2026-03-06
 
 ### Other

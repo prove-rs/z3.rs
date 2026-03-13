@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.10.9](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.8...z3-sys-v0.10.9) - 2026-03-13
+
+### Other
+
+- Update zip dependency to latest ([#515](https://github.com/prove-rs/z3.rs/pull/515)) (by @ThomasTNO) - #515
+
+### Contributors
+
+* @ThomasTNO
+
 ## [0.10.8](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.7...z3-sys-v0.10.8) - 2026-03-06
 
 ### Fixed
