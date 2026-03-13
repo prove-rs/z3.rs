@@ -40,7 +40,7 @@ impl Constructor {
     /// This mirrors the safety requirements of `Z3_mk_constructor`. The
     /// returned `Constructor` will own the Z3 constructor handle and free it
     /// on Drop.
-    pub unsafe fn new(
+    pub fn new(
         ctx: &Context,
         cname: Symbol,
         rname: Symbol,
@@ -97,20 +97,12 @@ impl Constructor {
         }
         .unwrap();
 
-        Self {
-            ctx: ctx.clone(),
-            z3_constructor,
-        }
+        unsafe { Self::wrap(ctx, z3_constructor) }
     }
 
     /// Access the underlying raw Z3 handle.
     pub fn z3_constructor(&self) -> Z3_constructor {
         self.z3_constructor
-    }
-
-    /// Borrow the context associated with this constructor.
-    pub fn ctx(&self) -> &Context {
-        &self.ctx
     }
 }
 
@@ -167,11 +159,6 @@ impl ConstructorList {
     /// Access the underlying raw Z3 handle.
     pub fn z3_constructor_list(&self) -> Z3_constructor_list {
         self.z3_constructor_list
-    }
-
-    /// Borrow the context associated with this constructor list.
-    pub fn ctx(&self) -> &Context {
-        &self.ctx
     }
 }
 

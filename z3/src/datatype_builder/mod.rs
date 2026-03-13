@@ -32,7 +32,7 @@
 //! let dts = create_datatypes(vec![my_tree, my_list]);
 //! ```
 //!
-pub(crate) mod constructor;
+mod constructor;
 
 use std::convert::TryInto;
 use z3_sys::*;
@@ -65,6 +65,60 @@ impl DatatypeBuilder {
         let mut dtypes = create_datatypes(vec![self]);
         dtypes.remove(0)
     }
+}
+
+/// Helper to build a single DatatypeSort from a raw Z3 sort and its builder.
+fn build_datatype_sort(
+    ctx: &Context,
+    sort: Sort,
+    datatype_builder: &DatatypeBuilder,
+) -> DatatypeSort {
+    let num_cs = datatype_builder.constructors.len();
+
+    let mut variants: Vec<DatatypeVariant> = Vec::with_capacity(num_cs);
+
+    for (j, (_cname, fs)) in datatype_builder.constructors.iter().enumerate() {
+        let num_fs = fs.len();
+
+        let raw_constructor = unsafe {
+            Z3_get_datatype_sort_constructor(
+                ctx.z3_ctx.0,
+                sort.get_z3_sort(),
+                j.try_into().unwrap(),
+            )
+            .unwrap()
+        };
+        let constructor: FuncDecl = unsafe { FuncDecl::wrap(ctx, raw_constructor) };
+
+        let tester_func = unsafe {
+            Z3_get_datatype_sort_recognizer(ctx.z3_ctx.0, sort.get_z3_sort(), j.try_into().unwrap())
+                .unwrap()
+        };
+        let tester = unsafe { FuncDecl::wrap(ctx, tester_func) };
+
+        let mut accessors: Vec<FuncDecl> = Vec::new();
+        for k in 0..num_fs {
+            let accessor_func = unsafe {
+                Z3_get_datatype_sort_constructor_accessor(
+                    ctx.z3_ctx.0,
+                    sort.get_z3_sort(),
+                    j.try_into().unwrap(),
+                    k.try_into().unwrap(),
+                )
+                .unwrap()
+            };
+
+            accessors.push(unsafe { FuncDecl::wrap(ctx, accessor_func) });
+        }
+
+        variants.push(DatatypeVariant {
+            constructor,
+            tester,
+            accessors,
+        });
+    }
+
+    DatatypeSort { sort, variants }
 }
 
 pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<DatatypeSort> {
@@ -102,15 +156,13 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             // Create the constructor using the higher-level helper which accepts
             // the same field representation used by `DatatypeBuilder`. That
             // helper will construct the temporary arrays required by the Z3 FFI.
-            let ctor_wrapper = unsafe {
-                Constructor::new(
-                    &ctx,
-                    cname_symbol,
-                    rname_symbol,
-                    fs.as_slice(),
-                    &datatype_builders,
-                )
-            };
+            let ctor_wrapper = Constructor::new(
+                &ctx,
+                cname_symbol,
+                rname_symbol,
+                fs.as_slice(),
+                &datatype_builders,
+            );
             ctor_wrapped.push(ctor_wrapper);
         }
 
@@ -144,53 +196,14 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
         );
         raw_sorts.set_len(num);
     };
+    let sorts = raw_sorts
+        .into_iter()
+        .map(|s| unsafe { Sort::wrap(&ctx, s) })
+        .collect::<Vec<_>>();
 
-    let mut datatype_sorts: Vec<DatatypeSort> = Vec::with_capacity(raw_sorts.len());
-    for (z3_sort, datatype_builder) in raw_sorts.into_iter().zip(&datatype_builders) {
-        let num_cs = datatype_builder.constructors.len();
-
-        let sort = unsafe { Sort::wrap(&ctx, z3_sort) };
-
-        let mut variants: Vec<DatatypeVariant> = Vec::with_capacity(num_cs);
-
-        for (j, (_cname, fs)) in datatype_builder.constructors.iter().enumerate() {
-            let num_fs = fs.len();
-
-            let raw_constructor = unsafe {
-                Z3_get_datatype_sort_constructor(ctx.z3_ctx.0, z3_sort, j.try_into().unwrap())
-                    .unwrap()
-            };
-            let constructor: FuncDecl = unsafe { FuncDecl::wrap(&ctx, raw_constructor) };
-
-            let tester_func = unsafe {
-                Z3_get_datatype_sort_recognizer(ctx.z3_ctx.0, z3_sort, j.try_into().unwrap())
-                    .unwrap()
-            };
-            let tester = unsafe { FuncDecl::wrap(&ctx, tester_func) };
-
-            let mut accessors: Vec<FuncDecl> = Vec::new();
-            for k in 0..num_fs {
-                let accessor_func = unsafe {
-                    Z3_get_datatype_sort_constructor_accessor(
-                        ctx.z3_ctx.0,
-                        z3_sort,
-                        j.try_into().unwrap(),
-                        k.try_into().unwrap(),
-                    )
-                    .unwrap()
-                };
-
-                accessors.push(unsafe { FuncDecl::wrap(&ctx, accessor_func) });
-            }
-
-            variants.push(DatatypeVariant {
-                constructor,
-                tester,
-                accessors,
-            });
-        }
-
-        datatype_sorts.push(DatatypeSort { sort, variants });
+    let mut datatype_sorts: Vec<DatatypeSort> = Vec::with_capacity(sorts.len());
+    for (sort, datatype_builder) in sorts.into_iter().zip(&datatype_builders) {
+        datatype_sorts.push(build_datatype_sort(&ctx, sort, datatype_builder));
     }
 
     // ctor_wrapped and clist_wrapped will be dropped here, calling the
