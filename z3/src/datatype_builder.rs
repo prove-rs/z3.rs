@@ -167,11 +167,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     for (z3_sort, datatype_builder) in raw_sorts.into_iter().zip(&datatype_builders) {
         let num_cs = datatype_builder.constructors.len();
 
-        unsafe { Z3_inc_ref(ctx.z3_ctx.0, Z3_sort_to_ast(ctx.z3_ctx.0, z3_sort).unwrap()) };
-        let sort = Sort {
-            ctx: ctx.clone(),
-            z3_sort,
-        };
+        let sort = unsafe { Sort::wrap(&ctx, z3_sort) };
 
         let mut variants: Vec<DatatypeVariant> = Vec::with_capacity(num_cs);
 
