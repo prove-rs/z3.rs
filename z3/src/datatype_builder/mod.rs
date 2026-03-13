@@ -96,53 +96,19 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             let mut rname: String = "is-".to_string();
             rname.push_str(cname);
 
-            let cname_symbol: Z3_symbol = Symbol::String(cname.clone()).as_z3_symbol();
-            let rname_symbol: Z3_symbol = Symbol::String(rname).as_z3_symbol();
+            let cname_symbol = Symbol::String(cname.clone());
+            let rname_symbol = Symbol::String(rname);
 
-            let num_fs = fs.len();
-            let mut field_names: Vec<Z3_symbol> = Vec::with_capacity(num_fs);
-            let mut field_sorts: Vec<Option<Z3_sort>> = Vec::with_capacity(num_fs);
-            let mut sort_refs: Vec<::std::os::raw::c_uint> = Vec::with_capacity(num_fs);
-
-            for (fname, accessor) in fs {
-                field_names.push(Symbol::String(fname.clone()).as_z3_symbol());
-                match accessor {
-                    DatatypeAccessor::Datatype(dtype_name) => {
-                        field_sorts.push(None);
-
-                        let matching_names: Vec<_> = datatype_builders
-                            .iter()
-                            .enumerate()
-                            .filter(|&(_, x)| &x.name == dtype_name)
-                            .collect();
-
-                        assert_eq!(
-                            1,
-                            matching_names.len(),
-                            "One and only one occurrence of each datatype is expected."
-                        );
-
-                        let (sort_ref, _) = matching_names[0];
-                        sort_refs.push(sort_ref as u32);
-                    }
-                    DatatypeAccessor::Sort(sort) => {
-                        field_sorts.push(Some(sort.z3_sort));
-                        sort_refs.push(0);
-                    }
-                }
-            }
-
-            // Create the constructor via the new safe wrapper which calls into
-            // Z3_mk_constructor internally and returns a managed `Constructor`.
+            // Create the constructor using the higher-level helper which accepts
+            // the same field representation used by `DatatypeBuilder`. That
+            // helper will construct the temporary arrays required by the Z3 FFI.
             let ctor_wrapper = unsafe {
                 Constructor::new(
                     &ctx,
                     cname_symbol,
                     rname_symbol,
-                    num_fs.try_into().unwrap(),
-                    field_names.as_ptr(),
-                    field_sorts.as_ptr(),
-                    sort_refs.as_mut_ptr(),
+                    fs.as_slice(),
+                    &datatype_builders,
                 )
             };
             ctor_wrapped.push(ctor_wrapper);

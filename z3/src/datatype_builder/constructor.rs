@@ -3,7 +3,11 @@ use z3_sys::{
     Z3_mk_constructor, Z3_mk_constructor_list, Z3_sort, Z3_symbol,
 };
 
+use super::DatatypeAccessor;
 use crate::Context;
+use crate::DatatypeBuilder;
+use crate::Symbol;
+use std::convert::TryInto;
 
 /// Wrapper around a raw `Z3_constructor`.
 pub struct Constructor {
@@ -23,34 +27,76 @@ impl Constructor {
         }
     }
 
-    /// Create a new Z3 constructor via the FFI and wrap it.
+    /// Create a new constructor from high-level field descriptions.
     ///
-    /// This mirrors the parameters of `Z3_mk_constructor`. Callers must ensure
-    /// that the pointers passed in are valid for the duration of the call.
+    /// This function accepts the fields as a slice of `(String, DatatypeAccessor)`
+    /// (the same representation used by `DatatypeBuilder`) and the full list
+    /// of `DatatypeBuilder`s so that recursive references can be resolved to
+    /// indices required by the Z3 API. The function constructs the temporary
+    /// arrays required by `Z3_mk_constructor` internally.
+    ///
+    /// # Safety
+    ///
+    /// This mirrors the safety requirements of `Z3_mk_constructor`. The
+    /// returned `Constructor` will own the Z3 constructor handle and free it
+    /// on Drop.
     pub unsafe fn new(
         ctx: &Context,
-        cname: Z3_symbol,
-        rname: Z3_symbol,
-        num_fs: ::std::os::raw::c_uint,
-        field_names: *const Z3_symbol,
-        field_sorts: *const Option<Z3_sort>,
-        sort_refs: *mut ::std::os::raw::c_uint,
+        cname: Symbol,
+        rname: Symbol,
+        fields: &[(String, DatatypeAccessor)],
+        all_builders: &[DatatypeBuilder],
     ) -> Self {
+        let num_fs = fields.len();
+
+        let mut field_names: Vec<Z3_symbol> = Vec::with_capacity(num_fs);
+        let mut field_sorts: Vec<Option<Z3_sort>> = Vec::with_capacity(num_fs);
+        let mut sort_refs: Vec<::std::os::raw::c_uint> = Vec::with_capacity(num_fs);
+
+        for (fname, accessor) in fields {
+            field_names.push(Symbol::String(fname.clone()).as_z3_symbol());
+            match accessor {
+                DatatypeAccessor::Datatype(dtype_name) => {
+                    field_sorts.push(None);
+
+                    let matching_names: Vec<_> = all_builders
+                        .iter()
+                        .enumerate()
+                        .filter(|&(_, x)| &x.name == dtype_name)
+                        .collect();
+
+                    assert_eq!(
+                        1,
+                        matching_names.len(),
+                        "One and only one occurrence of each datatype is expected.",
+                    );
+
+                    let (sort_ref, _) = matching_names[0];
+                    sort_refs.push(sort_ref as u32);
+                }
+                DatatypeAccessor::Sort(sort) => {
+                    field_sorts.push(Some(sort.z3_sort));
+                    sort_refs.push(0);
+                }
+            }
+        }
+
         // Call the unsafe FFI function inside an inner `unsafe` block to avoid
         // the `unsafe_op_in_unsafe_fn` warning and to make the unsafe region
         // explicit.
         let z3_constructor = unsafe {
             Z3_mk_constructor(
                 ctx.z3_ctx.0,
-                cname,
-                rname,
-                num_fs,
-                field_names,
-                field_sorts,
-                sort_refs,
+                cname.as_z3_symbol(),
+                rname.as_z3_symbol(),
+                num_fs.try_into().unwrap(),
+                field_names.as_ptr(),
+                field_sorts.as_ptr(),
+                sort_refs.as_mut_ptr(),
             )
         }
         .unwrap();
+
         Self {
             ctx: ctx.clone(),
             z3_constructor,
