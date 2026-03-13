@@ -132,9 +132,11 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
                 }
             }
 
-            let constructor = unsafe {
-                Z3_mk_constructor(
-                    ctx.z3_ctx.0,
+            // Create the constructor via the new safe wrapper which calls into
+            // Z3_mk_constructor internally and returns a managed `Constructor`.
+            let ctor_wrapper = unsafe {
+                Constructor::new(
+                    &ctx,
                     cname_symbol,
                     rname_symbol,
                     num_fs.try_into().unwrap(),
@@ -142,37 +144,17 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
                     field_sorts.as_ptr(),
                     sort_refs.as_mut_ptr(),
                 )
-            }
-            .unwrap();
-
-            // Wrap the raw constructor so it will be freed automatically when
-            // `ctor_wrapped` is dropped.
-            let ctor_wrapper = unsafe { Constructor::wrap(&ctx, constructor) };
+            };
             ctor_wrapped.push(ctor_wrapper);
         }
 
         assert!(ctor_wrapped.len() >= cs_start_idx + num_cs);
 
-        // Build a temporary vector of raw constructor handles to pass to
-        // Z3_mk_constructor_list. The underlying constructors are owned by
-        // `ctor_wrapped`, which keeps them alive.
-        let mut cs_handles: Vec<Z3_constructor> = ctor_wrapped[cs_start_idx..]
-            .iter()
-            .take(num_cs)
-            .map(|c| c.z3_constructor())
-            .collect();
-
-        let clist = unsafe {
-            Z3_mk_constructor_list(
-                ctx.z3_ctx.0,
-                num_cs.try_into().unwrap(),
-                cs_handles.as_mut_ptr(),
-            )
-        }
-        .unwrap();
-
-        // Wrap the constructor list so it will be freed automatically.
-        let clist_wrapper = unsafe { ConstructorList::wrap(&ctx, clist) };
+        // Build a `ConstructorList` from the constructors we just created.
+        // The slice references constructors owned by `ctor_wrapped`, keeping
+        // them alive for the duration of the call.
+        let ctors_slice = &ctor_wrapped[cs_start_idx..cs_start_idx + num_cs];
+        let clist_wrapper = ConstructorList::new(&ctx, ctors_slice);
         clist_wrapped.push(clist_wrapper);
     }
 
