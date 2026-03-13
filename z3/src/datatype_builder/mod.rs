@@ -67,7 +67,7 @@ impl DatatypeBuilder {
     }
 }
 
-/// Helper to build a single DatatypeSort from a raw Z3 sort and its builder.
+/// Helper to build a single `DatatypeSort` from a raw Z3 sort and its builder.
 fn build_datatype_sort(
     ctx: &Context,
     sort: Sort,
