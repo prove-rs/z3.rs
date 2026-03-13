@@ -32,11 +32,14 @@
 //! let dts = create_datatypes(vec![my_tree, my_list]);
 //! ```
 //!
+pub(crate) mod constructor;
 
 use std::convert::TryInto;
 use z3_sys::*;
 
+use crate::datatype_builder::constructor::{Constructor, ConstructorList};
 use crate::{Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
+
 impl DatatypeBuilder {
     pub fn new<S: Into<Symbol>>(name: S) -> Self {
         let ctx = &Context::thread_local();
@@ -74,18 +77,20 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     let ctx: Context = datatype_builders[0].ctx.clone();
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
 
+    // Raw Z3 sorts to be filled by Z3_mk_datatypes
     let mut raw_sorts: Vec<Z3_sort> = Vec::with_capacity(num);
-    let mut clists: Vec<Z3_constructor_list> = Vec::with_capacity(num);
 
-    // Collect all the `Z3_constructor`s that we create in here so that we can
-    // free them later, once we've created the associated `FuncDecl`s and don't
-    // need the raw constructor anymore.
-    let mut ctors: Vec<Z3_constructor> = Vec::with_capacity(num * 2);
+    // Use wrappers for constructors and constructor-lists so we don't have to
+    // manually call Z3_del_constructor / Z3_del_constructor_list.
+    let mut ctor_wrapped: Vec<Constructor> = Vec::with_capacity(num * 2);
+    let mut clist_wrapped: Vec<ConstructorList> = Vec::with_capacity(num);
 
     for d in datatype_builders.iter() {
         names.push(d.name.as_z3_symbol());
         let num_cs = d.constructors.len();
-        let mut cs: Vec<Z3_constructor> = Vec::with_capacity(num_cs);
+
+        // Track where constructors for this datatype start within ctor_wrapped.
+        let cs_start_idx = ctor_wrapped.len();
 
         for (cname, fs) in &d.constructors {
             let mut rname: String = "is-".to_string();
@@ -137,20 +142,49 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
                     field_sorts.as_ptr(),
                     sort_refs.as_mut_ptr(),
                 )
-            };
-            cs.push(constructor.unwrap());
+            }
+            .unwrap();
+
+            // Wrap the raw constructor so it will be freed automatically when
+            // `ctor_wrapped` is dropped.
+            let ctor_wrapper = unsafe { Constructor::wrap(&ctx, constructor) };
+            ctor_wrapped.push(ctor_wrapper);
         }
-        assert!(!cs.is_empty());
+
+        assert!(ctor_wrapped.len() >= cs_start_idx + num_cs);
+
+        // Build a temporary vector of raw constructor handles to pass to
+        // Z3_mk_constructor_list. The underlying constructors are owned by
+        // `ctor_wrapped`, which keeps them alive.
+        let mut cs_handles: Vec<Z3_constructor> = ctor_wrapped[cs_start_idx..]
+            .iter()
+            .take(num_cs)
+            .map(|c| c.z3_constructor())
+            .collect();
 
         let clist = unsafe {
-            Z3_mk_constructor_list(ctx.z3_ctx.0, num_cs.try_into().unwrap(), cs.as_mut_ptr())
-        };
-        clists.push(clist.unwrap());
-        ctors.extend(cs);
+            Z3_mk_constructor_list(
+                ctx.z3_ctx.0,
+                num_cs.try_into().unwrap(),
+                cs_handles.as_mut_ptr(),
+            )
+        }
+        .unwrap();
+
+        // Wrap the constructor list so it will be freed automatically.
+        let clist_wrapper = unsafe { ConstructorList::wrap(&ctx, clist) };
+        clist_wrapped.push(clist_wrapper);
     }
 
     assert_eq!(num, names.len());
-    assert_eq!(num, clists.len());
+    assert_eq!(num, clist_wrapped.len());
+
+    // Prepare a temporary vector of raw constructor-list handles for the FFI
+    // call. Keep it alive for the duration of the unsafe call.
+    let mut clist_handles: Vec<Z3_constructor_list> = clist_wrapped
+        .iter()
+        .map(|c| c.z3_constructor_list())
+        .collect();
 
     unsafe {
         Z3_mk_datatypes(
@@ -158,7 +192,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             num.try_into().unwrap(),
             names.as_ptr(),
             raw_sorts.as_mut_ptr(),
-            clists.as_mut_ptr(),
+            clist_handles.as_mut_ptr(),
         );
         raw_sorts.set_len(num);
     };
@@ -211,18 +245,9 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
         datatype_sorts.push(DatatypeSort { sort, variants });
     }
 
-    for ctor in ctors {
-        unsafe {
-            Z3_del_constructor(ctx.z3_ctx.0, ctor);
-        }
-    }
-
-    for clist in clists {
-        unsafe {
-            Z3_del_constructor_list(ctx.z3_ctx.0, clist);
-        }
-    }
-
+    // ctor_wrapped and clist_wrapped will be dropped here, calling the
+    // appropriate Z3 deletion routines in their Drop impls. No manual calls
+    // to Z3_del_constructor / Z3_del_constructor_list are required.
     datatype_sorts
 }
 
