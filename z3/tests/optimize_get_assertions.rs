@@ -13,8 +13,8 @@ fn test_optimize_get_assertions() {
     let x = Int::new_const("opt_x");
 
     // Hard assertions
-    let a = x.eq(&Int::from_i64(3));
-    let b = x.eq(&Int::from_i64(4));
+    let a = x.eq(3);
+    let b = x.eq(4);
     opt.assert(&a);
     opt.assert(&b);
 
@@ -24,7 +24,7 @@ fn test_optimize_get_assertions() {
     assert!(assertions.contains(&b));
 
     // Soft assertions should NOT appear in get_assertions (they are objectives).
-    opt.assert_soft(&x.eq(&Int::from_i64(5)), 10u32, None);
+    opt.assert_soft(&x.eq(5), 10u32, None);
     let assertions_after_soft = opt.get_assertions();
     assert_eq!(
         assertions_after_soft.len(),
@@ -36,7 +36,7 @@ fn test_optimize_get_assertions() {
     // Verify the count increases by one and at least one returned
     // assertion is new compared to the previous list.
     let track_sym = Bool::new_const("opt_track_p");
-    let c = x.eq(&Int::from_i64(6));
+    let c = x.eq(6);
     opt.assert_and_track(&c, &track_sym);
 
     let assertions_final = opt.get_assertions();
