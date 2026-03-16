@@ -546,7 +546,7 @@ impl Solver {
     ///  assert!(val <= 2);
     /// ```
     pub fn check_and_get_model<T: Solvable>(
-        self,
+        &self,
         t: T,
         model_completion: bool,
     ) -> Option<T::ModelInstance> {

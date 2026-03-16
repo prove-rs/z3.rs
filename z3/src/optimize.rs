@@ -290,7 +290,7 @@ impl Optimize {
     ///
     /// - [`Optimize::into_solutions`]
     pub fn check_and_get_model<T: Solvable>(
-        self,
+        &self,
         t: T,
         model_completion: bool,
     ) -> Option<T::ModelInstance> {
