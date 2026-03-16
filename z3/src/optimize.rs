@@ -302,6 +302,17 @@ impl Optimize {
             _ => None,
         }
     }
+
+    /// Return all assertions currently in the optimizer.
+    pub fn get_assertions(&self) -> Vec<Bool> {
+        let av = unsafe {
+            AstVector::wrap(
+                &self.ctx,
+                Z3_optimize_get_assertions(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
+            )
+        };
+        av.try_into().expect("solver assertions are always Bool")
+    }
 }
 
 struct OptimizeIterator<T> {
