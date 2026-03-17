@@ -2,9 +2,11 @@ use log::debug;
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
+use std::iter::FusedIterator;
 
 use z3_sys::*;
 
+use crate::solver::Solvable;
 use crate::{
     AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
     ast::{Ast, Bool, Dynamic},
@@ -254,6 +256,84 @@ impl Optimize {
                 &self.ctx,
                 Z3_optimize_get_statistics(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
             )
+        }
+    }
+
+    /// Consume this [`Optimize`] and iterate over solutions to the given [`Solvable`].
+    ///
+    /// Each iteration calls [`Optimize::check`] with no assumptions and asserts a
+    /// counterexample constraint to exclude the current solution, yielding all
+    /// distinct model instances until the optimizer returns `UNSAT` or `UNKNOWN`.
+    ///
+    /// # See also
+    ///
+    /// - [`Optimize::check_and_get_model`]
+    pub fn into_solutions<T: Solvable>(
+        self,
+        t: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        OptimizeIterator {
+            optimize: self,
+            ast: t,
+            model_completion,
+        }
+        .fuse()
+    }
+
+    /// Check the optimizer and, if satisfiable, return a single model instance for `t`.
+    ///
+    /// Combines `check(&[])` + `get_model()` + `Solvable::read_from_model`.
+    /// Returns `Some(instance)` on `Sat` with successful model extraction; `None` otherwise.
+    ///
+    /// # See also
+    ///
+    /// - [`Optimize::into_solutions`]
+    pub fn check_and_get_model<T: Solvable>(
+        &self,
+        t: T,
+        model_completion: bool,
+    ) -> Option<T::ModelInstance> {
+        match self.check(&[]) {
+            SatResult::Sat => {
+                let model = self.get_model()?;
+                t.read_from_model(&model, model_completion)
+            }
+            _ => None,
+        }
+    }
+
+    /// Return all assertions currently in the optimizer.
+    pub fn get_assertions(&self) -> Vec<Bool> {
+        let av = unsafe {
+            AstVector::wrap(
+                &self.ctx,
+                Z3_optimize_get_assertions(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
+            )
+        };
+        av.try_into().expect("solver assertions are always Bool")
+    }
+}
+
+struct OptimizeIterator<T> {
+    optimize: Optimize,
+    ast: T,
+    model_completion: bool,
+}
+
+impl<T: Solvable> Iterator for OptimizeIterator<T> {
+    type Item = T::ModelInstance;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.optimize.check(&[]) {
+            SatResult::Sat => {
+                let model = self.optimize.get_model()?;
+                let instance = self.ast.read_from_model(&model, self.model_completion)?;
+                let counterexample = self.ast.generate_constraint(&instance);
+                self.optimize.assert(&counterexample);
+                Some(instance)
+            }
+            _ => None,
         }
     }
 }
