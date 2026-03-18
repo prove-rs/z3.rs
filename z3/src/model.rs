@@ -79,7 +79,7 @@ impl Model {
 
     /// Evaluates an expression `ast` in the current model.
     /// When `model_completion` is true it will assign an interpretation for constants and functions that do not have an interpretation in the model.
-    /// This function may fail (return [None]) if the argument contains quantifiers, is partial (MODEL_PARTIAL enabled), or if it is not well-sorted.
+    /// This function may fail (return [None]) if the argument contains quantifiers or if it is not well-sorted.
     pub fn eval<T>(&self, ast: &T, model_completion: bool) -> Option<T>
     where
         T: Ast,

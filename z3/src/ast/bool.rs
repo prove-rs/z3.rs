@@ -56,8 +56,8 @@ impl Bool {
         }
     }
 
-    // This doesn't quite fit the trinop! macro because of the generic argty
-    pub fn ite<T>(&self, a: &T, b: &T) -> T
+    /// Uses `self` as a predicate in an if-then-else expression. Evaluates `then_expr` if `self` is true.
+    pub fn ite<T>(&self, then_expr: &T, else_expr: &T) -> T
     where
         T: Ast,
     {
@@ -66,8 +66,8 @@ impl Bool {
                 Z3_mk_ite(
                     self.ctx.z3_ctx.0,
                     self.z3_ast,
-                    a.get_z3_ast(),
-                    b.get_z3_ast(),
+                    then_expr.get_z3_ast(),
+                    else_expr.get_z3_ast(),
                 )
                 .unwrap()
             })

@@ -623,6 +623,7 @@ impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
 impl_ast!(Algebraic);
 
+/// Create an at-most Pseudo-Boolean k constraint: arg0 + arg1 + ... + argn <= k
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atmost(args.as_ref(), k)
