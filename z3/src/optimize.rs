@@ -48,7 +48,7 @@ impl Optimize {
         &self.ctx
     }
 
-    /// Assert hard constraint to the optimization context.
+    /// Add a hard constraint to the optimization context.
     ///
     /// # See also:
     ///

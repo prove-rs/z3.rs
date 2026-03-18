@@ -19,6 +19,7 @@ impl Bool {
         }
     }
 
+    /// Declare and create a fresh Boolean uninterpreted constant with name `prefix`.
     pub fn fresh_const(prefix: &str) -> Bool {
         let ctx = &Context::thread_local();
         let sort = Sort::bool();
@@ -31,6 +32,7 @@ impl Bool {
         }
     }
 
+    /// Create an AST node representing `true` or `false`.
     pub fn from_bool(b: bool) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
@@ -44,6 +46,7 @@ impl Bool {
         }
     }
 
+    /// If `self` is the Boolean value `true` or `false`, return its value. Otherwise, return [None].
     pub fn as_bool(&self) -> Option<bool> {
         unsafe {
             match Z3_get_bool_value(self.ctx.z3_ctx.0, self.z3_ast) {
@@ -54,8 +57,8 @@ impl Bool {
         }
     }
 
-    // This doesn't quite fit the trinop! macro because of the generic argty
-    pub fn ite<T>(&self, a: &T, b: &T) -> T
+    /// Uses `self` as a predicate in an if-then-else expression. Evaluates `then_expr` if `self` is true.
+    pub fn ite<T>(&self, then_expr: &T, else_expr: &T) -> T
     where
         T: Ast,
     {
@@ -64,8 +67,8 @@ impl Bool {
                 Z3_mk_ite(
                     self.ctx.z3_ctx.0,
                     self.z3_ast,
-                    a.get_z3_ast(),
-                    b.get_z3_ast(),
+                    then_expr.get_z3_ast(),
+                    else_expr.get_z3_ast(),
                 )
                 .unwrap()
             })
