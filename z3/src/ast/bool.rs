@@ -19,7 +19,7 @@ impl Bool {
         }
     }
 
-    /// Declare and create a fresh uninterpreted constant with name `prefix`.
+    /// Declare and create a fresh Boolean uninterpreted constant with name `prefix`.
     pub fn fresh_const(prefix: &str) -> Bool {
         let ctx = &Context::thread_local();
         let sort = Sort::bool();
