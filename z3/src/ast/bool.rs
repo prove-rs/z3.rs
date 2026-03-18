@@ -19,6 +19,7 @@ impl Bool {
         }
     }
 
+    /// Declare and create a fresh uninterpreted constant with name `prefix`.
     pub fn fresh_const(prefix: &str) -> Bool {
         let ctx = &Context::thread_local();
         let sort = Sort::bool();
@@ -31,6 +32,7 @@ impl Bool {
         }
     }
 
+    /// Create an AST node representing `true` or `false`.
     pub fn from_bool(b: bool) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
