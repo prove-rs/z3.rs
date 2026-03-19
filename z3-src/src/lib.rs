@@ -77,6 +77,12 @@ fn resolve_source() -> PathBuf {
         return submodule;
     }
 
+    // Note that this panic should only be reachable in dev contexts: the crate has the
+    // source tree from the submodule prepublished already, so the above "submodule" check
+    // should always work.
+    //
+    // If, however, someone is developing on this library and has it checked out through git,
+    // and did not check out submodules, this may be hit, hence the message.
     panic!("Z3 source not found — run `git submodule update --init` or set {Z3_SRC_SOURCE_DIR}");
 }
 

@@ -1,6 +1,6 @@
 [package]
 name = "z3-src"
-version = "416.0.0"
+version = "415.4.0"
 edition = "2024"
 description = "Source distribution of the Z3 SMT solver, for use as a build dependency"
 license = "MIT"

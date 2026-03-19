@@ -98,9 +98,29 @@ fn gen_bindings() -> Result<(), Box<dyn std::error::Error>> {
 fn read_z3_version(submodule: &Path) -> Result<Version, Box<dyn std::error::Error>> {
     let version_txt = submodule.join("scripts/VERSION.txt");
     let version_str = std::fs::read_to_string(&version_txt)
-        .map_err(|e| format!("failed to read {}: {e}", version_txt.display()))?;
-    Version::parse(version_str.trim())
-        .map_err(|e| format!("unexpected VERSION.txt content {:?}: {e}", version_str.trim()).into())
+        .map_err(|e| format!("failed to read {}: {e}", version_txt.display()))?
+        .trim()
+        .to_string();
+    let periods = version_str.split_terminator(|p| ".".contains(p)).count();
+    let version_str = if periods > 2 {
+        // we have extra periods: trim all but the most major versions
+        let new_str = version_str
+            .split(|p| ".".contains(p))
+            .take(3)
+            .collect::<Vec<_>>()
+            .join(".");
+        println!("Trimming Z3 reported version {version_str} to {new_str}");
+        new_str
+    } else {
+        version_str
+    };
+    Version::parse(version_str.trim()).map_err(|e| {
+        format!(
+            "unexpected VERSION.txt content {:?}: {e}",
+            version_str.trim()
+        )
+        .into()
+    })
 }
 
 fn prepare_z3_src(z3_tag: &str) -> Result<(), Box<dyn std::error::Error>> {
@@ -123,7 +143,8 @@ fn prepare_z3_src(z3_tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     run(Command::new("git")
         .arg("-C")
         .arg(&submodule)
-        .args(["fetch", "--tags", "origin"]))?;
+        // Forcing here because Z3 overwrites their nightly tag
+        .args(["fetch", "--tags", "origin", "--force"]))?;
     run(Command::new("git")
         .arg("-C")
         .arg(&submodule)
@@ -227,11 +248,7 @@ fn publish_z3_src(dry_run: bool, package: bool) -> Result<(), Box<dyn std::error
 
 /// Replaces the first occurrence of `old` with `new` in the file at `path`.
 /// Returns an error if `old` is not found (guards against silent no-ops).
-fn set_toml_field(
-    path: &Path,
-    old: &str,
-    new: &str,
-) -> Result<(), Box<dyn std::error::Error>> {
+fn set_toml_field(path: &Path, old: &str, new: &str) -> Result<(), Box<dyn std::error::Error>> {
     let content = std::fs::read_to_string(path)?;
     if !content.contains(old) {
         return Err(format!(
