@@ -1,6 +1,6 @@
 [package]
 name = "z3-src"
-version = "415.4.0"
+version = "415.4.1"
 edition = "2024"
 description = "Source distribution of the Z3 SMT solver, for use as a build dependency"
 license = "MIT"
@@ -25,7 +25,10 @@ exclude = [
     # Never built by cmake
     "z3/examples",
     "z3/doc",
-    "z3/scripts",
+    "z3/scripts/*.yml",
+    "z3/scripts/*.yaml",
+    "z3/scripts/*.py",
+    "z3/scripts/README",
     "z3/docker",
     "z3/.github",
     "z3/contrib",
