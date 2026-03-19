@@ -119,10 +119,13 @@ fn is_strip_line(line: &str) -> bool {
 /// If the line is a `\sa` directive, extract all referenced names.
 fn extract_sa(line: &str) -> Option<Vec<String>> {
     let rest = line.trim().strip_prefix(r"\sa ")?;
+    // Only keep tokens that look like Z3 API names (start with "Z3_").
+    // \sa lines sometimes include prose like "for requirements." after the name.
     let names: Vec<String> = rest
         .split_whitespace()
-        .filter(|s| !s.is_empty())
-        .map(|s| s.trim_end_matches(['.', ',']).to_string())
+        .map(|s| s.trim_end_matches(['.', ',']))
+        .filter(|s| s.starts_with("Z3_"))
+        .map(str::to_string)
         .collect();
     if names.is_empty() { None } else { Some(names) }
 }

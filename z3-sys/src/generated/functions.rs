@@ -4401,8 +4401,6 @@ unsafe extern "C" {
     /// # See also
     ///
     /// - [`Z3_goal_to_diamcs_string`]
-    /// - [`for`]
-    /// - [`requirements`]
     pub fn Z3_solver_to_dimacs_string(
         c: Z3_context,
         s: Z3_solver,
@@ -5467,19 +5465,14 @@ unsafe extern "C" {
     /// # See also
     ///
     /// - [`Z3_mk_fpa_round_nearest_ties_to_away`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_rna`]
     /// - [`Z3_mk_fpa_round_nearest_ties_to_even`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_rne`]
     /// - [`Z3_mk_fpa_round_toward_negative`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_rtn`]
     /// - [`Z3_mk_fpa_round_toward_positive`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_rtp`]
     /// - [`Z3_mk_fpa_round_toward_zero`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_rtz`]
     pub fn Z3_mk_fpa_rounding_mode_sort(c: Z3_context) -> Option<Z3_sort>;
     /// Create a numeral of RoundingMode sort which represents the NearestTiesToEven rounding mode.
@@ -5633,16 +5626,12 @@ unsafe extern "C" {
     /// # See also
     ///
     /// - [`Z3_mk_fpa_sort_half`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_sort_16`]
     /// - [`Z3_mk_fpa_sort_single`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_sort_32`]
     /// - [`Z3_mk_fpa_sort_double`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_sort_64`]
     /// - [`Z3_mk_fpa_sort_quadruple`]
-    /// - [`or`]
     /// - [`Z3_mk_fpa_sort_128`]
     pub fn Z3_mk_fpa_sort(
         c: Z3_context,
