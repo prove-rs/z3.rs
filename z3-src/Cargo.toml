@@ -25,10 +25,6 @@ exclude = [
     # Never built by cmake
     "z3/examples",
     "z3/doc",
-    "z3/scripts/*.yml",
-    "z3/scripts/*.yaml",
-    "z3/scripts/*.py",
-    "z3/scripts/README",
     "z3/docker",
     "z3/.github",
     "z3/contrib",
