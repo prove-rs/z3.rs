@@ -3392,7 +3392,8 @@ unsafe extern "C" {
     /// Parse and evaluate and SMT-LIB2 command sequence. The state from a previous call is saved so the next
     /// evaluation builds on top of the previous call.
     ///
-    /// \returns output generated from processing commands.
+    ///
+    /// **Returns:** output generated from processing commands.
     pub fn Z3_eval_smtlib2_string(c: Z3_context, str_: Z3_string) -> Z3_string;
     /// Create a parser context.
     ///
@@ -6514,7 +6515,8 @@ unsafe extern "C" {
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
     /// - `sgn`: the retrieved sign
-    /// \returns true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
+    ///
+    /// **Returns:** true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
     ///
     /// Remarks: sets `sgn` to `false` if `t' is positive and to `true` otherwise, except for
     /// NaN, which is an invalid argument.
@@ -6523,7 +6525,8 @@ unsafe extern "C" {
     ///
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
-    /// \returns true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
+    ///
+    /// **Returns:** true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
     ///
     /// Remarks: The significand `s` is always `0.0 <= s < 2.0`; the resulting string is long
     /// enough to represent the real significand precisely.
@@ -6547,7 +6550,8 @@ unsafe extern "C" {
     /// - `c`: logical context
     /// - `t`: a floating-point numeral
     /// - `biased`: flag to indicate whether the result is in biased representation
-    /// \returns true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
+    ///
+    /// **Returns:** true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
     ///
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid argument.
@@ -6562,7 +6566,8 @@ unsafe extern "C" {
     /// - `t`: a floating-point numeral
     /// - `n`: exponent
     /// - `biased`: flag to indicate whether the result is in biased representation
-    /// \returns true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
+    ///
+    /// **Returns:** true if `t` corresponds to a floating point numeral, otherwise invokes exception handler or returns false
     ///
     /// Remarks: This function extracts the exponent in `t`, without normalization.
     /// NaN is an invalid argument.

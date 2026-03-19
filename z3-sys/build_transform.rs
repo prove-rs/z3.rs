@@ -329,6 +329,14 @@ fn process_doc_string(raw: &str) -> String {
             continue;
         }
 
+        if let Some(rest) = t
+            .strip_prefix(r"\returns ")
+            .or_else(|| if t == r"\returns" { Some("") } else { None })
+        {
+            out.push(format!("\n**Returns:** {}", apply_inline(rest.trim_end())));
+            continue;
+        }
+
         if let Some(rest) = t.strip_prefix(r"\pre ") {
             preconditions.push(apply_inline(rest.trim_end()));
             continue;
