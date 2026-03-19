@@ -645,6 +645,7 @@ fn _atmost(args: &[Z3_ast], k: u32) -> Bool {
     }
 }
 
+/// Create an at-least Pseudo-Boolean k constraint: arg0 + arg1 + ... + argn >= k
 pub fn atleast<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
     _atleast(args.as_ref(), k)

@@ -94,6 +94,12 @@ impl Bool {
         not(Z3_mk_not, Self);
     }
 
+    /// Creates an at-most Pseudo-Boolean k constraint:
+    /// `values[0].0 * values[0].1 + ... + values[n - 1].0 * values[n - 1].1 <= k`
+    ///
+    /// # See also:
+    ///
+    /// - [`crate::ast::atmost()`]
     pub fn pb_le(values: &[(&Bool, i32)], k: i32) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
@@ -115,6 +121,12 @@ impl Bool {
         }
     }
 
+    /// Creates an at-least Pseudo-Boolean k constraint:
+    /// `values[0].0 * values[0].1 + ... + values[n - 1].0 * values[n - 1].1 >= k`
+    ///
+    /// # See also:
+    ///
+    /// - [`crate::ast::atleast()`]
     pub fn pb_ge(values: &[(&Bool, i32)], k: i32) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
@@ -136,6 +148,8 @@ impl Bool {
         }
     }
 
+    /// Creates a Pseudo-Boolean k constraint:
+    /// `values[0].0 * values[0].1 + ... + values[n - 1].0 * values[n - 1].1 == k`
     pub fn pb_eq(values: &[(&Bool, i32)], k: i32) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
