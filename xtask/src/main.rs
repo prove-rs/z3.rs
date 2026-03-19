@@ -268,11 +268,10 @@ fn read_package_version(path: &Path) -> Result<String, Box<dyn std::error::Error
     let content = std::fs::read_to_string(path)?;
     for line in content.lines() {
         let trimmed = line.trim();
-        if let Some(rest) = trimmed.strip_prefix("version = \"") {
-            if let Some(ver) = rest.strip_suffix('"') {
+        if let Some(rest) = trimmed.strip_prefix("version = \"")
+            && let Some(ver) = rest.strip_suffix('"') {
                 return Ok(ver.to_string());
             }
-        }
     }
     Err(format!("no `version = \"...\"` field found in {}", path.display()).into())
 }
@@ -284,11 +283,10 @@ fn read_z3src_dep_series(path: &Path) -> Result<String, Box<dyn std::error::Erro
         if !line.trim_start().starts_with("z3-src = {") {
             continue;
         }
-        if let Some((_, after)) = line.split_once("version = \"") {
-            if let Some((ver, _)) = after.split_once('"') {
+        if let Some((_, after)) = line.split_once("version = \"")
+            && let Some((ver, _)) = after.split_once('"') {
                 return Ok(ver.to_string());
             }
-        }
     }
     Err(format!("no `z3-src` dep with version found in {}", path.display()).into())
 }
