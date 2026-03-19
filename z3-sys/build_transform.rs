@@ -122,7 +122,7 @@ fn extract_sa(line: &str) -> Option<Vec<String>> {
     let names: Vec<String> = rest
         .split_whitespace()
         .filter(|s| !s.is_empty())
-        .map(str::to_string)
+        .map(|s| s.trim_end_matches(['.', ',']).to_string())
         .collect();
     if names.is_empty() { None } else { Some(names) }
 }
@@ -230,6 +230,7 @@ enum DocBlock {
     Normal,
     Code,     // inside \code ... \endcode  → fenced ```c
     Verbatim, // inside \verbatim ... \endverbatim → fenced ```
+    Nicebox,  // inside \nicebox{ ... }  → fenced ```
 }
 
 /// Convert a raw Doxygen doc string (from `#[doc = "..."]`) to Rust markdown.
@@ -252,13 +253,14 @@ fn process_doc_string(raw: &str) -> String {
     let mut block = DocBlock::Normal;
 
     for line in raw.lines() {
-        // Inside a code or verbatim block — pass lines through until the closer.
+        // Inside a code, verbatim, or nicebox block — pass lines through until the closer.
         if block != DocBlock::Normal {
             let t = line.trim();
-            let end_tag = if block == DocBlock::Code {
-                r"\endcode"
-            } else {
-                r"\endverbatim"
+            let end_tag = match block {
+                DocBlock::Code => r"\endcode",
+                DocBlock::Verbatim => r"\endverbatim",
+                DocBlock::Nicebox => "}",
+                DocBlock::Normal => unreachable!(),
             };
             if t == end_tag {
                 out.push("```".to_string());
@@ -309,6 +311,11 @@ fn process_doc_string(raw: &str) -> String {
         if t == r"\verbatim" {
             out.push("```".to_string());
             block = DocBlock::Verbatim;
+            continue;
+        }
+        if t == r"\nicebox{" {
+            out.push("```".to_string());
+            block = DocBlock::Nicebox;
             continue;
         }
 
@@ -522,39 +529,93 @@ fn apply_strip<'a>(variant: &'a str, strip: &StripKind) -> &'a str {
 
 /// Parse per-variant docs from an enum-level doc string.
 ///
-/// Scans for bullet-list lines of the form `- Z3_VARIANT_NAME desc`,
-/// handling `:` and `is` separators.  Returns `{ "Z3_VARIANT_NAME" => "desc" }`.
+/// Scans for bullet-list lines of the form `- Z3_VARIANT_NAME desc`, collecting
+/// continuation lines (indented or blank) into the variant's doc.  Returns
+/// `{ "Z3_VARIANT_NAME" => processed_doc }`.
 fn parse_variant_docs(doc: &str) -> HashMap<String, String> {
-    let mut map = HashMap::new();
+    let mut map: HashMap<String, String> = HashMap::new();
+    let mut current_name: Option<String> = None;
+    let mut current_lines: Vec<&str> = Vec::new();
+
+    // Inline flush: trim trailing blank lines, process, insert.
+    macro_rules! flush {
+        () => {
+            if let Some(ref name) = current_name {
+                let mut end = current_lines.len();
+                while end > 0 && current_lines[end - 1].trim().is_empty() {
+                    end -= 1;
+                }
+                let processed = process_doc_string(&current_lines[..end].join("\n"));
+                if !processed.is_empty() {
+                    map.insert(name.clone(), processed);
+                }
+            }
+        };
+    }
+
     for line in doc.lines() {
         let t = line.trim();
-        let Some(rest) = t.strip_prefix("- Z3_") else {
-            continue;
-        };
-        // rest = "OP_TRUE The constant true." or "APP_AST: constant and apps" etc.
-        // Find end of the identifier portion: first char that isn't [A-Z0-9_].
-        let name_end = rest
-            .find(|c: char| !c.is_ascii_uppercase() && !c.is_ascii_digit() && c != '_')
-            .unwrap_or(rest.len());
-        if name_end == 0 {
-            continue;
-        }
-        let variant_name = format!("Z3_{}", &rest[..name_end]);
-        let after = rest[name_end..].trim_start_matches([' ', ':', '\t']);
-        let desc = after.strip_prefix("is ").unwrap_or(after).trim();
-        if !desc.is_empty() {
-            map.insert(variant_name, apply_inline(desc));
+        if let Some(rest) = t.strip_prefix("- Z3_") {
+            flush!();
+            // Find end of the identifier portion: first char that isn't [A-Z0-9_].
+            let name_end = rest
+                .find(|c: char| !c.is_ascii_uppercase() && !c.is_ascii_digit() && c != '_')
+                .unwrap_or(rest.len());
+            if name_end == 0 {
+                current_name = None;
+                current_lines.clear();
+                continue;
+            }
+            let variant_name = format!("Z3_{}", &rest[..name_end]);
+            let after = rest[name_end..].trim_start_matches([' ', ':', '\t']);
+            let first_text = after.strip_prefix("is ").unwrap_or(after).trim();
+            current_name = Some(variant_name);
+            current_lines.clear();
+            if !first_text.is_empty() {
+                current_lines.push(first_text);
+            }
+        } else if current_name.is_some() {
+            // Any non-bullet line is a continuation of the current variant.
+            // bindgen strips indentation, so we can't use starts_with(' ') to detect
+            // continuations. Bullets always run to the next `- Z3_` or end of doc.
+            current_lines.push(t);
         }
     }
+
+    // Flush last variant.
+    flush!();
+
     map
 }
 
 /// Return the enum-level doc with variant bullet-list lines removed.
+///
+/// Uses a state machine to drop entire bullet sections including
+/// multi-line continuations and `\nicebox{...}` blocks.
 fn strip_variant_bullets(doc: &str) -> String {
-    doc.lines()
-        .filter(|line| !line.trim().starts_with("- Z3_"))
-        .collect::<Vec<_>>()
-        .join("\n")
+    let mut out: Vec<&str> = Vec::new();
+    let mut in_bullet = false;
+
+    for line in doc.lines() {
+        let t = line.trim();
+        if t.starts_with("- Z3_") {
+            in_bullet = true;
+            // skip bullet line
+        } else if in_bullet {
+            // Skip all continuation and blank lines.
+            // bindgen strips indentation, so we can't rely on starts_with(' ') to
+            // detect continuations. Bullet sections always extend to end of doc.
+        } else {
+            out.push(line);
+        }
+    }
+
+    // Trim trailing blank lines.
+    while out.last().is_some_and(|l| l.trim().is_empty()) {
+        out.pop();
+    }
+
+    out.join("\n")
 }
 
 /// Transform a `Z3_xxx_kind` enum to an idiomatic Rust enum plus a type alias.

@@ -142,591 +142,6 @@ pub enum AstKind {
 }
 pub type Z3_ast_kind = AstKind;
 /// The different kinds of interpreted function kinds.
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-/// It captures equisatisfiability and equivalence modulo renamings.
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-/// Array store takes at least 3 arguments.
-///
-///
-///
-///
-/// It satisfies map[f](a1,..,a_n)[i] = f(a1[i],...,a_n[i]) for every i.
-///
-///
-///
-///
-///
-///
-/// function passed as parameter.
-///
-/// are different if they are different on the index.
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-/// The meaning is given by the equivalence
-/// (carry l1 l2 l3) <=> (or (and l1 l2) (and l1 l3) (and l2 l3)))
-///
-/// The meaning is given by the equivalence
-/// (xor3 l1 l2 l3) <=> (xor (xor l1 l2) l3)
-///
-/// Signed multiplication overflows if the operands have the same sign and the result of multiplication
-/// does not fit within the available bits. \sa Z3_mk_bvmul_no_overflow.
-///
-/// Unsigned multiplication overflows if the result does not fit within the available bits.
-///
-/// Signed multiplication underflows if the operands have opposite signs and the result of multiplication
-/// does not fit within the available bits. Z3_mk_bvmul_no_underflow.
-///
-/// It has the same semantics as Z3_OP_BSDIV, but created in a context where the second operand can be assumed to be non-zero.
-///
-/// It has the same semantics as Z3_OP_BUDIV, but created in a context where the second operand can be assumed to be non-zero.
-///
-/// It has the same semantics as Z3_OP_BSREM, but created in a context where the second operand can be assumed to be non-zero.
-///
-/// It has the same semantics as Z3_OP_BUREM, but created in a context where the second operand can be assumed to be non-zero.
-///
-/// It has the same semantics as Z3_OP_BSMOD, but created in a context where the second operand can be assumed to be non-zero.
-///
-///
-///
-///
-///
-///
-/// T1: p
-/// T2: (implies p q)
-/// [mp T1 T2]: q
-///
-/// The second antecedents may also be a proof for (iff p q).
-///
-/// The only reflexive relations that are used are
-/// equivalence modulo namings, equality and equivalence.
-/// That is, R is either '~', '=' or 'iff'.
-///
-/// \nicebox{
-/// T1: (R t s)
-/// [symmetry T1]: (R s t)
-/// }
-/// T1 is the antecedent of this proof object.
-///
-/// for (R t u).
-/// \nicebox{
-/// T1: (R t s)
-/// T2: (R s u)
-/// [trans T1 T2]: (R t u)
-/// }
-///
-/// It combines several symmetry and transitivity proofs. Example:
-/// \nicebox{
-/// T1: (R a b)
-/// T2: (R c b)
-/// T3: (R c d)
-/// [trans* T1 T2 T3]: (R a d)
-/// }
-/// R must be a symmetric and transitive relation.
-///
-/// Assuming that this proof object is a proof for (R s t), then
-/// a proof checker must check if it is possible to prove (R s t)
-/// using the antecedents, symmetry and transitivity.  That is,
-/// if there is a path from s to t, if we view every
-/// antecedent (R a b) as an edge between a and b.
-///
-///
-/// T1: (R t_1 s_1)
-/// ...
-/// Tn: (R t_n s_n)
-/// [monotonicity T1 ... Tn]: (R (f t_1 ... t_n) (f s_1 ... s_n))
-///
-/// Remark: if t_i == s_i, then the antecedent Ti is suppressed.
-/// That is, reflexivity proofs are suppressed to save space.
-///
-///
-/// T1: (~ p q)
-/// [quant-intro T1]: (~ (forall (x) p) (forall (x) q))
-///
-///
-/// T1: f
-/// [proof-bind T1] forall (x) f
-///
-/// Given that f (= or) distributes over g (= and), produces a proof for
-/// \nicebox{
-/// (= (f a (g c d))
-/// (g (f a c) (f a d)))
-/// }
-/// If f and g are associative, this proof also justifies the following equality:
-/// \nicebox{
-/// (= (f (g a b) (g c d))
-/// (g (f a c) (f a d) (f b c) (f b d)))
-/// }
-/// where each f and g can have arbitrary number of arguments.
-///
-/// This proof object has no antecedents.
-/// Remark. This rule is used by the CNF conversion pass and
-/// instantiated by f = or, and g = and.
-///
-///
-/// T1: (and l_1 ... l_n)
-/// [and-elim T1]: l_i
-///
-///
-/// T1: (not (or l_1 ... l_n))
-/// [not-or-elim T1]: (not l_i)
-///
-/// The head function symbol of t is interpreted.
-///
-/// This proof object has no antecedents.
-/// The conclusion of a rewrite rule is either an equality (= t s),
-/// an equivalence (iff t s), or equi-satisfiability (~ t s).
-/// Remark: if f is bool, then = is iff.
-/// Examples:
-/// \nicebox{
-/// (= (+ x 0) x)
-/// (= (+ x 1 2) (+ 3 x))
-/// (iff (or x false) x)
-/// }
-///
-/// This proof object can have n antecedents.
-/// The antecedents are proofs for equalities used as substitution rules.
-/// The proof rule is used in a few cases. The cases are:
-/// - When applying contextual simplification (CONTEXT_SIMPLIFIER=true)
-/// - When converting bit-vectors to Booleans (BIT2BOOL=true)
-///
-///
-/// \nicebox{
-/// (iff (forall (x_1 ... x_m) (and p_1[x_1 ... x_m] ... p_n[x_1 ... x_m]))
-/// (and (forall (x_1 ... x_m) p_1[x_1 ... x_m])
-/// ...
-/// (forall (x_1 ... x_m) p_n[x_1 ... x_m])))
-/// }
-/// This proof object has no antecedents.
-///
-/// A proof for (iff (forall (x_1 ... x_n y_1 ... y_m) p[x_1 ... x_n])
-/// (forall (x_1 ... x_n) p[x_1 ... x_n]))
-///
-/// It is used to justify the elimination of unused variables.
-/// This proof object has no antecedents.
-///
-/// (iff (forall (x) (or (not (= x t)) P[x])) P[t])
-/// if x does not occur in t.
-///
-/// This proof object has no antecedents.
-///
-/// Several variables can be eliminated simultaneously.
-///
-///
-///
-///
-/// T1: false
-/// [lemma T1]: (or (not l_1) ... (not l_n))
-///
-/// This proof object has one antecedent: a hypothetical proof for false.
-/// It converts the proof in a proof for (or (not l_1) ... (not l_n)),
-/// when T1 contains the open hypotheses: l_1, ..., l_n.
-/// The hypotheses are closed after an application of a lemma.
-/// Furthermore, there are no other open hypotheses in the subtree covered by
-/// the lemma.
-///
-/// \nicebox{
-/// T1:      (or l_1 ... l_n l_1' ... l_m')
-/// T2:      (not l_1)
-/// ...
-/// T(n+1):  (not l_n)
-/// [unit-resolution T1 ... T(n+1)]: (or l_1' ... l_m')
-/// }
-///
-/// \nicebox{
-/// T1: p
-/// [iff-true T1]: (iff p true)
-/// }
-///
-/// \nicebox{
-/// T1: (not p)
-/// [iff-false T1]: (iff p false)
-/// }
-///
-///
-/// [comm]: (= (f a b) (f b a))
-///
-/// f is a commutative operator.
-///
-/// This proof object has no antecedents.
-/// Remark: if f is bool, then = is iff.
-///
-/// \nicebox{
-/// (or (not (and p q)) p)
-/// (or (not (and p q)) q)
-/// (or (not (and p q r)) p)
-/// (or (not (and p q r)) q)
-/// (or (not (and p q r)) r)
-/// ...
-/// (or (and p q) (not p) (not q))
-/// (or (not (or p q)) p q)
-/// (or (or p q) (not p))
-/// (or (or p q) (not q))
-/// (or (not (iff p q)) (not p) q)
-/// (or (not (iff p q)) p (not q))
-/// (or (iff p q) (not p) (not q))
-/// (or (iff p q) p q)
-/// (or (not (ite a b c)) (not a) b)
-/// (or (not (ite a b c)) a c)
-/// (or (ite a b c) (not a) (not b))
-/// (or (ite a b c) a (not c))
-/// (or (not (not a)) (not a))
-/// (or (not a) a)
-/// }
-/// This proof object has no antecedents.
-/// Note: all axioms are propositional tautologies.
-/// Note also that 'and' and 'or' can take multiple arguments.
-/// You can recover the propositional tautologies by
-/// unfolding the Boolean connectives in the axioms a small
-/// bounded number of steps (=3).
-///
-/// Clausal proof adding axiom
-///
-/// Clausal proof lemma addition
-///
-/// Clausal proof lemma deletion
-///
-/// Clausal proof trail of additions and deletions
-///
-/// Suppose e is an expression with free variables x, and def-intro
-/// introduces the name n(x). The possible cases are:
-///
-/// When e is of Boolean type:
-/// [def-intro]: (and (or n (not e)) (or (not n) e))
-///
-/// or:
-/// [def-intro]: (or (not n) e)
-/// when e only occurs positively.
-///
-/// When e is of the form (ite cond th el):
-/// [def-intro]: (and (or (not cond) (= n th)) (or cond (= n el)))
-///
-/// Otherwise:
-/// [def-intro]: (= n e)
-///
-///
-/// [apply-def T1]: F ~ n
-///
-/// F is 'equivalent' to n, given that T1 is a proof that
-/// n is a name for F.
-///
-///
-/// T1: (iff p q)
-/// [iff~ T1]: (~ p q)
-///
-///
-/// T1: (not s_1) ~ r_1
-/// T2: (not s_2) ~ r_2
-/// T3: s_1 ~ r_1'
-/// T4: s_2 ~ r_2'
-/// [nnf-pos T1 T2 T3 T4]: (~ (iff s_1 s_2) (and (or r_1 r_2') (or r_1' r_2)))
-///
-/// The negation normal form steps NNF_POS and NNF_NEG are used in the following cases:
-/// (a) When creating the NNF of a positive force quantifier.
-/// The quantifier is retained (unless the bound variables are eliminated).
-/// Example
-///
-/// T1: q ~ q_new
-/// [nnf-pos T1]: (~ (forall (x T) q) (forall (x T) q_new))
-///
-/// (b) When recursively creating NNF over Boolean formulas, where the top-level
-/// connective is changed during NNF conversion. The relevant Boolean connectives
-/// for NNF_POS are 'implies', 'iff', 'xor', 'ite'.
-/// NNF_NEG furthermore handles the case where negation is pushed
-/// over Boolean connectives 'and' and 'or'.
-///
-///
-///
-/// T1: (not s_1) ~ r_1
-/// ...
-/// Tn: (not s_n) ~ r_n
-/// [nnf-neg T1 ... Tn]: (not (and s_1 ... s_n)) ~ (or r_1 ... r_n)
-///
-/// and
-///
-/// T1: (not s_1) ~ r_1
-/// ...
-/// Tn: (not s_n) ~ r_n
-/// [nnf-neg T1 ... Tn]: (not (or s_1 ... s_n)) ~ (and r_1 ... r_n)
-///
-/// and
-///
-/// T1: (not s_1) ~ r_1
-/// T2: (not s_2) ~ r_2
-/// T3: s_1 ~ r_1'
-/// T4: s_2 ~ r_2'
-/// [nnf-neg T1 T2 T3 T4]: (~ (not (iff s_1 s_2))
-/// (and (or r_1 r_2) (or r_1' r_2')))
-///
-///
-/// [sk]: (~ (not (forall x (p x y))) (not (p (sk y) y)))
-/// [sk]: (~ (exists x (p x y)) (p (sk y) y))
-///
-/// This proof object has no antecedents.
-///
-///
-/// T1: p
-/// T2: (~ p q)
-/// [mp~ T1 T2]: q
-///
-/// The theory lemma function comes with one or more parameters.
-/// The first parameter indicates the name of the theory.
-/// For the theory of arithmetic, additional parameters provide hints for
-/// checking the theory lemma.
-/// The hints for arithmetic are:
-///
-/// - farkas - followed by rational coefficients. Multiply the coefficients to the
-/// inequalities in the lemma, add the (negated) inequalities and obtain a contradiction.
-///
-/// - triangle-eq - Indicates a lemma related to the equivalence:
-///
-/// (iff (= t1 t2) (and (<= t1 t2) (<= t2 t1)))
-///
-/// - gcd-test - Indicates an integer linear arithmetic lemma that uses a gcd test.
-///
-///
-///
-/// The premises of the rules is a sequence of clauses.
-/// The first clause argument is the main clause of the rule.
-/// with a literal from the first (main) clause.
-///
-/// Premises of the rules are of the form
-/// \nicebox{
-/// (or l0 l1 l2 .. ln)
-/// }
-/// or
-/// \nicebox{
-/// (=> (and l1 l2 .. ln) l0)
-/// }
-/// or in the most general (ground) form:
-/// \nicebox{
-/// (=> (and ln+1 ln+2 .. ln+m) (or l0 l1 .. ln))
-/// }
-/// In other words we use the following (Prolog style) convention for Horn
-/// implications:
-/// The head of a Horn implication is position 0,
-/// the first conjunct in the body of an implication is position 1
-/// the second conjunct in the body of an implication is position 2
-///
-/// For general implications where the head is a disjunction, the
-/// first n positions correspond to the n disjuncts in the head.
-/// The next m positions correspond to the m conjuncts in the body.
-///
-/// The premises can be universally quantified so that the most
-/// general non-ground form is:
-///
-/// \nicebox{
-/// (forall (vars) (=> (and ln+1 ln+2 .. ln+m) (or l0 l1 .. ln)))
-/// }
-///
-/// The hyper-resolution rule takes a sequence of parameters.
-/// The parameters are substitutions of bound variables separated by pairs
-/// of literal positions from the main clause and side clause.
-///
-///
-/// The function takes `n`+1 arguments, where the first argument is the relation and the remaining `n` elements
-/// correspond to the `n` columns of the relation.
-///
-///
-///
-///
-/// The function takes two arguments.
-///
-/// The function takes two arguments.
-///
-/// The function takes one argument.
-///
-/// The first argument is a relation.
-/// The second argument is a predicate with free de-Bruijn indices
-/// corresponding to the columns of the relation.
-/// So the first column in the relation has index 0.
-///
-/// of the second relation (the function takes two arguments).
-/// Logically, the specification can be described by a function
-///
-/// target = filter_by_negation(pos, neg, columns)
-///
-/// where columns are pairs c1, d1, .., cN, dN of columns from pos and neg, such that
-/// target are elements in x in pos, such that there is no y in neg that agrees with
-/// x on the columns c1, d1, .., cN, dN.
-///
-///
-/// The function takes one argument.
-/// The parameters contain the renaming as a cycle.
-///
-///
-/// The function takes `n`+1 arguments, where the first argument is a relation,
-/// and the remaining `n` arguments correspond to a record.
-///
-/// The function is logically the identity, but
-/// in the context of a register machine allows
-/// for [`Z3_OP_RA_UNION`] to perform destructive updates to the first argument.
-///
-///
-///
-/// The label has two parameters, a string and a Boolean polarity.
-/// It takes one argument, a formula.
-///
-/// A label literal has a set of string parameters. It takes no arguments.
-///
-///
-///
-///
-///
-///
-/// E.g., x + y + z <= 2
-///
-/// E.g., x + y + z >= 2
-///
-/// Example  2*x + 3*y <= 4
-///
-/// Example  2*x + 3*y + 2*z >= 4
-///
-/// Example  2*x + 1*y + 2*z + 1*u = 4
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-///
-/// representation of a floating-point term (used for the lazy encoding
-/// of non-relevant terms in theory_fpa)
-///
-/// floating-point rounding-mode term
-///
-/// The conversion uses the following values:
-/// 0 = 000 = Z3_OP_FPA_RM_NEAREST_TIES_TO_EVEN,
-/// 1 = 001 = Z3_OP_FPA_RM_NEAREST_TIES_TO_AWAY,
-/// 2 = 010 = Z3_OP_FPA_RM_TOWARD_POSITIVE,
-/// 3 = 011 = Z3_OP_FPA_RM_TOWARD_NEGATIVE,
-/// 4 = 100 = Z3_OP_FPA_RM_TOWARD_ZERO.
-///
-/// information is exposed. Tools may use the string representation of the
-/// function declaration to obtain more information.
-///
-/// # See also
-///
-/// - [`Z3_mk_bvmul_no_overflow.`]
 #[doc(alias = "Z3_decl_kind")]
 #[repr(u32)]
 #[derive(Debug, Copy, Clone, Hash, PartialEq, Eq)]
@@ -765,6 +180,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_IMPLIES")]
     Implies = 266,
     /// Binary equivalence modulo namings. This binary predicate is used in proof terms.
+    /// It captures equisatisfiability and equivalence modulo renamings.
     #[doc(alias = "Z3_OP_OEQ")]
     Oeq = 267,
     /// Arithmetic numeral.
@@ -825,6 +241,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_ABS")]
     Abs = 530,
     /// Array store. It satisfies select(store(a,i,v),j) = if i = j then v else select(a,j).
+    /// Array store takes at least 3 arguments.
     #[doc(alias = "Z3_OP_STORE")]
     Store = 768,
     /// Array select.
@@ -834,6 +251,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_CONST_ARRAY")]
     ConstArray = 770,
     /// Array map operator.
+    /// It satisfies map[f](a1,..,a_n)[i] = f(a1[i],...,a_n[i]) for every i.
     #[doc(alias = "Z3_OP_ARRAY_MAP")]
     ArrayMap = 771,
     /// Default value of arrays. For example default(const(v)) = v. The function is unary.
@@ -855,9 +273,11 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_SET_SUBSET")]
     SetSubset = 777,
     /// An array value that behaves as the function graph of the
+    /// function passed as parameter.
     #[doc(alias = "Z3_OP_AS_ARRAY")]
     AsArray = 778,
     /// Array extensionality function. It takes two arrays as arguments and produces an index, such that the arrays
+    /// are different if they are different on the index.
     #[doc(alias = "Z3_OP_ARRAY_EXT")]
     ArrayExt = 779,
     /// Bit-vector numeral.
@@ -1014,33 +434,51 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_SBV2INT")]
     Sbv2int = 1074,
     /// Compute the carry bit in a full-adder.
+    /// The meaning is given by the equivalence
+    /// (carry l1 l2 l3) <=> (or (and l1 l2) (and l1 l3) (and l2 l3)))
     #[doc(alias = "Z3_OP_CARRY")]
     Carry = 1075,
     /// Compute ternary XOR.
+    /// The meaning is given by the equivalence
+    /// (xor3 l1 l2 l3) <=> (xor (xor l1 l2) l3)
     #[doc(alias = "Z3_OP_XOR3")]
     Xor3 = 1076,
     /// a predicate to check that bit-wise signed multiplication does not overflow.
+    /// Signed multiplication overflows if the operands have the same sign and the result of multiplication
+    /// does not fit within the available bits. \sa Z3_mk_bvmul_no_overflow.
     #[doc(alias = "Z3_OP_BSMUL_NO_OVFL")]
     BsmulNoOvfl = 1077,
     /// check that bit-wise unsigned multiplication does not overflow.
+    /// Unsigned multiplication overflows if the result does not fit within the available bits.
+    ///
+    /// # See also
+    ///
+    /// - [`Z3_mk_bvmul_no_overflow`]
     #[doc(alias = "Z3_OP_BUMUL_NO_OVFL")]
     BumulNoOvfl = 1078,
     /// check that bit-wise signed multiplication does not underflow.
+    /// Signed multiplication underflows if the operands have opposite signs and the result of multiplication
+    /// does not fit within the available bits. Z3_mk_bvmul_no_underflow.
     #[doc(alias = "Z3_OP_BSMUL_NO_UDFL")]
     BsmulNoUdfl = 1079,
     /// Binary signed division.
+    /// It has the same semantics as Z3_OP_BSDIV, but created in a context where the second operand can be assumed to be non-zero.
     #[doc(alias = "Z3_OP_BSDIV_I")]
     BsdivI = 1080,
     /// Binary unsigned division.
+    /// It has the same semantics as Z3_OP_BUDIV, but created in a context where the second operand can be assumed to be non-zero.
     #[doc(alias = "Z3_OP_BUDIV_I")]
     BudivI = 1081,
     /// Binary signed remainder.
+    /// It has the same semantics as Z3_OP_BSREM, but created in a context where the second operand can be assumed to be non-zero.
     #[doc(alias = "Z3_OP_BSREM_I")]
     BsremI = 1082,
     /// Binary unsigned remainder.
+    /// It has the same semantics as Z3_OP_BUREM, but created in a context where the second operand can be assumed to be non-zero.
     #[doc(alias = "Z3_OP_BUREM_I")]
     BuremI = 1083,
     /// Binary signed modulus.
+    /// It has the same semantics as Z3_OP_BSMOD, but created in a context where the second operand can be assumed to be non-zero.
     #[doc(alias = "Z3_OP_BSMOD_I")]
     BsmodI = 1084,
     /// Undef/Null proof object.
@@ -1056,54 +494,157 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_PR_GOAL")]
     PrGoal = 1283,
     /// Given a proof for p and a proof for (implies p q), produces a proof for q.
+    ///
+    /// T1: p
+    /// T2: (implies p q)
+    /// [mp T1 T2]: q
+    ///
+    /// The second antecedents may also be a proof for (iff p q).
     #[doc(alias = "Z3_OP_PR_MODUS_PONENS")]
     PrModusPonens = 1284,
     /// A proof for (R t t), where R is a reflexive relation. This proof object has no antecedents.
+    /// The only reflexive relations that are used are
+    /// equivalence modulo namings, equality and equivalence.
+    /// That is, R is either '~', '=' or 'iff'.
     #[doc(alias = "Z3_OP_PR_REFLEXIVITY")]
     PrReflexivity = 1285,
     /// Given an symmetric relation R and a proof for (R t s), produces a proof for (R s t).
+    /// ```
+    /// T1: (R t s)
+    /// [symmetry T1]: (R s t)
+    /// ```
+    /// T1 is the antecedent of this proof object.
     #[doc(alias = "Z3_OP_PR_SYMMETRY")]
     PrSymmetry = 1286,
     /// Given a transitive relation R, and proofs for (R t s) and (R s u), produces a proof
+    /// for (R t u).
+    /// ```
+    /// T1: (R t s)
+    /// T2: (R s u)
+    /// [trans T1 T2]: (R t u)
+    /// ```
     #[doc(alias = "Z3_OP_PR_TRANSITIVITY")]
     PrTransitivity = 1287,
     /// Condensed transitivity proof.
+    /// It combines several symmetry and transitivity proofs. Example:
+    /// ```
+    /// T1: (R a b)
+    /// T2: (R c b)
+    /// T3: (R c d)
+    /// [trans* T1 T2 T3]: (R a d)
+    /// ```
+    /// R must be a symmetric and transitive relation.
+    ///
+    /// Assuming that this proof object is a proof for (R s t), then
+    /// a proof checker must check if it is possible to prove (R s t)
+    /// using the antecedents, symmetry and transitivity.  That is,
+    /// if there is a path from s to t, if we view every
+    /// antecedent (R a b) as an edge between a and b.
     #[doc(alias = "Z3_OP_PR_TRANSITIVITY_STAR")]
     PrTransitivityStar = 1288,
     /// Monotonicity proof object.
+    ///
+    /// T1: (R t_1 s_1)
+    /// ...
+    /// Tn: (R t_n s_n)
+    /// [monotonicity T1 ... Tn]: (R (f t_1 ... t_n) (f s_1 ... s_n))
+    ///
+    /// Remark: if t_i == s_i, then the antecedent Ti is suppressed.
+    /// That is, reflexivity proofs are suppressed to save space.
     #[doc(alias = "Z3_OP_PR_MONOTONICITY")]
     PrMonotonicity = 1289,
     /// Given a proof for (~ p q), produces a proof for (~ (forall (x) p) (forall (x) q)).
+    ///
+    /// T1: (~ p q)
+    /// [quant-intro T1]: (~ (forall (x) p) (forall (x) q))
     #[doc(alias = "Z3_OP_PR_QUANT_INTRO")]
     PrQuantIntro = 1290,
     /// Given a proof p, produces a proof of lambda x . p, where x are free variables in p.
+    ///
+    /// T1: f
+    /// [proof-bind T1] forall (x) f
     #[doc(alias = "Z3_OP_PR_BIND")]
     PrBind = 1291,
     /// Distributivity proof object.
+    /// Given that f (= or) distributes over g (= and), produces a proof for
+    /// ```
+    /// (= (f a (g c d))
+    /// (g (f a c) (f a d)))
+    /// ```
+    /// If f and g are associative, this proof also justifies the following equality:
+    /// ```
+    /// (= (f (g a b) (g c d))
+    /// (g (f a c) (f a d) (f b c) (f b d)))
+    /// ```
+    /// where each f and g can have arbitrary number of arguments.
+    ///
+    /// This proof object has no antecedents.
+    /// Remark. This rule is used by the CNF conversion pass and
+    /// instantiated by f = or, and g = and.
     #[doc(alias = "Z3_OP_PR_DISTRIBUTIVITY")]
     PrDistributivity = 1292,
     /// Given a proof for (and l_1 ... l_n), produces a proof for l_i
+    ///
+    /// T1: (and l_1 ... l_n)
+    /// [and-elim T1]: l_i
     #[doc(alias = "Z3_OP_PR_AND_ELIM")]
     PrAndElim = 1293,
     /// Given a proof for (not (or l_1 ... l_n)), produces a proof for (not l_i).
+    ///
+    /// T1: (not (or l_1 ... l_n))
+    /// [not-or-elim T1]: (not l_i)
     #[doc(alias = "Z3_OP_PR_NOT_OR_ELIM")]
     PrNotOrElim = 1294,
     /// A proof for a local rewriting step (= t s).
+    /// The head function symbol of t is interpreted.
+    ///
+    /// This proof object has no antecedents.
+    /// The conclusion of a rewrite rule is either an equality (= t s),
+    /// an equivalence (iff t s), or equi-satisfiability (~ t s).
+    /// Remark: if f is bool, then = is iff.
+    /// Examples:
+    /// ```
+    /// (= (+ x 0) x)
+    /// (= (+ x 1 2) (+ 3 x))
+    /// (iff (or x false) x)
+    /// ```
     #[doc(alias = "Z3_OP_PR_REWRITE")]
     PrRewrite = 1295,
     /// A proof for rewriting an expression t into an expression s.
+    /// This proof object can have n antecedents.
+    /// The antecedents are proofs for equalities used as substitution rules.
+    /// The proof rule is used in a few cases. The cases are:
+    /// - When applying contextual simplification (CONTEXT_SIMPLIFIER=true)
+    /// - When converting bit-vectors to Booleans (BIT2BOOL=true)
     #[doc(alias = "Z3_OP_PR_REWRITE_STAR")]
     PrRewriteStar = 1296,
     /// A proof for (iff (f (forall (x) q(x)) r) (forall (x) (f (q x) r))). This proof object has no antecedents.
     #[doc(alias = "Z3_OP_PR_PULL_QUANT")]
     PrPullQuant = 1297,
     /// A proof for:
+    /// ```
+    /// (iff (forall (x_1 ... x_m) (and p_1[x_1 ... x_m] ... p_n[x_1 ... x_m]))
+    /// (and (forall (x_1 ... x_m) p_1[x_1 ... x_m])
+    /// ...
+    /// (forall (x_1 ... x_m) p_n[x_1 ... x_m])))
+    /// ```
+    /// This proof object has no antecedents.
     #[doc(alias = "Z3_OP_PR_PUSH_QUANT")]
     PrPushQuant = 1298,
-    /// Corresponds to `Z3_OP_PR_ELIM_UNUSED_VARS` in the C API.
+    /// A proof for (iff (forall (x_1 ... x_n y_1 ... y_m) p[x_1 ... x_n])
+    /// (forall (x_1 ... x_n) p[x_1 ... x_n]))
+    ///
+    /// It is used to justify the elimination of unused variables.
+    /// This proof object has no antecedents.
     #[doc(alias = "Z3_OP_PR_ELIM_UNUSED_VARS")]
     PrElimUnusedVars = 1299,
     /// A proof for destructive equality resolution:
+    /// (iff (forall (x) (or (not (= x t)) P[x])) P[t])
+    /// if x does not occur in t.
+    ///
+    /// This proof object has no antecedents.
+    ///
+    /// Several variables can be eliminated simultaneously.
     #[doc(alias = "Z3_OP_PR_DER")]
     PrDer = 1300,
     /// A proof of (or (not (forall (x) (P x))) (P a))
@@ -1112,64 +653,244 @@ pub enum DeclKind {
     /// Mark a hypothesis in a natural deduction style proof.
     #[doc(alias = "Z3_OP_PR_HYPOTHESIS")]
     PrHypothesis = 1302,
-    /// Corresponds to `Z3_OP_PR_LEMMA` in the C API.
+    ///
+    /// T1: false
+    /// [lemma T1]: (or (not l_1) ... (not l_n))
+    ///
+    /// This proof object has one antecedent: a hypothetical proof for false.
+    /// It converts the proof in a proof for (or (not l_1) ... (not l_n)),
+    /// when T1 contains the open hypotheses: l_1, ..., l_n.
+    /// The hypotheses are closed after an application of a lemma.
+    /// Furthermore, there are no other open hypotheses in the subtree covered by
+    /// the lemma.
     #[doc(alias = "Z3_OP_PR_LEMMA")]
     PrLemma = 1303,
-    /// Corresponds to `Z3_OP_PR_UNIT_RESOLUTION` in the C API.
+    /// ```
+    /// T1:      (or l_1 ... l_n l_1' ... l_m')
+    /// T2:      (not l_1)
+    /// ...
+    /// T(n+1):  (not l_n)
+    /// [unit-resolution T1 ... T(n+1)]: (or l_1' ... l_m')
+    /// ```
     #[doc(alias = "Z3_OP_PR_UNIT_RESOLUTION")]
     PrUnitResolution = 1304,
-    /// Corresponds to `Z3_OP_PR_IFF_TRUE` in the C API.
+    /// ```
+    /// T1: p
+    /// [iff-true T1]: (iff p true)
+    /// ```
     #[doc(alias = "Z3_OP_PR_IFF_TRUE")]
     PrIffTrue = 1305,
-    /// Corresponds to `Z3_OP_PR_IFF_FALSE` in the C API.
+    /// ```
+    /// T1: (not p)
+    /// [iff-false T1]: (iff p false)
+    /// ```
     #[doc(alias = "Z3_OP_PR_IFF_FALSE")]
     PrIffFalse = 1306,
-    /// Corresponds to `Z3_OP_PR_COMMUTATIVITY` in the C API.
+    ///
+    /// [comm]: (= (f a b) (f b a))
+    ///
+    /// f is a commutative operator.
+    ///
+    /// This proof object has no antecedents.
+    /// Remark: if f is bool, then = is iff.
     #[doc(alias = "Z3_OP_PR_COMMUTATIVITY")]
     PrCommutativity = 1307,
     /// Proof object used to justify Tseitin's like axioms:
+    /// ```
+    /// (or (not (and p q)) p)
+    /// (or (not (and p q)) q)
+    /// (or (not (and p q r)) p)
+    /// (or (not (and p q r)) q)
+    /// (or (not (and p q r)) r)
+    /// ...
+    /// (or (and p q) (not p) (not q))
+    /// (or (not (or p q)) p q)
+    /// (or (or p q) (not p))
+    /// (or (or p q) (not q))
+    /// (or (not (iff p q)) (not p) q)
+    /// (or (not (iff p q)) p (not q))
+    /// (or (iff p q) (not p) (not q))
+    /// (or (iff p q) p q)
+    /// (or (not (ite a b c)) (not a) b)
+    /// (or (not (ite a b c)) a c)
+    /// (or (ite a b c) (not a) (not b))
+    /// (or (ite a b c) a (not c))
+    /// (or (not (not a)) (not a))
+    /// (or (not a) a)
+    /// ```
+    /// This proof object has no antecedents.
+    /// Note: all axioms are propositional tautologies.
+    /// Note also that 'and' and 'or' can take multiple arguments.
+    /// You can recover the propositional tautologies by
+    /// unfolding the Boolean connectives in the axioms a small
+    /// bounded number of steps (=3).
     #[doc(alias = "Z3_OP_PR_DEF_AXIOM")]
     PrDefAxiom = 1308,
-    /// Corresponds to `Z3_OP_PR_ASSUMPTION_ADD` in the C API.
+    /// Clausal proof adding axiom
     #[doc(alias = "Z3_OP_PR_ASSUMPTION_ADD")]
     PrAssumptionAdd = 1309,
-    /// Corresponds to `Z3_OP_PR_LEMMA_ADD` in the C API.
+    /// Clausal proof lemma addition
     #[doc(alias = "Z3_OP_PR_LEMMA_ADD")]
     PrLemmaAdd = 1310,
-    /// Corresponds to `Z3_OP_PR_REDUNDANT_DEL` in the C API.
+    /// Clausal proof lemma deletion
     #[doc(alias = "Z3_OP_PR_REDUNDANT_DEL")]
     PrRedundantDel = 1311,
     /// ,
+    /// Clausal proof trail of additions and deletions
     #[doc(alias = "Z3_OP_PR_CLAUSE_TRAIL")]
     PrClauseTrail = 1312,
     /// Introduces a name for a formula/term.
+    /// Suppose e is an expression with free variables x, and def-intro
+    /// introduces the name n(x). The possible cases are:
+    ///
+    /// When e is of Boolean type:
+    /// [def-intro]: (and (or n (not e)) (or (not n) e))
+    ///
+    /// or:
+    /// [def-intro]: (or (not n) e)
+    /// when e only occurs positively.
+    ///
+    /// When e is of the form (ite cond th el):
+    /// [def-intro]: (and (or (not cond) (= n th)) (or cond (= n el)))
+    ///
+    /// Otherwise:
+    /// [def-intro]: (= n e)
     #[doc(alias = "Z3_OP_PR_DEF_INTRO")]
     PrDefIntro = 1313,
-    /// Corresponds to `Z3_OP_PR_APPLY_DEF` in the C API.
+    ///
+    /// [apply-def T1]: F ~ n
+    ///
+    /// F is 'equivalent' to n, given that T1 is a proof that
+    /// n is a name for F.
     #[doc(alias = "Z3_OP_PR_APPLY_DEF")]
     PrApplyDef = 1314,
-    /// Corresponds to `Z3_OP_PR_IFF_OEQ` in the C API.
+    ///
+    /// T1: (iff p q)
+    /// [iff~ T1]: (~ p q)
     #[doc(alias = "Z3_OP_PR_IFF_OEQ")]
     PrIffOeq = 1315,
     /// Proof for a (positive) NNF step. Example:
+    ///
+    /// T1: (not s_1) ~ r_1
+    /// T2: (not s_2) ~ r_2
+    /// T3: s_1 ~ r_1'
+    /// T4: s_2 ~ r_2'
+    /// [nnf-pos T1 T2 T3 T4]: (~ (iff s_1 s_2) (and (or r_1 r_2') (or r_1' r_2)))
+    ///
+    /// The negation normal form steps NNF_POS and NNF_NEG are used in the following cases:
+    /// (a) When creating the NNF of a positive force quantifier.
+    /// The quantifier is retained (unless the bound variables are eliminated).
+    /// Example
+    ///
+    /// T1: q ~ q_new
+    /// [nnf-pos T1]: (~ (forall (x T) q) (forall (x T) q_new))
+    ///
+    /// (b) When recursively creating NNF over Boolean formulas, where the top-level
+    /// connective is changed during NNF conversion. The relevant Boolean connectives
+    /// for NNF_POS are 'implies', 'iff', 'xor', 'ite'.
+    /// NNF_NEG furthermore handles the case where negation is pushed
+    /// over Boolean connectives 'and' and 'or'.
     #[doc(alias = "Z3_OP_PR_NNF_POS")]
     PrNnfPos = 1316,
     /// Proof for a (negative) NNF step. Examples:
+    ///
+    /// T1: (not s_1) ~ r_1
+    /// ...
+    /// Tn: (not s_n) ~ r_n
+    /// [nnf-neg T1 ... Tn]: (not (and s_1 ... s_n)) ~ (or r_1 ... r_n)
+    ///
+    /// and
+    ///
+    /// T1: (not s_1) ~ r_1
+    /// ...
+    /// Tn: (not s_n) ~ r_n
+    /// [nnf-neg T1 ... Tn]: (not (or s_1 ... s_n)) ~ (and r_1 ... r_n)
+    ///
+    /// and
+    ///
+    /// T1: (not s_1) ~ r_1
+    /// T2: (not s_2) ~ r_2
+    /// T3: s_1 ~ r_1'
+    /// T4: s_2 ~ r_2'
+    /// [nnf-neg T1 T2 T3 T4]: (~ (not (iff s_1 s_2))
+    /// (and (or r_1 r_2) (or r_1' r_2')))
     #[doc(alias = "Z3_OP_PR_NNF_NEG")]
     PrNnfNeg = 1317,
     /// Proof for:
+    ///
+    /// [sk]: (~ (not (forall x (p x y))) (not (p (sk y) y)))
+    /// [sk]: (~ (exists x (p x y)) (p (sk y) y))
+    ///
+    /// This proof object has no antecedents.
     #[doc(alias = "Z3_OP_PR_SKOLEMIZE")]
     PrSkolemize = 1318,
     /// Modus ponens style rule for equi-satisfiability.
+    ///
+    /// T1: p
+    /// T2: (~ p q)
+    /// [mp~ T1 T2]: q
     #[doc(alias = "Z3_OP_PR_MODUS_PONENS_OEQ")]
     PrModusPonensOeq = 1319,
     /// Generic proof for theory lemmas.
+    /// The theory lemma function comes with one or more parameters.
+    /// The first parameter indicates the name of the theory.
+    /// For the theory of arithmetic, additional parameters provide hints for
+    /// checking the theory lemma.
+    /// The hints for arithmetic are:
+    ///
+    /// - farkas - followed by rational coefficients. Multiply the coefficients to the
+    /// inequalities in the lemma, add the (negated) inequalities and obtain a contradiction.
+    ///
+    /// - triangle-eq - Indicates a lemma related to the equivalence:
+    ///
+    /// (iff (= t1 t2) (and (<= t1 t2) (<= t2 t1)))
+    ///
+    /// - gcd-test - Indicates an integer linear arithmetic lemma that uses a gcd test.
     #[doc(alias = "Z3_OP_PR_TH_LEMMA")]
     PrThLemma = 1320,
     /// Hyper-resolution rule.
+    ///
+    /// The premises of the rules is a sequence of clauses.
+    /// The first clause argument is the main clause of the rule.
+    /// with a literal from the first (main) clause.
+    ///
+    /// Premises of the rules are of the form
+    /// ```
+    /// (or l0 l1 l2 .. ln)
+    /// ```
+    /// or
+    /// ```
+    /// (=> (and l1 l2 .. ln) l0)
+    /// ```
+    /// or in the most general (ground) form:
+    /// ```
+    /// (=> (and ln+1 ln+2 .. ln+m) (or l0 l1 .. ln))
+    /// ```
+    /// In other words we use the following (Prolog style) convention for Horn
+    /// implications:
+    /// The head of a Horn implication is position 0,
+    /// the first conjunct in the body of an implication is position 1
+    /// the second conjunct in the body of an implication is position 2
+    ///
+    /// For general implications where the head is a disjunction, the
+    /// first n positions correspond to the n disjuncts in the head.
+    /// The next m positions correspond to the m conjuncts in the body.
+    ///
+    /// The premises can be universally quantified so that the most
+    /// general non-ground form is:
+    ///
+    /// ```
+    /// (forall (vars) (=> (and ln+1 ln+2 .. ln+m) (or l0 l1 .. ln)))
+    /// ```
+    ///
+    /// The hyper-resolution rule takes a sequence of parameters.
+    /// The parameters are substitutions of bound variables separated by pairs
+    /// of literal positions from the main clause and side clause.
     #[doc(alias = "Z3_OP_PR_HYPER_RESOLVE")]
     PrHyperResolve = 1321,
     /// Insert a record into a relation.
+    /// The function takes `n`+1 arguments, where the first argument is the relation and the remaining `n` elements
+    /// correspond to the `n` columns of the relation.
     #[doc(alias = "Z3_OP_RA_STORE")]
     RaStore = 1536,
     /// Creates the empty relation.
@@ -1182,30 +903,52 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_RA_JOIN")]
     RaJoin = 1539,
     /// Create the union or convex hull of two relations.
+    /// The function takes two arguments.
     #[doc(alias = "Z3_OP_RA_UNION")]
     RaUnion = 1540,
     /// Widen two relations.
+    /// The function takes two arguments.
     #[doc(alias = "Z3_OP_RA_WIDEN")]
     RaWiden = 1541,
     /// Project the columns (provided as numbers in the parameters).
+    /// The function takes one argument.
     #[doc(alias = "Z3_OP_RA_PROJECT")]
     RaProject = 1542,
     /// Filter (restrict) a relation with respect to a predicate.
+    /// The first argument is a relation.
+    /// The second argument is a predicate with free de-Bruijn indices
+    /// corresponding to the columns of the relation.
+    /// So the first column in the relation has index 0.
     #[doc(alias = "Z3_OP_RA_FILTER")]
     RaFilter = 1543,
     /// Intersect the first relation with respect to negation
+    /// of the second relation (the function takes two arguments).
+    /// Logically, the specification can be described by a function
+    ///
+    /// target = filter_by_negation(pos, neg, columns)
+    ///
+    /// where columns are pairs c1, d1, .., cN, dN of columns from pos and neg, such that
+    /// target are elements in x in pos, such that there is no y in neg that agrees with
+    /// x on the columns c1, d1, .., cN, dN.
     #[doc(alias = "Z3_OP_RA_NEGATION_FILTER")]
     RaNegationFilter = 1544,
     /// rename columns in the relation.
+    /// The function takes one argument.
+    /// The parameters contain the renaming as a cycle.
     #[doc(alias = "Z3_OP_RA_RENAME")]
     RaRename = 1545,
     /// Complement the relation.
     #[doc(alias = "Z3_OP_RA_COMPLEMENT")]
     RaComplement = 1546,
     /// Check if a record is an element of the relation.
+    /// The function takes `n`+1 arguments, where the first argument is a relation,
+    /// and the remaining `n` arguments correspond to a record.
     #[doc(alias = "Z3_OP_RA_SELECT")]
     RaSelect = 1547,
     /// Create a fresh copy (clone) of a relation.
+    /// The function is logically the identity, but
+    /// in the context of a register machine allows
+    /// for [`Z3_OP_RA_UNION`] to perform destructive updates to the first argument.
     #[doc(alias = "Z3_OP_RA_CLONE")]
     RaClone = 1548,
     /// Corresponds to `Z3_OP_FD_CONSTANT` in the C API.
@@ -1374,9 +1117,12 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_CHAR_IS_DIGIT")]
     CharIsDigit = 1603,
     /// A label (used by the Boogie Verification condition generator).
+    /// The label has two parameters, a string and a Boolean polarity.
+    /// It takes one argument, a formula.
     #[doc(alias = "Z3_OP_LABEL")]
     Label = 1792,
     /// A label literal (used by the Boogie Verification condition generator).
+    /// A label literal has a set of string parameters. It takes no arguments.
     #[doc(alias = "Z3_OP_LABEL_LIT")]
     LabelLit = 1793,
     /// datatype constructor.
@@ -1395,18 +1141,23 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_DT_UPDATE_FIELD")]
     DtUpdateField = 2052,
     /// Cardinality constraint.
+    /// E.g., x + y + z <= 2
     #[doc(alias = "Z3_OP_PB_AT_MOST")]
     PbAtMost = 2304,
     /// Cardinality constraint.
+    /// E.g., x + y + z >= 2
     #[doc(alias = "Z3_OP_PB_AT_LEAST")]
     PbAtLeast = 2305,
     /// Generalized Pseudo-Boolean cardinality constraint.
+    /// Example  2*x + 3*y <= 4
     #[doc(alias = "Z3_OP_PB_LE")]
     PbLe = 2306,
     /// Generalized Pseudo-Boolean cardinality constraint.
+    /// Example  2*x + 3*y + 2*z >= 4
     #[doc(alias = "Z3_OP_PB_GE")]
     PbGe = 2307,
     /// Generalized Pseudo-Boolean equality constraint.
+    /// Example  2*x + 1*y + 2*z + 1*u = 4
     #[doc(alias = "Z3_OP_PB_EQ")]
     PbEq = 2308,
     /// A relation that is a total linear order
@@ -1554,12 +1305,24 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_FPA_TO_IEEE_BV")]
     FpaToIeeeBv = 45097,
     /// (Implicitly) represents the internal bitvector-
+    /// representation of a floating-point term (used for the lazy encoding
+    /// of non-relevant terms in theory_fpa)
     #[doc(alias = "Z3_OP_FPA_BVWRAP")]
     FpaBvwrap = 45098,
     /// Conversion of a 3-bit bit-vector term to a
+    /// floating-point rounding-mode term
+    ///
+    /// The conversion uses the following values:
+    /// 0 = 000 = Z3_OP_FPA_RM_NEAREST_TIES_TO_EVEN,
+    /// 1 = 001 = Z3_OP_FPA_RM_NEAREST_TIES_TO_AWAY,
+    /// 2 = 010 = Z3_OP_FPA_RM_TOWARD_POSITIVE,
+    /// 3 = 011 = Z3_OP_FPA_RM_TOWARD_NEGATIVE,
+    /// 4 = 100 = Z3_OP_FPA_RM_TOWARD_ZERO.
     #[doc(alias = "Z3_OP_FPA_BV2RM")]
     FpaBv2rm = 45099,
     /// internal (often interpreted) symbol, but no additional
+    /// information is exposed. Tools may use the string representation of the
+    /// function declaration to obtain more information.
     #[doc(alias = "Z3_OP_INTERNAL")]
     Internal = 45100,
     /// function declared as recursive

@@ -4402,7 +4402,7 @@ unsafe extern "C" {
     ///
     /// - [`Z3_goal_to_diamcs_string`]
     /// - [`for`]
-    /// - [`requirements.`]
+    /// - [`requirements`]
     pub fn Z3_solver_to_dimacs_string(
         c: Z3_context,
         s: Z3_solver,
