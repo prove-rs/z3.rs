@@ -1,16 +1,42 @@
 use std::path::{Path, PathBuf};
 use std::process::Command;
 
+use clap::{Parser, Subcommand};
+use semver::Version;
+
+#[derive(Parser)]
+#[command(about = "z3.rs workspace task runner")]
+struct Cli {
+    #[command(subcommand)]
+    command: CliCommand,
+}
+
+#[derive(Subcommand)]
+enum CliCommand {
+    /// Regenerate z3-sys/src/generated/ from bundled Z3 headers.
+    GenBindings,
+    /// Check out a Z3 tag in the submodule and update Cargo.toml versions.
+    PrepareZ3Src {
+        /// Z3 git tag to check out, e.g. `z3-4.16.1` or `4.16.1`.
+        z3_tag: String,
+    },
+    /// Package or publish the prepared z3-src crate and create a git tag.
+    PublishZ3Src {
+        /// Run `cargo publish --dry-run` instead of publishing for real.
+        #[arg(long)]
+        dry_run: bool,
+        /// Run `cargo package` only — inspect contents without publishing.
+        #[arg(long)]
+        package: bool,
+    },
+}
+
 fn main() -> Result<(), Box<dyn std::error::Error>> {
-    match std::env::args().nth(1).as_deref() {
-        Some("gen-bindings") => gen_bindings()?,
-        _ => {
-            eprintln!("Usage: cargo xtask <task>");
-            eprintln!();
-            eprintln!("Tasks:");
-            eprintln!("  gen-bindings    Regenerate z3-sys/src/generated/ from bundled Z3 headers");
-            std::process::exit(1);
-        }
+    let cli = Cli::parse();
+    match cli.command {
+        CliCommand::GenBindings => gen_bindings()?,
+        CliCommand::PrepareZ3Src { z3_tag } => prepare_z3_src(&z3_tag)?,
+        CliCommand::PublishZ3Src { dry_run, package } => publish_z3_src(dry_run, package)?,
     }
     Ok(())
 }
@@ -67,4 +93,185 @@ fn gen_bindings() -> Result<(), Box<dyn std::error::Error>> {
     println!("Check API coverage:  scripts/check-bindings.sh");
 
     Ok(())
+}
+
+fn read_z3_version(submodule: &Path) -> Result<Version, Box<dyn std::error::Error>> {
+    let version_txt = submodule.join("scripts/VERSION.txt");
+    let version_str = std::fs::read_to_string(&version_txt)
+        .map_err(|e| format!("failed to read {}: {e}", version_txt.display()))?;
+    Version::parse(version_str.trim())
+        .map_err(|e| format!("unexpected VERSION.txt content {:?}: {e}", version_str.trim()).into())
+}
+
+fn prepare_z3_src(z3_tag: &str) -> Result<(), Box<dyn std::error::Error>> {
+    let root = workspace_root();
+
+    // 1. Normalise tag: accept both `z3-4.16.1` and `4.16.1`.
+    let display_version = z3_tag.strip_prefix("z3-").unwrap_or(z3_tag);
+    let git_tag = if z3_tag.starts_with("z3-") {
+        z3_tag.to_string()
+    } else {
+        format!("z3-{z3_tag}")
+    };
+
+    // 2. Submodule init + checkout.
+    run(Command::new("git")
+        .args(["submodule", "update", "--init", "z3-src/z3"])
+        .current_dir(&root))?;
+
+    let submodule = root.join("z3-src/z3");
+    run(Command::new("git")
+        .arg("-C")
+        .arg(&submodule)
+        .args(["fetch", "--tags", "origin"]))?;
+    run(Command::new("git")
+        .arg("-C")
+        .arg(&submodule)
+        .args(["checkout", &git_tag]))?;
+
+    // 3. Parse VERSION.txt → compute crate version.
+    let z3_ver = read_z3_version(&submodule)?;
+    let crate_version = format!("{}{:02}.{}.0", z3_ver.major, z3_ver.minor, z3_ver.patch);
+    let series = format!("{}{:02}", z3_ver.major, z3_ver.minor);
+
+    println!("Z3 version:    {display_version}");
+    println!("crate version: {crate_version}");
+    println!("series:        {series}");
+    println!();
+
+    // 4. Edit Cargo.toml files.
+    let z3_src_toml = root.join("z3-src/Cargo.toml");
+    let z3_sys_toml = root.join("z3-sys/Cargo.toml");
+
+    let current_z3src_ver = read_package_version(&z3_src_toml)?;
+    set_toml_field(
+        &z3_src_toml,
+        &format!("version = \"{current_z3src_ver}\""),
+        &format!("version = \"{crate_version}\""),
+    )?;
+
+    let current_series = read_z3src_dep_series(&z3_sys_toml)?;
+    set_toml_field(
+        &z3_sys_toml,
+        &format!("z3-src = {{ version = \"{current_series}\", optional = true }}"),
+        &format!("z3-src = {{ version = \"{series}\", optional = true }}"),
+    )?;
+
+    // 5. Post-action guidance.
+    println!("Prepared z3-src {crate_version} (Z3 {display_version})");
+    println!();
+    println!("Review changes:");
+    println!("  git diff z3-src/Cargo.toml z3-sys/Cargo.toml");
+    println!("  git -C z3-src/z3 log --oneline -3");
+    println!();
+    println!("Then run:");
+    println!("  cargo xtask publish-z3-src [--package | --dry-run]");
+
+    Ok(())
+}
+
+fn publish_z3_src(dry_run: bool, package: bool) -> Result<(), Box<dyn std::error::Error>> {
+    let root = workspace_root();
+    let submodule = root.join("z3-src/z3");
+
+    // Read state from the already-prepared workspace.
+    let z3_src_toml = root.join("z3-src/Cargo.toml");
+    let crate_version = read_package_version(&z3_src_toml)?;
+
+    let display_version = read_z3_version(&submodule)?.to_string();
+
+    // Cargo operation.
+    if package {
+        run(Command::new("cargo")
+            .args(["package", "-p", "z3-src", "--allow-dirty"])
+            .current_dir(&root))?;
+        println!();
+        println!("Review crate contents. Run without --package to publish.");
+        return Ok(());
+    }
+
+    if dry_run {
+        run(Command::new("cargo")
+            .args(["publish", "-p", "z3-src", "--allow-dirty", "--dry-run"])
+            .current_dir(&root))?;
+        println!();
+        println!("Dry run passed. Run without --dry-run to publish.");
+        return Ok(());
+    }
+
+    run(Command::new("cargo")
+        .args(["publish", "-p", "z3-src", "--allow-dirty"])
+        .current_dir(&root))?;
+
+    // Git tag.
+    let tag_name = format!("z3-src-v{crate_version}");
+    let tag_msg = format!("z3-src {crate_version} (Z3 {display_version})");
+    run(Command::new("git")
+        .args(["tag", "-a", &tag_name, "-m", &tag_msg])
+        .current_dir(&root))?;
+
+    // Post-action guidance.
+    println!();
+    println!("Published z3-src {crate_version}");
+    println!("Tagged: {tag_name}");
+    println!();
+    println!("Push the tag:");
+    println!("  git push origin {tag_name}");
+    println!();
+    println!("Commit the Cargo.toml version bumps and submodule pointer:");
+    println!("  git add z3-src/Cargo.toml z3-sys/Cargo.toml z3-src/z3");
+    println!("  git commit -m \"chore: release z3-src {crate_version}\"");
+
+    Ok(())
+}
+
+/// Replaces the first occurrence of `old` with `new` in the file at `path`.
+/// Returns an error if `old` is not found (guards against silent no-ops).
+fn set_toml_field(
+    path: &Path,
+    old: &str,
+    new: &str,
+) -> Result<(), Box<dyn std::error::Error>> {
+    let content = std::fs::read_to_string(path)?;
+    if !content.contains(old) {
+        return Err(format!(
+            "{}: pattern not found: {:?}\n  (file may already be updated or format has changed)",
+            path.display(),
+            old
+        )
+        .into());
+    }
+    let updated = content.replacen(old, new, 1);
+    std::fs::write(path, updated)?;
+    Ok(())
+}
+
+/// Returns the value of the first `version = "..."` field in a Cargo.toml.
+fn read_package_version(path: &Path) -> Result<String, Box<dyn std::error::Error>> {
+    let content = std::fs::read_to_string(path)?;
+    for line in content.lines() {
+        let trimmed = line.trim();
+        if let Some(rest) = trimmed.strip_prefix("version = \"") {
+            if let Some(ver) = rest.strip_suffix('"') {
+                return Ok(ver.to_string());
+            }
+        }
+    }
+    Err(format!("no `version = \"...\"` field found in {}", path.display()).into())
+}
+
+/// Returns the version string from the `z3-src = { version = "...", ... }` dep line.
+fn read_z3src_dep_series(path: &Path) -> Result<String, Box<dyn std::error::Error>> {
+    let content = std::fs::read_to_string(path)?;
+    for line in content.lines() {
+        if !line.trim_start().starts_with("z3-src = {") {
+            continue;
+        }
+        if let Some((_, after)) = line.split_once("version = \"") {
+            if let Some((ver, _)) = after.split_once('"') {
+                return Ok(ver.to_string());
+            }
+        }
+    }
+    Err(format!("no `z3-src` dep with version found in {}", path.display()).into())
 }
