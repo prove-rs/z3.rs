@@ -57,7 +57,7 @@ impl Bool {
         }
     }
 
-    /// Uses `self` as a predicate in an if-then-else expression. Evaluates `then_expr` if `self` is true.
+    /// Uses `self` as a predicate in an if-then-else expression. Evaluates to `then_expr` when `self` is true.
     pub fn ite<T>(&self, then_expr: &T, else_expr: &T) -> T
     where
         T: Ast,
@@ -76,18 +76,30 @@ impl Bool {
     }
 
     varop! {
+        /// Creates an AST node that is the logical AND of two expressions
         and(Z3_mk_and, Self);
+        /// Creates an AST node that is the logical OR of two expressions
         or(Z3_mk_or, Self);
     }
     binop! {
+        /// Creates an AST node that is the logical XOR of `self` and some other expression
         xor(Z3_mk_xor, Self);
+        /// Creates an AST node that is the logical XNOR of `self` and some other expression
         iff(Z3_mk_iff, Self);
+        /// Creates an AST node that is the logical implication of `self` with some other expression
         implies(Z3_mk_implies, Self);
     }
     unop! {
+        /// Creates an AST node that is the logical NOT of `self`
         not(Z3_mk_not, Self);
     }
 
+    /// Creates an at-most Pseudo-Boolean k constraint:
+    /// `values[0].0 * values[0].1 + ... + values[n - 1].0 * values[n - 1].1 <= k`
+    ///
+    /// # See also:
+    ///
+    /// - [`crate::ast::atmost()`]
     pub fn pb_le(values: &[(&Bool, i32)], k: i32) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
@@ -109,6 +121,12 @@ impl Bool {
         }
     }
 
+    /// Creates an at-least Pseudo-Boolean k constraint:
+    /// `values[0].0 * values[0].1 + ... + values[n - 1].0 * values[n - 1].1 >= k`
+    ///
+    /// # See also:
+    ///
+    /// - [`crate::ast::atleast()`]
     pub fn pb_ge(values: &[(&Bool, i32)], k: i32) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
@@ -130,6 +148,8 @@ impl Bool {
         }
     }
 
+    /// Creates a Pseudo-Boolean k constraint:
+    /// `values[0].0 * values[0].1 + ... + values[n - 1].0 * values[n - 1].1 == k`
     pub fn pb_eq(values: &[(&Bool, i32)], k: i32) -> Bool {
         let ctx = &Context::thread_local();
         unsafe {
