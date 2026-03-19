@@ -24,6 +24,24 @@ on top of, and wraps, the `z3-sys` crate. This is the crate you'll want to use
 The [`z3-sys` crate][z3-sys] provides the raw, unsafe, low-level C API that Z3
 exposes.
 
+## `z3-src`
+
+[![](https://img.shields.io/crates/v/z3-src.svg)](https://crates.io/crates/z3-src)
+
+The [`z3-src` crate][z3-sys] contains the Z3 source distribution and logic to handle from-source builds.
+
+## Z3 Version Compatibility
+
+Versions of this library up to 0.19.x are compatible with Z3 4.8.12 through 4.16.0. 
+
+This wide support comes at a cost: new low-level Z3 APIs must be gated behind feature flags or omitted entirely due to the developer burden.
+
+Starting with version 0.20.0, this library will be tracking z3 releases more closely and will have a minimum supported Z3 version of 4.16.0. 
+
+Backwards compatibility will be maintianed for as long as
+Z3 does not break ABI compatibility by adding new exported enum variants,
+new exported functions, or large semantic changes.
+
 ## When should I use `z3-sys` instead of `z3`?
 
 The first scenario where it makes sense to use `z3-sys` directly is when some Z3
