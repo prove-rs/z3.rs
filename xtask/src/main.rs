@@ -90,7 +90,6 @@ fn gen_bindings() -> Result<(), Box<dyn std::error::Error>> {
     println!("Updated z3-sys/src/generated/enums.rs");
     println!();
     println!("Review diffs with:   git diff z3-sys/src/generated/");
-    println!("Check API coverage:  scripts/check-bindings.sh");
 
     Ok(())
 }
