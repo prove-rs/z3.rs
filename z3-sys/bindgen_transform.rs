@@ -1,6 +1,6 @@
 //! Transform raw bindgen output into z3-sys–compatible declarations.
 //!
-//! Reads bindgen-generated Rust source and writes transformed Rust to stdout.
+//! Reads bindgen-generated Rust source and returns transformed Rust source.
 //!
 //! ## Function transformations
 //!
