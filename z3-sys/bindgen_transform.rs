@@ -39,8 +39,10 @@
 //! - A `pub type Z3_original_name = NewName;` type alias is emitted after the enum
 
 use std::collections::HashMap;
+use std::sync::LazyLock;
 
 use quote::quote;
+use regex::Regex;
 use syn::{
     Attribute, Expr, ExprLit, ForeignItem, ForeignItemFn, Item, ItemEnum, Lit, Meta, MetaNameValue,
     ReturnType, Type, Variant,
@@ -99,6 +101,28 @@ fn is_opaque_handle(ty: &Type) -> bool {
 // Doxygen → Rust doc comment processing
 // ---------------------------------------------------------------------------
 
+// Matches \ccode{content} — content may contain \, escape sequences.
+static RE_CCODE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\\ccode\{([^}]*)\}").unwrap());
+
+// Matches \c identifier — identifier chars: alphanumeric, _, :
+// Uses * (not +) to preserve legacy behaviour: \c followed by a non-identifier char (e.g. `\c (expr)`)
+// produces an empty code span (`​``) before the non-identifier text, matching the committed output.
+static RE_C_REF: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\\c ([A-Za-z0-9_:]*)").unwrap());
+
+// Matches #Z3_identifier with optional trailing ()
+static RE_HASH_REF: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"#(Z3_[A-Za-z0-9_]+)(?:\(\))?").unwrap());
+
+// Matches single-line \code content \endcode
+static RE_INLINE_CODE: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\\code (.+?) \\endcode").unwrap());
+
+// Matches a variant bullet: "- Z3_VARIANT_NAME[separators][desc]"
+static RE_VARIANT_BULLET: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^- (Z3_[A-Z0-9_]+)[ \t:]*(?:is )?\s*(.*)$").unwrap());
+
 /// Returns true for lines that should be dropped entirely.
 fn is_strip_line(line: &str) -> bool {
     let t = line.trim();
@@ -132,91 +156,30 @@ fn extract_sa(line: &str) -> Option<Vec<String>> {
 
 /// Replace `\ccode{expr\,with\,commas}` with `` `expr,with,commas` ``.
 fn replace_ccode(s: &str) -> String {
-    let needle = r"\ccode{";
-    let mut out = String::with_capacity(s.len());
-    let mut rest = s;
-    while let Some(start) = rest.find(needle) {
-        out.push_str(&rest[..start]);
-        rest = &rest[start + needle.len()..];
-        if let Some(end) = rest.find('}') {
-            let content = rest[..end].replace(r"\,", ",");
-            out.push('`');
-            out.push_str(&content);
-            out.push('`');
-            rest = &rest[end + 1..];
-        } else {
-            out.push_str(needle); // malformed — keep as-is
-        }
-    }
-    out.push_str(rest);
-    out
+    RE_CCODE
+        .replace_all(s, |caps: &regex::Captures| {
+            let content = caps[1].replace(r"\,", ",");
+            format!("`{content}`")
+        })
+        .into_owned()
 }
 
 /// Replace `\c word` with `` `word` ``.
 fn replace_c_ref(s: &str) -> String {
-    let needle = r"\c ";
-    let mut out = String::with_capacity(s.len());
-    let mut rest = s;
-    while let Some(start) = rest.find(needle) {
-        out.push_str(&rest[..start]);
-        rest = &rest[start + needle.len()..];
-        let end = rest
-            .find(|c: char| !c.is_alphanumeric() && c != '_' && c != ':')
-            .unwrap_or(rest.len());
-        out.push('`');
-        out.push_str(&rest[..end]);
-        out.push('`');
-        rest = &rest[end..];
-    }
-    out.push_str(rest);
-    out
+    RE_C_REF.replace_all(s, "`$1`").into_owned()
 }
 
 /// Replace `#Z3_identifier[()]` with `` [`Z3_identifier`] ``.
 fn replace_hash_ref(s: &str) -> String {
-    let needle = "#Z3_";
-    let mut out = String::with_capacity(s.len());
-    let mut rest = s;
-    while let Some(start) = rest.find(needle) {
-        out.push_str(&rest[..start]);
-        rest = &rest[start + 1..]; // skip '#', keep "Z3_..."
-        let end = rest
-            .find(|c: char| !c.is_alphanumeric() && c != '_')
-            .unwrap_or(rest.len());
-        let ident = &rest[..end];
-        rest = &rest[end..];
-        // Strip trailing () if present (function cross-reference style)
-        rest = rest.strip_prefix("()").unwrap_or(rest);
-        out.push_str(&format!("[`{ident}`]"));
-    }
-    out.push_str(rest);
-    out
+    RE_HASH_REF.replace_all(s, "[`$1`]").into_owned()
 }
 
 /// Replace single-line `\code content \endcode` with `` `content` ``.
 /// Multi-line code blocks are handled by the state machine in process_doc_string.
 fn replace_inline_code(s: &str) -> String {
-    const OPEN: &str = r"\code ";
-    const CLOSE: &str = r" \endcode";
-    let mut out = String::with_capacity(s.len());
-    let mut rest = s;
-    while let Some(start) = rest.find(OPEN) {
-        out.push_str(&rest[..start]);
-        let after_open = &rest[start + OPEN.len()..];
-        if let Some(end) = after_open.find(CLOSE) {
-            let content = after_open[..end].trim();
-            out.push('`');
-            out.push_str(content);
-            out.push('`');
-            rest = &after_open[end + CLOSE.len()..];
-        } else {
-            // No closing tag on this line — leave as-is.
-            out.push_str(OPEN);
-            rest = after_open;
-        }
-    }
-    out.push_str(rest);
-    out
+    RE_INLINE_CODE
+        .replace_all(s, |caps: &regex::Captures| format!("`{}`", caps[1].trim()))
+        .into_owned()
 }
 
 /// Apply all inline Doxygen-to-Markdown transforms to a line.
@@ -538,7 +501,7 @@ fn apply_strip<'a>(variant: &'a str, strip: &StripKind) -> &'a str {
 fn parse_variant_docs(doc: &str) -> HashMap<String, String> {
     let mut map: HashMap<String, String> = HashMap::new();
     let mut current_name: Option<String> = None;
-    let mut current_lines: Vec<&str> = Vec::new();
+    let mut current_lines: Vec<String> = Vec::new();
 
     // Inline flush: trim trailing blank lines, process, insert.
     macro_rules! flush {
@@ -558,30 +521,20 @@ fn parse_variant_docs(doc: &str) -> HashMap<String, String> {
 
     for line in doc.lines() {
         let t = line.trim();
-        if let Some(rest) = t.strip_prefix("- Z3_") {
+        if let Some(caps) = RE_VARIANT_BULLET.captures(t) {
             flush!();
-            // Find end of the identifier portion: first char that isn't [A-Z0-9_].
-            let name_end = rest
-                .find(|c: char| !c.is_ascii_uppercase() && !c.is_ascii_digit() && c != '_')
-                .unwrap_or(rest.len());
-            if name_end == 0 {
-                current_name = None;
-                current_lines.clear();
-                continue;
-            }
-            let variant_name = format!("Z3_{}", &rest[..name_end]);
-            let after = rest[name_end..].trim_start_matches([' ', ':', '\t']);
-            let first_text = after.strip_prefix("is ").unwrap_or(after).trim();
+            let variant_name = caps[1].to_string();
+            let first_text = caps[2].trim();
             current_name = Some(variant_name);
             current_lines.clear();
             if !first_text.is_empty() {
-                current_lines.push(first_text);
+                current_lines.push(first_text.to_string());
             }
         } else if current_name.is_some() {
             // Any non-bullet line is a continuation of the current variant.
             // bindgen strips indentation, so we can't use starts_with(' ') to detect
             // continuations. Bullets always run to the next `- Z3_` or end of doc.
-            current_lines.push(t);
+            current_lines.push(t.to_string());
         }
     }
 
