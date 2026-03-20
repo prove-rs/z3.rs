@@ -76,8 +76,6 @@ impl Regexp {
 
     /// Creates a regular expression that recognizes this regular expression
     /// n number of times
-    /// Requires Z3 4.8.15 or later.
-    #[cfg(feature = "z3_4_8_15")]
     pub fn power(&self, n: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
@@ -101,8 +99,6 @@ impl Regexp {
     }
 
     /// Creates a regular expression that accepts all singleton sequences of the characters
-    /// Requires Z3 4.8.13 or later.
-    #[cfg(feature = "z3_4_8_13")]
     pub fn allchar() -> Self {
         let ctx = &Context::thread_local();
         unsafe {
@@ -142,7 +138,6 @@ impl Regexp {
        /// Creates a regular expression that optionally accepts this regular expression (e.g. `a?`)
        option(Z3_mk_re_option, Self);
     }
-    #[cfg(feature = "z3_4_8_14")]
     crate::ast::binop! {
         /// Creates a difference regular expression
         /// Requires Z3 4.8.14 or later.
