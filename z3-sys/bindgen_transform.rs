@@ -105,11 +105,12 @@ fn is_opaque_handle(ty: &Type) -> bool {
 static RE_CCODE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\\ccode\{([^}]*)\}").unwrap());
 
-// Matches \c identifier — identifier chars: alphanumeric, _, :
-// Uses * (not +) to preserve legacy behaviour: \c followed by a non-identifier char (e.g. `\c (expr)`)
-// produces an empty code span (`​``) before the non-identifier text, matching the committed output.
+// Matches \c followed by a parenthesised expression, a bracketed expression, or a plain identifier.
+// e.g. \c (t1 div 2^i)  →  `(t1 div 2^i)`
+//      \c [re]           →  `[re]`
+//      \c word           →  `word`
 static RE_C_REF: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\\c ([A-Za-z0-9_:]*)").unwrap());
+    LazyLock::new(|| Regex::new(r"\\c ((?:\([^)]*\)|\[[^\]]*\]|[A-Za-z0-9_:]+))").unwrap());
 
 // Matches #Z3_identifier with optional trailing ()
 static RE_HASH_REF: LazyLock<Regex> =

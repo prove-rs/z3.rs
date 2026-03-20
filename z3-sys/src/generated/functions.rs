@@ -1128,7 +1128,7 @@ unsafe extern "C" {
     /// Create an `n` bit bit-vector from the integer argument `t1`.
     ///
     /// The resulting bit-vector has `n` bits, where the i'th bit (counting
-    /// from 0 to `n`-1) is 1 if \c (t1 div 2^i) mod 2 is 1.
+    /// from 0 to `n`-1) is 1 if `(t1 div 2^i)` mod 2 is 1.
     ///
     /// The node `t1` must have integer sort.
     pub fn Z3_mk_int2bv(
@@ -1694,7 +1694,7 @@ unsafe extern "C" {
     pub fn Z3_mk_re_plus(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
     /// Create the regular language `re`*.
     pub fn Z3_mk_re_star(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
-    /// Create the regular language \c [re].
+    /// Create the regular language `[re]`.
     pub fn Z3_mk_re_option(c: Z3_context, re: Z3_ast) -> Option<Z3_ast>;
     /// Create the union of the regular languages.
     ///
@@ -2071,9 +2071,9 @@ unsafe extern "C" {
     /// bound variables. Z3 applies the convention that the last element in the `decl_names` and `sorts` array
     /// refers to the variable with index 0, the second to last element of `decl_names` and `sorts` refers
     /// to the variable with index 1, etc.
-    /// The sort of the resulting expression is \c (Array sorts range) where `range` is the sort of `body`.
+    /// The sort of the resulting expression is `(Array sorts range)` where `range` is the sort of `body`.
     /// For example, if the lambda binds two variables of sort `Int` and `Bool`, and the `body` has sort `Real`,
-    /// the sort of the expression is \c (Array Int Bool Real).
+    /// the sort of the expression is `(Array Int Bool Real)`.
     ///
     /// - `c`: logical context
     /// - `num_decls`: number of variables to be bound.
