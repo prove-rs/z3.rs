@@ -7,7 +7,7 @@ unsafe extern "C" {
     /// When a Z3 module is initialized it will use the value of these parameters
     /// when Z3_params objects are not provided.
     ///
-    /// The name of parameter can be composed of characters [a-z][A-Z], digits [0-9], '-' and '_'.
+    /// The name of parameter can be composed of characters \[a-z]\[A-Z], digits \[0-9], '-' and '_'.
     /// The character '.' is a delimiter (more later).
     ///
     /// The parameter names are case-insensitive. The character '-' should be viewed as an "alias" for '_'.
@@ -4669,14 +4669,14 @@ unsafe extern "C" {
     /// - `Z3_algebraic_is_value(c, b)`
     pub fn Z3_algebraic_neq(c: Z3_context, a: Z3_ast, b: Z3_ast) -> bool;
     /// Given a multivariate polynomial p(x_0, ..., x_{n-1}, x_n), returns the
-    /// roots of the univariate polynomial p(a[0], ..., a[n-1], x_n).
+    /// roots of the univariate polynomial p(a\[0], ..., a\[n-1], x_n).
     ///
     /// \post forall r in result Z3_algebraic_is_value(c, result)
     ///
     /// # Preconditions
     ///
     /// - `p is a Z3 expression that contains only arithmetic terms and free variables.`
-    /// - `forall i in [0, n) Z3_algebraic_is_value(c, a[i])`
+    /// - `forall i in [0, n) Z3_algebraic_is_value(c, a\[i])`
     pub fn Z3_algebraic_roots(
         c: Z3_context,
         p: Z3_ast,
@@ -4684,12 +4684,12 @@ unsafe extern "C" {
         a: *mut Z3_ast,
     ) -> Option<Z3_ast_vector>;
     /// Given a multivariate polynomial p(x_0, ..., x_{n-1}), return the
-    /// sign of p(a[0], ..., a[n-1]).
+    /// sign of p(a\[0], ..., a\[n-1]).
     ///
     /// # Preconditions
     ///
     /// - `p is a Z3 expression that contains only arithmetic terms and free variables.`
-    /// - `forall i in [0, n) Z3_algebraic_is_value(c, a[i])`
+    /// - `forall i in [0, n) Z3_algebraic_is_value(c, a\[i])`
     pub fn Z3_algebraic_eval(
         c: Z3_context,
         p: Z3_ast,
@@ -4738,7 +4738,7 @@ unsafe extern "C" {
     pub fn Z3_rcf_mk_e(c: Z3_context) -> Option<Z3_rcf_num>;
     /// Return a new infinitesimal that is smaller than all elements in the Z3 field.
     pub fn Z3_rcf_mk_infinitesimal(c: Z3_context) -> Option<Z3_rcf_num>;
-    /// Store in roots the roots of the polynomial `a[n-1]*x^{n-1` + ... + a[0]}.
+    /// Store in roots the roots of the polynomial `a[n-1]*x^{n-1` + ... + a\[0]}.
     /// The output vector `roots` must have size `n`.
     /// It returns the number of roots of the polynomial.
     ///

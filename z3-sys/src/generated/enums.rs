@@ -251,7 +251,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_CONST_ARRAY")]
     ConstArray = 770,
     /// Array map operator.
-    /// It satisfies map[f](a1,..,a_n)[i] = f(a1[i],...,a_n[i]) for every i.
+    /// It satisfies map\[f](a1,..,a_n)\[i] = f(a1\[i],...,a_n\[i]) for every i.
     #[doc(alias = "Z3_OP_ARRAY_MAP")]
     ArrayMap = 771,
     /// Default value of arrays. For example default(const(v)) = v. The function is unary.
@@ -639,7 +639,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_PR_ELIM_UNUSED_VARS")]
     PrElimUnusedVars = 1299,
     /// A proof for destructive equality resolution:
-    /// (iff (forall (x) (or (not (= x t)) P[x])) P[t])
+    /// (iff (forall (x) (or (not (= x t)) P\[x])) P\[t])
     /// if x does not occur in t.
     ///
     /// This proof object has no antecedents.

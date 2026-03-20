@@ -130,6 +130,12 @@ static RE_PLACEHOLDER_TAG: LazyLock<Regex> = LazyLock::new(|| {
 static RE_BRACKET_LABEL: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"^\[([a-z][a-z-]*)\]:").unwrap());
 
+// Matches [content] where content is alphanumeric with + or - chars (no underscores, no ::).
+// These are math/index expressions and character classes (e.g. [i], [0], [n-1], [a-z])
+// that would be mis-parsed as intra-doc links by rustdoc.
+static RE_MATH_BRACKET: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"\[([a-zA-Z0-9][a-zA-Z0-9+\-]*)\]").unwrap());
+
 // Matches single-line \code content \endcode
 static RE_INLINE_CODE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\\code (.+?) \\endcode").unwrap());
@@ -224,6 +230,31 @@ fn escape_bracket_label(s: &str) -> String {
     RE_BRACKET_LABEL.replace(s, r"\[$1\]:").into_owned()
 }
 
+/// Escape `[content]` patterns that look like math/index notation or character classes,
+/// not Rust paths (e.g. `[i]`, `[0]`, `[n-1]`, `[a-z]`).
+///
+/// Skips brackets that are:
+/// - already escaped (preceded by `\`)
+/// - inside a backtick code span (odd number of backticks before the match)
+fn escape_math_brackets(s: &str) -> String {
+    let bytes = s.as_bytes();
+    RE_MATH_BRACKET
+        .replace_all(s, |caps: &regex::Captures| {
+            let m = caps.get(0).unwrap();
+            let content = &caps[1];
+            let start = m.start();
+            let already_escaped = start > 0 && bytes[start - 1] == b'\\';
+            let backtick_count = bytes[..start].iter().filter(|&&b| b == b'`').count();
+            let inside_code_span = backtick_count % 2 == 1;
+            if already_escaped || inside_code_span {
+                m.as_str().to_string()
+            } else {
+                format!("\\[{content}]")
+            }
+        })
+        .into_owned()
+}
+
 /// Replace single-line `\code content \endcode` with `` `content` ``.
 /// Multi-line code blocks are handled by the state machine in process_doc_string.
 fn replace_inline_code(s: &str) -> String {
@@ -240,7 +271,9 @@ fn apply_inline(s: &str) -> String {
     let s = replace_c_ref(&s);
     let s = replace_placeholder_tags(&s);
     let s = replace_hash_ref(&s);
-    replace_bare_url(&s)
+    let s = replace_bare_url(&s);
+    // Must run last: skips already-escaped brackets and backtick code spans.
+    escape_math_brackets(&s)
 }
 
 /// Parsing state for multi-line block commands.
