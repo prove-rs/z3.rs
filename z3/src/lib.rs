@@ -106,6 +106,7 @@ mod statistics;
 mod symbol;
 mod tactic;
 mod translate;
+pub mod user_propagator;
 mod version;
 
 pub mod ast_vector;

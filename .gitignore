@@ -3,4 +3,9 @@ Cargo.lock
 *~
 .z3-trace
 *.sln
+
+# nix
+.envrc
+.direnv
+result
 .DS_Store
