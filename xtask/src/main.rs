@@ -13,7 +13,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum CliCommand {
-    /// Regenerate z3-sys/src/generated/ from bundled Z3 headers.
+    /// Regenerate z3-sys/src/generated/ from vendored Z3 headers.
     GenBindings,
     /// Check out a Z3 tag in the submodule and update Cargo.toml versions.
     PrepareZ3Src {

@@ -29,7 +29,7 @@ exposes.
 
 [![](https://img.shields.io/crates/v/z3-src.svg)](https://crates.io/crates/z3-src)
 
-The [`z3-src` crate][z3-src] contains the Z3 source distribution and logic to handle from-source builds.
+The [`z3-src` crate][z3-src] contains the Z3 source distribution and logic to handle vendored builds.
 
 ## Z3 Version Compatibility
 
