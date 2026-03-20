@@ -252,7 +252,6 @@ fn find_library_by_vcpkg() {
 }
 
 #[cfg(feature = "bindgen")]
-#[path = "build_transform.rs"]
 mod bindgen_transform;
 
 #[cfg(feature = "bindgen")]

@@ -1,3 +1,25 @@
+//! Customized FFI types for the Z3 API.
+//!
+//! Custom FFI types, rather than the bindgden defaults allow us to
+//! express properties of the Z3 API not formally expressed in the C ABI:
+//!
+//! * Z3, with a couple exceptions for output parameters, requires that all
+//!   pointers to Z3-allocated objects passed as parameters be non-null.
+//! * Any Z3 function which returns a pointer will return a null pointer if
+//!   Z3 encounters an internal error, or if the invocation was invalid in
+//!   some way (e.g. adding two BVs of different lengths)
+//!
+//! To ensure the Rust bindings uphold both these properties, we use the following
+//! strategy:
+//! * We define our own pointer types to opaque Z3 structures that as `NonNull` pointers.
+//! * We rewrite the bindgen-generated functions to return Option<Z3_type> to explicitly
+//!   indicate nullability.
+//!
+//! These two changes force us to ensure pointers are valid before calling Z3 and to check
+//! the returned pointer results from Z3 before we use them.
+//!
+//! This module contains the customized Opaque structure definitions and their associated
+//! NonNull pointer aliases.
 use core::ptr::NonNull;
 
 use crate::Z3_error_code;
