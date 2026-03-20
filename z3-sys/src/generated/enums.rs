@@ -509,7 +509,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_PR_REFLEXIVITY")]
     PrReflexivity = 1285,
     /// Given an symmetric relation R and a proof for (R t s), produces a proof for (R s t).
-    /// ```
+    /// ```text
     /// T1: (R t s)
     /// [symmetry T1]: (R s t)
     /// ```
@@ -518,7 +518,7 @@ pub enum DeclKind {
     PrSymmetry = 1286,
     /// Given a transitive relation R, and proofs for (R t s) and (R s u), produces a proof
     /// for (R t u).
-    /// ```
+    /// ```text
     /// T1: (R t s)
     /// T2: (R s u)
     /// [trans T1 T2]: (R t u)
@@ -527,7 +527,7 @@ pub enum DeclKind {
     PrTransitivity = 1287,
     /// Condensed transitivity proof.
     /// It combines several symmetry and transitivity proofs. Example:
-    /// ```
+    /// ```text
     /// T1: (R a b)
     /// T2: (R c b)
     /// T3: (R c d)
@@ -567,12 +567,12 @@ pub enum DeclKind {
     PrBind = 1291,
     /// Distributivity proof object.
     /// Given that f (= or) distributes over g (= and), produces a proof for
-    /// ```
+    /// ```text
     /// (= (f a (g c d))
     /// (g (f a c) (f a d)))
     /// ```
     /// If f and g are associative, this proof also justifies the following equality:
-    /// ```
+    /// ```text
     /// (= (f (g a b) (g c d))
     /// (g (f a c) (f a d) (f b c) (f b d)))
     /// ```
@@ -603,7 +603,7 @@ pub enum DeclKind {
     /// an equivalence (iff t s), or equi-satisfiability (~ t s).
     /// Remark: if f is bool, then = is iff.
     /// Examples:
-    /// ```
+    /// ```text
     /// (= (+ x 0) x)
     /// (= (+ x 1 2) (+ 3 x))
     /// (iff (or x false) x)
@@ -622,7 +622,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_PR_PULL_QUANT")]
     PrPullQuant = 1297,
     /// A proof for:
-    /// ```
+    /// ```text
     /// (iff (forall (x_1 ... x_m) (and p_1[x_1 ... x_m] ... p_n[x_1 ... x_m]))
     /// (and (forall (x_1 ... x_m) p_1[x_1 ... x_m])
     /// ...
@@ -665,7 +665,7 @@ pub enum DeclKind {
     /// the lemma.
     #[doc(alias = "Z3_OP_PR_LEMMA")]
     PrLemma = 1303,
-    /// ```
+    /// ```text
     /// T1:      (or l_1 ... l_n l_1' ... l_m')
     /// T2:      (not l_1)
     /// ...
@@ -674,20 +674,20 @@ pub enum DeclKind {
     /// ```
     #[doc(alias = "Z3_OP_PR_UNIT_RESOLUTION")]
     PrUnitResolution = 1304,
-    /// ```
+    /// ```text
     /// T1: p
     /// [iff-true T1]: (iff p true)
     /// ```
     #[doc(alias = "Z3_OP_PR_IFF_TRUE")]
     PrIffTrue = 1305,
-    /// ```
+    /// ```text
     /// T1: (not p)
     /// [iff-false T1]: (iff p false)
     /// ```
     #[doc(alias = "Z3_OP_PR_IFF_FALSE")]
     PrIffFalse = 1306,
     ///
-    /// [comm]: (= (f a b) (f b a))
+    /// \[comm\]: (= (f a b) (f b a))
     ///
     /// f is a commutative operator.
     ///
@@ -696,7 +696,7 @@ pub enum DeclKind {
     #[doc(alias = "Z3_OP_PR_COMMUTATIVITY")]
     PrCommutativity = 1307,
     /// Proof object used to justify Tseitin's like axioms:
-    /// ```
+    /// ```text
     /// (or (not (and p q)) p)
     /// (or (not (and p q)) q)
     /// (or (not (and p q r)) p)
@@ -744,17 +744,17 @@ pub enum DeclKind {
     /// introduces the name n(x). The possible cases are:
     ///
     /// When e is of Boolean type:
-    /// [def-intro]: (and (or n (not e)) (or (not n) e))
+    /// \[def-intro\]: (and (or n (not e)) (or (not n) e))
     ///
     /// or:
-    /// [def-intro]: (or (not n) e)
+    /// \[def-intro\]: (or (not n) e)
     /// when e only occurs positively.
     ///
     /// When e is of the form (ite cond th el):
-    /// [def-intro]: (and (or (not cond) (= n th)) (or cond (= n el)))
+    /// \[def-intro\]: (and (or (not cond) (= n th)) (or cond (= n el)))
     ///
     /// Otherwise:
-    /// [def-intro]: (= n e)
+    /// \[def-intro\]: (= n e)
     #[doc(alias = "Z3_OP_PR_DEF_INTRO")]
     PrDefIntro = 1313,
     ///
@@ -818,8 +818,8 @@ pub enum DeclKind {
     PrNnfNeg = 1317,
     /// Proof for:
     ///
-    /// [sk]: (~ (not (forall x (p x y))) (not (p (sk y) y)))
-    /// [sk]: (~ (exists x (p x y)) (p (sk y) y))
+    /// \[sk\]: (~ (not (forall x (p x y))) (not (p (sk y) y)))
+    /// \[sk\]: (~ (exists x (p x y)) (p (sk y) y))
     ///
     /// This proof object has no antecedents.
     #[doc(alias = "Z3_OP_PR_SKOLEMIZE")]
@@ -855,15 +855,15 @@ pub enum DeclKind {
     /// with a literal from the first (main) clause.
     ///
     /// Premises of the rules are of the form
-    /// ```
+    /// ```text
     /// (or l0 l1 l2 .. ln)
     /// ```
     /// or
-    /// ```
+    /// ```text
     /// (=> (and l1 l2 .. ln) l0)
     /// ```
     /// or in the most general (ground) form:
-    /// ```
+    /// ```text
     /// (=> (and ln+1 ln+2 .. ln+m) (or l0 l1 .. ln))
     /// ```
     /// In other words we use the following (Prolog style) convention for Horn
@@ -879,7 +879,7 @@ pub enum DeclKind {
     /// The premises can be universally quantified so that the most
     /// general non-ground form is:
     ///
-    /// ```
+    /// ```text
     /// (forall (vars) (=> (and ln+1 ln+2 .. ln+m) (or l0 l1 .. ln)))
     /// ```
     ///
@@ -948,7 +948,7 @@ pub enum DeclKind {
     /// Create a fresh copy (clone) of a relation.
     /// The function is logically the identity, but
     /// in the context of a register machine allows
-    /// for [`Z3_OP_RA_UNION`] to perform destructive updates to the first argument.
+    /// for `Z3_OP_RA_UNION` to perform destructive updates to the first argument.
     #[doc(alias = "Z3_OP_RA_CLONE")]
     RaClone = 1548,
     /// Corresponds to `Z3_OP_FD_CONSTANT` in the C API.

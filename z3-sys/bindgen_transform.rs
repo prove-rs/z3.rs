@@ -116,6 +116,20 @@ static RE_C_REF: LazyLock<Regex> =
 static RE_HASH_REF: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"#(Z3_[A-Za-z0-9_]+)(?:\(\))?").unwrap());
 
+// Matches http/https URLs (bare or already wrapped — wrapper check done in replace_bare_url)
+static RE_BARE_URL: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"https?://[^\s>)\]]+").unwrap());
+
+// Matches placeholder tags with hyphens (not real HTML): <module-name> or <a-b>.<c-d>
+static RE_PLACEHOLDER_TAG: LazyLock<Regex> = LazyLock::new(|| {
+    Regex::new(r"<[a-z][a-z0-9-]*-[a-z0-9][a-z0-9-]*>(?:\.<[a-z][a-z0-9-]*-[a-z0-9][a-z0-9-]*>)*")
+        .unwrap()
+});
+
+// Matches [label]: at start of a line (proof-rule notation, not a Markdown reference)
+static RE_BRACKET_LABEL: LazyLock<Regex> =
+    LazyLock::new(|| Regex::new(r"^\[([a-z][a-z-]*)\]:").unwrap());
+
 // Matches single-line \code content \endcode
 static RE_INLINE_CODE: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"\\code (.+?) \\endcode").unwrap());
@@ -170,9 +184,44 @@ fn replace_c_ref(s: &str) -> String {
     RE_C_REF.replace_all(s, "`$1`").into_owned()
 }
 
-/// Replace `#Z3_identifier[()]` with `` [`Z3_identifier`] ``.
+/// Replace `#Z3_identifier[()]` with `` [`Z3_identifier`] ``, or a code span for `Z3_OP_*` names
+/// (which are enum variants and don't resolve as intra-doc links from function doc context).
 fn replace_hash_ref(s: &str) -> String {
-    RE_HASH_REF.replace_all(s, "[`$1`]").into_owned()
+    RE_HASH_REF
+        .replace_all(s, |caps: &regex::Captures| {
+            let name = &caps[1];
+            if name.starts_with("Z3_OP_") {
+                format!("`{name}`")
+            } else {
+                format!("[`{name}`]")
+            }
+        })
+        .into_owned()
+}
+
+/// Wrap bare http/https URLs in angle brackets so rustdoc renders them as links.
+/// Skips URLs already preceded by `<`, `[`, or `` ` ``.
+fn replace_bare_url(s: &str) -> String {
+    let bytes = s.as_bytes();
+    RE_BARE_URL
+        .replace_all(s, |caps: &regex::Captures| {
+            let m = caps.get(0).unwrap();
+            let url = m.as_str();
+            let already_wrapped =
+                m.start() > 0 && matches!(bytes[m.start() - 1], b'<' | b'[' | b'`');
+            if already_wrapped { url.to_string() } else { format!("<{url}>") }
+        })
+        .into_owned()
+}
+
+/// Wrap hyphenated placeholder tags like `<module-name>` in backticks.
+fn replace_placeholder_tags(s: &str) -> String {
+    RE_PLACEHOLDER_TAG.replace_all(s, "`$0`").into_owned()
+}
+
+/// Escape `[label]:` at line start to prevent rustdoc treating it as a reference definition.
+fn escape_bracket_label(s: &str) -> String {
+    RE_BRACKET_LABEL.replace(s, r"\[$1\]:").into_owned()
 }
 
 /// Replace single-line `\code content \endcode` with `` `content` ``.
@@ -185,10 +234,13 @@ fn replace_inline_code(s: &str) -> String {
 
 /// Apply all inline Doxygen-to-Markdown transforms to a line.
 fn apply_inline(s: &str) -> String {
-    let s = replace_inline_code(s);
+    let s = escape_bracket_label(s);
+    let s = replace_inline_code(&s);
     let s = replace_ccode(&s);
     let s = replace_c_ref(&s);
-    replace_hash_ref(&s)
+    let s = replace_placeholder_tags(&s);
+    let s = replace_hash_ref(&s);
+    replace_bare_url(&s)
 }
 
 /// Parsing state for multi-line block commands.
@@ -276,12 +328,12 @@ fn process_doc_string(raw: &str) -> String {
             continue;
         }
         if t == r"\verbatim" {
-            out.push("```".to_string());
+            out.push("```text".to_string());
             block = DocBlock::Verbatim;
             continue;
         }
         if t == r"\nicebox{" {
-            out.push("```".to_string());
+            out.push("```text".to_string());
             block = DocBlock::Nicebox;
             continue;
         }

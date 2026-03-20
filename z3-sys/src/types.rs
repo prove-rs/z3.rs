@@ -35,11 +35,11 @@ pub struct _Z3_symbol {
 ///
 /// # See also:
 ///
-/// - [`Z3_get_symbol_int`]
-/// - [`Z3_get_symbol_kind`]
-/// - [`Z3_get_symbol_string`]
-/// - [`Z3_mk_int_symbol`]
-/// - [`Z3_mk_string_symbol`]
+/// - [`crate::Z3_get_symbol_int`]
+/// - [`crate::Z3_get_symbol_kind`]
+/// - [`crate::Z3_get_symbol_string`]
+/// - [`crate::Z3_mk_int_symbol`]
+/// - [`crate::Z3_mk_string_symbol`]
 pub type Z3_symbol = NonNull<_Z3_symbol>;
 
 #[doc(hidden)]
@@ -326,7 +326,7 @@ pub const Z3_L_TRUE: Z3_lbool = 1;
 /// Lifted Boolean type: `false`, `undefined`, `true`.
 pub type Z3_lbool = i32;
 
-/// Z3 custom error handler (See [`Z3_set_error_handler`]).
+/// Z3 custom error handler (See [`crate::Z3_set_error_handler`]).
 pub type Z3_error_handler =
     ::core::option::Option<unsafe extern "C" fn(c: Z3_context, e: Z3_error_code)>;
 

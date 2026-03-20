@@ -14,7 +14,7 @@ unsafe extern "C" {
     /// Thus, the following parameter names are considered equivalent: "pp.decimal-precision"  and "PP.DECIMAL_PRECISION".
     ///
     /// This function can be used to set parameters for a specific Z3 module.
-    /// This can be done by using <module-name>.<parameter-name>.
+    /// This can be done by using `<module-name>.<parameter-name>`.
     /// For example:
     /// Z3_global_param_set('pp.decimal', 'true')
     /// will set the parameter "decimal" in the module "pp" to true.
@@ -1249,7 +1249,7 @@ unsafe extern "C" {
     /// The node `a` must have an array sort `[domain -> range]`, `i` must have sort `domain`,
     /// `v` must have sort range. The sort of the result is `[domain -> range]`.
     /// The semantics of this function is given by the theory of arrays described in the SMT-LIB
-    /// standard. See http://smtlib.org for more details.
+    /// standard. See <http://smtlib.org> for more details.
     /// The result of this function is an array that is equal to `a` (with respect to `select`)
     /// on all indices except for `i`, where it maps to `v` (and the `select` of `a` with
     /// respect to `i` may be a different value).
@@ -1843,7 +1843,7 @@ unsafe extern "C" {
     /// the meaning of de-Bruijn indices by indicating the compilation process from
     /// non-de-Bruijn formulas to de-Bruijn format.
     ///
-    /// ```
+    /// ```text
     /// abs(forall (x1) phi) = forall (x1) abs1(phi, x1, 0)
     /// abs(forall (x1, x2) phi) = abs(forall (x1) abs(forall (x2) phi))
     /// abs1(x, x, n) = b_n
