@@ -5,8 +5,8 @@ Source distribution of the [Z3 SMT solver](https://github.com/Z3Prover/z3), mode
 when you want to compile Z3 from source rather than link against a system-installed copy.
 
 Most users do not depend on `z3-src` directly — it is pulled in automatically when you enable the
-`bundled` feature on [`z3-sys`](https://crates.io/crates/z3-sys) or
-[`z3`](https://crates.io/crates/z3).
+`vendored` feature on [`z3-sys`](https://crates.io/crates/z3-sys) or
+[`z3`](https://crates.io/crates/z3) (the `bundled` feature is a deprecated alias for `vendored`).
 
 ## Versioning
 

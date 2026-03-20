@@ -8,6 +8,7 @@ for the [Z3 solver][upstream].
 [upstream]: https://github.com/Z3Prover/z3
 [z3]: https://github.com/prove-rs/z3.rs/tree/master/z3
 [z3-sys]: https://github.com/prove-rs/z3.rs/tree/master/z3-sys
+[z3-src]: https://github.com/prove-rs/z3.rs/tree/master/z3-src
 
 ## `z3`
 
@@ -28,7 +29,7 @@ exposes.
 
 [![](https://img.shields.io/crates/v/z3-src.svg)](https://crates.io/crates/z3-src)
 
-The [`z3-src` crate][z3-sys] contains the Z3 source distribution and logic to handle from-source builds.
+The [`z3-src` crate][z3-src] contains the Z3 source distribution and logic to handle from-source builds.
 
 ## Z3 Version Compatibility
 
