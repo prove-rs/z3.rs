@@ -28,7 +28,7 @@ $ cargo add z3
 **Note:** This library has a dependency on Z3.
 
 There are 4 ways for this crate to currently find Z3, controlled by the feature
-flags `bundled`, `vcpkg` and `gh-release`.
+flags `vendored`, `vcpkg` and `gh-release`.
 
 This might look like:
 
@@ -69,21 +69,18 @@ Z3_SYS_Z3_HEADER = "/opt/homebrew/include/z3.h"
 ```
 
 
-#### 2. Bundled: Build Z3 from source
+#### 2. Vendored: Build Z3 from source
 
-Enabling the `bundled` feature will use `cmake` to build and statically
-link Z3 from source. Despite the name, **Z3 source is not included in the
-crate tarball**. On a first build from crates.io, the build script queries
-the GitHub Contents API to find which Z3 commit the `z3-sys` submodule
-pointed to at release time (via the `z3-sys-vX.Y.Z` git tag), then downloads
-and extracts that Z3 source archive. The result is cached in Cargo's build
-output directory and reused until `cargo clean`.
+Enabling the `vendored` feature will use `cmake` to build and statically
+link Z3 from source. The Z3 source tree is shipped inside the `z3-src` crate
+and compiled locally — no network access is required at build time.
+(`bundled` is a deprecated alias for `vendored`.)
 
-**Using your own Z3 checkout:** Set `Z3_SYS_BUNDLED_DIR_OVERRIDE` to the
+**Using your own Z3 checkout:** Set `Z3_SRC_SOURCE_DIR` to the
 **absolute path** of a Z3 source tree:
 
 ```bash
-Z3_SYS_BUNDLED_DIR_OVERRIDE=/absolute/path/to/z3 cargo build
+Z3_SRC_SOURCE_DIR=/absolute/path/to/z3 cargo build
 ```
 
 To use a path relative to your project root, add the following to your
@@ -93,12 +90,12 @@ absolute path:
 
 ```toml
 [env]
-Z3_SYS_BUNDLED_DIR_OVERRIDE = { value = "path/to/z3", relative = true }
+Z3_SRC_SOURCE_DIR = { value = "path/to/z3", relative = true }
 ```
 
 **Note:** A `z3` directory in your own project or workspace is **not**
 picked up automatically. Even if you have a Z3 git submodule in your repo,
-you must point `Z3_SYS_BUNDLED_DIR_OVERRIDE` at it explicitly.
+you must point `Z3_SRC_SOURCE_DIR` at it explicitly.
 
 **Pinning a Z3 version without a source checkout:** The `gh-release` feature
 (see below) lets you pin a specific Z3 version via `Z3_SYS_Z3_VERSION`

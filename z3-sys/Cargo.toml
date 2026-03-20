@@ -17,26 +17,26 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 
 [build-dependencies]
-bindgen = { version = "0.72", default-features = false, features = ["runtime"] }
-cmake = { version = "0.1.54", optional = true }
+z3-src = { version = "416", optional = true }
 zip = { version = "8.2", optional = true }
 pkg-config = "0.3.32"
-reqwest = { version = "0.12.22", default-features = false, features = ["blocking"], optional = true }
+reqwest = { version = "0.12.22", default-features = false, features = ["blocking", "rustls-tls"], optional = true }
 serde_json = { version = "1.0.140", optional = true }
 vcpkg = { version = "0.2.15", optional = true }
+bindgen = { version = "0.72", optional = true }
+proc-macro2 = { version = "1", optional = true }
+prettyplease = { version = "0.2", optional = true }
+quote = { version = "1", optional = true }
+syn = { version = "2", features = ["full"], optional = true }
+regex = {version = "1", optional = true}
+[lib]
+doctest = false
 
 [features]
-# Default features: enable reqwest's rusttls-tls implementation by default.
-# By omitting default features, you can use the `default-tls` impl,
-# and by specifying `reqwest-native-tls-vendored` you can use the vendored OpenSSL version
-default = ["reqwest-rustls"]
-reqwest-native-tls-vendored = ["reqwest/native-tls-vendored"]
-reqwest-rustls = ["reqwest/rustls-tls"]
+vendored = ["dep:z3-src"]                                     # Build Z3 from vendored source via z3-src.
+vcpkg = ["dep:vcpkg"]                                        # Build Z3 via vcpkg.
+gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip"]   # Download pre-compiled Z3 lib from GitHub release for supported platforms.
+bindgen = ["dep:bindgen", "dep:proc-macro2", "dep:prettyplease", "dep:quote", "dep:syn", "dep:regex"]  # Regenerate functions.rs from local Z3 headers at build time.
 
-bundled = ["dep:reqwest", "dep:serde_json", "dep:zip", "dep:cmake"] # Build Z3 via our bundled submodule.
-vcpkg = ["dep:vcpkg"] # Build Z3 via vcpkg.
-gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip"] # Download pre-compiled Z3 lib from GitHub release for supported platforms.
-
-# Legacy feature for short term compatibility
-static-link-z3 = ["bundled", "deprecated-static-link-z3"]
-deprecated-static-link-z3 = []
+# Deprecated alias for `vendored`; will be removed in a future release.
+bundled = ["vendored"]

@@ -1,3 +1,4 @@
 [workspace]
-members = ["z3", "z3-sys"]
+members = ["z3", "z3-sys", "xtask"]
+exclude = ["z3-src"]
 resolver = "3"

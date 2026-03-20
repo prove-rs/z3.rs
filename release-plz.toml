@@ -34,3 +34,7 @@ body = """
     {% if commit.remote.pr_number %} - #{{ commit.remote.pr_number }}{% endif -%}
 {% endmacro -%}
 """
+
+[[package]]
+name = "z3-src"
+release = false

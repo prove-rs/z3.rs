@@ -297,9 +297,9 @@ fn test_ast_attributes() {
     let b = Bool::from_bool(false);
     let not_a = a.not();
     let a_or_b = &Bool::or(&[&a, &b]);
-    assert_eq!(b.decl().kind(), DeclKind::FALSE);
-    assert_eq!(not_a.decl().kind(), DeclKind::NOT);
-    assert_eq!(a_or_b.decl().kind(), DeclKind::OR);
+    assert_eq!(b.decl().kind(), DeclKind::False);
+    assert_eq!(not_a.decl().kind(), DeclKind::Not);
+    assert_eq!(a_or_b.decl().kind(), DeclKind::Or);
 
     assert_ast_attributes(&a, true);
     assert_ast_attributes(&b, true);
@@ -322,17 +322,17 @@ fn test_ast_attributes() {
 #[test]
 fn test_func_decl_attributes() {
     let const_decl = FuncDecl::new("c", &[], &Sort::bool());
-    assert_eq!(const_decl.kind(), DeclKind::UNINTERPRETED);
+    assert_eq!(const_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(const_decl.name(), "c");
     assert_eq!(const_decl.arity(), 0);
 
     let unary_decl = FuncDecl::new("unary", &[&Sort::bool()], &Sort::bool());
-    assert_eq!(unary_decl.kind(), DeclKind::UNINTERPRETED);
+    assert_eq!(unary_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(unary_decl.name(), "unary");
     assert_eq!(unary_decl.arity(), 1);
 
     let binary_decl = FuncDecl::new("binary", &[&Sort::bool(), &Sort::bool()], &Sort::bool());
-    assert_eq!(binary_decl.kind(), DeclKind::UNINTERPRETED);
+    assert_eq!(binary_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(binary_decl.name(), "binary");
     assert_eq!(binary_decl.arity(), 2);
 }
