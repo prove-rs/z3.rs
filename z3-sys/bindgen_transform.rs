@@ -102,8 +102,7 @@ fn is_opaque_handle(ty: &Type) -> bool {
 // ---------------------------------------------------------------------------
 
 // Matches \ccode{content} — content may contain \, escape sequences.
-static RE_CCODE: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"\\ccode\{([^}]*)\}").unwrap());
+static RE_CCODE: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"\\ccode\{([^}]*)\}").unwrap());
 
 // Matches \c followed by a parenthesised expression, a bracketed expression, or a plain identifier.
 // e.g. \c (t1 div 2^i)  →  `(t1 div 2^i)`
@@ -117,8 +116,7 @@ static RE_HASH_REF: LazyLock<Regex> =
     LazyLock::new(|| Regex::new(r"#(Z3_[A-Za-z0-9_]+)(?:\(\))?").unwrap());
 
 // Matches http/https URLs (bare or already wrapped — wrapper check done in replace_bare_url)
-static RE_BARE_URL: LazyLock<Regex> =
-    LazyLock::new(|| Regex::new(r"https?://[^\s>)\]]+").unwrap());
+static RE_BARE_URL: LazyLock<Regex> = LazyLock::new(|| Regex::new(r"https?://[^\s>)\]]+").unwrap());
 
 // Matches placeholder tags with hyphens (not real HTML): <module-name> or <a-b>.<c-d>
 static RE_PLACEHOLDER_TAG: LazyLock<Regex> = LazyLock::new(|| {
@@ -215,7 +213,11 @@ fn replace_bare_url(s: &str) -> String {
             let url = m.as_str();
             let already_wrapped =
                 m.start() > 0 && matches!(bytes[m.start() - 1], b'<' | b'[' | b'`');
-            if already_wrapped { url.to_string() } else { format!("<{url}>") }
+            if already_wrapped {
+                url.to_string()
+            } else {
+                format!("<{url}>")
+            }
         })
         .into_owned()
 }
