@@ -18,16 +18,17 @@
 //! | Feature | Behaviour |
 //! |---------|-----------|
 //! | *(default)* | Link against a system-installed Z3 (`brew install z3`, etc.) |
-//! | `bundled` | Build Z3 from source using `cmake` and statically link it |
+//! | `vendored` | Build Z3 from source using `cmake` and statically link it |
+//! | `bundled` | **Deprecated.** Alias for `vendored`; will be removed in a future release |
 //! | `gh-release` | Build against a pre-compiled Z3 static library from GitHub Releases |
 //! | `vcpkg` | Use a Z3 installed via vcpkg |
 //! | `bindgen` | Regenerate `functions.rs` from local Z3 headers at build time |
 //!
 //! ## Environment variables
 //!
-//! ### `bundled` feature
+//! ### `vendored` feature
 //!
-//! The `bundled` feature builds Z3 from source using `cmake` and statically
+//! The `vendored` feature builds Z3 from source using `cmake` and statically
 //! links it. Despite the name, **Z3 source is not included in the crate
 //! tarball** published to crates.io. In cases where the user does not provide
 //! the source tree, the z3-sys `build.rs` script _must reach out to GitHub
@@ -86,7 +87,7 @@
 //! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions.rs` and `src/generated/enums.rs` |
 //! | `Z3_LIBRARY_PATH_OVERRIDE` | default | Add an extra library search path for the linker |
 //! | `Z3_SYS_Z3_VERSION` | `gh-release` | Z3 version to download (e.g. `4.13.0`) |
-//! | `READ_ONLY_GITHUB_TOKEN` | `bundled`, `gh-release` | GitHub PAT to avoid API rate limits in CI |
+//! | `READ_ONLY_GITHUB_TOKEN` | `vendored`, `gh-release` | GitHub PAT to avoid API rate limits in CI |
 //! | `CXXSTDLIB` | any | Override which C++ standard library to link (e.g. `c++`, `stdc++`) |
 //!
 //! # Example

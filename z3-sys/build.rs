@@ -21,12 +21,12 @@ macro_rules! assert_one_of_features {
 
 fn main() {
     // Check that only one of the mutually exclusive features is active
-    let active_feature = assert_one_of_features!("bundled", "vcpkg", "gh-release");
+    let active_feature = assert_one_of_features!("vendored", "vcpkg", "gh-release");
 
     println!("cargo:rerun-if-changed=build.rs");
 
     match active_feature {
-        Some("bundled") => build_from_source(),
+        Some("vendored") => build_from_source(),
         Some("gh-release") => install_from_gh_release(),
         Some("vcpkg") => find_library_by_vcpkg(),
         _ => {
@@ -38,9 +38,9 @@ fn main() {
         }
     }
 
-    #[cfg(feature = "deprecated-static-link-z3")]
+    #[cfg(feature = "bundled")]
     println!(
-        "cargo:warning=The 'static-link-z3' feature is deprecated. Please use the 'bundled' feature."
+        "cargo:warning=The 'bundled' feature is deprecated. Please use the 'vendored' feature."
     );
 
     link_against_cxx_stdlib();
@@ -49,13 +49,13 @@ fn main() {
     generate_bindings();
 }
 
-#[cfg(feature = "bundled")]
+#[cfg(feature = "vendored")]
 fn build_from_source() {
     let artifacts = z3_src::build();
     artifacts.print_cargo_metadata();
 }
 
-#[cfg(not(feature = "bundled"))]
+#[cfg(not(feature = "vendored"))]
 fn build_from_source() {
     unreachable!()
 }
@@ -262,14 +262,14 @@ fn generate_bindings() {
     let header = if let Ok(h) = env::var("Z3_SYS_Z3_HEADER") {
         PathBuf::from(h)
     } else {
-        #[cfg(feature = "bundled")]
+        #[cfg(feature = "vendored")]
         {
             z3_src::build().include_dir().join("z3.h")
         }
-        #[cfg(not(feature = "bundled"))]
+        #[cfg(not(feature = "vendored"))]
         panic!(
             "Set Z3_SYS_Z3_HEADER to the path of z3.h, \
-             or enable the `bundled` feature to use the bundled Z3 source"
+             or enable the `vendored` feature to use the vendored Z3 source"
         )
     };
     let include_dir = header.parent().unwrap();

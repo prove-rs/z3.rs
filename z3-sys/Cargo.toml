@@ -33,11 +33,10 @@ regex = {version = "1", optional = true}
 doctest = false
 
 [features]
-bundled = ["dep:z3-src"]                                     # Build Z3 from bundled source via z3-src.
+vendored = ["dep:z3-src"]                                     # Build Z3 from vendored source via z3-src.
 vcpkg = ["dep:vcpkg"]                                        # Build Z3 via vcpkg.
 gh-release = ["dep:reqwest", "dep:serde_json", "dep:zip"]   # Download pre-compiled Z3 lib from GitHub release for supported platforms.
 bindgen = ["dep:bindgen", "dep:proc-macro2", "dep:prettyplease", "dep:quote", "dep:syn", "dep:regex"]  # Regenerate functions.rs from local Z3 headers at build time.
 
-# Legacy feature for short term compatibility
-static-link-z3 = ["bundled", "deprecated-static-link-z3"]
-deprecated-static-link-z3 = []
+# Deprecated alias for `vendored`; will be removed in a future release.
+bundled = ["vendored"]

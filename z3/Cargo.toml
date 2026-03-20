@@ -17,12 +17,12 @@ edition = "2024"
 
 [features]
 default = ["z3_4_8_15"]
-bundled = ["z3-sys/bundled"]
+vendored = ["z3-sys/vendored"]
 vcpkg = ["z3-sys/vcpkg"]
 gh-release = ["z3-sys/gh-release"]
 
-# This is a legacy feature here for short term compatibility.
-static-link-z3 = ["z3-sys/bundled", "z3-sys/deprecated-static-link-z3"]
+# Deprecated alias for `vendored`; will be removed in a future release.
+bundled = ["z3-sys/bundled"]
 
 # Features requiring a minimum Z3 version.
 # By default we use features present in 4.8.13 and up, but these features
