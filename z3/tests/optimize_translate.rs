@@ -11,8 +11,8 @@ fn test_optimize_translate() {
     let opt = with_z3_config(&Config::new(), || {
         let x = sx.recover();
         let opt = Optimize::new();
-        opt.assert(&x.ge(0));
-        opt.assert(&x.le(10));
+        opt.assert(x.ge(0));
+        opt.assert(x.le(10));
         assert_eq!(opt.check(&[]), SatResult::Sat);
         opt.synchronized()
     })
@@ -22,7 +22,7 @@ fn test_optimize_translate() {
     assert_eq!(opt.check(&[]), SatResult::Sat);
 
     // Adding a contradiction in the original context should make it unsat.
-    opt.assert(&x.gt(10));
+    opt.assert(x.gt(10));
     assert_eq!(opt.check(&[]), SatResult::Unsat);
 }
 
@@ -30,14 +30,14 @@ fn test_optimize_translate() {
 fn test_optimize_clone() {
     let x = Int::new_const("x");
     let opt = Optimize::new();
-    opt.assert(&x.ge(0));
-    opt.assert(&x.le(10));
+    opt.assert(x.ge(0));
+    opt.assert(x.le(10));
     opt.minimize(&x);
 
     let cloned = opt.clone();
 
     // Add a stricter lower bound only to the clone.
-    cloned.assert(&x.ge(5));
+    cloned.assert(x.ge(5));
 
     // Original should minimize to 0.
     assert_eq!(opt.check(&[]), SatResult::Sat);

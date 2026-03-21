@@ -1,4 +1,5 @@
 use log::debug;
+use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -55,7 +56,8 @@ impl Optimize {
     /// - [`Optimize::assert_soft()`]
     /// - [`Optimize::maximize()`]
     /// - [`Optimize::minimize()`]
-    pub fn assert(&self, ast: &impl Ast) {
+    pub fn assert<T: Borrow<Bool>>(&self, ast: T) {
+        let ast = ast.borrow();
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -259,6 +261,47 @@ impl Optimize {
         }
     }
 
+    /// Iterate over solutions to the given [`Solvable`], cloning this [`Optimize`].
+    ///
+    /// The [`Optimize`] given to this method is [`Clone`]'d when producing the iterator: no change
+    /// is made to the optimizer passed to the function.
+    ///
+    /// Each iteration calls [`Optimize::check`] with no assumptions and asserts a counterexample
+    /// constraint to exclude the current solution, yielding distinct model instances until the
+    /// optimizer returns `UNSAT` or `UNKNOWN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::Optimize;
+    /// # use z3::ast::*;
+    ///  let opt = Optimize::new();
+    ///  let a = Int::new_const("a");
+    ///  opt.assert(a.le(4));
+    ///  opt.assert(a.ge(0));
+    ///  let solutions: Vec<_> = opt.solutions(a, true).collect();
+    ///  let mut values: Vec<_> = solutions.into_iter().map(|a| a.as_u64().unwrap()).collect();
+    ///  values.sort();
+    ///  assert_eq!(vec![0, 1, 2, 3, 4], values);
+    /// ```
+    ///
+    /// # See also
+    ///
+    /// - [`Optimize::into_solutions`]
+    /// - [`Optimize::check_and_get_model`]
+    pub fn solutions<T: Solvable>(
+        &self,
+        t: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        OptimizeIterator {
+            optimize: self.clone(),
+            ast: t,
+            model_completion,
+        }
+        .fuse()
+    }
+
     /// Consume this [`Optimize`] and iterate over solutions to the given [`Solvable`].
     ///
     /// Each iteration calls [`Optimize::check`] with no assumptions and asserts a
@@ -267,6 +310,7 @@ impl Optimize {
     ///
     /// # See also
     ///
+    /// - [`Optimize::solutions`]
     /// - [`Optimize::check_and_get_model`]
     pub fn into_solutions<T: Solvable>(
         self,
