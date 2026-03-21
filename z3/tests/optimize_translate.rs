@@ -1,4 +1,4 @@
-use z3::ast::{Ast, Int};
+use z3::ast::Int;
 use z3::*;
 
 #[test]
