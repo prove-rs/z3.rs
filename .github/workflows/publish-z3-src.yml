@@ -4,15 +4,23 @@ on:
   pull_request:
     types: [closed]
     branches: [master]
+  workflow_dispatch:
+    inputs:
+      release_branch:
+        description: 'Release branch name (e.g. release/z3-src-416.0.1), used for the git tag message'
+        required: true
 
 jobs:
   publish-z3-src:
     name: Publish z3-src to crates.io
     runs-on: ubuntu-latest
     if: >-
-      github.event.pull_request.merged == true &&
-      startsWith(github.head_ref, 'release/z3-src-') &&
-      github.repository_owner == 'prove-rs'
+      github.repository_owner == 'prove-rs' && (
+        github.event_name == 'workflow_dispatch' || (
+          github.event.pull_request.merged == true &&
+          startsWith(github.head_ref, 'release/z3-src-')
+        )
+      )
     permissions:
       contents: write
       id-token: write
@@ -33,13 +41,15 @@ jobs:
 
       - name: Get crate version
         id: crate_version
+        working-directory: z3-src
         run: |
           VERSION=$(cargo metadata --no-deps --format-version 1 \
             | jq -r '.packages[] | select(.name == "z3-src") | .version')
           echo "version=${VERSION}" >> "$GITHUB_OUTPUT"
 
       - name: Publish z3-src
-        run: cargo publish -p z3-src --allow-dirty
+        working-directory: z3-src
+        run: cargo publish --allow-dirty
         env:
           CARGO_REGISTRY_TOKEN: ${{ steps.auth.outputs.token }}
 
@@ -47,6 +57,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
+          RELEASE_BRANCH="${{ github.head_ref || inputs.release_branch }}"
           git tag -a "z3-src-v${{ steps.crate_version.outputs.version }}" \
-            -m "z3-src v${{ steps.crate_version.outputs.version }} (Z3 ${{ github.head_ref }})"
+            -m "z3-src v${{ steps.crate_version.outputs.version }} (Z3 ${RELEASE_BRANCH})"
           git push origin "z3-src-v${{ steps.crate_version.outputs.version }}"
