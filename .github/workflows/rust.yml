@@ -37,16 +37,13 @@ jobs:
           sudo rm -rf /opt/hostedtoolcache/*/z3* || true
           # Refresh shell cache
           hash -r || true
-      - name: Install Z3 (Ubuntu)
-        if: matrix.os == 'ubuntu-latest'
+      - name: Install Z3
+        if: matrix.os == 'ubuntu-latest' || matrix.os == 'macos-latest'
         id: z3
         uses: cda-tum/setup-z3@v1
         with:
           version: "4.16.0"
           add_to_library_path: true
-      - name: Install Z3 (macOS)
-        if: matrix.os == 'macos-latest'
-        run: brew install z3
       - name: Z3 version
         run: z3 --version
       - name: Run tests
