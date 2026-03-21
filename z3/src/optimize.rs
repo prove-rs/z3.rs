@@ -1,4 +1,5 @@
 use log::debug;
+use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -55,7 +56,8 @@ impl Optimize {
     /// - [`Optimize::assert_soft()`]
     /// - [`Optimize::maximize()`]
     /// - [`Optimize::minimize()`]
-    pub fn assert(&self, ast: &impl Ast) {
+    pub fn assert<T: Borrow<Bool>>(&self, ast: T) {
+        let ast = ast.borrow();
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
     }
 
