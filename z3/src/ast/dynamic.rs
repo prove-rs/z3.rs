@@ -14,7 +14,7 @@ impl Dynamic {
         unsafe { Self::wrap(ast.get_ctx(), ast.get_z3_ast()) }
     }
 
-    pub fn new_const<S: Into<Symbol>>(name: S, sort: &Sort) -> Self {
+    pub fn new_const<S: Into<Symbol>, A>(name: S, sort: &Sort<A>) -> Self {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(
@@ -24,7 +24,7 @@ impl Dynamic {
         }
     }
 
-    pub fn fresh_const(prefix: &str, sort: &Sort) -> Self {
+    pub fn fresh_const<A>(prefix: &str, sort: &Sort<A>) -> Self {
         let ctx = sort.ctx.clone();
         unsafe {
             Self::wrap(&ctx, {
@@ -107,7 +107,7 @@ impl Dynamic {
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Set`
-    pub fn as_set(&self) -> Option<Set> {
+    pub fn as_set<A: Ast>(&self) -> Option<Set<A>> {
         unsafe {
             match self.sort_kind() {
                 SortKind::Array => {

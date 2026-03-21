@@ -3,8 +3,7 @@ use z3_sys::*;
 
 use crate::func_decl::{FuncDeclDomain, FuncDeclReturn};
 use crate::{
-    AstVector, Context, FuncEntry, FuncInterp,
-    ast::{Ast, Dynamic},
+    Context, FuncEntry, FuncInterp,
 };
 
 impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncInterp<A, R> {

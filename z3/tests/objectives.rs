@@ -13,33 +13,20 @@ fn test_optimize_assert_soft_and_get_objectives() {
 
     let opt = Optimize::new();
 
-    let int = Sort::int();
-    let well_ordered_fn = FuncDecl::new("well_ordered_fn", &[&int], &int);
+    let well_ordered_fn: FuncDecl<Vec<Sort<ast::Dynamic>>, ast::Dynamic> =
+        FuncDecl::new("well_ordered_fn", vec![Sort::int().into()], Sort::int().into());
+
+    let apply_fn = |n: u64| well_ordered_fn.apply(vec![ast::Dynamic::from_ast(&ast::Int::from_u64(n))]);
 
     // i < j in the order
     for i in 0..COUNT {
         opt.assert(ast::Bool::and(&[
-            &well_ordered_fn
-                .apply(&[&ast::Int::from_u64(i)])
-                .as_int()
-                .unwrap()
-                .lt(COUNT),
-            &well_ordered_fn
-                .apply(&[&ast::Int::from_u64(i)])
-                .as_int()
-                .unwrap()
-                .ge(0),
+            &apply_fn(i).as_int().unwrap().lt(COUNT),
+            &apply_fn(i).as_int().unwrap().ge(0),
         ]));
         for j in 0..i {
             opt.assert_soft(
-                &well_ordered_fn
-                    .apply(&[&ast::Int::from_u64(i)])
-                    .as_int()
-                    .unwrap()
-                    .lt(well_ordered_fn
-                        .apply(&[&ast::Int::from_u64(j)])
-                        .as_int()
-                        .unwrap()),
+                &apply_fn(i).as_int().unwrap().lt(apply_fn(j).as_int().unwrap()),
                 1,
                 None,
             );
@@ -48,14 +35,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
 
     // incorrect assertion: COUNT-1 > 0
     opt.assert_soft(
-        &well_ordered_fn
-            .apply(&[&ast::Int::from_u64(0)])
-            .as_int()
-            .unwrap()
-            .lt(well_ordered_fn
-                .apply(&[&ast::Int::from_u64(COUNT - 1)])
-                .as_int()
-                .unwrap()),
+        &apply_fn(0).as_int().unwrap().lt(apply_fn(COUNT - 1).as_int().unwrap()),
         1,
         None,
     );
@@ -66,7 +46,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
 
     for i in 0..COUNT {
         let i_new_pos = model
-            .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(i)]), true)
+            .eval(&apply_fn(i), true)
             .unwrap()
             .as_int()
             .unwrap()
@@ -74,7 +54,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
             .unwrap();
         for j in 0..i {
             let j_new_pos = model
-                .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(j)]), true)
+                .eval(&apply_fn(j), true)
                 .unwrap()
                 .as_int()
                 .unwrap()
@@ -87,23 +67,8 @@ fn test_optimize_assert_soft_and_get_objectives() {
     // the COUNT-1 > 0 assertion is not satisfied because doing so would incur
     // the penalty of all other soft assertions
     assert!(
-        model
-            .eval(&well_ordered_fn.apply(&[&ast::Int::from_u64(0)]), true)
-            .unwrap()
-            .as_int()
-            .unwrap()
-            .as_u64()
-            .unwrap()
-            > model
-                .eval(
-                    &well_ordered_fn.apply(&[&ast::Int::from_u64(COUNT - 1)]),
-                    true
-                )
-                .unwrap()
-                .as_int()
-                .unwrap()
-                .as_u64()
-                .unwrap()
+        model.eval(&apply_fn(0), true).unwrap().as_int().unwrap().as_u64().unwrap()
+            > model.eval(&apply_fn(COUNT - 1), true).unwrap().as_int().unwrap().as_u64().unwrap()
     );
 
     // There is a single objective containing soft constraints of the form:
@@ -119,21 +84,21 @@ fn test_optimize_assert_soft_and_get_objectives() {
     assert_eq!(objectives.len(), 1);
     let objective = &objectives[0];
     dbg!(objective);
-    assert_eq!(objective.get_sort(), Sort::real());
+    assert_eq!(objective.get_sort(), Sort::real().into());
     assert_eq!(
         objective.num_children(),
         (0..COUNT).fold(0, |acc, i| acc + (0..i).count()) + 1
     );
 
     for ite in objective.children() {
-        assert_eq!(ite.get_sort(), Sort::real());
+        assert_eq!(ite.get_sort(), Sort::real().into());
         assert_eq!(ite.num_children(), 3);
         let ite_children = ite.children();
         let r#bool = &ite_children[0];
 
         assert_eq!(r#bool.num_children(), 2);
         for child in r#bool.children() {
-            assert_eq!(child.get_sort(), Sort::int());
+            assert_eq!(child.get_sort(), Sort::int().into());
         }
 
         assert_eq!(

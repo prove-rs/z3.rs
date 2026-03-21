@@ -8,7 +8,7 @@ use z3_sys::*;
 pub struct Set<A> {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
-    inner: PhantomData<A>
+    pub(crate) inner: PhantomData<A>,
 }
 
 impl<A: Ast> Set<A> {
@@ -22,7 +22,7 @@ impl<A: Ast> Set<A> {
         }
     }
 
-    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Set {
+    pub fn fresh_const(prefix: &str, eltype: &Sort<A>) -> Set<A> {
         let ctx = &Context::thread_local();
         let sort = Sort::set(eltype);
         unsafe {
@@ -35,7 +35,7 @@ impl<A: Ast> Set<A> {
     }
 
     /// Creates a set that maps the domain to false by default
-    pub fn empty(domain: &Sort) -> Set {
+    pub fn empty(domain: &Sort<A>) -> Set<A> {
         let ctx = &Context::thread_local();
         unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.0, domain.z3_sort).unwrap()) }
     }
@@ -45,10 +45,7 @@ impl<A: Ast> Set<A> {
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn add<A>(&self, element: &A) -> Set
-    where
-        A: Ast,
-    {
+    pub fn add<E: Ast>(&self, element: &E) -> Set<A> {
         unsafe {
             Self::wrap(&self.ctx, {
                 Z3_mk_set_add(self.ctx.z3_ctx.0, self.z3_ast, element.get_z3_ast()).unwrap()
@@ -61,10 +58,7 @@ impl<A: Ast> Set<A> {
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn del<A>(&self, element: &A) -> Set
-    where
-        A: Ast,
-    {
+    pub fn del<E: Ast>(&self, element: &E) -> Set<A> {
         unsafe {
             Self::wrap(&self.ctx, {
                 Z3_mk_set_del(self.ctx.z3_ctx.0, self.z3_ast, element.get_z3_ast()).unwrap()
@@ -77,10 +71,7 @@ impl<A: Ast> Set<A> {
     /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn member<A>(&self, element: &A) -> Bool
-    where
-        A: Ast,
-    {
+    pub fn member<E: Ast>(&self, element: &E) -> Bool {
         unsafe {
             Bool::wrap(&self.ctx, {
                 Z3_mk_set_member(self.ctx.z3_ctx.0, element.get_z3_ast(), self.z3_ast).unwrap()

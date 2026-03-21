@@ -38,7 +38,10 @@ use std::convert::TryInto;
 use z3_sys::*;
 
 use crate::datatype_builder::constructor::{Constructor, ConstructorList};
-use crate::{Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
+use crate::{
+    Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol,
+    ast::{Datatype, Dynamic},
+};
 
 impl DatatypeBuilder {
     pub fn new<S: Into<Symbol>>(name: S) -> Self {
@@ -70,7 +73,7 @@ impl DatatypeBuilder {
 /// Helper to build a single `DatatypeSort` from a raw Z3 sort and its builder.
 fn build_datatype_sort(
     ctx: &Context,
-    sort: Sort,
+    sort: Sort<Datatype>,
     datatype_builder: &DatatypeBuilder,
 ) -> DatatypeSort {
     let num_cs = datatype_builder.constructors.len();
@@ -214,12 +217,12 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
 /// Wrapper which can point to a sort (by value) or to a custom datatype (by name).
 #[derive(Debug)]
 pub enum DatatypeAccessor {
-    Sort(Sort),
+    Sort(Sort<Dynamic>),
     Datatype(Symbol),
 }
 
 impl DatatypeAccessor {
-    pub fn sort<S: Into<Sort>>(s: S) -> Self {
+    pub fn sort<S: Into<Sort<Dynamic>>>(s: S) -> Self {
         Self::Sort(s.into())
     }
 

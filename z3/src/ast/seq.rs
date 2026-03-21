@@ -10,7 +10,7 @@ pub struct Seq {
     pub(crate) z3_ast: Z3_ast,
 }
 impl Seq {
-    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Self {
+    pub fn new_const<S: Into<Symbol>, A>(name: S, eltype: &Sort<A>) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
         unsafe {
@@ -20,7 +20,7 @@ impl Seq {
         }
     }
 
-    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Self {
+    pub fn fresh_const<A>(prefix: &str, eltype: &Sort<A>) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
         unsafe {
@@ -45,7 +45,7 @@ impl Seq {
     /// solver.assert(&concatenated._eq(&any_seq));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn empty(eltype: &Sort) -> Self {
+    pub fn empty<A>(eltype: &Sort<A>) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
         unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.0, sort.z3_sort).unwrap()) }

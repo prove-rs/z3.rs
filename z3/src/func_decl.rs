@@ -224,15 +224,18 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
     }
 
     fn apply_internal<I: Iterator<Item = Dynamic>>(&self, args: I) -> ast::Dynamic {
-        let args: Vec<_> = args.map(|a| a.get_z3_ast()).collect();
+        // Collect Dynamics first to keep them alive (and thus their Z3_ast refcounts > 0)
+        // until after Z3_mk_app returns.
+        let dynamics: Vec<Dynamic> = args.collect();
+        let ast_ptrs: Vec<_> = dynamics.iter().map(|a| a.get_z3_ast()).collect();
 
         unsafe {
             ast::Dynamic::wrap(&self.ctx, {
                 Z3_mk_app(
                     self.ctx.z3_ctx.0,
                     self.z3_func_decl,
-                    args.len().try_into().unwrap(),
-                    args.as_ptr(),
+                    ast_ptrs.len().try_into().unwrap(),
+                    ast_ptrs.as_ptr(),
                 )
                 .unwrap()
             })
@@ -266,7 +269,7 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
     /// Returns `None` if `i >= |domain|`.
     pub fn domain(&self, i: usize) -> Option<SortKind> {
         let z3_ctx = self.ctx.z3_ctx.0;
-        let i = c_uint::try_from(i).unwrap();
+        let i = u32::try_from(i).unwrap();
 
         let domain_size = unsafe { Z3_get_domain_size(z3_ctx, self.z3_func_decl) };
         if i >= domain_size {
@@ -336,19 +339,22 @@ unsafe impl<A: FuncDeclDomain, R: FuncDeclReturn> Translate for FuncDecl<A, R> {
 
 #[cfg(test)]
 mod test {
-    use crate::ast::{Ast, Bool};
+    use crate::ast::{Bool, Dynamic};
     use crate::{Config, FuncDecl, PrepareSynchronized, Sort, with_z3_config};
 
     #[test]
     pub fn test_translate_func_decl() {
-        let f = FuncDecl::new("foo", vec![Sort::bool().as_dyn()], Sort::bool());
+        // Vec<Sort<Dynamic>> domain + Dynamic return
+        let f: FuncDecl<Vec<Sort<Dynamic>>, Dynamic> =
+            FuncDecl::new("foo", vec![Sort::bool().as_dyn()], Sort::bool().as_dyn());
         let ff = f.synchronized();
         with_z3_config(&Config::new(), || {
             let f = ff.recover();
             assert_eq!(f.name(), "foo");
             assert_eq!(f.arity(), 1);
+            // apply returns Dynamic; as_bool() checks sort kind == Bool
             assert!(
-                f.apply(vec![Bool::from_bool(true).as_dyn()])
+                f.apply(vec![Dynamic::from_ast(&Bool::from_bool(true))])
                     .as_bool()
                     .is_some()
             );
@@ -357,13 +363,15 @@ mod test {
 
     #[test]
     pub fn test_translate_func_decl2() {
+        // Typed Sort<Bool> domain + Bool return
         let f = FuncDecl::new("foo", Sort::bool(), Sort::bool());
         let ff = f.synchronized();
         with_z3_config(&Config::new(), || {
             let f = ff.recover();
             assert_eq!(f.name(), "foo");
             assert_eq!(f.arity(), 1);
-            assert!(f.apply(Bool::from_bool(true)).as_bool().is_some());
+            // apply returns Bool directly; just verify it doesn't panic
+            let _ = f.apply(Bool::from_bool(true));
         });
     }
 }
@@ -381,7 +389,7 @@ pub trait DomainFromDynamic: Sized {
 }
 
 impl DomainFromDynamic for () {
-    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+    fn from_dynamic(_v: Vec<Dynamic>) -> Option<Self> {
         Some(())
     }
 }
@@ -391,11 +399,41 @@ impl DomainFromDynamic for Vec<Dynamic> {
     }
 }
 
+impl DomainFromDynamic for Dynamic {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        v.into_iter().next()
+    }
+}
+
+impl DomainFromDynamic for Bool {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        v.into_iter().next()?.as_bool()
+    }
+}
+
+impl DomainFromDynamic for Int {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        v.into_iter().next()?.as_int()
+    }
+}
+
+impl DomainFromDynamic for Real {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        v.into_iter().next()?.as_real()
+    }
+}
+
+impl DomainFromDynamic for BV {
+    fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
+        v.into_iter().next()?.as_bv()
+    }
+}
+
 impl<A: Ast + DomainFromDynamic + Clone + 'static> FuncDeclDomain for Sort<A> {
     type ApplicationParam = A;
 
     fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
-        vec![a.as_dyn()]
+        vec![Dynamic::from_ast(&a)]
     }
 
     fn sorts(&self) -> Vec<Sort<Dynamic>> {
@@ -406,7 +444,7 @@ impl FuncDeclDomain for Vec<Sort<Dynamic>> {
     type ApplicationParam = Vec<Dynamic>;
 
     fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
-        a.iter().map(|x| x.as_dyn()).collect()
+        a
     }
 
     fn sorts(&self) -> Vec<Sort<Dynamic>> {
@@ -420,14 +458,14 @@ macro_rules! impl_func_decl_domain_for_tuples {
         $(
             impl<$($T: DomainFromDynamic),+> DomainFromDynamic for ($($T,)+){
                 fn from_dynamic(v: Vec<Dynamic>) -> Option<Self>{
-                    let [$($T,)+, ..] = v[..];
-                    let a = ($($T::from_dynamic(vec![$T]).unwrap(),)+);
-                    Some(a)
+                    let mut iter = v.into_iter();
+                    Some(($($T::from_dynamic(vec![iter.next()?])?,)+))
                 }
             }
             impl<$($T: FuncDeclDomain),+> FuncDeclDomain for ($($T,)+) {
                 type ApplicationParam = ($($T::ApplicationParam,)+);
 
+                #[allow(non_snake_case)]
                 fn application_args(a: Self::ApplicationParam) -> Vec<Dynamic> {
                     let ($($T,)+) = a;
                     let mut args = Vec::new();
@@ -437,6 +475,7 @@ macro_rules! impl_func_decl_domain_for_tuples {
                     args
                 }
 
+                #[allow(non_snake_case)]
                 fn sorts(&self) -> Vec<Sort<Dynamic>> {
                     let ($($T,)+) = self;
                     let mut sorts = Vec::new();
@@ -512,7 +551,7 @@ impl FuncDeclReturn for Seq {
     }
 }
 
-impl FuncDeclReturn for Set {
+impl FuncDeclReturn for Set<Dynamic> {
     fn process(d: Dynamic) -> Self {
         d.as_set().unwrap()
     }
@@ -536,14 +575,30 @@ impl FuncDeclReturn for Dynamic {
     }
 }
 
+#[cfg(test)]
 mod duh {
-    use crate::ast::{BV, Int};
+    use crate::ast::{BV, Dynamic, Int};
     use crate::{FuncDecl, Sort};
 
-    fn test_func_decl() {
+    #[test]
+    fn test_func_decl_typed() {
+        // Typed tuple-domain API
         let a = FuncDecl::new("f", (Sort::int(), Sort::bitvector(5)), Sort::int());
         let i = Int::new_const("sdf");
         let b = BV::new_const("sf", 5);
-        let b = a.apply((i, b));
+        let _result = a.apply((i, b));
+    }
+
+    #[test]
+    fn test_func_decl_untyped() {
+        // Untyped vec-domain API as a baseline
+        let a: FuncDecl<Vec<Sort<Dynamic>>, Dynamic> = FuncDecl::new(
+            "g",
+            vec![Sort::int().as_dyn(), Sort::bitvector(5).as_dyn()],
+            Sort::int().as_dyn(),
+        );
+        let i = Int::new_const("sdf2");
+        let b = BV::new_const("sf2", 5);
+        let _result = a.apply(vec![Dynamic::from_ast(&i), Dynamic::from_ast(&b)]);
     }
 }

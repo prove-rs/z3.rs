@@ -328,7 +328,7 @@ impl Float {
     }
 
     /// Convert float to another floating-point sort with specified rounding mode.
-    pub fn to_fp_with_rounding_mode(&self, rm: &RoundingMode, target_sort: &crate::Sort) -> Float {
+    pub fn to_fp_with_rounding_mode(&self, rm: &RoundingMode, target_sort: &crate::Sort<crate::ast::Dynamic>) -> Float {
         assert!(matches!(target_sort.kind(), crate::SortKind::FloatingPoint));
         unsafe {
             Float::wrap(

@@ -3,7 +3,9 @@ use std::{ffi::CStr, iter::FusedIterator};
 use z3_sys::*;
 
 use crate::{
-    AstVector, Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Sort, Translate, ast::Ast,
+    AstVector, Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Sort, Translate,
+    ast::{Ast, Dynamic},
+    func_decl::{FuncDeclDomain, FuncDeclReturn},
 };
 
 impl Model {
@@ -43,7 +45,7 @@ impl Model {
 
     /// Returns the interpretation of the given `f` in the `Model`
     /// Returns `None` if there is no interpretation in the `Model`
-    pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp> {
+    pub fn get_func_interp<A: FuncDeclDomain, R: FuncDeclReturn>(&self, f: &FuncDecl<A, R>) -> Option<FuncInterp> {
         if f.arity() == 0 {
             let ret = unsafe {
                 Z3_model_get_const_interp(self.ctx.z3_ctx.0, self.z3_mdl, f.z3_func_decl)
@@ -57,7 +59,7 @@ impl Model {
             match sort_kind {
                 SortKind::Array => {
                     if unsafe { Z3_is_as_array(self.ctx.z3_ctx.0, ret) } {
-                        let fd = unsafe {
+                        let fd: FuncDecl = unsafe {
                             FuncDecl::wrap(
                                 &self.ctx,
                                 Z3_get_as_array_func_decl(self.ctx.z3_ctx.0, ret).unwrap(),
@@ -121,14 +123,14 @@ impl Model {
 
     /// Returns the i-th uninterpreted sort that the model assigns an interpretation to,
     /// or `None` if `i >= self.num_sorts()`.
-    pub fn get_sort(&self, i: u32) -> Option<Sort> {
+    pub fn get_sort(&self, i: u32) -> Option<Sort<Dynamic>> {
         let z3_sort = unsafe { Z3_model_get_sort(self.ctx.z3_ctx.0, self.z3_mdl, i) }?;
         Some(unsafe { Sort::wrap(&self.ctx, z3_sort) })
     }
 
     /// Returns the universe of the given sort (the finite set of values Z3 assigned to it),
     /// or `None` if the sort has no interpretation in the model.
-    pub fn get_sort_universe(&self, sort: &Sort) -> Option<AstVector> {
+    pub fn get_sort_universe(&self, sort: &Sort<Dynamic>) -> Option<AstVector> {
         let z3_av =
             unsafe { Z3_model_get_sort_universe(self.ctx.z3_ctx.0, self.z3_mdl, sort.z3_sort) }?;
         Some(unsafe { AstVector::wrap(&self.ctx, z3_av) })
@@ -144,7 +146,7 @@ impl Model {
     }
 
     /// Returns an iterator over each uninterpreted sort and its universe in the model.
-    pub fn sort_universes(&self) -> impl Iterator<Item = (Sort, AstVector)> + '_ {
+    pub fn sort_universes(&self) -> impl Iterator<Item = (Sort<Dynamic>, AstVector)> + '_ {
         self.sorts().filter_map(|s| {
             let u = self.get_sort_universe(&s)?;
             Some((s, u))
@@ -243,7 +245,7 @@ pub struct SortIter<'a> {
 }
 
 impl Iterator for SortIter<'_> {
-    type Item = Sort;
+    type Item = Sort<Dynamic>;
 
     fn next(&mut self) -> Option<Self::Item> {
         if self.idx >= self.len {
@@ -293,7 +295,7 @@ mod tests {
         use crate::SatResult;
         use crate::{Sort, Symbol, ast::Dynamic};
 
-        let s = Sort::uninterpreted(Symbol::String("S".to_string()));
+        let s = Sort::<Dynamic>::uninterpreted(Symbol::String("S".to_string()));
         let x = Dynamic::new_const("x", &s);
         let y = Dynamic::new_const("y", &s);
 

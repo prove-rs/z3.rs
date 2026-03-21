@@ -1,5 +1,4 @@
-use crate::ast::{Ast, BV, Real, binop};
-use crate::ast::{Bool, unop, varop};
+use crate::ast::{Ast, BV, Bool, Real, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;

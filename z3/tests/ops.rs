@@ -79,7 +79,7 @@ fn test_int_ops() {
 fn test_pow_ret_real() {
     let x = Int::new_const("x");
     let y = x.power(&x);
-    assert!(y.get_sort() == Sort::real());
+    assert!(y.get_sort() == Sort::real().into());
 }
 
 #[test]
@@ -321,17 +321,17 @@ fn test_ast_attributes() {
 
 #[test]
 fn test_func_decl_attributes() {
-    let const_decl = FuncDecl::new("c", &[], &Sort::bool());
+    let const_decl = FuncDecl::new("c", (), Sort::bool());
     assert_eq!(const_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(const_decl.name(), "c");
     assert_eq!(const_decl.arity(), 0);
 
-    let unary_decl = FuncDecl::new("unary", &[&Sort::bool()], &Sort::bool());
+    let unary_decl = FuncDecl::new("unary", Sort::bool(), Sort::bool());
     assert_eq!(unary_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(unary_decl.name(), "unary");
     assert_eq!(unary_decl.arity(), 1);
 
-    let binary_decl = FuncDecl::new("binary", &[&Sort::bool(), &Sort::bool()], &Sort::bool());
+    let binary_decl = FuncDecl::new("binary", (Sort::bool(), Sort::bool()), Sort::bool());
     assert_eq!(binary_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(binary_decl.name(), "binary");
     assert_eq!(binary_decl.arity(), 2);

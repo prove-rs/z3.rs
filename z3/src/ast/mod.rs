@@ -67,7 +67,7 @@ macro_rules! unop {
     };
 }
 
-macro_rules! {
+macro_rules! binop {
     (
         $(
             $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident, $retty:ty ) ;
@@ -188,7 +188,7 @@ pub trait Ast: fmt::Debug {
     }
 
     /// Get the [`Sort`] of the `Ast`.
-    fn get_sort(&self) -> Sort {
+    fn get_sort(&self) -> Sort<Dynamic> {
         unsafe {
             Sort::wrap(
                 self.get_ctx(),
@@ -449,7 +449,7 @@ macro_rules! impl_ast {
             }
 
             #[deprecated = "Please use safe_eq instead"]
-            pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+            pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers<Dynamic, Dynamic>>
             where
                 Self: Sized,
             {
@@ -458,7 +458,7 @@ macro_rules! impl_ast {
 
             /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
             /// match for the two values.
-            pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+            pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers<Dynamic, Dynamic>>
             where
                 Self: Sized,
             {
@@ -610,8 +610,229 @@ impl_ast!(BV);
 impl_from_try_into_dynamic!(BV, as_bv);
 impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
-impl_ast!(Set);
-impl_from_try_into_dynamic!(Set, as_set);
+// Set<A> is generic, so it can't use impl_ast! directly.
+impl<A: Ast> Ast for Set<A> {
+    unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self {
+        Self {
+            ctx: ctx.clone(),
+            z3_ast: {
+                debug!(
+                    "new ast: id = {}, pointer = {:p}",
+                    unsafe { Z3_get_ast_id(ctx.z3_ctx.0, ast) },
+                    ast
+                );
+                unsafe {
+                    Z3_inc_ref(ctx.z3_ctx.0, ast);
+                }
+                ast
+            },
+            inner: std::marker::PhantomData,
+        }
+    }
+
+    fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized,
+    {
+        self.eq(other)
+    }
+
+    fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized,
+    {
+        self.ne(other)
+    }
+
+    fn get_ctx(&self) -> &Context {
+        &self.ctx
+    }
+
+    fn get_z3_ast(&self) -> Z3_ast {
+        self.z3_ast
+    }
+}
+
+impl<A: Ast> Set<A> {
+    pub fn ast_eq<T: IntoAst<Self>>(&self, other: T) -> bool
+    where
+        Self: Sized,
+    {
+        let other = other.into_ast(self);
+        assert_eq!(self.get_ctx(), other.get_ctx());
+        unsafe {
+            Z3_is_eq_ast(
+                self.get_ctx().z3_ctx.0,
+                self.get_z3_ast(),
+                other.get_z3_ast(),
+            )
+        }
+    }
+
+    #[deprecated = "Please use eq instead"]
+    pub fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized,
+    {
+        self.eq(other)
+    }
+
+    pub fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized,
+    {
+        self.eq(other).not()
+    }
+
+    pub fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+    where
+        Self: Sized,
+    {
+        self.safe_eq(other).unwrap()
+    }
+
+    #[deprecated = "Please use safe_eq instead"]
+    pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers<Dynamic, Dynamic>>
+    where
+        Self: Sized,
+    {
+        self.safe_eq(other)
+    }
+
+    pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers<Dynamic, Dynamic>>
+    where
+        Self: Sized,
+    {
+        let other = other.into_ast(self);
+
+        let left_sort = self.get_sort();
+        let right_sort = other.get_sort();
+        match left_sort == right_sort {
+            true => Ok(unsafe {
+                Bool::wrap(self.get_ctx(), {
+                    Z3_mk_eq(
+                        self.get_ctx().z3_ctx.0,
+                        self.get_z3_ast(),
+                        other.get_z3_ast(),
+                    )
+                    .unwrap()
+                })
+            }),
+            false => Err(SortDiffers::new(left_sort, right_sort)),
+        }
+    }
+}
+
+impl<A: Ast, T: IntoAst<Set<A>> + Clone> PartialEq<T> for Set<A> {
+    fn eq(&self, other: &T) -> bool {
+        let other = other.clone().into_ast(self);
+        unsafe { Z3_is_eq_ast(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast) }
+    }
+}
+
+impl<A: Ast> Eq for Set<A> {}
+
+impl<A> From<Set<A>> for Z3_ast {
+    fn from(ast: Set<A>) -> Self {
+        ast.z3_ast
+    }
+}
+
+impl<A> Clone for Set<A> {
+    fn clone(&self) -> Self {
+        debug!(
+            "clone ast: id = {}, pointer = {:p}",
+            unsafe { Z3_get_ast_id(self.ctx.z3_ctx.0, self.z3_ast) },
+            self.z3_ast
+        );
+        unsafe { Z3_inc_ref(self.ctx.z3_ctx.0, self.z3_ast); }
+        Self { ctx: self.ctx.clone(), z3_ast: self.z3_ast, inner: std::marker::PhantomData }
+    }
+}
+
+impl<A> Drop for Set<A> {
+    fn drop(&mut self) {
+        debug!(
+            "drop ast: id = {}, pointer = {:p}",
+            unsafe { Z3_get_ast_id(self.ctx.z3_ctx.0, self.z3_ast) },
+            self.z3_ast
+        );
+        unsafe {
+            Z3_dec_ref(self.ctx.z3_ctx.0, self.z3_ast);
+        }
+    }
+}
+
+impl<A> std::hash::Hash for Set<A> {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        unsafe {
+            let u = Z3_get_ast_hash(self.ctx.z3_ctx.0, self.z3_ast);
+            u.hash(state);
+        }
+    }
+}
+
+impl<A> fmt::Debug for Set<A> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let p = unsafe { Z3_ast_to_string(self.ctx.z3_ctx.0, self.z3_ast) };
+        if p.is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match unsafe { CStr::from_ptr(p) }.to_str() {
+            Ok(s) => write!(f, "{}", s),
+            Err(_) => Result::Err(fmt::Error),
+        }
+    }
+}
+
+impl<A> fmt::Display for Set<A> {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Debug>::fmt(self, f)
+    }
+}
+
+impl<A> From<&Set<A>> for Set<A> {
+    fn from(value: &Self) -> Self {
+        value.clone()
+    }
+}
+
+impl<A: Ast> Solvable for Set<A> {
+    type ModelInstance = Self;
+    fn read_from_model(
+        &self,
+        model: &Model,
+        model_completion: bool,
+    ) -> Option<Self::ModelInstance> {
+        model.eval(self, model_completion)
+    }
+
+    fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
+        model.eq(self.clone()).not()
+    }
+}
+
+// Set<A> → Dynamic (infallible)
+impl<A> From<Set<A>> for Dynamic {
+    fn from(ast: Set<A>) -> Self {
+        unsafe { Dynamic::wrap(&ast.ctx, ast.z3_ast) }
+    }
+}
+
+impl<A> From<&Set<A>> for Dynamic {
+    fn from(ast: &Set<A>) -> Self {
+        unsafe { Dynamic::wrap(&ast.ctx, ast.z3_ast) }
+    }
+}
+
+// Dynamic → Set<A> (fallible)
+impl<A: Ast> TryFrom<Dynamic> for Set<A> {
+    type Error = std::string::String;
+    fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
+        ast.as_set()
+            .ok_or_else(|| format!("Dynamic is not a set: {:?}", ast))
+    }
+}
 impl_ast!(Seq);
 impl_from_try_into_dynamic!(Seq, as_seq);
 impl_ast!(Regexp);

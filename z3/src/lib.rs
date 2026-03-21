@@ -82,7 +82,6 @@
 
 use std::ffi::CString;
 use std::marker::PhantomData;
-use std::rc::Rc;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 

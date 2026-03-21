@@ -1,6 +1,6 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
-use std::{fmt, mem};
+use std::fmt;
 use std::marker::PhantomData;
 use std::ptr::NonNull;
 use z3_sys::*;
@@ -302,8 +302,8 @@ impl Sort<Seq>{
     }
 }
 
-impl Sort<Set>{
-    pub fn set<B>(elt: &Sort<B>) -> Sort<Set> {
+impl<B> Sort<Set<B>>{
+    pub fn set(elt: &Sort<B>) -> Sort<Set<B>> {
         let ctx = &Context::thread_local();
 
         unsafe { Sort::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.0, elt.z3_sort).unwrap()) }
@@ -323,24 +323,19 @@ impl Sort<Array>{
     }
 }
 
-impl<A> Sort<A>{
-    pub(crate) fn as_dyn(&self) -> Sort<Dynamic>{
-        Sort{
-            ctx: self.ctx.clone(),
-            z3_sort: self.z3_sort,
-            phantom: PhantomData::default(),
-        }
+impl<A> Sort<A> {
+    pub fn as_dyn(&self) -> Sort<Dynamic> {
+        unsafe { Sort::wrap(&self.ctx, self.z3_sort) }
     }
 }
 macro_rules! into_dynamic_sort {
     ($t:ty) => {
-        impl From<Sort<$t>> for Sort<Dynamic>{
+        impl From<Sort<$t>> for Sort<Dynamic> {
             fn from(value: Sort<$t>) -> Self {
-                Self{
-                    ctx: value.ctx.clone(),
-                    z3_sort: value.z3_sort,
-                    phantom: PhantomData::default(),
-                }
+                let ctx = value.ctx.clone();
+                let z3_sort = value.z3_sort;
+                std::mem::forget(value);
+                Self { ctx, z3_sort, phantom: PhantomData::default() }
             }
         }
     };
@@ -353,7 +348,14 @@ into_dynamic_sort!(Float);
 into_dynamic_sort!(BV);
 into_dynamic_sort!(String);
 into_dynamic_sort!(Seq);
-into_dynamic_sort!(Set);
+impl<A> From<Sort<Set<A>>> for Sort<Dynamic> {
+    fn from(value: Sort<Set<A>>) -> Self {
+        let ctx = value.ctx.clone();
+        let z3_sort = value.z3_sort;
+        std::mem::forget(value);
+        Self { ctx, z3_sort, phantom: PhantomData::default() }
+    }
+}
 into_dynamic_sort!(Array);
 
 

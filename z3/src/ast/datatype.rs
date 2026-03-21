@@ -10,7 +10,7 @@ pub struct Datatype {
 }
 
 impl Datatype {
-    pub fn new_const<S: Into<Symbol>>(name: S, sort: &Sort) -> Self {
+    pub fn new_const<S: Into<Symbol>, A>(name: S, sort: &Sort<A>) -> Self {
         let ctx = &Context::thread_local();
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);
@@ -22,7 +22,7 @@ impl Datatype {
         }
     }
 
-    pub fn fresh_const(prefix: &str, sort: &Sort) -> Self {
+    pub fn fresh_const<A>(prefix: &str, sort: &Sort<A>) -> Self {
         let ctx = &Context::thread_local();
         assert_eq!(ctx, &sort.ctx);
         assert_eq!(sort.kind(), SortKind::Datatype);

@@ -54,19 +54,19 @@ fn roundtrip_rational_through_real() {
 
 #[test]
 fn sort_of_rational_algebraic_is_real() {
-    assert_eq!(alg(2, 1).get_sort(), Sort::real());
+    assert_eq!(alg(2, 1).get_sort(), Sort::real().into());
 }
 
 #[test]
 fn sort_of_computed_algebraic_is_real() {
     // sqrt(2) is irrational but still lives in the Real sort.
-    assert_eq!(alg(2, 1).root(2).get_sort(), Sort::real());
+    assert_eq!(alg(2, 1).root(2).get_sort(), Sort::real().into());
 }
 
 #[test]
 fn sort_after_arithmetic_is_real() {
     let result = Algebraic::add(&alg(1, 1), &alg(2, 1));
-    assert_eq!(result.get_sort(), Sort::real());
+    assert_eq!(result.get_sort(), Sort::real().into());
 }
 
 #[test]

@@ -320,7 +320,12 @@ impl_try_from_ast_vector!(Real);
 impl_try_from_ast_vector!(Float);
 impl_try_from_ast_vector!(BV);
 impl_try_from_ast_vector!(Array);
-impl_try_from_ast_vector!(Set);
+impl<A: Ast> TryFrom<AstVector> for Vec<Set<A>> {
+    type Error = String;
+    fn try_from(v: AstVector) -> Result<Self, Self::Error> {
+        v.try_into_typed_vec()
+    }
+}
 impl_try_from_ast_vector!(Seq);
 impl_try_from_ast_vector!(Datatype);
 impl_try_from_ast_vector!(AstString);
