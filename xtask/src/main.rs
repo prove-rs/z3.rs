@@ -280,7 +280,11 @@ fn z3_src_patch_pr() -> Result<(), Box<dyn std::error::Error>> {
         .current_dir(&root))?;
 
     run(Command::new("git")
-        .args(["commit", "-m", &format!("chore: release z3-src {new_version}")])
+        .args([
+            "commit",
+            "-m",
+            &format!("chore: release z3-src {new_version}"),
+        ])
         .current_dir(&root))?;
 
     run(Command::new("git")
