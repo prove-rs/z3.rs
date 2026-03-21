@@ -29,6 +29,8 @@ enum CliCommand {
         #[arg(long)]
         package: bool,
     },
+    /// Bump z3-src packaging revision, open a release PR, and trigger CI publish on merge.
+    Z3SrcPatchPr,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -37,6 +39,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
         CliCommand::GenBindings => gen_bindings()?,
         CliCommand::PrepareZ3Src { z3_tag } => prepare_z3_src(&z3_tag)?,
         CliCommand::PublishZ3Src { dry_run, package } => publish_z3_src(dry_run, package)?,
+        CliCommand::Z3SrcPatchPr => z3_src_patch_pr()?,
     }
     Ok(())
 }
@@ -241,6 +244,71 @@ fn publish_z3_src(dry_run: bool, package: bool) -> Result<(), Box<dyn std::error
     println!("Commit the Cargo.toml version bumps and submodule pointer:");
     println!("  git add z3-src/Cargo.toml z3-sys/Cargo.toml z3-src/z3");
     println!("  git commit -m \"chore: release z3-src {crate_version}\"");
+
+    Ok(())
+}
+
+fn z3_src_patch_pr() -> Result<(), Box<dyn std::error::Error>> {
+    let root = workspace_root();
+    let z3_src_toml = root.join("z3-src/Cargo.toml");
+
+    let old_version_str = read_package_version(&z3_src_toml)?;
+    let old_version = Version::parse(&old_version_str)?;
+    let new_version = format!(
+        "{}.{}.{}",
+        old_version.major,
+        old_version.minor,
+        old_version.patch + 1,
+    );
+
+    set_toml_field(
+        &z3_src_toml,
+        &format!("version = \"{old_version_str}\""),
+        &format!("version = \"{new_version}\""),
+    )?;
+
+    println!("Bumped z3-src: {old_version_str} → {new_version}");
+
+    let branch = format!("release/z3-src-{new_version}");
+
+    run(Command::new("git")
+        .args(["checkout", "-b", &branch])
+        .current_dir(&root))?;
+
+    run(Command::new("git")
+        .args(["add", "z3-src/Cargo.toml"])
+        .current_dir(&root))?;
+
+    run(Command::new("git")
+        .args([
+            "commit",
+            "-m",
+            &format!("chore: release z3-src {new_version}"),
+        ])
+        .current_dir(&root))?;
+
+    run(Command::new("git")
+        .args(["push", "-u", "origin", &branch])
+        .current_dir(&root))?;
+
+    run(Command::new("gh")
+        .args([
+            "pr",
+            "create",
+            "--title",
+            &format!("chore: release z3-src {new_version}"),
+            "--body",
+            &format!(
+                "Packaging patch release.\n\n\
+                 Bumps z3-src: {old_version_str} → {new_version}\n\n\
+                 Merge to publish to crates.io."
+            ),
+            "--base",
+            "master",
+            "--head",
+            &branch,
+        ])
+        .current_dir(&root))?;
 
     Ok(())
 }
