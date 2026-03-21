@@ -3,7 +3,7 @@ use z3_sys::*;
 
 use crate::func_decl::{FuncDeclDomain, FuncDeclReturn};
 use crate::{
-    Context, FuncEntry, FuncInterp,
+    AstVector, Context, FuncEntry, FuncInterp,
     ast::{Ast, Dynamic},
 };
 
@@ -36,10 +36,16 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncInterp<A, R> {
         unsafe {
             let v = Z3_mk_ast_vector(self.ctx.z3_ctx.0).unwrap();
             Z3_ast_vector_inc_ref(self.ctx.z3_ctx.0, v);
-            A::application_args(args).iter()
+            A::application_args(args)
+                .iter()
                 .for_each(|a| Z3_ast_vector_push(self.ctx.z3_ctx.0, v, a.z3_ast));
 
-            Z3_func_interp_add_entry(self.ctx.z3_ctx.0, self.z3_func_interp, v, value.get_z3_ast());
+            Z3_func_interp_add_entry(
+                self.ctx.z3_ctx.0,
+                self.z3_func_interp,
+                v,
+                value.get_z3_ast(),
+            );
         }
     }
 
@@ -105,7 +111,7 @@ impl fmt::Debug for FuncInterp {
     }
 }
 
-impl<A: FuncDeclDomain,R> Drop for FuncInterp<A,R> {
+impl<A: FuncDeclDomain, R> Drop for FuncInterp<A, R> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_interp_dec_ref(self.ctx.z3_ctx.0, self.z3_func_interp);

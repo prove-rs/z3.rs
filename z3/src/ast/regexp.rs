@@ -1,6 +1,5 @@
 use crate::Context;
-use crate::ast::{Ast, binop, varop};
-use crate::ast::{IntoAst, unop};
+use crate::ast::Ast;
 use std::ffi::CString;
 use z3_sys::*;
 
@@ -77,8 +76,6 @@ impl Regexp {
 
     /// Creates a regular expression that recognizes this regular expression
     /// n number of times
-    /// Requires Z3 4.8.15 or later.
-    #[cfg(feature = "z3_4_8_15")]
     pub fn power(&self, n: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
@@ -102,8 +99,6 @@ impl Regexp {
     }
 
     /// Creates a regular expression that accepts all singleton sequences of the characters
-    /// Requires Z3 4.8.13 or later.
-    #[cfg(feature = "z3_4_8_13")]
     pub fn allchar() -> Self {
         let ctx = &Context::thread_local();
         unsafe {
@@ -131,7 +126,7 @@ impl Regexp {
         }
     }
 
-    unop! {
+    crate::ast::unop! {
        /// Creates a regular expression that recognizes this regular expression one or more times (e.g. `a+`)
        plus(Z3_mk_re_plus, Self);
        /// Creates a regular expression that recognizes this regular expression any number of times
@@ -143,13 +138,12 @@ impl Regexp {
        /// Creates a regular expression that optionally accepts this regular expression (e.g. `a?`)
        option(Z3_mk_re_option, Self);
     }
-    #[cfg(feature = "z3_4_8_14")]
-    binop! {
+    crate::ast::binop! {
         /// Creates a difference regular expression
         /// Requires Z3 4.8.14 or later.
         diff(Z3_mk_re_diff, Self);
     }
-    varop! {
+    crate::ast::varop! {
        /// Concatenates regular expressions
         concat(Z3_mk_re_concat, Self);
        /// Creates a regular expression that recognizes sequences that any of the regular

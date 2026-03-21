@@ -7,6 +7,156 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.19.15](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.14...z3-v0.19.15) - 2026-03-19
+
+### Added
+
+- Implement Optimize Convenience Methods ([#520](https://github.com/prove-rs/z3.rs/pull/520)) (by @toolCHAINZ) - #520
+
+### Fixed
+
+- {Solver, Optimize}::check_and_get_model no longer take ownership ([#522](https://github.com/prove-rs/z3.rs/pull/522)) (by @toolCHAINZ) - #522
+
+### Other
+
+- add missing docs for Boolean operators and pseudo-boolean constraints ([#527](https://github.com/prove-rs/z3.rs/pull/527)) (by @matth2k) - #527
+- add missing doc comments for Solver::eval() and several Ast impls ([#526](https://github.com/prove-rs/z3.rs/pull/526)) (by @matth2k) - #526
+- Optimize::get_assertions ([#523](https://github.com/prove-rs/z3.rs/pull/523)) (by @toolCHAINZ) - #523
+
+### Contributors
+
+* @matth2k
+* @toolCHAINZ
+
+## [0.19.14](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.13...z3-v0.19.14) - 2026-03-13
+
+### Other
+
+- internal refactoring of datatype builder ([#517](https://github.com/prove-rs/z3.rs/pull/517)) (by @toolCHAINZ) - #517
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.13](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.12...z3-v0.19.13) - 2026-03-06
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.12](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.11...z3-v0.19.12) - 2026-03-04
+
+### Added
+
+- add `with` method to Tactic ([#511](https://github.com/prove-rs/z3.rs/pull/511)) (by @longlinh123456) - #511
+
+### Contributors
+
+* @longlinh123456
+
+## [0.19.11](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.10...z3-v0.19.11) - 2026-02-27
+
+### Added
+
+- add high-level API for model sorts/sort universes ([#506](https://github.com/prove-rs/z3.rs/pull/506)) (by @toolCHAINZ) - #506
+
+### Fixed
+
+- standardize AstVector display/debug impl ([#508](https://github.com/prove-rs/z3.rs/pull/508)) (by @toolCHAINZ) - #508
+
+### Other
+
+- FusedIterator and ExactSizeIterator for model/SortIter ([#509](https://github.com/prove-rs/z3.rs/pull/509)) (by @toolCHAINZ) - #509
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.10](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.9...z3-v0.19.10) - 2026-02-24
+
+### Added
+
+- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ, @NikolajBjorner) - #500
+
+### Contributors
+
+* @toolCHAINZ
+* @NikolajBjorner
+
+## [0.19.9](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.8...z3-v0.19.9) - 2026-02-21
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.8](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.7...z3-v0.19.8) - 2026-02-13
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.7](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.6...z3-v0.19.7) - 2025-12-27
+
+### Added
+
+- Add check_and_get_model method to Solver ([#484](https://github.com/prove-rs/z3.rs/pull/484)) (by @toolCHAINZ) - #484
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.6](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.5...z3-v0.19.6) - 2025-12-10
+
+### Added
+
+- impl Sum and Product for Int and Real ([#479](https://github.com/prove-rs/z3.rs/pull/479)) (by @toolCHAINZ) - #479
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.5](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.4...z3-v0.19.5) - 2025-11-20
+
+### Other
+
+- remove unused imports in z3::ast and use absolute paths in macros ([#471](https://github.com/prove-rs/z3.rs/pull/471)) (by @lixitrixi) - #471
+
+### Contributors
+
+* @lixitrixi
+
+## [0.19.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.3...z3-v0.19.4) - 2025-11-17
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.2...z3-v0.19.3) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
+## [0.19.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.1...z3-v0.19.2) - 2025-10-21
+
+### Added
+
+- Add `Datatype::update_field`, `FuncDecl::domain`, `FuncDecl::range` ([#455](https://github.com/prove-rs/z3.rs/pull/455)) (by @willcrichton) - #455
+- impl Default for Solver, Optimize, and Parser ([#456](https://github.com/prove-rs/z3.rs/pull/456)) (by @toolCHAINZ) - #456
+
+### Contributors
+
+* @willcrichton
+* @toolCHAINZ
+
 ## [0.19.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.0...z3-v0.19.1) - 2025-09-26
 
 ### Added

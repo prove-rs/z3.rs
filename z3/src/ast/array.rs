@@ -134,6 +134,6 @@ impl Array {
         // python:
         // is_app_of(a, Z3_OP_CONST_ARRAY)
         // >> is_app(a) and a.decl().kind() == Z3_OP_CONST_ARRAY
-        self.is_app() && matches!(self.decl().kind(), DeclKind::CONST_ARRAY)
+        self.is_app() && matches!(self.decl().kind(), DeclKind::ConstArray)
     }
 }

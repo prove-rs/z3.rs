@@ -1,5 +1,5 @@
 use crate::ast::{Ast, BV, Real, binop};
-use crate::ast::{Bool, IntoAst, unop, varop};
+use crate::ast::{Bool, unop, varop};
 use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::CString;
@@ -28,6 +28,7 @@ impl Int {
         }
     }
 
+    /// Declare and create a fresh Integer uninterpreted constant with name `prefix`.
     pub fn fresh_const(prefix: &str) -> Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();
@@ -40,12 +41,14 @@ impl Int {
         }
     }
 
+    /// Create an AST node representing the integer value `i`.
     pub fn from_i64(i: i64) -> Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();
         unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort).unwrap()) }
     }
 
+    /// Create an AST node representing the integer value `u`.
     pub fn from_u64(u: u64) -> Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();

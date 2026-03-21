@@ -93,7 +93,7 @@ impl Dynamic {
     /// Returns `None` if the `Dynamic` is not actually a `BV`
     pub fn as_bv(&self) -> Option<BV> {
         match self.sort_kind() {
-            SortKind::BV => Some(unsafe { BV::wrap(&self.ctx, self.z3_ast) }),
+            SortKind::Bv => Some(unsafe { BV::wrap(&self.ctx, self.z3_ast) }),
             _ => None,
         }
     }

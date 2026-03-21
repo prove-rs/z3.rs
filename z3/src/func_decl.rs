@@ -109,7 +109,7 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -130,7 +130,7 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -151,7 +151,7 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap(),
+                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -169,7 +169,12 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
     pub fn tree_order<T: Borrow<Sort<C>>, C>(a: T, id: usize) -> Self {
         let a = a.borrow();
         let ctx = &a.ctx;
-        unsafe { Self::wrap(ctx, Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+            )
+        }
     }
 
     /// Create a transitive closure [`FuncDecl`] "Special Relation" over the given [`FuncDecl`].
@@ -255,6 +260,37 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
             }
         }
     }
+
+    /// Returns the kind of the `i`-th domain (parameter) of this `FuncDecl`.
+    ///
+    /// Returns `None` if `i >= |domain|`.
+    pub fn domain(&self, i: usize) -> Option<SortKind> {
+        let z3_ctx = self.ctx.z3_ctx.0;
+        let i = c_uint::try_from(i).unwrap();
+
+        let domain_size = unsafe { Z3_get_domain_size(z3_ctx, self.z3_func_decl) };
+        if i >= domain_size {
+            return None;
+        }
+
+        Some(unsafe {
+            Z3_get_sort_kind(
+                z3_ctx,
+                Z3_get_domain(z3_ctx, self.z3_func_decl, i).expect("cannot get domain of FuncDecl"),
+            )
+        })
+    }
+
+    /// Returns the kind of range (output) of this `FuncDecl`.
+    pub fn range(&self) -> SortKind {
+        let z3_ctx = self.ctx.z3_ctx.0;
+        unsafe {
+            Z3_get_sort_kind(
+                z3_ctx,
+                Z3_get_range(z3_ctx, self.z3_func_decl).expect("cannot get range of FuncDecl"),
+            )
+        }
+    }
 }
 
 impl<A: FuncDeclDomain, R> fmt::Display for FuncDecl<A, R> {
@@ -311,7 +347,11 @@ mod test {
             let f = ff.recover();
             assert_eq!(f.name(), "foo");
             assert_eq!(f.arity(), 1);
-            assert!(f.apply(vec![Bool::from_bool(true).as_dyn()]).as_bool().is_some());
+            assert!(
+                f.apply(vec![Bool::from_bool(true).as_dyn()])
+                    .as_bool()
+                    .is_some()
+            );
         });
     }
 
@@ -336,7 +376,7 @@ pub trait FuncDeclDomain {
     fn sorts(&self) -> Vec<Sort<Dynamic>>;
 }
 
-pub trait DomainFromDynamic: Sized{
+pub trait DomainFromDynamic: Sized {
     fn from_dynamic(v: Vec<Dynamic>) -> Option<Self>;
 }
 

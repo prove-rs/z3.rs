@@ -3,3 +3,4 @@ Cargo.lock
 *~
 .z3-trace
 *.sln
+.DS_Store

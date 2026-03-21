@@ -1,4 +1,3 @@
-use crate::ast::IntoAst;
 use crate::ast::{Ast, Bool, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;

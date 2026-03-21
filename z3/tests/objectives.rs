@@ -18,7 +18,7 @@ fn test_optimize_assert_soft_and_get_objectives() {
 
     // i < j in the order
     for i in 0..COUNT {
-        opt.assert(&ast::Bool::and(&[
+        opt.assert(ast::Bool::and(&[
             &well_ordered_fn
                 .apply(&[&ast::Int::from_u64(i)])
                 .as_int()

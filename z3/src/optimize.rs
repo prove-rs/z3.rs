@@ -1,12 +1,15 @@
 use log::debug;
+use std::borrow::Borrow;
 use std::convert::TryInto;
 use std::ffi::{CStr, CString};
 use std::fmt;
+use std::iter::FusedIterator;
 
 use z3_sys::*;
 
+use crate::solver::Solvable;
 use crate::{
-    Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
+    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol, Translate,
     ast::{Ast, Bool, Dynamic},
 };
 
@@ -46,14 +49,15 @@ impl Optimize {
         &self.ctx
     }
 
-    /// Assert hard constraint to the optimization context.
+    /// Add a hard constraint to the optimization context.
     ///
     /// # See also:
     ///
     /// - [`Optimize::assert_soft()`]
     /// - [`Optimize::maximize()`]
     /// - [`Optimize::minimize()`]
-    pub fn assert(&self, ast: &impl Ast) {
+    pub fn assert<T: Borrow<Bool>>(&self, ast: T) {
+        let ast = ast.borrow();
         unsafe { Z3_optimize_assert(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
     }
 
@@ -114,7 +118,7 @@ impl Optimize {
         // https://github.com/Z3Prover/z3/blob/09f911d8a84cd91988e5b96b69485b2a9a2edba3/src/opt/opt_context.cpp#L118-L120
         assert!(matches!(
             ast.get_sort().kind(),
-            SortKind::Int | SortKind::Real | SortKind::BV
+            SortKind::Int | SortKind::Real | SortKind::Bv
         ));
         unsafe { Z3_optimize_maximize(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
     }
@@ -128,7 +132,7 @@ impl Optimize {
     pub fn minimize(&self, ast: &impl Ast) {
         assert!(matches!(
             ast.get_sort().kind(),
-            SortKind::Int | SortKind::Real | SortKind::BV
+            SortKind::Int | SortKind::Real | SortKind::Bv
         ));
         unsafe { Z3_optimize_minimize(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
     }
@@ -154,24 +158,12 @@ impl Optimize {
     ///
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        if let Some(z3_unsat_core) =
-            unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) }
-        {
-            let len = unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.0, z3_unsat_core) };
-
-            let mut unsat_core = Vec::with_capacity(len as usize);
-
-            for i in 0..len {
-                let elem =
-                    unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_unsat_core, i).unwrap() };
-                let elem = unsafe { Bool::wrap(&self.ctx, elem) };
-                unsat_core.push(elem);
-            }
-
-            unsat_core
-        } else {
-            vec![]
-        }
+        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) })
+        else {
+            return vec![];
+        };
+        let av = unsafe { AstVector::wrap(&self.ctx, raw) };
+        av.try_into().expect("unsat core contains only Bool")
     }
 
     /// Create a backtracking point.
@@ -236,21 +228,8 @@ impl Optimize {
     ///
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic> {
-        let (z3_objectives, len) = unsafe {
-            let objectives = Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt).unwrap();
-            let len = Z3_ast_vector_size(self.ctx.z3_ctx.0, objectives);
-            (objectives, len)
-        };
-
-        let mut objectives = Vec::with_capacity(len as usize);
-
-        for i in 0..len {
-            let elem = unsafe { Z3_ast_vector_get(self.ctx.z3_ctx.0, z3_objectives, i).unwrap() };
-            let elem = unsafe { Dynamic::wrap(&self.ctx, elem) };
-            objectives.push(elem);
-        }
-
-        objectives
+        let raw = unsafe { Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt).unwrap() };
+        unsafe { AstVector::wrap(&self.ctx, raw) }.to_vec()
     }
 
     /// Retrieve a string that describes the last status returned by [`Optimize::check()`].
@@ -281,6 +260,132 @@ impl Optimize {
             )
         }
     }
+
+    /// Iterate over solutions to the given [`Solvable`], cloning this [`Optimize`].
+    ///
+    /// The [`Optimize`] given to this method is [`Clone`]'d when producing the iterator: no change
+    /// is made to the optimizer passed to the function.
+    ///
+    /// Each iteration calls [`Optimize::check`] with no assumptions and asserts a counterexample
+    /// constraint to exclude the current solution, yielding distinct model instances until the
+    /// optimizer returns `UNSAT` or `UNKNOWN`.
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::Optimize;
+    /// # use z3::ast::*;
+    ///  let opt = Optimize::new();
+    ///  let a = Int::new_const("a");
+    ///  opt.assert(a.le(4));
+    ///  opt.assert(a.ge(0));
+    ///  let solutions: Vec<_> = opt.solutions(a, true).collect();
+    ///  let mut values: Vec<_> = solutions.into_iter().map(|a| a.as_u64().unwrap()).collect();
+    ///  values.sort();
+    ///  assert_eq!(vec![0, 1, 2, 3, 4], values);
+    /// ```
+    ///
+    /// # See also
+    ///
+    /// - [`Optimize::into_solutions`]
+    /// - [`Optimize::check_and_get_model`]
+    pub fn solutions<T: Solvable>(
+        &self,
+        t: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        OptimizeIterator {
+            optimize: self.clone(),
+            ast: t,
+            model_completion,
+        }
+        .fuse()
+    }
+
+    /// Consume this [`Optimize`] and iterate over solutions to the given [`Solvable`].
+    ///
+    /// Each iteration calls [`Optimize::check`] with no assumptions and asserts a
+    /// counterexample constraint to exclude the current solution, yielding all
+    /// distinct model instances until the optimizer returns `UNSAT` or `UNKNOWN`.
+    ///
+    /// # See also
+    ///
+    /// - [`Optimize::solutions`]
+    /// - [`Optimize::check_and_get_model`]
+    pub fn into_solutions<T: Solvable>(
+        self,
+        t: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        OptimizeIterator {
+            optimize: self,
+            ast: t,
+            model_completion,
+        }
+        .fuse()
+    }
+
+    /// Check the optimizer and, if satisfiable, return a single model instance for `t`.
+    ///
+    /// Combines `check(&[])` + `get_model()` + `Solvable::read_from_model`.
+    /// Returns `Some(instance)` on `Sat` with successful model extraction; `None` otherwise.
+    ///
+    /// # See also
+    ///
+    /// - [`Optimize::into_solutions`]
+    pub fn check_and_get_model<T: Solvable>(
+        &self,
+        t: T,
+        model_completion: bool,
+    ) -> Option<T::ModelInstance> {
+        match self.check(&[]) {
+            SatResult::Sat => {
+                let model = self.get_model()?;
+                t.read_from_model(&model, model_completion)
+            }
+            _ => None,
+        }
+    }
+
+    /// Return all assertions currently in the optimizer.
+    pub fn get_assertions(&self) -> Vec<Bool> {
+        let av = unsafe {
+            AstVector::wrap(
+                &self.ctx,
+                Z3_optimize_get_assertions(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
+            )
+        };
+        av.try_into().expect("solver assertions are always Bool")
+    }
+}
+
+struct OptimizeIterator<T> {
+    optimize: Optimize,
+    ast: T,
+    model_completion: bool,
+}
+
+impl<T: Solvable> Iterator for OptimizeIterator<T> {
+    type Item = T::ModelInstance;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.optimize.check(&[]) {
+            SatResult::Sat => {
+                let model = self.optimize.get_model()?;
+                let instance = self.ast.read_from_model(&model, self.model_completion)?;
+                let counterexample = self.ast.generate_constraint(&instance);
+                self.optimize.assert(&counterexample);
+                Some(instance)
+            }
+            _ => None,
+        }
+    }
+}
+
+impl Default for Optimize {
+    fn default() -> Self {
+        Self::new()
+    }
 }
 
 impl fmt::Display for Optimize {
@@ -305,6 +410,25 @@ impl fmt::Debug for Optimize {
 impl Drop for Optimize {
     fn drop(&mut self) {
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
+    }
+}
+
+unsafe impl Translate for Optimize {
+    fn translate(&self, dest: &Context) -> Optimize {
+        unsafe {
+            Optimize::wrap(
+                dest,
+                Z3_optimize_translate(self.ctx.z3_ctx.0, self.z3_opt, dest.z3_ctx.0).unwrap(),
+            )
+        }
+    }
+}
+
+/// Creates a new [`Optimize`] with the same assertions, objectives, and parameters
+/// as the original
+impl Clone for Optimize {
+    fn clone(&self) -> Self {
+        self.translate(&Context::thread_local())
     }
 }
 

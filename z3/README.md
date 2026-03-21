@@ -28,7 +28,7 @@ $ cargo add z3
 **Note:** This library has a dependency on Z3.
 
 There are 4 ways for this crate to currently find Z3, controlled by the feature
-flags `bundled`, `vcpkg` and `gh-release`.
+flags `vendored`, `vcpkg` and `gh-release`.
 
 This might look like:
 
@@ -69,14 +69,37 @@ Z3_SYS_Z3_HEADER = "/opt/homebrew/include/z3.h"
 ```
 
 
-#### 2. Bundled: Use a locally bundled copy of Z3
+#### 2. Vendored: Build Z3 from source
 
-Enabling the `bundled` feature will use `cmake` to build and statically
-link Z3. This feature, as is, is only usable when `z3` or `z3-sys` is used
-as a `git` dependency, as it assumes the existence of a `git submodule` for
-Z3. Users wishing to use this feature with the release of `z3` or `z3-sys` on
-crates.io must set `Z3_SYS_BUNDLED_DIR_OVERRIDE` to point to
-their own checkout of Z3.
+Enabling the `vendored` feature will use `cmake` to build and statically
+link Z3 from source. The Z3 source tree is shipped inside the `z3-src` crate
+and compiled locally — no network access is required at build time.
+(`bundled` is a deprecated alias for `vendored`.)
+
+**Using your own Z3 checkout:** Set `Z3_SRC_SOURCE_DIR` to the
+**absolute path** of a Z3 source tree:
+
+```bash
+Z3_SRC_SOURCE_DIR=/absolute/path/to/z3 cargo build
+```
+
+To use a path relative to your project root, add the following to your
+project's `.cargo/config.toml`. The `relative = true` key tells Cargo to
+resolve the path relative to the config file's location rather than as an
+absolute path:
+
+```toml
+[env]
+Z3_SRC_SOURCE_DIR = { value = "path/to/z3", relative = true }
+```
+
+**Note:** A `z3` directory in your own project or workspace is **not**
+picked up automatically. Even if you have a Z3 git submodule in your repo,
+you must point `Z3_SRC_SOURCE_DIR` at it explicitly.
+
+**Pinning a Z3 version without a source checkout:** The `gh-release` feature
+(see below) lets you pin a specific Z3 version via `Z3_SYS_Z3_VERSION`
+without managing a source tree yourself.
 
 #### 3. VCPKG: Use a copy of Z3 installed via vcpkg
 

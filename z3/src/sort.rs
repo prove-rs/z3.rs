@@ -75,8 +75,8 @@ impl<A> Sort<A> {
     ) -> (Sort<Dynamic>, Vec<FuncDecl<(), Dynamic>>, Vec<FuncDecl<Sort<Dynamic>, Bool>>) {
         let ctx = &Context::thread_local();
         let enum_names: Vec<_> = enum_names.iter().map(|s| s.as_z3_symbol()).collect();
-        let mut enum_consts = vec![std::ptr::null_mut(); enum_names.len()];
-        let mut enum_testers = vec![std::ptr::null_mut(); enum_names.len()];
+        let mut enum_consts = vec![std::ptr::null_mut::<_Z3_func_decl>(); enum_names.len()];
+        let mut enum_testers = vec![std::ptr::null_mut::<_Z3_func_decl>(); enum_names.len()];
 
         let sort = unsafe {
             Sort::wrap(
@@ -86,8 +86,8 @@ impl<A> Sort<A> {
                     name.as_z3_symbol(),
                     enum_names.len().try_into().unwrap(),
                     enum_names.as_ptr(),
-                    enum_consts.as_mut_ptr(),
-                    enum_testers.as_mut_ptr(),
+                    enum_consts.as_mut_ptr() as *mut Z3_func_decl,
+                    enum_testers.as_mut_ptr() as *mut Z3_func_decl,
                 )
                 .unwrap(),
             )

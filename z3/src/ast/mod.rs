@@ -26,6 +26,10 @@ mod seq;
 mod set;
 mod string;
 
+// New AST modules for extended API coverage
+pub mod algebraic;
+pub mod polynomial;
+
 pub use array::Array;
 pub use bool::Bool;
 pub use bv::BV;
@@ -39,6 +43,10 @@ pub use rounding_mode::RoundingMode;
 pub use seq::Seq;
 pub use set::Set;
 pub use string::String;
+
+// Export new AST types
+pub use algebraic::Algebraic;
+pub use polynomial::Polynomial;
 
 macro_rules! unop {
     (
@@ -59,7 +67,7 @@ macro_rules! unop {
     };
 }
 
-macro_rules! binop {
+macro_rules! {
     (
         $(
             $( #[ $attr:meta ] )* $f:ident ( $z3fn:ident, $retty:ty ) ;
@@ -67,7 +75,7 @@ macro_rules! binop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<T: IntoAst<Self>>(&self, other: T) -> $retty {
+            pub fn $f<T: crate::ast::IntoAst<Self>>(&self, other: T) -> $retty {
                 let ast = other.into_ast(self);
                 unsafe {
                     <$retty>::wrap(&self.ctx, {
@@ -87,7 +95,7 @@ macro_rules! trinop {
     ) => {
         $(
             $( #[ $attr ] )*
-            pub fn $f<A: Into<$retty>, B: IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
+            pub fn $f<A: Into<$retty>, B: crate::ast::IntoAst<$retty>>(&self, a: A, b: B) -> $retty {
                 let a = a.into();
                 let b = b.into_ast(&a);
                 unsafe {
@@ -180,10 +188,7 @@ pub trait Ast: fmt::Debug {
     }
 
     /// Get the [`Sort`] of the `Ast`.
-    fn get_sort(&self) -> Sort<Self>
-    where
-        Self: Sized,
-    {
+    fn get_sort(&self) -> Sort {
         unsafe {
             Sort::wrap(
                 self.get_ctx(),
@@ -333,10 +338,6 @@ pub trait Ast: fmt::Debug {
             );
         }
     }
-
-    fn as_dyn(&self) -> Dynamic {
-        unsafe { Dynamic::wrap(&self.get_ctx(), self.get_z3_ast()) }
-    }
 }
 
 /// Turns a piece of data into a Z3 [`Ast`], with an existing piece
@@ -448,10 +449,7 @@ macro_rules! impl_ast {
             }
 
             #[deprecated = "Please use safe_eq instead"]
-            pub fn _safe_eq<T: IntoAst<Self>>(
-                &self,
-                other: T,
-            ) -> Result<Bool, SortDiffers<Self, Self>>
+            pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
             where
                 Self: Sized,
             {
@@ -460,10 +458,7 @@ macro_rules! impl_ast {
 
             /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
             /// match for the two values.
-            pub fn safe_eq<T: IntoAst<Self>>(
-                &self,
-                other: T,
-            ) -> Result<Bool, SortDiffers<Self, Self>>
+            pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
             where
                 Self: Sized,
             {
@@ -598,16 +593,6 @@ macro_rules! impl_from_try_into_dynamic {
                     .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
             }
         }
-
-        impl DomainFromDynamic for $ast {
-            fn from_dynamic(v: Vec<Dynamic>) -> Option<Self> {
-                if v.len() == 1{
-                    Self::try_from(v[0].clone()).ok()
-                }else{
-                    None
-                }
-            }
-        }
     };
 }
 
@@ -636,6 +621,7 @@ impl_from_try_into_dynamic!(Datatype, as_datatype);
 
 impl_ast!(Dynamic);
 impl_ast!(RoundingMode);
+impl_ast!(Algebraic);
 
 pub fn atmost<'a, I: IntoIterator<Item = &'a Bool>>(args: I, k: u32) -> Bool {
     let args: Vec<_> = args.into_iter().map(|f| f.z3_ast).collect();
@@ -952,4 +938,3 @@ impl fmt::Display for IsNotApp {
 }
 
 pub(crate) use {binop, trinop, unop, varop};
-use crate::func_decl::DomainFromDynamic;
