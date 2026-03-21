@@ -8,7 +8,7 @@ use z3_sys::*;
 
 use crate::solver::Solvable;
 use crate::{
-    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
+    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol, Translate,
     ast::{Ast, Bool, Dynamic},
 };
 
@@ -366,6 +366,25 @@ impl fmt::Debug for Optimize {
 impl Drop for Optimize {
     fn drop(&mut self) {
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
+    }
+}
+
+unsafe impl Translate for Optimize {
+    fn translate(&self, dest: &Context) -> Optimize {
+        unsafe {
+            Optimize::wrap(
+                dest,
+                Z3_optimize_translate(self.ctx.z3_ctx.0, self.z3_opt, dest.z3_ctx.0).unwrap(),
+            )
+        }
+    }
+}
+
+/// Creates a new [`Optimize`] with the same assertions, objectives, and parameters
+/// as the original
+impl Clone for Optimize {
+    fn clone(&self) -> Self {
+        self.translate(&Context::thread_local())
     }
 }
 
