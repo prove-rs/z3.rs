@@ -76,3 +76,84 @@ impl Char {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::{SatResult, Solver};
+
+    #[test]
+    fn test_from_char_is_digit() {
+        let solver = Solver::new();
+        solver.assert(&Char::from_char('5').is_digit());
+        assert_eq!(solver.check(), SatResult::Sat);
+
+        let solver = Solver::new();
+        solver.assert(&Char::from_char('A').is_digit());
+        assert_eq!(solver.check(), SatResult::Unsat);
+    }
+
+    #[test]
+    fn test_from_u32_eq() {
+        let solver = Solver::new();
+        solver.assert(&Char::from_u32('z' as u32).eq(Char::from_char('z')));
+        assert_eq!(solver.check(), SatResult::Sat);
+    }
+
+    #[test]
+    fn test_new_const_and_fresh_const() {
+        let solver = Solver::new();
+        let a = Char::new_const("a");
+        let b = Char::fresh_const("b");
+        solver.assert(&a.eq(b));
+        assert_eq!(solver.check(), SatResult::Sat);
+    }
+
+    #[test]
+    fn test_to_int_roundtrip() {
+        // 'A' has code point 65; to_int should equal Int 65.
+        let solver = Solver::new();
+        let a = Char::from_char('A');
+        solver.assert(&a.to_int().eq(crate::ast::Int::from_i64(65)));
+        assert_eq!(solver.check(), SatResult::Sat);
+    }
+
+    #[test]
+    fn test_char_le() {
+        let solver = Solver::new();
+        solver.assert(&Char::from_char('a').char_le(Char::from_char('z')));
+        assert_eq!(solver.check(), SatResult::Sat);
+
+        let solver = Solver::new();
+        solver.assert(&Char::from_char('z').char_le(Char::from_char('a')));
+        assert_eq!(solver.check(), SatResult::Unsat);
+    }
+
+    #[test]
+    fn test_to_string_length_one() {
+        // to_string() wraps the char in a unit string of length 1.
+        let solver = Solver::new();
+        let s = Char::from_char('x').to_string();
+        solver.assert(&s.length().eq(crate::ast::Int::from_i64(1)));
+        assert_eq!(solver.check(), SatResult::Sat);
+    }
+
+    #[test]
+    fn test_from_bv_roundtrip() {
+        // from_bv(to_bv(c)) should equal c.
+        let solver = Solver::new();
+        let c = Char::from_char('B');
+        let roundtrip = Char::from_bv(&c.to_bv());
+        solver.assert(&c.eq(roundtrip));
+        assert_eq!(solver.check(), SatResult::Sat);
+    }
+
+#[test]
+    fn test_dynamic_as_char() {
+        use crate::ast::Dynamic;
+        let c = Char::from_char('X');
+        let dyn_c = Dynamic::from_ast(&c);
+        assert!(dyn_c.as_char().is_some());
+        assert!(dyn_c.as_int().is_none());
+    }
+}
