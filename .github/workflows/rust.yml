@@ -169,10 +169,17 @@ jobs:
         with:
           pkgs: z3
           triplet: ${{ matrix.vcpkg_triplet }}
-          cache-key: ${{ matrix.os }}
           revision: master
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
+          disable-cache: 'true'
+        env:
+          # Use vcpkg's native GHA binary cache, keyed per-package by ABI hash.
+          # The action's built-in cache keys only on package names/versions, not the
+          # compiler ABI, so it gets stuck serving stale entries after runner image
+          # updates. x-gha derives its key from the ABI hash vcpkg computes at
+          # install time, so it always stays valid.
+          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
       - name: Show default toolchain of rust.
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
