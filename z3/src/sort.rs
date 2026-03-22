@@ -81,6 +81,13 @@ impl Sort {
         }
     }
 
+    pub fn char() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_char_sort(ctx.z3_ctx.0).unwrap())
+        }
+    }
+
     pub fn bitvector(sz: u32) -> Sort {
         let ctx = &Context::thread_local();
 

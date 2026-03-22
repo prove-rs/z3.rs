@@ -1,4 +1,4 @@
-use crate::ast::{Array, Ast, BV, Bool, Datatype, Float, Int, Real, Seq, Set};
+use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set};
 use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
 use z3_sys::*;
@@ -73,6 +73,20 @@ impl Dynamic {
         match self.sort_kind() {
             SortKind::FloatingPoint => Some(unsafe { Float::wrap(&self.ctx, self.z3_ast) }),
             _ => None,
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `Char`
+    pub fn as_char(&self) -> Option<Char> {
+        unsafe {
+            if Z3_is_char_sort(
+                self.ctx.z3_ctx.0,
+                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
+            ) {
+                Some(Char::wrap(&self.ctx, self.z3_ast))
+            } else {
+                None
+            }
         }
     }
 
