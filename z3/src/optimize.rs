@@ -13,6 +13,7 @@ use crate::{
     ast::{Ast, Bool, Dynamic},
 };
 
+#[cfg(feature = "num")]
 use num::{
     bigint::{BigInt, BigUint, Sign},
     rational::BigRational,
@@ -467,6 +468,7 @@ impl_weight! {
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
 }
 
+#[cfg(feature = "num")]
 impl Weight for BigInt {
     fn to_string(&self) -> String {
         assert_ne!(self.sign(), Sign::Minus);
@@ -474,12 +476,14 @@ impl Weight for BigInt {
     }
 }
 
+#[cfg(feature = "num")]
 impl Weight for BigUint {
     fn to_string(&self) -> String {
         self.to_str_radix(10)
     }
 }
 
+#[cfg(feature = "num")]
 impl Weight for BigRational {
     fn to_string(&self) -> String {
         assert_ne!(self.numer().sign(), Sign::Minus);
@@ -503,8 +507,11 @@ macro_rules! impl_sealed {
                 impl Sealed for ($ty, $ty) {}
             )*
 
+            #[cfg(feature = "num")]
             impl Sealed for BigInt {}
+            #[cfg(feature = "num")]
             impl Sealed for BigUint {}
+            #[cfg(feature = "num")]
             impl Sealed for BigRational {}
         }
     };

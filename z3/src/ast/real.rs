@@ -1,6 +1,7 @@
 use crate::ast::Ast;
 use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
+#[cfg(feature = "num")]
 use num::BigRational;
 use std::ffi::{CStr, CString};
 use z3_sys::*;
@@ -11,6 +12,7 @@ pub struct Real {
     pub(crate) z3_ast: Z3_ast,
 }
 impl Real {
+    #[cfg(feature = "num")]
     pub fn from_big_rational(value: &BigRational) -> Real {
         let num = value.numer();
         let den = value.denom();
@@ -145,6 +147,7 @@ impl Real {
     }
 }
 
+#[cfg(feature = "num")]
 impl From<BigRational> for Real {
     fn from(v: BigRational) -> Real {
         Real::from_big_rational(&v)

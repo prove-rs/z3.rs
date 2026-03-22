@@ -1,6 +1,7 @@
 use crate::ast::{Ast, BV, Real, binop};
 use crate::ast::{Bool, unop, varop};
 use crate::{Context, Sort, Symbol};
+#[cfg(feature = "num")]
 use num::BigInt;
 use std::ffi::CString;
 use std::str::FromStr;
@@ -11,6 +12,7 @@ pub struct Int {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
+#[cfg(feature = "num")]
 impl Int {
     pub fn from_big_int(value: &BigInt) -> Int {
         Int::from_str(&value.to_str_radix(10)).unwrap()
@@ -195,6 +197,7 @@ into_int_signed!(i16);
 into_int_signed!(i32);
 into_int_signed!(i64);
 
+#[cfg(feature = "num")]
 impl From<BigInt> for Int {
     fn from(value: BigInt) -> Self {
         Int::from_big_int(&value)

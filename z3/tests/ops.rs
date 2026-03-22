@@ -1,4 +1,3 @@
-use num::abs;
 use z3::{
     DeclKind, FuncDecl, SatResult, Solver, Sort, ast,
     ast::{Array, Ast, AstKind, BV, Bool, Dynamic, Float, Int, Real},
@@ -422,10 +421,10 @@ fn test_eq() {
 #[test]
 fn test_float_ops() {
     let t = Float::from_f64(10.0);
-    assert!(abs(t.add_towards_zero(1.0).simplify().as_f64() - 11.0) < 0.1);
-    assert!(abs(t.sub_towards_zero(1.0).simplify().as_f64() - 9.0) < 0.1);
-    assert!(abs(t.mul_towards_zero(2.0).simplify().as_f64() - 20.0) < 0.1);
-    assert!(abs(t.div_towards_zero(2.0).simplify().as_f64() - 5.0) < 0.1);
+    assert!((t.add_towards_zero(1.0).simplify().as_f64() - 11.0).abs() < 0.1);
+    assert!((t.sub_towards_zero(1.0).simplify().as_f64() - 9.0).abs() < 0.1);
+    assert!((t.mul_towards_zero(2.0).simplify().as_f64() - 20.0).abs() < 0.1);
+    assert!((t.div_towards_zero(2.0).simplify().as_f64() - 5.0).abs() < 0.1);
 }
 
 #[test]

@@ -5,6 +5,7 @@ use std::time::Duration;
 use z3::ast::{Array, Ast, BV, Bool, Int, atleast, atmost};
 use z3::*;
 
+#[cfg(feature = "num")]
 use num::{bigint::BigInt, rational::BigRational};
 use std::str::FromStr;
 
@@ -485,6 +486,7 @@ fn test_arbitrary_size_int() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
+#[cfg(feature = "num")]
 #[test]
 fn test_arbitrary_size_real_from_bigrational() {
     let solver = Solver::new();
@@ -499,6 +501,7 @@ fn test_arbitrary_size_real_from_bigrational() {
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
+#[cfg(feature = "num")]
 #[test]
 fn test_arbitrary_size_int_from_bigint() {
     let solver = Solver::new();
