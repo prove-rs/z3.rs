@@ -78,17 +78,22 @@ jobs:
           ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}
       - name: Install wasm32-unknown-emscripten target
         run: rustup target add wasm32-unknown-emscripten
-      - name: Run sccache-cache
-        uses: mozilla-actions/sccache-action@v0.0.9
+      - name: Install ccache
+        run: sudo apt-get install -y ccache
+      - name: Cache ccache (Z3 C++ compilation)
+        uses: actions/cache@v4
+        with:
+          path: ~/.ccache
+          key: ccache-wasm-${{ github.sha }}
+          restore-keys: ccache-wasm-
+      - uses: Swatinem/rust-cache@v2
       - name: Build z3-sys and z3 with vendored Z3
         run: |
           source ~/emsdk/emsdk_env.sh
           cargo build --target=wasm32-unknown-emscripten --features "vendored,num"
         env:
-          SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
           _EM_CCACHE: "true"
-          EM_COMPILER_WRAPPER: "sccache"
+          EM_COMPILER_WRAPPER: "ccache"
 
   build_with_vendored_z3:
     # if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
