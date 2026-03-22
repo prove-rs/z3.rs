@@ -47,7 +47,7 @@ jobs:
       - name: Z3 version
         run: z3 --version
       - name: Run tests
-        run: cargo test --workspace
+        run: cargo test --workspace --features num
 
   build_on_wasm:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
@@ -72,7 +72,7 @@ jobs:
       - name: Build z3-sys and z3 with vendored Z3
         run: |
           source ~/emsdk/emsdk_env.sh
-          cargo build --target=wasm32-unknown-emscripten --features vendored
+          cargo build --target=wasm32-unknown-emscripten --features "vendored,num"
         env:
           SCCACHE_GHA_ENABLED: "true"
           RUSTC_WRAPPER: "sccache"
@@ -108,7 +108,7 @@ jobs:
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
       - name: Test `z3-sys` and `z3` with vendored linked Z3
-        run: cargo test --workspace --features vendored
+        run: cargo test --workspace --features "vendored,num"
         env:
           SCCACHE_GHA_ENABLED: "true"
           RUSTC_WRAPPER: "sccache"
@@ -159,7 +159,7 @@ jobs:
       - name: Show default toolchain of rust.
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
-        run: cargo test --workspace --features vcpkg
+        run: cargo test --workspace --features "vcpkg,num"
 
   run_clippy:
     runs-on: macos-latest
@@ -168,7 +168,7 @@ jobs:
       - name: Install Z3
         run: brew install z3
       - name: Run clippy
-        run: cargo clippy --workspace --all-targets
+        run: cargo clippy --workspace --all-targets --features num
 
   build_with_gh_release_z3:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
@@ -186,6 +186,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Test `z3-sys` and `z3` with gh-release linked Z3
-        run: cargo test --workspace --features gh-release
+        run: cargo test --workspace --features "gh-release,num"
         env:
           READ_ONLY_GITHUB_TOKEN: ${{ secrets.PUBLIC_REPO_TOKEN }}

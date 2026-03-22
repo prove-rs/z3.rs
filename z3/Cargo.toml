@@ -23,11 +23,13 @@ gh-release = ["z3-sys/gh-release"]
 # Deprecated alias for `vendored`; will be removed in a future release.
 bundled = ["z3-sys/bundled"]
 
+num = ["dep:num"]
+
 [dependencies]
 log = "0.4"
 
 # optional dependencies
-num = "0.4"
+num = { version = "0.4", optional = true }
 
 [dev-dependencies]
 env_logger = "0.11"
