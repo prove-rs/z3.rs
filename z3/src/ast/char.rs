@@ -1,5 +1,5 @@
 use crate::ast::string::String as Z3String;
-use crate::ast::{Ast, Bool, Int, BV, binop, unop};
+use crate::ast::{Ast, BV, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -48,7 +48,10 @@ impl Char {
     /// Converts this character to a unit string (a `String` of length 1).
     pub fn to_string(&self) -> Z3String {
         unsafe {
-            Z3String::wrap(&self.ctx, Z3_mk_seq_unit(self.ctx.z3_ctx.0, self.z3_ast).unwrap())
+            Z3String::wrap(
+                &self.ctx,
+                Z3_mk_seq_unit(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
+            )
         }
     }
 
@@ -148,7 +151,7 @@ mod tests {
         assert_eq!(solver.check(), SatResult::Sat);
     }
 
-#[test]
+    #[test]
     fn test_dynamic_as_char() {
         use crate::ast::Dynamic;
         let c = Char::from_char('X');
