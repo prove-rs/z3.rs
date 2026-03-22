@@ -88,18 +88,18 @@ mod tests {
     #[test]
     fn test_from_char_is_digit() {
         let solver = Solver::new();
-        solver.assert(&Char::from_char('5').is_digit());
+        solver.assert(Char::from_char('5').is_digit());
         assert_eq!(solver.check(), SatResult::Sat);
 
         let solver = Solver::new();
-        solver.assert(&Char::from_char('A').is_digit());
+        solver.assert(Char::from_char('A').is_digit());
         assert_eq!(solver.check(), SatResult::Unsat);
     }
 
     #[test]
     fn test_from_u32_eq() {
         let solver = Solver::new();
-        solver.assert(&Char::from_u32('z' as u32).eq(Char::from_char('z')));
+        solver.assert(Char::from_u32('z' as u32).eq(Char::from_char('z')));
         assert_eq!(solver.check(), SatResult::Sat);
     }
 
@@ -108,7 +108,7 @@ mod tests {
         let solver = Solver::new();
         let a = Char::new_const("a");
         let b = Char::fresh_const("b");
-        solver.assert(&a.eq(b));
+        solver.assert(a.eq(b));
         assert_eq!(solver.check(), SatResult::Sat);
     }
 
@@ -117,18 +117,18 @@ mod tests {
         // 'A' has code point 65; to_int should equal Int 65.
         let solver = Solver::new();
         let a = Char::from_char('A');
-        solver.assert(&a.to_int().eq(crate::ast::Int::from_i64(65)));
+        solver.assert(a.to_int().eq(crate::ast::Int::from_i64(65)));
         assert_eq!(solver.check(), SatResult::Sat);
     }
 
     #[test]
     fn test_char_le() {
         let solver = Solver::new();
-        solver.assert(&Char::from_char('a').char_le(Char::from_char('z')));
+        solver.assert(Char::from_char('a').char_le(Char::from_char('z')));
         assert_eq!(solver.check(), SatResult::Sat);
 
         let solver = Solver::new();
-        solver.assert(&Char::from_char('z').char_le(Char::from_char('a')));
+        solver.assert(Char::from_char('z').char_le(Char::from_char('a')));
         assert_eq!(solver.check(), SatResult::Unsat);
     }
 
@@ -137,7 +137,7 @@ mod tests {
         // to_string() wraps the char in a unit string of length 1.
         let solver = Solver::new();
         let s = Char::from_char('x').to_string();
-        solver.assert(&s.length().eq(crate::ast::Int::from_i64(1)));
+        solver.assert(s.length().eq(crate::ast::Int::from_i64(1)));
         assert_eq!(solver.check(), SatResult::Sat);
     }
 
@@ -147,7 +147,7 @@ mod tests {
         let solver = Solver::new();
         let c = Char::from_char('B');
         let roundtrip = Char::from_bv(&c.to_bv());
-        solver.assert(&c.eq(roundtrip));
+        solver.assert(c.eq(roundtrip));
         assert_eq!(solver.check(), SatResult::Sat);
     }
 
