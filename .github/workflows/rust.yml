@@ -50,7 +50,7 @@ jobs:
         run: cargo test --workspace --features num
 
   build_on_wasm:
-    # if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -91,7 +91,7 @@ jobs:
           CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
 
   build_with_vendored_z3:
-    # if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
         build: [linux, macos, windows]
@@ -121,7 +121,7 @@ jobs:
         uses: actions/cache@v5
         with:
           path: target/debug/build/z3-sys-*
-          key: z3-cmake-windows-${{ hashFiles('Cargo.lock', 'z3-sys/Cargo.toml', 'z3-src/Cargo.toml') }}
+          key: z3-cmake-windows-${{ hashFiles('z3-sys/Cargo.toml', 'z3-src/Cargo.toml') }}
           restore-keys: z3-cmake-windows-
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
@@ -136,6 +136,7 @@ jobs:
           SCCACHE_MSVC_Z7: "1"
 
   build_with_vcpkg_installed_z3:
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
         build: [linux, macos, windows]
@@ -201,7 +202,7 @@ jobs:
         run: cargo clippy --workspace --all-targets --features num
 
   build_with_gh_release_z3:
-    # if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
         build: [linux, macos, windows]
