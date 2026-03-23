@@ -79,6 +79,8 @@ jobs:
       - name: Install wasm32-unknown-emscripten target
         run: rustup target add wasm32-unknown-emscripten
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
       - name: Build z3-sys and z3 with vendored Z3
         run: |
           source ~/emsdk/emsdk_env.sh
@@ -111,6 +113,8 @@ jobs:
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
       - uses: Swatinem/rust-cache@v2
+        with:
+          cache-all-crates: true
       - name: Test `z3-sys` and `z3` with vendored linked Z3
         run: cargo test --workspace --features "vendored,num"
 
