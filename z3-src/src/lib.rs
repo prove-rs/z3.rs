@@ -94,10 +94,21 @@ fn build_cmake(src_dir: &Path) -> PathBuf {
         .define("Z3_BUILD_TEST_EXECUTABLES", "false")
         .define("Z3_ENABLE_EXAMPLE_TARGETS", "false");
 
+    // The cmake crate does not forward CMAKE_*_COMPILER_LAUNCHER env vars
+    // automatically; pass them explicitly so sccache/ccache can wrap the compiler.
+    for var in &["CMAKE_C_COMPILER_LAUNCHER", "CMAKE_CXX_COMPILER_LAUNCHER"] {
+        if let Ok(val) = env::var(var) {
+            cfg.define(var, val);
+        }
+    }
+
     if cfg!(target_os = "windows") {
-        // -MP and -m enable parallel compilation, measurably faster for Z3.
-        cfg.cxxflag("-MP");
-        cfg.build_arg("-m");
+        // -MP enables parallel MSVC compilation, but conflicts with compiler launchers
+        // like sccache which handle parallelism per-invocation and cannot cache -MP mode.
+        if env::var("CMAKE_CXX_COMPILER_LAUNCHER").is_err() {
+            cfg.cxxflag("-MP");
+            cfg.build_arg("-m");
+        }
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
         cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");

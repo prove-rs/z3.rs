@@ -16,7 +16,7 @@ jobs:
   check-formatting:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Check formatting
         run: cargo fmt -- --check
 
@@ -26,7 +26,7 @@ jobs:
         os: [macos-latest, ubuntu-latest]
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Remove preinstalled Z3 (Ubuntu)
         if: matrix.os == 'ubuntu-latest'
         run: |
@@ -53,20 +53,32 @@ jobs:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
-      - name: Install emscripten
+      - name: Clone emsdk
         run: |
           cd ~
-          git clone https://github.com/emscripten-core/emsdk.git
-          cd emsdk
-          git pull
+          git clone --depth 1 https://github.com/emscripten-core/emsdk.git
+          echo "EMSDK_TAG=$(cd ~/emsdk && git describe --tags --always)" >> $GITHUB_ENV
+
+      - name: Cache emsdk toolchain
+        id: cache-emsdk
+        uses: actions/cache@v5
+        with:
+          path: ~/emsdk
+          key: emsdk-${{ env.EMSDK_TAG }}
+          restore-keys: emsdk-
+
+      - name: Install emscripten
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
+        run: |
+          cd ~/emsdk
           ./emsdk install ${{ env.EMSCRIPTEN_VERSION }}
           ./emsdk activate ${{ env.EMSCRIPTEN_VERSION }}
-          source ./emsdk_env.sh
       - name: Install wasm32-unknown-emscripten target
         run: rustup target add wasm32-unknown-emscripten
+      - uses: Swatinem/rust-cache@v2
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
       - name: Build z3-sys and z3 with vendored Z3
@@ -75,9 +87,8 @@ jobs:
           cargo build --target=wasm32-unknown-emscripten --features "vendored,num"
         env:
           SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
-          _EM_CCACHE: "true"
-          EM_COMPILER_WRAPPER: "sccache"
+          CMAKE_C_COMPILER_LAUNCHER: "sccache"
+          CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
 
   build_with_vendored_z3:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
@@ -93,7 +104,7 @@ jobs:
             os: windows-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
@@ -105,17 +116,27 @@ jobs:
       - name: Set LIBCLANG_PATH
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
+      - name: Cache Z3 cmake build output (Windows)
+        if: matrix.build == 'windows'
+        uses: actions/cache@v5
+        with:
+          path: target/debug/build/z3-sys-*
+          key: z3-cmake-windows-${{ hashFiles('z3-sys/Cargo.toml', 'z3-src/Cargo.toml') }}
+          restore-keys: z3-cmake-windows-
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
+        if: matrix.os != 'windows-latest' # sccache isn't actually doing anything on windows
+      - uses: Swatinem/rust-cache@v2
       - name: Test `z3-sys` and `z3` with vendored linked Z3
         run: cargo test --workspace --features "vendored,num"
         env:
           SCCACHE_GHA_ENABLED: "true"
-          RUSTC_WRAPPER: "sccache"
           CMAKE_C_COMPILER_LAUNCHER: "sccache"
           CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
+          SCCACHE_MSVC_Z7: "1"
 
   build_with_vcpkg_installed_z3:
+    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v')
     strategy:
       matrix:
         build: [linux, macos, windows]
@@ -133,7 +154,7 @@ jobs:
     env:
       VCPKG_ROOT: ${{ github.workspace }}/vcpkg
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           submodules: recursive
       - name: Install LLVM and Clang # required for bindgen to work, see https://github.com/rust-lang/rust-bindgen/issues/1797
@@ -146,16 +167,26 @@ jobs:
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
       - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v5
+        with:
+          path: ${{ runner.temp }}/vcpkg_binary_cache
+          # run_id suffix ensures we always save; restore-keys picks up the latest
+          # prior entry for this triplet. vcpkg keys entries by ABI hash internally,
+          # so stale files from old compiler versions are simply ignored.
+          key: vcpkg-${{ matrix.vcpkg_triplet }}-${{ github.run_id }}
+          restore-keys: vcpkg-${{ matrix.vcpkg_triplet }}-
       - name: vcpkg build z3
         uses: johnwason/vcpkg-action@v7
         id: vcpkg
         with:
           pkgs: z3
           triplet: ${{ matrix.vcpkg_triplet }}
-          cache-key: ${{ matrix.os }}
           revision: master
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
+        env:
+          VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg_binary_cache,readwrite"
       - name: Show default toolchain of rust.
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
@@ -164,7 +195,7 @@ jobs:
   run_clippy:
     runs-on: macos-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Install Z3
         run: brew install z3
       - name: Run clippy
@@ -184,7 +215,7 @@ jobs:
             os: windows-latest
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Test `z3-sys` and `z3` with gh-release linked Z3
         run: cargo test --workspace --features "gh-release,num"
         env:
