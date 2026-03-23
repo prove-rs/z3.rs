@@ -64,7 +64,7 @@ jobs:
 
       - name: Cache emsdk toolchain
         id: cache-emsdk
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/emsdk
           key: emsdk-${{ env.EMSDK_TAG }}
@@ -81,7 +81,7 @@ jobs:
       - name: Install ccache
         run: sudo apt-get install -y ccache
       - name: Cache ccache (Z3 C++ compilation)
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.ccache
           key: ccache-wasm-${{ github.sha }}
@@ -164,7 +164,7 @@ jobs:
         if: matrix.os == 'windows-latest'
       - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
       - name: Cache vcpkg binary packages
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{ runner.temp }}/vcpkg_binary_cache
           # run_id suffix ensures we always save; restore-keys picks up the latest
