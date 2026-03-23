@@ -163,6 +163,15 @@ jobs:
         run: echo "LIBCLANG_PATH=$((gcm clang).source -replace "clang.exe")" >> $env:GITHUB_ENV
         if: matrix.os == 'windows-latest'
       - run: echo  Instaling z3:${{ matrix.vcpkg_triplet }} on ${{ matrix.os }}.
+      - name: Cache vcpkg binary packages
+        uses: actions/cache@v4
+        with:
+          path: ${{ runner.temp }}/vcpkg_binary_cache
+          # run_id suffix ensures we always save; restore-keys picks up the latest
+          # prior entry for this triplet. vcpkg keys entries by ABI hash internally,
+          # so stale files from old compiler versions are simply ignored.
+          key: vcpkg-${{ matrix.vcpkg_triplet }}-${{ github.run_id }}
+          restore-keys: vcpkg-${{ matrix.vcpkg_triplet }}-
       - name: vcpkg build z3
         uses: johnwason/vcpkg-action@v7
         id: vcpkg
@@ -172,14 +181,8 @@ jobs:
           revision: master
           token: ${{ github.token }}
           extra-args: --clean-buildtrees-after-build
-          disable-cache: 'true'
         env:
-          # Use vcpkg's native GHA binary cache, keyed per-package by ABI hash.
-          # The action's built-in cache keys only on package names/versions, not the
-          # compiler ABI, so it gets stuck serving stale entries after runner image
-          # updates. x-gha derives its key from the ABI hash vcpkg computes at
-          # install time, so it always stays valid.
-          VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+          VCPKG_BINARY_SOURCES: "clear;files,${{ runner.temp }}/vcpkg_binary_cache,readwrite"
       - name: Show default toolchain of rust.
         run: rustup default
       - name: Test `z3-sys` and `z3` with vcpkg installed Z3
