@@ -120,8 +120,8 @@ jobs:
         if: matrix.build == 'windows'
         uses: actions/cache@v5
         with:
-          path: target/debug/build/z3-src-*
-          key: z3-cmake-windows-${{ hashFiles('Cargo.lock', 'z3-src/Cargo.toml') }}
+          path: target/debug/build/z3-sys-*
+          key: z3-cmake-windows-${{ hashFiles('Cargo.lock', 'z3-sys/Cargo.toml', 'z3-src/Cargo.toml') }}
           restore-keys: z3-cmake-windows-
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
