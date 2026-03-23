@@ -125,6 +125,7 @@ jobs:
           restore-keys: z3-cmake-windows-
       - name: Run sccache-cache
         uses: mozilla-actions/sccache-action@v0.0.9
+        if: matrix.os != 'windows-latest' # sccache isn't actually doing anything on windows
       - uses: Swatinem/rust-cache@v2
       - name: Test `z3-sys` and `z3` with vendored linked Z3
         run: cargo test --workspace --features "vendored,num"
