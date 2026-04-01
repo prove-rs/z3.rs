@@ -1,6 +1,7 @@
 use z3::ast::Int;
 use z3::*;
 
+#[cfg(feature = "z3_4_16")]
 #[test]
 fn test_optimize_translate() {
     let x = Int::new_const("x");
@@ -26,6 +27,7 @@ fn test_optimize_translate() {
     assert_eq!(opt.check(&[]), SatResult::Unsat);
 }
 
+#[cfg(feature = "z3_4_16")]
 #[test]
 fn test_optimize_clone() {
     let x = Int::new_const("x");

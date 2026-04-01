@@ -25,6 +25,11 @@ bundled = ["z3-sys/bundled"]
 
 num = ["dep:num"]
 
+# Temporary feature gate for APIs requiring Z3 >= 4.16.0.
+# This flag will be removed and these APIs will become unconditional once
+# the minimum supported Z3 version is bumped to 4.16.0.
+z3_4_16 = []
+
 [dependencies]
 log = "0.4"
 

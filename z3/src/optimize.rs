@@ -9,9 +9,11 @@ use z3_sys::*;
 
 use crate::solver::Solvable;
 use crate::{
-    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol, Translate,
+    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
     ast::{Ast, Bool, Dynamic},
 };
+#[cfg(feature = "z3_4_16")]
+use crate::Translate;
 
 #[cfg(feature = "num")]
 use num::{
@@ -290,6 +292,9 @@ impl Optimize {
     ///
     /// - [`Optimize::into_solutions`]
     /// - [`Optimize::check_and_get_model`]
+    // Requires the `z3_4_16` feature (Z3 >= 4.16.0). This gate is temporary and will
+    // be removed once the minimum supported Z3 version is bumped to 4.16.0.
+    #[cfg(feature = "z3_4_16")]
     pub fn solutions<T: Solvable>(
         &self,
         t: T,
@@ -414,6 +419,9 @@ impl Drop for Optimize {
     }
 }
 
+// Z3_optimize_translate was added in Z3 4.16.0. This feature gate is temporary
+// and will be removed once the minimum supported Z3 version is bumped to 4.16.0.
+#[cfg(feature = "z3_4_16")]
 unsafe impl Translate for Optimize {
     fn translate(&self, dest: &Context) -> Optimize {
         unsafe {
@@ -427,6 +435,9 @@ unsafe impl Translate for Optimize {
 
 /// Creates a new [`Optimize`] with the same assertions, objectives, and parameters
 /// as the original
+// Requires the `z3_4_16` feature (Z3 >= 4.16.0). This gate is temporary and will
+// be removed once the minimum supported Z3 version is bumped to 4.16.0.
+#[cfg(feature = "z3_4_16")]
 impl Clone for Optimize {
     fn clone(&self) -> Self {
         self.translate(&Context::thread_local())
