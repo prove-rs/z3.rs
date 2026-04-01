@@ -7,6 +7,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.15...z3-v0.20.0) - 2026-04-01
+
+### Added
+
+- add Char Ast and Sort ([#553](https://github.com/prove-rs/z3.rs/pull/553)) (by @toolCHAINZ) - #553
+- make num dependency optional ([#552](https://github.com/prove-rs/z3.rs/pull/552)) (by @toolCHAINZ) - #552
+- Add Optimize::solutions and tweak Optimize::assert ([#530](https://github.com/prove-rs/z3.rs/pull/530)) (by @toolCHAINZ) - #530
+- impl Translate and Clone for Optimize ([#529](https://github.com/prove-rs/z3.rs/pull/529)) (by @toolCHAINZ) - #529
+- [**breaking**] add `vendored` build to pull z3 sources from crates.io ([#510](https://github.com/prove-rs/z3.rs/pull/510)) (by @toolCHAINZ) - #510
+
+### Other
+
+- document minimum z3 version and feature gate optimize features ([#556](https://github.com/prove-rs/z3.rs/pull/556)) (by @toolCHAINZ) - #556
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.19.15](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.14...z3-v0.19.15) - 2026-03-19
 
 ### Added

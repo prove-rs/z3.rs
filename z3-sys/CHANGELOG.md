@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.11.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.9...z3-sys-v0.11.0) - 2026-04-01
+
+### Added
+
+- [**breaking**] add `vendored` build to pull z3 sources from crates.io ([#510](https://github.com/prove-rs/z3.rs/pull/510)) (by @toolCHAINZ) - #510
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.10.9](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.8...z3-sys-v0.10.9) - 2026-03-13
 
 ### Other
