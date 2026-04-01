@@ -1,4 +1,4 @@
-# `z3` and `z3-sys`
+# `z3`, `z3-sys`, and `z3-src`
 
 [![Rust](https://github.com/prove-rs/z3.rs/actions/workflows/rust.yml/badge.svg)](https://github.com/prove-rs/z3.rs/actions/workflows/rust.yml)
 
@@ -37,7 +37,7 @@ Starting with version 0.20.0, z3-rs aims to track the latest Z3 release and stay
 
 | z3      | z3-sys   | upstream Z3                                         |
 |---------|----------|-----------------------------------------------------|
-| ≤0.19.x | ≤0.10.x  | 4.8.12 – 4.16.0                                     |
+| ≤0.19.x | ≤0.10.x  | ≥4.8.12                                             |
 | ≥0.20.0 | ≥0.11.0  | ≥4.8.17 (≥4.16.0 for `Optimize::translate`/`Clone`) |
 
 ### ≤0.19.x (z3-sys ≤0.10.x): broad version support
