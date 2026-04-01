@@ -63,7 +63,7 @@ The baseline minimum upstream Z3 version is **4.8.17**. This floor is set by two
   operations (`StrToInt` etc.) when calling `FuncDecl::kind()`.
 
 **`Optimize::translate` and `Optimize::clone` require Z3 ≥ 4.16.0** (`Z3_optimize_translate`
-was added in that release) and are gated behind the `z3_4_16` feature flag:
+was added in that release) and are temporarily gated behind the `z3_4_16` feature flag:
 
 ```toml
 [dependencies]
