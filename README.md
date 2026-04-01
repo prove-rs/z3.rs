@@ -1,4 +1,4 @@
-# `z3` and `z3-sys`
+# `z3`, `z3-sys`, and `z3-src`
 
 [![Rust](https://github.com/prove-rs/z3.rs/actions/workflows/rust.yml/badge.svg)](https://github.com/prove-rs/z3.rs/actions/workflows/rust.yml)
 
@@ -35,15 +35,15 @@ The [`z3-src` crate][z3-src] contains the Z3 source distribution and logic to ha
 
 Starting with version 0.20.0, z3-rs aims to track the latest Z3 release and stay up-to-date with API changes.
 
-| z3      | z3-sys   | upstream Z3      |
-|---------|----------|------------------|
-| ≤0.19.x | ≤0.10.x  | 4.8.12 – 4.16.0  |
-| ≥0.20.0 | ≥0.11.0  | ≥4.16.0          |
+| z3      | z3-sys   | upstream Z3                                         |
+|---------|----------|-----------------------------------------------------|
+| ≤0.19.x | ≤0.10.x  | ≥4.8.12                                             |
+| ≥0.20.0 | ≥0.11.0  | ≥4.8.17 (≥4.16.0 for `Optimize::translate`/`Clone`) |
 
 ### ≤0.19.x (z3-sys ≤0.10.x): broad version support
 
-Function and opaque structure FFI bindings were generated and committed sometime around Z3 4.8.12 
-and updated ad-hoc, but enum bindings were re-generated via bindgen on every build. 
+Function and opaque structure FFI bindings were generated and committed sometime around Z3 4.8.12
+and updated ad-hoc, but enum bindings were re-generated via bindgen on every build.
 This let the enums track whatever Z3 version was linked, giving broad 4.8.12–4.16.0 support. The cost was
 that new high-level Z3 APIs could not easily be defined without feature-gating, and were often
 omitted entirely.
@@ -52,7 +52,23 @@ omitted entirely.
 
 Both functions and enums are tracked in version control
 (`z3-sys/src/generated/functions.rs` and `z3-sys/src/generated/enums.rs`). There is by default no
-dynamic bindgen step on every build. The minimum supported upstream Z3 version is 4.16.0.
+dynamic bindgen step on every build.
+
+The baseline minimum upstream Z3 version is **4.8.17**. This floor is set by two constraints:
+
+- **API surface**: `Regexp::power`, `Regexp::allchar`, and `Regexp::diff` require Z3 ≥ 4.8.15.
+- **`DeclKind` enum correctness**: Z3 4.8.17 inserted `SeqMap`/`SeqMapi`/`SeqFoldl`/`SeqFoldli`
+  into the sequence range (values 1569–1572), shifting all string operation variants up by four.
+  Using these bindings against Z3 < 4.8.17 will return incorrect `DeclKind` values for string
+  operations (`StrToInt` etc.) when calling `FuncDecl::kind()`.
+
+**`Optimize::translate` and `Optimize::clone` require Z3 ≥ 4.16.0** (`Z3_optimize_translate`
+was added in that release) and are temporarily gated behind the `z3_4_16` feature flag:
+
+```toml
+[dependencies]
+z3 = { version = "0.20", features = ["z3_4_16"] }
+```
 
 FFI bindings can be regenerated for new Z3 versions by running
 `cargo xtask gen-bindings`.

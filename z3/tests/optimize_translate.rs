@@ -1,8 +1,9 @@
-use z3::ast::Int;
-use z3::*;
-
+#[cfg(feature = "z3_4_16")]
 #[test]
 fn test_optimize_translate() {
+    use z3::ast::Int;
+    use z3::*;
+
     let x = Int::new_const("x");
     let sx = x.synchronized();
 
@@ -26,8 +27,12 @@ fn test_optimize_translate() {
     assert_eq!(opt.check(&[]), SatResult::Unsat);
 }
 
+#[cfg(feature = "z3_4_16")]
 #[test]
 fn test_optimize_clone() {
+    use z3::ast::Int;
+    use z3::*;
+
     let x = Int::new_const("x");
     let opt = Optimize::new();
     opt.assert(x.ge(0));
