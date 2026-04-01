@@ -7,13 +7,13 @@ use std::iter::FusedIterator;
 
 use z3_sys::*;
 
+#[cfg(feature = "z3_4_16")]
+use crate::Translate;
 use crate::solver::Solvable;
 use crate::{
     AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
     ast::{Ast, Bool, Dynamic},
 };
-#[cfg(feature = "z3_4_16")]
-use crate::Translate;
 
 #[cfg(feature = "num")]
 use num::{
