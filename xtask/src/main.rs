@@ -20,17 +20,6 @@ enum CliCommand {
         /// Z3 git tag to check out, e.g. `z3-4.16.1` or `4.16.1`.
         z3_tag: String,
     },
-    /// Package or publish the prepared z3-src crate and create a git tag.
-    PublishZ3Src {
-        /// Run `cargo publish --dry-run` instead of publishing for real.
-        #[arg(long)]
-        dry_run: bool,
-        /// Run `cargo package` only — inspect contents without publishing.
-        #[arg(long)]
-        package: bool,
-    },
-    /// Bump z3-src packaging revision, open a release PR, and trigger CI publish on merge.
-    Z3SrcPatchPr,
 }
 
 fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -38,8 +27,6 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         CliCommand::GenBindings => gen_bindings()?,
         CliCommand::PrepareZ3Src { z3_tag } => prepare_z3_src(&z3_tag)?,
-        CliCommand::PublishZ3Src { dry_run, package } => publish_z3_src(dry_run, package)?,
-        CliCommand::Z3SrcPatchPr => z3_src_patch_pr()?,
     }
     Ok(())
 }
@@ -187,128 +174,7 @@ fn prepare_z3_src(z3_tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("  git diff z3-src/Cargo.toml z3-sys/Cargo.toml");
     println!("  git -C z3-src/z3 log --oneline -3");
     println!();
-    println!("Then run:");
-    println!("  cargo xtask publish-z3-src [--package | --dry-run]");
-
-    Ok(())
-}
-
-fn publish_z3_src(dry_run: bool, package: bool) -> Result<(), Box<dyn std::error::Error>> {
-    let root = workspace_root();
-    let submodule = root.join("z3-src/z3");
-
-    // Read state from the already-prepared workspace.
-    let z3_src_toml = root.join("z3-src/Cargo.toml");
-    let crate_version = read_package_version(&z3_src_toml)?;
-
-    let display_version = read_z3_version(&submodule)?.to_string();
-
-    // Cargo operation.
-    if package {
-        run(Command::new("cargo")
-            .args(["package", "-p", "z3-src", "--allow-dirty"])
-            .current_dir(&root))?;
-        println!();
-        println!("Review crate contents. Run without --package to publish.");
-        return Ok(());
-    }
-
-    if dry_run {
-        run(Command::new("cargo")
-            .args(["publish", "-p", "z3-src", "--allow-dirty", "--dry-run"])
-            .current_dir(&root))?;
-        println!();
-        println!("Dry run passed. Run without --dry-run to publish.");
-        return Ok(());
-    }
-
-    run(Command::new("cargo")
-        .args(["publish", "-p", "z3-src", "--allow-dirty"])
-        .current_dir(&root))?;
-
-    // Git tag.
-    let tag_name = format!("z3-src-v{crate_version}");
-    let tag_msg = format!("z3-src {crate_version} (Z3 {display_version})");
-    run(Command::new("git")
-        .args(["tag", "-a", &tag_name, "-m", &tag_msg])
-        .current_dir(&root))?;
-
-    // Post-action guidance.
-    println!();
-    println!("Published z3-src {crate_version}");
-    println!("Tagged: {tag_name}");
-    println!();
-    println!("Push the tag:");
-    println!("  git push origin {tag_name}");
-    println!();
-    println!("Commit the Cargo.toml version bumps and submodule pointer:");
-    println!("  git add z3-src/Cargo.toml z3-sys/Cargo.toml z3-src/z3");
-    println!("  git commit -m \"chore: release z3-src {crate_version}\"");
-
-    Ok(())
-}
-
-fn z3_src_patch_pr() -> Result<(), Box<dyn std::error::Error>> {
-    let root = workspace_root();
-    let z3_src_toml = root.join("z3-src/Cargo.toml");
-
-    let old_version_str = read_package_version(&z3_src_toml)?;
-    let old_version = Version::parse(&old_version_str)?;
-    let new_version = format!(
-        "{}.{}.{}",
-        old_version.major,
-        old_version.minor,
-        old_version.patch + 1,
-    );
-
-    set_toml_field(
-        &z3_src_toml,
-        &format!("version = \"{old_version_str}\""),
-        &format!("version = \"{new_version}\""),
-    )?;
-
-    println!("Bumped z3-src: {old_version_str} → {new_version}");
-
-    let branch = format!("release/z3-src-{new_version}");
-
-    run(Command::new("git")
-        .args(["checkout", "-b", &branch])
-        .current_dir(&root))?;
-
-    run(Command::new("git")
-        .args(["add", "z3-src/Cargo.toml"])
-        .current_dir(&root))?;
-
-    run(Command::new("git")
-        .args([
-            "commit",
-            "-m",
-            &format!("chore: release z3-src {new_version}"),
-        ])
-        .current_dir(&root))?;
-
-    run(Command::new("git")
-        .args(["push", "-u", "origin", &branch])
-        .current_dir(&root))?;
-
-    run(Command::new("gh")
-        .args([
-            "pr",
-            "create",
-            "--title",
-            &format!("chore: release z3-src {new_version}"),
-            "--body",
-            &format!(
-                "Packaging patch release.\n\n\
-                 Bumps z3-src: {old_version_str} → {new_version}\n\n\
-                 Merge to publish to crates.io."
-            ),
-            "--base",
-            "master",
-            "--head",
-            &branch,
-        ])
-        .current_dir(&root))?;
+    println!("Commit and open a PR. release-plz will publish on merge.");
 
     Ok(())
 }
