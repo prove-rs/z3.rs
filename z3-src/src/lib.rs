@@ -111,7 +111,14 @@ fn build_cmake(src_dir: &Path) -> PathBuf {
         }
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
-        cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", "MultiThreadedDLL");
+
+        let target_features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
+        let runtime = if target_features.split(',').any(|f| f.trim() == "crt-static") {
+            "MultiThreaded"
+        } else {
+            "MultiThreadedDLL"
+        };
+        cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", runtime);
     } else if env::var("TARGET").unwrap().starts_with("wasm") {
         // Z3 uses exceptions, which must be explicitly enabled for WASM.
         cfg.no_default_flags(true).cxxflag("-fexceptions");
