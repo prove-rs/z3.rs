@@ -14,6 +14,8 @@ homepage = "https://github.com/prove-rs/z3.rs"
 repository = "https://github.com/prove-rs/z3.rs.git"
 edition = "2024"
 
+[package.metadata.docs.rs]
+features = ["num"]
 
 [features]
 vendored = ["z3-sys/vendored"]
