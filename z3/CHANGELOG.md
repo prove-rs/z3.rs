@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.0...z3-v0.20.1) - 2026-06-21
+
+### Other
+
+- enable "num" feature for z3 docs.rs build ([#562](https://github.com/prove-rs/z3.rs/pull/562)) (by @GreenBeard) - #562
+
+### Contributors
+
+* @GreenBeard
+
 ## [0.20.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.15...z3-v0.20.0) - 2026-04-01
 
 ### Added
