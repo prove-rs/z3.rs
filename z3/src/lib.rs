@@ -81,7 +81,6 @@
 #![deny(missing_debug_implementations)]
 
 use std::cell::RefCell;
-use std::collections::BTreeSet;
 use std::ffi::CString;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
@@ -199,8 +198,8 @@ pub struct Model {
 pub struct Optimize {
     ctx: Context,
     z3_opt: Z3_optimize,
-    // Stores IDs of model handlers associated with this `Optimize` solver.
-    registered_handlers: RefCell<BTreeSet<u32>>,
+    // Stores ID of a model handler associated with this `Optimize` solver.
+    registered_model_handler: RefCell<Option<u32>>,
 }
 
 /// Context for Horn clause / Datalog solving.
