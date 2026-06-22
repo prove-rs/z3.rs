@@ -1,10 +1,12 @@
 use log::debug;
 use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::fmt;
 use std::iter::FusedIterator;
-
+use std::sync::atomic::AtomicU32;
 use z3_sys::*;
 
 #[cfg(feature = "z3_4_16")]
@@ -29,6 +31,7 @@ impl Optimize {
         Optimize {
             ctx: ctx.clone(),
             z3_opt,
+            registered_model_handler: Default::default(),
         }
     }
 
@@ -379,6 +382,85 @@ impl Optimize {
                 .map(|ast| Dynamic::wrap(&self.ctx, ast))
         }
     }
+
+    /// Register a model handler that is invoked for every incrementally improved model
+    /// produced by the optimization process. Only one model handler can be registered within
+    /// each optimization solver.
+    ///
+    /// Note that the [`Model`] instance received by the handler is always the same object,
+    /// internally mutated by the solver. There is no risk of concurrent reads and writes; the
+    /// model is only modified by the solver, running on the same thread as the handler. But
+    /// to save each model returned by individual handler invocations, you need some kind
+    /// of deep copy mechanism (otherwise all models that you'll save will just
+    /// be the same model instance).
+    pub fn set_model_handler<F: Fn(&Model) + 'static>(&self, callback: F) {
+        /*
+           Implementation notes: The C handler cannot be `Fn` (must be `fn`). As such,
+           we instead register a single "global handler" (`global_model_callback`),
+           and then forward the callback to the right handler saved within
+           a thread local map. Because the callback will be called by the solver on the same
+           thread as other Z3 methods, we know there won't be any concurrent access to these
+           data structures and the handler will be present in the thread local map.
+           To support interior mutability, we thus rely on `RefCell`, but we don't need
+           additional synchronization. When the solver is dropped, we remove
+           the handler from the thread local map.
+        */
+
+        self.clear_model_handler(); // First, remove any pre-existing handler.
+
+        unsafe {
+            // Make an "empty" model into which the result will be placed. The model lives
+            // as long as the handler is registered.
+            let model = Model::new_empty(&self.ctx);
+            let z3_model = model.z3_mdl;
+
+            // Register the given handler within the thread-local map so that it can be
+            // accessed by the global handler.
+            let id = THREAD_MODEL_HANDLER_COUNTER
+                .with(|it| it.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
+            let callback: DynamicModelHandler = Box::new(callback);
+            THREAD_MODEL_HANDLER_REGISTRY.with_borrow_mut(|map| {
+                if let Some(_old) = map.insert(id, (callback, model)) {
+                    panic!("Correctness violation: Callback with this ID was already registered.");
+                }
+            });
+
+            // Register the callback within solver-specific map (to allow eventual deallocation).
+            {
+                let mut registered_id = self
+                    .registered_model_handler
+                    .try_borrow_mut()
+                    .expect("Correctness violation: Concurrent access to handler registrations.");
+                // Invariant: at this point, the `registered_id` should be `None`.
+                *registered_id = Some(id);
+            }
+
+            // Register the callback internally within Z3
+            Z3_optimize_register_model_eh(
+                self.ctx.z3_ctx.0,
+                self.z3_opt,
+                z3_model,
+                id as *mut c_void,
+                Some(global_model_callback),
+            );
+        }
+    }
+
+    /// Clear a model handler previously set by [`Optimize::set_model_handler`]
+    /// (assuming it exists).
+    pub fn clear_model_handler(&self) {
+        let mut registered_id = self
+            .registered_model_handler
+            .try_borrow_mut()
+            .expect("Correctness violation: Concurrent access to handler registrations.");
+
+        if let Some(id) = *registered_id {
+            *registered_id = None;
+            THREAD_MODEL_HANDLER_REGISTRY.with_borrow_mut(|map| {
+                map.remove(&id);
+            });
+        }
+    }
 }
 
 struct OptimizeIterator<T> {
@@ -431,6 +513,9 @@ impl fmt::Debug for Optimize {
 
 impl Drop for Optimize {
     fn drop(&mut self) {
+        // Drop model handler from the global handler registry.
+        self.clear_model_handler();
+
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
     }
 }
@@ -546,4 +631,29 @@ macro_rules! impl_sealed {
 
 impl_sealed! {
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
+}
+
+/// The type of model handlers that can be registered in [`THREAD_MODEL_HANDLER_REGISTRY`].
+type DynamicModelHandler = Box<dyn Fn(&Model) + 'static>;
+
+thread_local! {
+    /// A global thread safe registry for storing all model handlers that are currently registered.
+    static THREAD_MODEL_HANDLER_REGISTRY: RefCell<BTreeMap<u32, (DynamicModelHandler, Model)>> = RefCell::new(BTreeMap::new());
+    /// A utility counter used to assign unique IDs to model handlers in the thread model registry.
+    static THREAD_MODEL_HANDLER_COUNTER: AtomicU32 = const { AtomicU32::new(0) };
+}
+
+/// A global model handler which is called via registrations from
+/// [`Optimize::register_model_callback`] and dispatches the callback to
+/// the respective anonymous functions.
+extern "C" fn global_model_callback(ctx: *mut c_void) {
+    // Invariant: global_model_callback is always called with `ctx` being an u32 callback ID,
+    // as long as handlers are registered by our code.
+    let id = ctx as u32;
+    THREAD_MODEL_HANDLER_REGISTRY.with_borrow(|map| {
+        let Some((callback, model)) = map.get(&id) else {
+            panic!("Correctness violation: Callback `ID={id}` called but not registered.")
+        };
+        callback(model);
+    });
 }
