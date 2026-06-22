@@ -1,10 +1,12 @@
 use log::debug;
 use std::borrow::Borrow;
+use std::cell::RefCell;
+use std::collections::BTreeMap;
 use std::convert::TryInto;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::fmt;
 use std::iter::FusedIterator;
-
+use std::sync::atomic::AtomicU32;
 use z3_sys::*;
 
 #[cfg(feature = "z3_4_16")]
@@ -29,6 +31,7 @@ impl Optimize {
         Optimize {
             ctx: ctx.clone(),
             z3_opt,
+            registered_handlers: Default::default(),
         }
     }
 
@@ -379,6 +382,53 @@ impl Optimize {
                 .map(|ast| Dynamic::wrap(&self.ctx, ast))
         }
     }
+
+    /// Register a new model handler that is invoked for every incrementally improved model
+    /// produced by the optimization process.
+    ///
+    /// Note that each handler invocation receives **the same instance** of [`Model`], but
+    /// its internal state is updated by the solver between invocations. Accessing such [`Model`]
+    /// is still completely memory safe; it can only be modified by the Z3 solver running on the
+    /// same thread, hence it can never change while being accessed by safe Rust code. However,
+    /// keep in mind that if you want to store the values from the model, you need to make
+    /// a deep copy into some dedicated data structure; i.e. you can't just make a reference to
+    /// the model every time the handler is invoked, since all such models will point to
+    /// the same data.
+    pub fn register_model_handler<F: Fn(&Model) + 'static>(&self, callback: F) {
+        unsafe {
+            // Make an "empty" model into which the result will be placed.
+            let model = Model::new_empty(&self.ctx);
+            let z3_model = model.z3_mdl;
+
+            // Register the callback within the thread-local map.
+            let id = THREAD_MODEL_HANDLER_COUNTER
+                .with(|it| it.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
+            let callback: DynamicModelHandler = Box::new(callback);
+            THREAD_MODEL_HANDLER_REGISTRY.with_borrow_mut(|map| {
+                if let Some(_old) = map.insert(id, (callback, model)) {
+                    panic!("Correctness violation: Callback with this ID was already registered.");
+                }
+            });
+
+            // Register the callback within solver-specific map (to allow eventual deallocation).
+            {
+                let mut registry = self
+                    .registered_handlers
+                    .try_borrow_mut()
+                    .expect("Correctness violation: Concurrent access to handler registrations.");
+                registry.insert(id);
+            }
+
+            // Register the callback internally within Z3
+            Z3_optimize_register_model_eh(
+                self.ctx.z3_ctx.0,
+                self.z3_opt,
+                z3_model,
+                id as *mut c_void,
+                Some(global_model_callback),
+            );
+        }
+    }
 }
 
 struct OptimizeIterator<T> {
@@ -431,6 +481,17 @@ impl fmt::Debug for Optimize {
 
 impl Drop for Optimize {
     fn drop(&mut self) {
+        // Drop model handlers from the global handler registry.
+        THREAD_MODEL_HANDLER_REGISTRY.with_borrow_mut(|map| {
+            let registered = self
+                .registered_handlers
+                .try_borrow()
+                .expect("Correctness violation: Concurrent access to handler registrations.");
+            for id in registered.iter() {
+                map.remove(id);
+            }
+        });
+
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
     }
 }
@@ -546,4 +607,28 @@ macro_rules! impl_sealed {
 
 impl_sealed! {
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
+}
+
+/// The type of model handlers that can be registered in [`THREAD_MODEL_HANDLER_REGISTRY`].
+type DynamicModelHandler = Box<dyn Fn(&Model) + 'static>;
+
+thread_local! {
+    /// A global thread safe registry for storing all model handlers that are currently registered.
+    static THREAD_MODEL_HANDLER_REGISTRY: RefCell<BTreeMap<u32, (DynamicModelHandler, Model)>> = RefCell::new(BTreeMap::new());
+    /// A utility counter used to assign unique IDs to model handlers in the thread model registry.
+    static THREAD_MODEL_HANDLER_COUNTER: AtomicU32 = const { AtomicU32::new(0) };
+}
+
+/// A global model handler which is called via registrations from
+/// [`Optimize::register_model_callback`] and dispatches the callback to
+/// the respective anonymous functions.
+extern "C" fn global_model_callback(ctx: *mut c_void) {
+    // Invariant: global_model_callback is always called with `ctx` being an u32 callback ID.
+    let id = ctx as u32;
+    THREAD_MODEL_HANDLER_REGISTRY.with_borrow(|map| {
+        let Some((callback, model)) = map.get(&id) else {
+            panic!("Correctness violation: Callback `ID={id}` called but not registered.")
+        };
+        callback(model);
+    });
 }
