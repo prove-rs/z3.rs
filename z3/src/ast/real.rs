@@ -66,12 +66,10 @@ impl Real {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_real(
-                    ctx.z3_ctx.0,
-                    num as ::std::os::raw::c_int,
-                    den as ::std::os::raw::c_int,
-                )
-                .unwrap()
+                // Use the int64 fraction API, not Z3_mk_real (which takes C `int`):
+                // casting the i64 args to c_int silently truncates any value outside
+                // the i32 range (e.g. 634909090909091/100000000000 wrapped to garbage).
+                Z3_mk_real_int64(ctx.z3_ctx.0, num, den).unwrap()
             })
         }
     }

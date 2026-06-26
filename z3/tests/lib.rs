@@ -475,6 +475,26 @@ fn test_arbitrary_size_real() {
 }
 
 #[test]
+fn test_from_rational_beyond_i32() {
+    // Regression: from_rational must not truncate its i64 args to C `int`.
+    // 634909090909091 / 100000000000 = 6349.09090909091; both num and den
+    // exceed i32::MAX, so the old `as c_int` cast wrapped this to ~1.03.
+    let solver = Solver::new();
+    let num = 634909090909091_i64;
+    let den = 100000000000_i64;
+    let r = ast::Real::from_rational(num, den);
+    // r must equal the exact rational built via the string API (no truncation).
+    let exact = ast::Real::from_rational_str("634909090909091", "100000000000").unwrap();
+    solver.assert(r.eq(&exact));
+    assert_eq!(solver.check(), SatResult::Sat);
+    // And it must NOT equal the value the truncating path produced (~1.0326).
+    let solver2 = Solver::new();
+    let wrong = ast::Real::from_rational_str("1255410595", "1215752192").unwrap();
+    solver2.assert(ast::Real::from_rational(num, den).eq(&wrong));
+    assert_eq!(solver2.check(), SatResult::Unsat);
+}
+
+#[test]
 fn test_arbitrary_size_int() {
     let solver = Solver::new();
 
