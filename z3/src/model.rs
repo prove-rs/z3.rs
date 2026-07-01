@@ -7,6 +7,19 @@ use crate::{
 };
 
 impl Model {
+    /// A new instance of an *empty* model, not tied to any particular solver. Internally used
+    /// by [`Optimize::register_model_handler`].
+    ///
+    /// Note: [`Model::of_optimize`] cannot be used here because it assumes the solver already
+    /// has a model, whereas [`Optimize::register_model_handler`] is called before the solver
+    /// has found any model at all.
+    pub(crate) fn new_empty(ctx: &Context) -> Model {
+        unsafe {
+            let m = Z3_mk_model(ctx.z3_ctx.0).expect("Cannot allocate new Z3_model.");
+            Self::wrap(ctx, m)
+        }
+    }
+
     unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
         unsafe {
             Z3_model_inc_ref(ctx.z3_ctx.0, z3_mdl);
