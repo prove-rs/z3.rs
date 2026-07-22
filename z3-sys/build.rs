@@ -132,7 +132,7 @@ mod gh_release {
             }
         };
         println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
-        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("4.16.0".to_string());
+        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("5.0.0".to_string());
         let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{z3_version}"));
 
         if !z3_dir.exists() {
