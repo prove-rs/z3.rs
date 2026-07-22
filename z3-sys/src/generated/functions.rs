@@ -1352,6 +1352,62 @@ unsafe extern "C" {
     /// The meaning is given by the axiom:
     /// (=> (= (select A (array-ext A B)) (select B (array-ext A B))) (= A B))
     pub fn Z3_mk_array_ext(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
+    /// Create a finite set sort.
+    pub fn Z3_mk_finite_set_sort(c: Z3_context, elem_sort: Z3_sort) -> Option<Z3_sort>;
+    /// Check if a sort is a finite set sort.
+    pub fn Z3_is_finite_set_sort(c: Z3_context, s: Z3_sort) -> bool;
+    /// Get the element sort of a finite set sort.
+    pub fn Z3_get_finite_set_sort_basis(c: Z3_context, s: Z3_sort) -> Option<Z3_sort>;
+    /// Create an empty finite set of the given sort.
+    pub fn Z3_mk_finite_set_empty(c: Z3_context, set_sort: Z3_sort) -> Option<Z3_ast>;
+    /// Create a singleton finite set.
+    pub fn Z3_mk_finite_set_singleton(c: Z3_context, elem: Z3_ast) -> Option<Z3_ast>;
+    /// Create the union of two finite sets.
+    pub fn Z3_mk_finite_set_union(
+        c: Z3_context,
+        s1: Z3_ast,
+        s2: Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Create the intersection of two finite sets.
+    pub fn Z3_mk_finite_set_intersect(
+        c: Z3_context,
+        s1: Z3_ast,
+        s2: Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Create the set difference of two finite sets.
+    pub fn Z3_mk_finite_set_difference(
+        c: Z3_context,
+        s1: Z3_ast,
+        s2: Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Check if an element is a member of a finite set.
+    pub fn Z3_mk_finite_set_member(
+        c: Z3_context,
+        elem: Z3_ast,
+        set: Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Get the size (cardinality) of a finite set.
+    pub fn Z3_mk_finite_set_size(c: Z3_context, set: Z3_ast) -> Option<Z3_ast>;
+    /// Check if one finite set is a subset of another.
+    pub fn Z3_mk_finite_set_subset(
+        c: Z3_context,
+        s1: Z3_ast,
+        s2: Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Apply a function to all elements of a finite set.
+    pub fn Z3_mk_finite_set_map(c: Z3_context, f: Z3_ast, set: Z3_ast) -> Option<Z3_ast>;
+    /// Filter a finite set using a predicate.
+    pub fn Z3_mk_finite_set_filter(
+        c: Z3_context,
+        f: Z3_ast,
+        set: Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Create a finite set of integers in the range [low, high].
+    pub fn Z3_mk_finite_set_range(
+        c: Z3_context,
+        low: Z3_ast,
+        high: Z3_ast,
+    ) -> Option<Z3_ast>;
     /// Create a numeral of a given sort.
     ///
     /// - `c`: logical context.
@@ -4400,7 +4456,7 @@ unsafe extern "C" {
     ///
     /// # See also
     ///
-    /// - [`Z3_goal_to_diamcs_string`]
+    /// - [`Z3_goal_to_dimacs_string`]
     pub fn Z3_solver_to_dimacs_string(
         c: Z3_context,
         s: Z3_solver,

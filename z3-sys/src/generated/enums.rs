@@ -1320,17 +1320,56 @@ pub enum DeclKind {
     /// 4 = 100 = Z3_OP_FPA_RM_TOWARD_ZERO.
     #[doc(alias = "Z3_OP_FPA_BV2RM")]
     FpaBv2rm = 45099,
+    /// Empty finite set.
+    #[doc(alias = "Z3_OP_FINITE_SET_EMPTY")]
+    FiniteSetEmpty = 49152,
+    /// Finite set containing a single element.
+    #[doc(alias = "Z3_OP_FINITE_SET_SINGLETON")]
+    FiniteSetSingleton = 49153,
+    /// Union of two finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_UNION")]
+    FiniteSetUnion = 49154,
+    /// Intersection of two finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_INTERSECT")]
+    FiniteSetIntersect = 49155,
+    /// Difference of two finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_DIFFERENCE")]
+    FiniteSetDifference = 49156,
+    /// Membership predicate for finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_IN")]
+    FiniteSetIn = 49157,
+    /// Cardinality of a finite set.
+    #[doc(alias = "Z3_OP_FINITE_SET_SIZE")]
+    FiniteSetSize = 49158,
+    /// Subset predicate for finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_SUBSET")]
+    FiniteSetSubset = 49159,
+    /// Map operation on finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_MAP")]
+    FiniteSetMap = 49160,
+    /// Filter operation on finite sets.
+    #[doc(alias = "Z3_OP_FINITE_SET_FILTER")]
+    FiniteSetFilter = 49161,
+    /// Range operation for finite sets of integers.
+    #[doc(alias = "Z3_OP_FINITE_SET_RANGE")]
+    FiniteSetRange = 49162,
+    /// Finite set extensionality. Returns a witness element that is in one set but not the other, demonstrating that two sets are different.
+    #[doc(alias = "Z3_OP_FINITE_SET_EXT")]
+    FiniteSetExt = 49163,
+    /// Inverse image under a finite set map operation. Related to reasoning about the pre-image of elements under set mappings.
+    #[doc(alias = "Z3_OP_FINITE_SET_MAP_INVERSE")]
+    FiniteSetMapInverse = 49164,
     /// internal (often interpreted) symbol, but no additional
     /// information is exposed. Tools may use the string representation of the
     /// function declaration to obtain more information.
     #[doc(alias = "Z3_OP_INTERNAL")]
-    Internal = 45100,
+    Internal = 49165,
     /// function declared as recursive
     #[doc(alias = "Z3_OP_RECURSIVE")]
-    Recursive = 45101,
+    Recursive = 49166,
     /// kind used for uninterpreted symbols.
     #[doc(alias = "Z3_OP_UNINTERPRETED")]
-    Uninterpreted = 45102,
+    Uninterpreted = 49167,
 }
 pub type Z3_decl_kind = DeclKind;
 /// The different kinds of parameters that can be associated with parameter sets.
