@@ -9,6 +9,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [0.12.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.11.0...z3-sys-v0.12.0) - 2026-07-23
 
+This release updates the generated FFI bindings to target Z3 5.0.0. The high-level `z3` crate is **not** being updated in lockstep because, at the time of this writing, Z3 5.0.0 is still making its way into package repositories; once it is a little more widely distributed, a `z3` release will follow targeting `z3-sys` 0.12.0 and Z3 5.0.0.
+
 ### Other
 
 - [**breaking**] updated z3-sys generated bindings for z3 5 ([#572](https://github.com/prove-rs/z3.rs/pull/572)) (by @toolCHAINZ) - #572
