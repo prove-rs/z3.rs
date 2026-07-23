@@ -1,7 +1,7 @@
 [package]
 name = "z3"
 rust-version = "1.85.0"
-version = "0.20.3"
+version = "0.20.2"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>", "Mark DenHoed <mark.denhoed@cs.ox.ac.uk>"]
 
 description = "High-level rust bindings for the Z3 SMT solver from Microsoft Research"
@@ -45,4 +45,4 @@ rayon = "1.10.0"
 
 [dependencies.z3-sys]
 path = "../z3-sys"
-version = "0.12.0"
+version = "0.11.0"
