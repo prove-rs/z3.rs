@@ -8,10 +8,10 @@ use crate::{
 
 impl Model {
     /// A new instance of an *empty* model, not tied to any particular solver. Internally used
-    /// by [`Optimize::register_model_handler`].
+    /// by [`Optimize::set_model_handler`].
     ///
     /// Note: [`Model::of_optimize`] cannot be used here because it assumes the solver already
-    /// has a model, whereas [`Optimize::register_model_handler`] is called before the solver
+    /// has a model, whereas [`Optimize::set_model_handler`] registers before the solver
     /// has found any model at all.
     pub(crate) fn new_empty(ctx: &Context) -> Model {
         unsafe {

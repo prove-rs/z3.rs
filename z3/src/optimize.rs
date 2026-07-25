@@ -1,16 +1,14 @@
 use log::debug;
 use std::borrow::Borrow;
-use std::cell::RefCell;
-use std::collections::BTreeMap;
 use std::convert::TryInto;
 use std::ffi::{CStr, CString, c_void};
 use std::fmt;
 use std::iter::FusedIterator;
-use std::sync::atomic::AtomicU32;
 use z3_sys::*;
 
 #[cfg(feature = "z3_4_16")]
 use crate::Translate;
+use crate::callbacks::FfiState;
 use crate::solver::Solvable;
 use crate::{
     AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
@@ -23,6 +21,24 @@ use num::{
     rational::BigRational,
 };
 
+/// Heap-allocated state for a model handler registered with an [`Optimize`] solver.
+struct ModelHandlerState {
+    callback: Box<dyn Fn(&Model) + 'static>,
+    model: Model,
+}
+
+/// Trampoline called by Z3 for each incremental model found during optimization.
+///
+/// # Safety
+/// `ctx` must be a pointer previously returned by `FfiState::<ModelHandlerState>::into_raw`
+/// and the state must still be live (i.e., the owning `Optimize` has not been dropped or had
+/// its handler replaced).
+unsafe extern "C" fn model_handler_trampoline(ctx: *mut c_void) {
+    // SAFETY: invariant above; pointer is valid and live.
+    let state = unsafe { FfiState::<ModelHandlerState>::borrow_raw(ctx) };
+    (state.callback)(&state.model);
+}
+
 impl Optimize {
     unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {
@@ -31,7 +47,7 @@ impl Optimize {
         Optimize {
             ctx: ctx.clone(),
             z3_opt,
-            registered_model_handler: Default::default(),
+            handler: std::cell::Cell::new(None),
         }
     }
 
@@ -385,80 +401,91 @@ impl Optimize {
 
     /// Register a model handler that is invoked for every incrementally improved model
     /// produced by the optimization process. Only one model handler can be registered within
-    /// each optimization solver.
+    /// each optimization solver; calling this method a second time replaces the first handler.
     ///
-    /// Note that the [`Model`] instance received by the handler is always the same object,
-    /// internally mutated by the solver. There is no risk of concurrent reads and writes; the
-    /// model is only modified by the solver, running on the same thread as the handler. But
-    /// to save each model returned by individual handler invocations, you need some kind
-    /// of deep copy mechanism (otherwise all models that you'll save will just
-    /// be the same model instance).
+    /// The [`Model`] passed to the handler is the same object for every invocation, updated
+    /// in-place by Z3. To capture a snapshot, copy out the values you need inside the handler.
+    ///
+    /// # Example
+    ///
+    /// Collect each improving cost as Z3 works toward the minimum, then verify the result:
+    ///
+    /// ```
+    /// # use z3::ast::{Ast, Int};
+    /// # use z3::*;
+    /// use std::cell::RefCell;
+    /// use std::rc::Rc;
+    ///
+    /// // Minimise 3·x + 5·y  subject to  x + y >= 10,  x >= 0,  y >= 0.
+    /// // The optimum is x = 10, y = 0 → cost = 30.
+    /// let x = Int::new_const("x");
+    /// let y = Int::new_const("y");
+    /// let opt = Optimize::new();
+    /// opt.assert((&x + &y).ge(10));
+    /// opt.assert(x.ge(0));
+    /// opt.assert(y.ge(0));
+    /// let cost = &x * 3i64 + &y * 5i64;
+    /// opt.minimize(&cost);
+    ///
+    /// // `Rc<RefCell<_>>` lets the handler share data with the outer scope
+    /// // without requiring the captured type to be `Send`.
+    /// let improving_costs: Rc<RefCell<Vec<i64>>> = Default::default();
+    /// let costs = improving_costs.clone();
+    /// let cost_snap = cost.clone();
+    ///
+    /// opt.set_model_handler(move |model| {
+    ///     // Z3 passes the same `Model` object on every call, updating it in-place.
+    ///     // Evaluate and copy out whatever values you need before returning.
+    ///     if let Some(c) = model.eval(&cost_snap, true).and_then(|v| v.as_i64()) {
+    ///         costs.borrow_mut().push(c);
+    ///     }
+    /// });
+    ///
+    /// assert_eq!(opt.check(&[]), SatResult::Sat);
+    ///
+    /// let seq = improving_costs.borrow();
+    /// assert!(!seq.is_empty(), "at least one improving model must be produced");
+    /// assert_eq!(*seq.last().unwrap(), 30, "proven optimum is 30");
+    /// // Each call produces a strictly better solution than the previous one.
+    /// assert!(seq.windows(2).all(|w| w[0] >= w[1]));
+    /// ```
     pub fn set_model_handler<F: Fn(&Model) + 'static>(&self, callback: F) {
-        /*
-           Implementation notes: The C handler cannot be `Fn` (must be `fn`). As such,
-           we instead register a single "global handler" (`global_model_callback`),
-           and then forward the callback to the right handler saved within
-           a thread local map. Because the callback will be called by the solver on the same
-           thread as other Z3 methods, we know there won't be any concurrent access to these
-           data structures and the handler will be present in the thread local map.
-           To support interior mutability, we thus rely on `RefCell`, but we don't need
-           additional synchronization. When the solver is dropped, we remove
-           the handler from the thread local map.
-        */
-
-        self.clear_model_handler(); // First, remove any pre-existing handler.
-
         unsafe {
-            // Make an "empty" model into which the result will be placed. The model lives
-            // as long as the handler is registered.
             let model = Model::new_empty(&self.ctx);
             let z3_model = model.z3_mdl;
+            let new_raw = FfiState::new(ModelHandlerState {
+                callback: Box::new(callback),
+                model,
+            })
+            .into_raw();
+            // SAFETY: FfiState::into_raw wraps a Box, which is always non-null.
+            let new_nn = unsafe { std::ptr::NonNull::new_unchecked(new_raw) };
 
-            // Register the given handler within the thread-local map so that it can be
-            // accessed by the global handler.
-            let id = THREAD_MODEL_HANDLER_COUNTER
-                .with(|it| it.fetch_add(1, std::sync::atomic::Ordering::SeqCst));
-            let callback: DynamicModelHandler = Box::new(callback);
-            THREAD_MODEL_HANDLER_REGISTRY.with_borrow_mut(|map| {
-                if let Some(_old) = map.insert(id, (callback, model)) {
-                    panic!("Correctness violation: Callback with this ID was already registered.");
-                }
-            });
-
-            // Register the callback within solver-specific map (to allow eventual deallocation).
-            {
-                let mut registered_id = self
-                    .registered_model_handler
-                    .try_borrow_mut()
-                    .expect("Correctness violation: Concurrent access to handler registrations.");
-                // Invariant: at this point, the `registered_id` should be `None`.
-                *registered_id = Some(id);
-            }
-
-            // Register the callback internally within Z3
+            // Register with Z3 before freeing the old state so Z3 never holds a dangling
+            // pointer in the window between the two operations.
             Z3_optimize_register_model_eh(
                 self.ctx.z3_ctx.0,
                 self.z3_opt,
                 z3_model,
-                id as *mut c_void,
-                Some(global_model_callback),
+                new_nn.as_ptr(),
+                Some(model_handler_trampoline),
             );
+
+            // Swap in the new pointer and free any previous handler state.
+            if let Some(old_nn) = self.handler.replace(Some(new_nn)) {
+                drop(FfiState::<ModelHandlerState>::from_raw(old_nn.as_ptr()));
+            }
         }
     }
 
-    /// Clear a model handler previously set by [`Optimize::set_model_handler`]
-    /// (assuming it exists).
+    /// Remove a model handler previously set by [`Optimize::set_model_handler`].
+    ///
+    /// After this call the Z3-side callback registration is not actively cleared; do not
+    /// call [`Optimize::check`] again without first re-registering a handler or relying on
+    /// the fact that no callback will fire once this `Optimize` is dropped.
     pub fn clear_model_handler(&self) {
-        let mut registered_id = self
-            .registered_model_handler
-            .try_borrow_mut()
-            .expect("Correctness violation: Concurrent access to handler registrations.");
-
-        if let Some(id) = *registered_id {
-            *registered_id = None;
-            THREAD_MODEL_HANDLER_REGISTRY.with_borrow_mut(|map| {
-                map.remove(&id);
-            });
+        if let Some(old_nn) = self.handler.replace(None) {
+            unsafe { drop(FfiState::<ModelHandlerState>::from_raw(old_nn.as_ptr())); }
         }
     }
 }
@@ -633,27 +660,3 @@ impl_sealed! {
     u8, u16, u32, u64, u128, usize, i8, i16, i32, i64, i128, isize
 }
 
-/// The type of model handlers that can be registered in [`THREAD_MODEL_HANDLER_REGISTRY`].
-type DynamicModelHandler = Box<dyn Fn(&Model) + 'static>;
-
-thread_local! {
-    /// A global thread safe registry for storing all model handlers that are currently registered.
-    static THREAD_MODEL_HANDLER_REGISTRY: RefCell<BTreeMap<u32, (DynamicModelHandler, Model)>> = RefCell::new(BTreeMap::new());
-    /// A utility counter used to assign unique IDs to model handlers in the thread model registry.
-    static THREAD_MODEL_HANDLER_COUNTER: AtomicU32 = const { AtomicU32::new(0) };
-}
-
-/// A global model handler which is called via registrations from
-/// [`Optimize::register_model_callback`] and dispatches the callback to
-/// the respective anonymous functions.
-extern "C" fn global_model_callback(ctx: *mut c_void) {
-    // Invariant: global_model_callback is always called with `ctx` being an u32 callback ID,
-    // as long as handlers are registered by our code.
-    let id = ctx as u32;
-    THREAD_MODEL_HANDLER_REGISTRY.with_borrow(|map| {
-        let Some((callback, model)) = map.get(&id) else {
-            panic!("Correctness violation: Callback `ID={id}` called but not registered.")
-        };
-        callback(model);
-    });
-}
