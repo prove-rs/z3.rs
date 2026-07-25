@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.20.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.1...z3-v0.20.2) - 2026-06-26
+
+### Added
+
+- Add bindings for `get_lower`/`get_upper` in the `Optimize` solver. ([#565](https://github.com/prove-rs/z3.rs/pull/565)) (by @daemontus) - #565
+
+### Fixed
+
+- *(Real)* from_rational must not truncate i64 args to i32 ([#568](https://github.com/prove-rs/z3.rs/pull/568)) (by @progwriter)
+
+### Contributors
+
+* @progwriter
+* @daemontus
+
 ## [0.20.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.0...z3-v0.20.1) - 2026-06-21
 
 ### Other
