@@ -8,6 +8,22 @@ use crate::ast::{Ast, Dynamic};
 use crate::callbacks::FfiState;
 use crate::{Context, FuncDecl, Solver, Sort, Symbol};
 
+mod sealed {
+    pub trait PropagateRegisterable {}
+    impl PropagateRegisterable for crate::ast::Bool {}
+    impl PropagateRegisterable for crate::ast::BV {}
+}
+
+/// Marker trait for AST types that can be registered with the user propagator.
+///
+/// Z3's propagation API only supports [`Bool`](crate::ast::Bool) and
+/// [`BV`](crate::ast::BV) expressions. This trait is sealed so that only
+/// those two types implement it, turning an invalid registration into a
+/// compile error instead of a runtime panic.
+pub trait PropagateRegisterable: sealed::PropagateRegisterable + Ast {}
+impl PropagateRegisterable for crate::ast::Bool {}
+impl PropagateRegisterable for crate::ast::BV {}
+
 type FreshFactory = Box<dyn Fn() -> Box<dyn UserPropagator> + Send + Sync>;
 
 // ──────────────────────────────────────────────────────────────
@@ -641,10 +657,11 @@ impl Solver {
     /// Register an expression for tracking by the attached propagator.
     ///
     /// Must be called after [`Solver::set_propagator`] and before (or during) [`Solver::check`].
-    /// Only Bool and Bit-Vector expressions can be registered.
-    pub fn propagate_register(&self, expr: &Dynamic) {
+    /// Only [`Bool`](crate::ast::Bool) and [`BV`](crate::ast::BV) expressions are accepted;
+    /// other sorts are rejected at compile time via the [`PropagateRegisterable`] marker trait.
+    pub fn propagate_register<T: PropagateRegisterable>(&self, expr: &T) {
         unsafe {
-            Z3_solver_propagate_register(self.ctx.z3_ctx.as_ptr(), self.z3_slv, expr.z3_ast);
+            Z3_solver_propagate_register(self.ctx.z3_ctx.as_ptr(), self.z3_slv, expr.get_z3_ast());
         }
     }
 
