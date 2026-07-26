@@ -6,7 +6,7 @@ use z3_sys::*;
 
 use crate::ast::{Ast, Dynamic};
 use crate::callbacks::FfiState;
-use crate::{Context, Solver};
+use crate::{Context, FuncDecl, Solver, Sort, Symbol};
 
 type FreshFactory = Box<dyn Fn() -> Box<dyn UserPropagator> + Send + Sync>;
 
@@ -645,6 +645,36 @@ impl Solver {
     pub fn propagate_register(&self, expr: &Dynamic) {
         unsafe {
             Z3_solver_propagate_register(self.ctx.z3_ctx.as_ptr(), self.z3_slv, expr.z3_ast);
+        }
+    }
+
+    /// Declare an uninterpreted function for the user propagator.
+    ///
+    /// Whenever Z3 creates a new term whose top-level symbol is this function,
+    /// the [`UserPropagator::created`] callback fires with that term. Inside the
+    /// callback, call [`PropagatorCallbackHandle::register`] to start tracking
+    /// the new term (triggering [`UserPropagator::fixed`] etc.).
+    ///
+    /// Unlike [`FuncDecl::new`], which declares an ordinary uninterpreted function,
+    /// this function declares one that is "owned" by the propagator and triggers
+    /// the `created` callback.
+    pub fn propagate_declare<S: Into<Symbol>>(
+        &self,
+        name: S,
+        domain: &[&Sort],
+        range: &Sort,
+    ) -> FuncDecl {
+        let mut domain_ptrs: Vec<Z3_sort> = domain.iter().map(|s| s.z3_sort).collect();
+        unsafe {
+            let z3_func_decl = Z3_solver_propagate_declare(
+                self.ctx.z3_ctx.as_ptr(),
+                name.into().as_z3_symbol(),
+                domain_ptrs.len().try_into().unwrap(),
+                domain_ptrs.as_mut_ptr(),
+                range.z3_sort,
+            )
+            .unwrap();
+            FuncDecl::wrap(&self.ctx, z3_func_decl)
         }
     }
 }

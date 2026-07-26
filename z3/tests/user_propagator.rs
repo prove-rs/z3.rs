@@ -1,7 +1,7 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
 use z3::ast::{Ast, Bool, BV, Dynamic};
-use z3::{Context, PrepareSynchronized, PropagatorCallbackHandle, SatResult, Solver, Translate, UserPropagator};
+use z3::{Context, FuncDecl, PrepareSynchronized, PropagatorCallbackHandle, SatResult, Solver, Sort, Translate, UserPropagator};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -700,4 +700,101 @@ fn translate_does_not_carry_propagator() {
     // (We just verify it doesn't crash; the count should stay at 0.)
     assert_eq!(translated.check(), SatResult::Sat);
     assert_eq!(count.get(), 0, "propagator must not carry across translate");
+}
+
+// ── decide callback ───────────────────────────────────────────────────────────
+
+/// Sets a flag the first time `decide` fires.
+struct DecideTracker {
+    fired: Rc<Cell<bool>>,
+}
+
+impl UserPropagator for DecideTracker {
+    fn push(&mut self) {}
+    fn pop(&mut self, _: u32) {}
+    fn decide(&mut self, _cb: &PropagatorCallbackHandle<'_>, _t: &Dynamic, _idx: u32, _phase: bool) {
+        self.fired.set(true);
+    }
+}
+
+#[test]
+fn decide_callback_fires_for_registered_bv() {
+    // Two BV8 variables constrained to non-singleton ranges; Z3 must make bit-level
+    // case splits to determine their values, which causes `decide` to fire.
+    let fired = Rc::new(Cell::new(false));
+    let solver = Solver::new();
+    let x = BV::new_const("x_dec", 8);
+    let y = BV::new_const("y_dec", 8);
+
+    solver.set_propagator(DecideTracker { fired: fired.clone() }, || {
+        DecideTracker { fired: Rc::new(Cell::new(false)) }
+    });
+    solver.propagate_register(&Dynamic::from_ast(&x));
+    solver.propagate_register(&Dynamic::from_ast(&y));
+
+    // x < 3 and y > 200: satisfiable but neither variable is uniquely determined,
+    // so Z3 must split on at least one registered variable.
+    solver.assert(x.bvult(BV::from_u64(3, 8)));
+    solver.assert(y.bvugt(BV::from_u64(200, 8)));
+
+    assert_eq!(solver.check(), SatResult::Sat);
+    assert!(fired.get(), "decide callback must fire when Z3 splits on a registered expression");
+}
+
+// ── created callback + propagate_declare ─────────────────────────────────────
+
+/// Records when `created` and `fixed` fire; registers discovered terms mid-callback.
+struct CreatedTracker {
+    created_fired: Rc<Cell<bool>>,
+    fixed_fired: Rc<Cell<bool>>,
+}
+
+impl UserPropagator for CreatedTracker {
+    fn push(&mut self) {}
+    fn pop(&mut self, _: u32) {}
+
+    fn created(&mut self, cb: &PropagatorCallbackHandle<'_>, t: &Dynamic) {
+        self.created_fired.set(true);
+        // Register the newly created term so `fixed` will fire when Z3 assigns it.
+        cb.register(t);
+    }
+
+    fn fixed(&mut self, _cb: &PropagatorCallbackHandle<'_>, _ast: &Dynamic, _val: &Dynamic) {
+        self.fixed_fired.set(true);
+    }
+}
+
+#[test]
+fn created_callback_fires_for_propagate_declare_function() {
+    // `propagate_declare` registers a function with Z3's user-propagator machinery.
+    // When Z3 internalizes any term whose top-level symbol is that function,
+    // `created` fires. We then call `cb.register(t)` inside `created` (exercising the
+    // `register_cb` code path); `fixed` fires once Z3 assigns a value to the term.
+    let created_fired = Rc::new(Cell::new(false));
+    let fixed_fired = Rc::new(Cell::new(false));
+    let solver = Solver::new();
+
+    // Declare f : S -> Bool as a propagator-owned function.
+    let s_sort = Sort::uninterpreted("S_created".into());
+    let f = solver.propagate_declare("f_created", &[&s_sort], &Sort::bool());
+
+    // x : S (an uninterpreted constant).
+    let x = FuncDecl::new("x_created", &[], &s_sort).apply(&[]);
+
+    // f(x) : Bool — asserting this forces Z3 to internalize the term, firing `created`.
+    let fx = f.apply(&[&x]).as_bool().unwrap();
+
+    solver.set_propagator(
+        CreatedTracker { created_fired: created_fired.clone(), fixed_fired: fixed_fired.clone() },
+        || CreatedTracker { created_fired: Rc::new(Cell::new(false)), fixed_fired: Rc::new(Cell::new(false)) },
+    );
+
+    solver.assert(&fx);
+    assert_eq!(solver.check(), SatResult::Sat);
+
+    assert!(created_fired.get(), "created callback must fire when Z3 internalizes a propagate_declare term");
+    assert!(
+        fixed_fired.get(),
+        "fixed callback must fire for the term registered via cb.register() inside created"
+    );
 }
