@@ -22,7 +22,7 @@ use num::{
 };
 
 /// Heap-allocated state for a model handler registered with an [`Optimize`] solver.
-struct ModelHandlerState {
+pub(crate) struct ModelHandlerState {
     callback: Box<dyn Fn(&Model) + 'static>,
     model: Model,
 }
@@ -453,13 +453,11 @@ impl Optimize {
         unsafe {
             let model = Model::new_empty(&self.ctx);
             let z3_model = model.z3_mdl;
-            let new_raw = FfiState::new(ModelHandlerState {
+            let new_nn = FfiState::new(ModelHandlerState {
                 callback: Box::new(callback),
                 model,
             })
-            .into_raw();
-            // SAFETY: FfiState::into_raw wraps a Box, which is always non-null.
-            let new_nn = unsafe { std::ptr::NonNull::new_unchecked(new_raw) };
+            .into_non_null();
 
             // Register with Z3 before freeing the old state so Z3 never holds a dangling
             // pointer in the window between the two operations.
@@ -467,13 +465,13 @@ impl Optimize {
                 self.ctx.z3_ctx.0,
                 self.z3_opt,
                 z3_model,
-                new_nn.as_ptr(),
+                new_nn.as_ptr().cast::<c_void>(),
                 Some(model_handler_trampoline),
             );
 
             // Swap in the new pointer and free any previous handler state.
             if let Some(old_nn) = self.handler.replace(Some(new_nn)) {
-                drop(FfiState::<ModelHandlerState>::from_raw(old_nn.as_ptr()));
+                drop(FfiState::<ModelHandlerState>::from_non_null(old_nn));
             }
         }
     }
@@ -485,7 +483,7 @@ impl Optimize {
     /// the fact that no callback will fire once this `Optimize` is dropped.
     pub fn clear_model_handler(&self) {
         if let Some(old_nn) = self.handler.replace(None) {
-            unsafe { drop(FfiState::<ModelHandlerState>::from_raw(old_nn.as_ptr())); }
+            unsafe { drop(FfiState::<ModelHandlerState>::from_non_null(old_nn)); }
         }
     }
 }

@@ -81,7 +81,7 @@
 #![deny(missing_debug_implementations)]
 
 use std::cell::Cell;
-use std::ffi::{CString, c_void};
+use std::ffi::CString;
 use std::ptr::NonNull;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
@@ -117,6 +117,7 @@ pub mod quantifier_elimination;
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
+use crate::optimize::ModelHandlerState;
 pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
 pub use ast_vector::AstVector;
@@ -202,7 +203,7 @@ pub struct Optimize {
     z3_opt: Z3_optimize,
     // Heap-allocated `optimize::ModelHandlerState`; None when no handler is registered.
     // Safety invariant: Some(ptr) implies a valid, live allocation owned by this Optimize.
-    handler: Cell<Option<NonNull<c_void>>>,
+    handler: Cell<Option<NonNull<ModelHandlerState>>>,
 }
 
 /// Context for Horn clause / Datalog solving.

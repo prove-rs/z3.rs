@@ -1,7 +1,5 @@
 use std::cell::Cell;
 use std::rc::Rc;
-use std::sync::atomic::{AtomicBool, Ordering};
-use std::sync::Arc;
 use z3::ast::Int;
 use z3::*;
 
