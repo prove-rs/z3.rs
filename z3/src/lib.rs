@@ -100,6 +100,7 @@ mod model;
 mod ops;
 mod optimize;
 mod params;
+mod propagator;
 mod pattern;
 mod probe;
 mod rec_func_decl;
@@ -116,6 +117,7 @@ pub mod quantifier_elimination;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
+pub use crate::propagator::{PropagatorCallbackHandle, UserPropagator};
 pub use crate::translate::Translate;
 use crate::optimize::ModelHandlerState;
 pub use crate::translate::synchronization::*;
@@ -183,6 +185,9 @@ pub struct IsNotApp {
 pub struct Solver {
     ctx: Context,
     z3_slv: Z3_solver,
+    // Heap-allocated `propagator::PropagatorState`; None when no propagator is set.
+    // Safety invariant: Some(ptr) implies a valid, live allocation owned by this Solver.
+    pub(crate) propagator: Cell<Option<NonNull<c_void>>>,
 }
 
 /// Model for the constraints inserted into the logical context.

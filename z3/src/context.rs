@@ -7,14 +7,26 @@ use z3_sys::*;
 
 use crate::{Config, ContextHandle};
 
+/// Indicates whether a [`ContextInternal`] owns the underlying [`Z3_context`].
+///
+/// `Owned` contexts call `Z3_del_context` on drop; `Borrowed` contexts do not
+/// (Z3 owns the pointer lifetime — used for views inside FFI callbacks such as `fresh_eh`).
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub(crate) enum ContextOwnership {
+    Owned,
+    Borrowed,
+}
+
 /// A wrapper around [`Z3_context`] that enforces proper dropping behavior.
 /// All high-level code should instead use [`Context`]
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ContextInternal(pub(crate) Z3_context);
+pub(crate) struct ContextInternal(pub(crate) Z3_context, ContextOwnership);
 
 impl Drop for ContextInternal {
     fn drop(&mut self) {
-        unsafe { Z3_del_context(self.0) };
+        if self.1 == ContextOwnership::Owned {
+            unsafe { Z3_del_context(self.0) };
+        }
     }
 }
 
@@ -85,7 +97,7 @@ impl Context {
                 let p = Z3_mk_context_rc(cfg.z3_cfg).unwrap();
                 debug!("new context {p:p}");
                 Z3_set_error_handler(p, None);
-                Rc::new(ContextInternal(p))
+                Rc::new(ContextInternal(p, ContextOwnership::Owned))
             },
         }
     }
@@ -117,7 +129,21 @@ impl Context {
     pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {
         debug!("from_raw context {z3_ctx:p}");
         Context {
-            z3_ctx: Rc::new(ContextInternal(z3_ctx)),
+            z3_ctx: Rc::new(ContextInternal(z3_ctx, ContextOwnership::Owned)),
+        }
+    }
+
+    /// Create a non-owning [`Context`] view over a Z3-owned context pointer.
+    ///
+    /// # Safety
+    ///
+    /// `z3_ctx` must remain valid for the entire lifetime of the returned `Context`.
+    /// The returned `Context` (and any ASTs created from it) must not outlive the
+    /// Z3-managed pointer. This is intended for use inside FFI callbacks where Z3
+    /// passes a temporary context (e.g. `fresh_eh`).
+    pub(crate) unsafe fn borrow_context(z3_ctx: Z3_context) -> Context {
+        Context {
+            z3_ctx: Rc::new(ContextInternal(z3_ctx, ContextOwnership::Borrowed)),
         }
     }
 

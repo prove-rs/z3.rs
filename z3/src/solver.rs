@@ -1,11 +1,14 @@
 use log::debug;
 use std::borrow::Borrow;
+use std::cell::Cell;
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::iter::FusedIterator;
 use z3_sys::*;
 
 use crate::ast::Bool;
+use crate::callbacks::FfiState;
+use crate::propagator::PropagatorState;
 use crate::{
     AstVector, Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast,
     ast::Ast,
@@ -20,6 +23,7 @@ impl Solver {
         Solver {
             ctx: ctx.clone(),
             z3_slv,
+            propagator: Cell::new(None),
         }
     }
 
@@ -611,6 +615,9 @@ impl fmt::Debug for Solver {
 
 impl Drop for Solver {
     fn drop(&mut self) {
+        if let Some(ptr) = self.propagator.replace(None) {
+            unsafe { drop(FfiState::<PropagatorState>::from_raw(ptr.as_ptr())); }
+        }
         unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx.0, self.z3_slv) };
     }
 }
