@@ -80,7 +80,7 @@ type FreshFactory = Box<dyn Fn() -> Box<dyn UserPropagator> + Send + Sync>;
 /// let solver = Solver::new();
 /// let x = Bool::new_const("x");
 /// solver.set_propagator(NoPropagation, || NoPropagation);
-/// solver.propagate_register(&Dynamic::from_ast(&x));
+/// solver.propagate_register(&x);
 /// solver.assert(&x);
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// ```
@@ -127,7 +127,6 @@ type FreshFactory = Box<dyn Fn() -> Box<dyn UserPropagator> + Send + Sync>;
 /// let x = Bool::new_const("x");
 /// let y = Bool::new_const("y");
 /// let y_dyn = Dynamic::from_ast(&y);
-/// let x_dyn = Dynamic::from_ast(&x);
 ///
 /// // Wrap y_dyn in a Synchronized handle so the factory closure can be Send+Sync.
 /// // .recover() translates y into the fresh thread's context when the factory runs.
@@ -136,7 +135,7 @@ type FreshFactory = Box<dyn Fn() -> Box<dyn UserPropagator> + Send + Sync>;
 ///     ImplyY { y: y_dyn, scope_stack: vec![] },
 ///     move || ImplyY { y: y_sync.recover(), scope_stack: vec![] },
 /// );
-/// solver.propagate_register(&x_dyn);
+/// solver.propagate_register(&x);
 /// // Assert x = true; the propagator will then force y = true.
 /// solver.assert(&x);
 /// assert_eq!(solver.check(), SatResult::Sat);
@@ -266,14 +265,13 @@ impl<'cb> PropagatorCallbackHandle<'cb> {
     /// // each one in final_check; once both are exhausted, check() returns UNSAT.
     /// let solver = Solver::new();
     /// let x = Bool::new_const("x");
-    /// let x_dyn = Dynamic::from_ast(&x);
     /// // The factory creates fresh background-thread instances without carrying
     /// // any captured ASTs — enforced at compile time by the Send+Sync bound.
     /// solver.set_propagator(
     ///     BlockEachModel { fixed: vec![], scope_stack: vec![] },
     ///     || BlockEachModel { fixed: vec![], scope_stack: vec![] },
     /// );
-    /// solver.propagate_register(&x_dyn);
+    /// solver.propagate_register(&x);
     ///
     /// // Enumerate all models until UNSAT.
     /// loop {
@@ -574,7 +572,7 @@ impl Solver {
     ///
     /// ```
     /// use z3::{UserPropagator, PropagatorCallbackHandle, Solver, SatResult};
-    /// use z3::ast::{Bool, Dynamic, Ast};
+    /// use z3::ast::Bool;
     ///
     /// struct NoPropagation;
     ///
@@ -585,10 +583,9 @@ impl Solver {
     ///
     /// let solver = Solver::new();
     /// let x = Bool::new_const("x");
-    /// let x_dyn = Dynamic::from_ast(&x);
     ///
     /// solver.set_propagator(NoPropagation, || NoPropagation);
-    /// solver.propagate_register(&x_dyn);
+    /// solver.propagate_register(&x);
     /// solver.assert(&x);
     /// assert_eq!(solver.check(), SatResult::Sat);
     ///

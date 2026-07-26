@@ -117,7 +117,7 @@ pub mod quantifier_elimination;
 
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
-pub use crate::propagator::{PropagatorCallbackHandle, UserPropagator};
+pub use crate::propagator::{PropagateRegisterable, PropagatorCallbackHandle, UserPropagator};
 pub use crate::translate::Translate;
 use crate::optimize::ModelHandlerState;
 pub use crate::translate::synchronization::*;

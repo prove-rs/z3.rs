@@ -245,7 +245,7 @@ fn fixed_callback_fires_for_asserted_bool() {
     solver.set_propagator(FixedCounter::new(count.clone()), || {
         FixedCounter::new(Rc::new(Cell::new(0)))
     });
-    solver.propagate_register(&Dynamic::from_ast(&x));
+    solver.propagate_register(&x);
     solver.assert(&x);
 
     assert_eq!(solver.check(), SatResult::Sat);
@@ -262,7 +262,7 @@ fn fixed_callback_fires_for_bv() {
     solver.set_propagator(FixedCounter::new(count.clone()), || {
         FixedCounter::new(Rc::new(Cell::new(0)))
     });
-    solver.propagate_register(&Dynamic::from_ast(&x));
+    solver.propagate_register(&x);
     solver.assert(x.eq(&zero));
 
     assert_eq!(solver.check(), SatResult::Sat);
@@ -282,7 +282,7 @@ fn final_check_fires_and_blocks_one_model() {
     solver.set_propagator(ModelCounter::new(count.clone()), || {
         ModelCounter::new(Rc::new(Cell::new(0)))
     });
-    solver.propagate_register(&Dynamic::from_ast(&x));
+    solver.propagate_register(&x);
 
     // Both models should be enumerated and blocked, so we eventually get UNSAT.
     // Run until UNSAT, capped at 10 iterations to avoid infinite loops in bad implementations.
@@ -412,7 +412,7 @@ fn nqueens_4_finds_two_solutions() {
         move || NQueensPropagator::new(n, &[], Rc::new(RefCell::new(vec![]))),
     );
     for q in &queens {
-        solver.propagate_register(&Dynamic::from_ast(q));
+        solver.propagate_register(q);
     }
 
     // Drive until UNSAT to enumerate all models.
@@ -457,7 +457,7 @@ fn nqueens_theory_style_early_conflicts_find_same_solutions() {
         move || TheoryNQueensPropagator::new(n, &[], Rc::new(RefCell::new(vec![]))),
     );
     for q in &queens {
-        solver.propagate_register(&Dynamic::from_ast(q));
+        solver.propagate_register(q);
     }
 
     let mut iterations = 0u32;
@@ -488,7 +488,6 @@ fn positive_consequence_propagates_into_model() {
     let solver = Solver::new();
     let x = Bool::new_const("pos_x");
     let y = Bool::new_const("pos_y");
-    let x_dyn = Dynamic::from_ast(&x);
     let y_dyn = Dynamic::from_ast(&y);
 
     // Use Synchronized to carry y_dyn across the Send+Sync factory boundary.
@@ -497,7 +496,7 @@ fn positive_consequence_propagates_into_model() {
         PositiveConsequencePropagator { consequence: y_dyn },
         move || PositiveConsequencePropagator { consequence: y_sync.recover() },
     );
-    solver.propagate_register(&x_dyn);
+    solver.propagate_register(&x);
     solver.assert(&x); // forces x = true, triggering the propagation
 
     assert_eq!(solver.check(), SatResult::Sat);
@@ -525,8 +524,8 @@ fn eq_callback_fires_when_expressions_equated() {
         EqDiseqTracker { eq_fired: eq_fired.clone(), diseq_fired: Rc::new(Cell::new(false)) },
         || EqDiseqTracker { eq_fired: Rc::new(Cell::new(false)), diseq_fired: Rc::new(Cell::new(false)) },
     );
-    solver.propagate_register(&Dynamic::from_ast(&a));
-    solver.propagate_register(&Dynamic::from_ast(&b));
+    solver.propagate_register(&a);
+    solver.propagate_register(&b);
 
     // Assert a = b and pin a to a concrete value; Z3 must merge a and b.
     solver.assert(a.eq(&b));
@@ -549,8 +548,8 @@ fn diseq_callback_fires_when_expressions_disequal() {
         EqDiseqTracker { eq_fired: Rc::new(Cell::new(false)), diseq_fired: diseq_fired.clone() },
         || EqDiseqTracker { eq_fired: Rc::new(Cell::new(false)), diseq_fired: Rc::new(Cell::new(false)) },
     );
-    solver.propagate_register(&Dynamic::from_ast(&a));
-    solver.propagate_register(&Dynamic::from_ast(&b));
+    solver.propagate_register(&a);
+    solver.propagate_register(&b);
 
     // a = 5 and a ≠ b; Z3 must derive that a and b are disequal.
     solver.assert(a.eq(BV::from_u64(5, 8)));
@@ -577,7 +576,7 @@ fn second_set_propagator_replaces_first() {
         FixedCounter::new(Rc::new(Cell::new(0)))
     });
 
-    solver.propagate_register(&Dynamic::from_ast(&x));
+    solver.propagate_register(&x);
     solver.assert(x.eq(&zero));
     assert_eq!(solver.check(), SatResult::Sat);
 
@@ -639,7 +638,7 @@ fn callback_thread_local_context_matches_propagator_context() {
         ContextSanityChecker { fired: fired.clone() },
         || ContextSanityChecker { fired: Rc::new(Cell::new(false)) },
     );
-    solver.propagate_register(&Dynamic::from_ast(&x));
+    solver.propagate_register(&x);
     solver.assert(&x);
     assert_eq!(solver.check(), SatResult::Sat);
     assert!(fired.get(), "fixed callback must have fired");
@@ -692,7 +691,7 @@ fn translate_does_not_carry_propagator() {
     let translated = solver.translate(&Context::thread_local());
 
     let x = Bool::new_const("x_tr");
-    translated.propagate_register(&Dynamic::from_ast(&x));
+    translated.propagate_register(&x);
     translated.assert(&x);
 
     // If the propagator were carried, this line would trigger a second call on the
@@ -729,8 +728,8 @@ fn decide_callback_fires_for_registered_bv() {
     solver.set_propagator(DecideTracker { fired: fired.clone() }, || {
         DecideTracker { fired: Rc::new(Cell::new(false)) }
     });
-    solver.propagate_register(&Dynamic::from_ast(&x));
-    solver.propagate_register(&Dynamic::from_ast(&y));
+    solver.propagate_register(&x);
+    solver.propagate_register(&y);
 
     // x < 3 and y > 200: satisfiable but neither variable is uniquely determined,
     // so Z3 must split on at least one registered variable.
