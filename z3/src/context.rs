@@ -7,25 +7,29 @@ use z3_sys::*;
 
 use crate::{Config, ContextHandle};
 
-/// Indicates whether a [`ContextInternal`] owns the underlying [`Z3_context`].
+/// A wrapper around [`Z3_context`] that enforces proper dropping behavior.
+/// All high-level code should instead use [`Context`].
 ///
-/// `Owned` contexts call `Z3_del_context` on drop; `Borrowed` contexts do not
-/// (Z3 owns the pointer lifetime — used for views inside FFI callbacks such as `fresh_eh`).
+/// `Owned` calls `Z3_del_context` on drop; `Borrowed` does not (Z3 owns the pointer
+/// lifetime — used for views inside FFI callbacks such as `fresh_eh`).
 #[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) enum ContextOwnership {
-    Owned,
-    Borrowed,
+pub(crate) enum ContextInternal {
+    Owned(Z3_context),
+    Borrowed(Z3_context),
 }
 
-/// A wrapper around [`Z3_context`] that enforces proper dropping behavior.
-/// All high-level code should instead use [`Context`]
-#[derive(Clone, Debug, PartialEq, Eq)]
-pub(crate) struct ContextInternal(pub(crate) Z3_context, ContextOwnership);
+impl ContextInternal {
+    pub(crate) fn as_ptr(&self) -> Z3_context {
+        match self {
+            Self::Owned(p) | Self::Borrowed(p) => *p,
+        }
+    }
+}
 
 impl Drop for ContextInternal {
     fn drop(&mut self) {
-        if self.1 == ContextOwnership::Owned {
-            unsafe { Z3_del_context(self.0) };
+        if let Self::Owned(p) = self {
+            unsafe { Z3_del_context(*p) };
         }
     }
 }
@@ -97,7 +101,7 @@ impl Context {
                 let p = Z3_mk_context_rc(cfg.z3_cfg).unwrap();
                 debug!("new context {p:p}");
                 Z3_set_error_handler(p, None);
-                Rc::new(ContextInternal(p, ContextOwnership::Owned))
+                Rc::new(ContextInternal::Owned(p))
             },
         }
     }
@@ -129,7 +133,7 @@ impl Context {
     pub unsafe fn from_raw(z3_ctx: Z3_context) -> Context {
         debug!("from_raw context {z3_ctx:p}");
         Context {
-            z3_ctx: Rc::new(ContextInternal(z3_ctx, ContextOwnership::Owned)),
+            z3_ctx: Rc::new(ContextInternal::Owned(z3_ctx)),
         }
     }
 
@@ -143,12 +147,12 @@ impl Context {
     /// passes a temporary context (e.g. `fresh_eh`).
     pub(crate) unsafe fn borrow_context(z3_ctx: Z3_context) -> Context {
         Context {
-            z3_ctx: Rc::new(ContextInternal(z3_ctx, ContextOwnership::Borrowed)),
+            z3_ctx: Rc::new(ContextInternal::Borrowed(z3_ctx)),
         }
     }
 
     pub fn get_z3_context(&self) -> Z3_context {
-        self.z3_ctx.0
+        self.z3_ctx.as_ptr()
     }
 
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
@@ -174,7 +178,7 @@ impl Context {
     pub fn update_param_value(&mut self, k: &str, v: &str) {
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
-        unsafe { Z3_update_param_value(self.z3_ctx.0, ks.as_ptr(), vs.as_ptr()) };
+        unsafe { Z3_update_param_value(self.z3_ctx.as_ptr(), ks.as_ptr(), vs.as_ptr()) };
     }
 
     /// Update a global parameter.
@@ -193,7 +197,7 @@ impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
         unsafe {
-            Z3_interrupt(self.ctx.z3_ctx.0);
+            Z3_interrupt(self.ctx.z3_ctx.as_ptr());
         }
     }
 }

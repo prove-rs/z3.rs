@@ -53,7 +53,7 @@ impl Optimize {
     /// a [Z3_optimize_check] will cause UB due to acccess of the now-dangling model handler context pointer.
     unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {
-            Z3_optimize_inc_ref(ctx.z3_ctx.0, z3_opt);
+            Z3_optimize_inc_ref(ctx.z3_ctx.as_ptr(), z3_opt);
         }
         Optimize {
             ctx: ctx.clone(),
@@ -65,7 +65,7 @@ impl Optimize {
     /// Create a new optimize context.
     pub fn new() -> Optimize {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.0).unwrap()) }
+        unsafe { Self::wrap(ctx, Z3_mk_optimize(ctx.z3_ctx.as_ptr()).unwrap()) }
     }
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
@@ -73,7 +73,7 @@ impl Optimize {
     pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
         let source_cstring = CString::new(source_string).unwrap();
         unsafe {
-            Z3_optimize_from_string(self.ctx.z3_ctx.0, self.z3_opt, source_cstring.as_ptr());
+            Z3_optimize_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_opt, source_cstring.as_ptr());
         }
     }
 
@@ -91,7 +91,7 @@ impl Optimize {
     /// - [`Optimize::minimize()`]
     pub fn assert<T: Borrow<Bool>>(&self, ast: T) {
         let ast = ast.borrow();
-        unsafe { Z3_optimize_assert(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
+        unsafe { Z3_optimize_assert(self.ctx.z3_ctx.as_ptr(), self.z3_opt, ast.get_z3_ast()) };
     }
 
     /// Assert a constraint `a` into the solver, and track it (in the
@@ -112,7 +112,7 @@ impl Optimize {
     pub fn assert_and_track(&self, ast: &Bool, p: &Bool) {
         debug!("assert_and_track: {ast:?}");
         unsafe {
-            Z3_optimize_assert_and_track(self.ctx.z3_ctx.0, self.z3_opt, ast.z3_ast, p.z3_ast)
+            Z3_optimize_assert_and_track(self.ctx.z3_ctx.as_ptr(), self.z3_opt, ast.z3_ast, p.z3_ast)
         };
     }
 
@@ -132,7 +132,7 @@ impl Optimize {
 
         unsafe {
             Z3_optimize_assert_soft(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_opt,
                 ast.get_z3_ast(),
                 weight_cstring.as_ptr(),
@@ -153,7 +153,7 @@ impl Optimize {
             ast.get_sort().kind(),
             SortKind::Int | SortKind::Real | SortKind::Bv
         ));
-        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
+        unsafe { Z3_optimize_maximize(self.ctx.z3_ctx.as_ptr(), self.z3_opt, ast.get_z3_ast()) };
     }
 
     /// Add a minimization constraint.
@@ -167,7 +167,7 @@ impl Optimize {
             ast.get_sort().kind(),
             SortKind::Int | SortKind::Real | SortKind::Bv
         ));
-        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx.0, self.z3_opt, ast.get_z3_ast()) };
+        unsafe { Z3_optimize_minimize(self.ctx.z3_ctx.as_ptr(), self.z3_opt, ast.get_z3_ast()) };
     }
 
     /// Return a subset of the assumptions provided to either the last
@@ -191,7 +191,7 @@ impl Optimize {
     ///
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.0, self.z3_opt) })
+        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_opt) })
         else {
             return vec![];
         };
@@ -209,7 +209,7 @@ impl Optimize {
     ///
     /// - [`Optimize::pop()`]
     pub fn push(&self) {
-        unsafe { Z3_optimize_push(self.ctx.z3_ctx.0, self.z3_opt) };
+        unsafe { Z3_optimize_push(self.ctx.z3_ctx.as_ptr(), self.z3_opt) };
     }
 
     /// Backtrack one level.
@@ -223,7 +223,7 @@ impl Optimize {
     ///
     /// - [`Optimize::push()`]
     pub fn pop(&self) {
-        unsafe { Z3_optimize_pop(self.ctx.z3_ctx.0, self.z3_opt) };
+        unsafe { Z3_optimize_pop(self.ctx.z3_ctx.as_ptr(), self.z3_opt) };
     }
 
     /// Check consistency and produce optimal values.
@@ -235,7 +235,7 @@ impl Optimize {
         let assumptions: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
             Z3_optimize_check(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_opt,
                 assumptions.len().try_into().unwrap(),
                 assumptions.as_ptr(),
@@ -261,7 +261,7 @@ impl Optimize {
     ///
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic> {
-        let raw = unsafe { Z3_optimize_get_objectives(self.ctx.z3_ctx.0, self.z3_opt).unwrap() };
+        let raw = unsafe { Z3_optimize_get_objectives(self.ctx.z3_ctx.as_ptr(), self.z3_opt).unwrap() };
         unsafe { AstVector::wrap(&self.ctx, raw) }.to_vec()
     }
 
@@ -269,7 +269,7 @@ impl Optimize {
     ///
     /// Use this method when [`Optimize::check()`] returns [`SatResult::Unknown`].
     pub fn get_reason_unknown(&self) -> Option<String> {
-        let p = unsafe { Z3_optimize_get_reason_unknown(self.ctx.z3_ctx.0, self.z3_opt) };
+        let p = unsafe { Z3_optimize_get_reason_unknown(self.ctx.z3_ctx.as_ptr(), self.z3_opt) };
         if p.is_null() {
             return None;
         }
@@ -281,7 +281,7 @@ impl Optimize {
 
     /// Configure the parameters for this Optimize.
     pub fn set_params(&self, params: &Params) {
-        unsafe { Z3_optimize_set_params(self.ctx.z3_ctx.0, self.z3_opt, params.z3_params) };
+        unsafe { Z3_optimize_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_opt, params.z3_params) };
     }
 
     /// Retrieve the statistics for the last [`Optimize::check()`].
@@ -289,7 +289,7 @@ impl Optimize {
         unsafe {
             Statistics::wrap(
                 &self.ctx,
-                Z3_optimize_get_statistics(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
+                Z3_optimize_get_statistics(self.ctx.z3_ctx.as_ptr(), self.z3_opt).unwrap(),
             )
         }
     }
@@ -388,7 +388,7 @@ impl Optimize {
         let av = unsafe {
             AstVector::wrap(
                 &self.ctx,
-                Z3_optimize_get_assertions(self.ctx.z3_ctx.0, self.z3_opt).unwrap(),
+                Z3_optimize_get_assertions(self.ctx.z3_ctx.as_ptr(), self.z3_opt).unwrap(),
             )
         };
         av.try_into().expect("solver assertions are always Bool")
@@ -397,7 +397,7 @@ impl Optimize {
     /// Retrieve the lower bound value or approximation for the i-th optimization objective.
     pub fn get_lower(&self, objective_id: u32) -> Option<Dynamic> {
         unsafe {
-            Z3_optimize_get_lower(self.ctx.z3_ctx.0, self.z3_opt, objective_id)
+            Z3_optimize_get_lower(self.ctx.z3_ctx.as_ptr(), self.z3_opt, objective_id)
                 .map(|ast| Dynamic::wrap(&self.ctx, ast))
         }
     }
@@ -405,7 +405,7 @@ impl Optimize {
     /// Retrieve the upper bound value or approximation for the i-th optimization objective.
     pub fn get_upper(&self, objective_id: u32) -> Option<Dynamic> {
         unsafe {
-            Z3_optimize_get_upper(self.ctx.z3_ctx.0, self.z3_opt, objective_id)
+            Z3_optimize_get_upper(self.ctx.z3_ctx.as_ptr(), self.z3_opt, objective_id)
                 .map(|ast| Dynamic::wrap(&self.ctx, ast))
         }
     }
@@ -473,7 +473,7 @@ impl Optimize {
             // Register with Z3 before freeing the old state so Z3 never holds a dangling
             // pointer in the window between the two operations.
             Z3_optimize_register_model_eh(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_opt,
                 z3_model,
                 new_nn.as_ptr().cast::<c_void>(),
@@ -530,7 +530,7 @@ impl Default for Optimize {
 
 impl fmt::Display for Optimize {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_optimize_to_string(self.ctx.z3_ctx.0, self.z3_opt) };
+        let p = unsafe { Z3_optimize_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_opt) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -556,7 +556,7 @@ impl Drop for Optimize {
         // will continue to exist, but retain a pointer to free'd memory
         self.clear_model_handler();
 
-        unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
+        unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_opt) };
     }
 }
 
@@ -568,7 +568,7 @@ unsafe impl Translate for Optimize {
         unsafe {
             Optimize::wrap(
                 dest,
-                Z3_optimize_translate(self.ctx.z3_ctx.0, self.z3_opt, dest.z3_ctx.0).unwrap(),
+                Z3_optimize_translate(self.ctx.z3_ctx.as_ptr(), self.z3_opt, dest.z3_ctx.as_ptr()).unwrap(),
             )
         }
     }

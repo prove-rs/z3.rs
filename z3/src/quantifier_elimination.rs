@@ -16,7 +16,7 @@ impl QuantifierElimination {
         unsafe {
             Bool::wrap(
                 ctx,
-                Z3_qe_lite(ctx.z3_ctx.0, vars.z3_ast_vector, formula.get_z3_ast()).unwrap(),
+                Z3_qe_lite(ctx.z3_ctx.as_ptr(), vars.z3_ast_vector, formula.get_z3_ast()).unwrap(),
             )
         }
     }
@@ -30,12 +30,12 @@ impl QuantifierElimination {
         unsafe {
             let z3_vars: Vec<Z3_app> = vars
                 .iter()
-                .map(|v| Z3_to_app(ctx.z3_ctx.0, v.get_z3_ast()).unwrap())
+                .map(|v| Z3_to_app(ctx.z3_ctx.as_ptr(), v.get_z3_ast()).unwrap())
                 .collect();
             Bool::wrap(
                 ctx,
                 Z3_qe_model_project(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     model.z3_mdl,
                     z3_vars.len() as u32,
                     z3_vars.as_ptr(),

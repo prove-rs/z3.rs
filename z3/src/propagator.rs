@@ -275,7 +275,7 @@ impl<'cb> PropagatorCallbackHandle<'cb> {
         let eq_rhs: Vec<Z3_ast> = eq_pairs.iter().map(|(_, r)| r.z3_ast).collect();
         unsafe {
             Z3_solver_propagate_consequence(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.cb,
                 fixed_asts.len() as u32,
                 fixed_asts.as_ptr(),
@@ -290,7 +290,7 @@ impl<'cb> PropagatorCallbackHandle<'cb> {
     /// Register a new expression for tracking. Can be called from within any callback.
     pub fn register(&self, expr: &Dynamic) {
         unsafe {
-            Z3_solver_propagate_register_cb(self.ctx.z3_ctx.0, self.cb, expr.z3_ast);
+            Z3_solver_propagate_register_cb(self.ctx.z3_ctx.as_ptr(), self.cb, expr.z3_ast);
         }
     }
 
@@ -300,7 +300,7 @@ impl<'cb> PropagatorCallbackHandle<'cb> {
     ///
     /// Returns `false` if the expression is already assigned.
     pub fn next_split(&self, t: &Dynamic, idx: u32, phase: i32) -> bool {
-        unsafe { Z3_solver_next_split(self.ctx.z3_ctx.0, self.cb, t.z3_ast, idx, phase) }
+        unsafe { Z3_solver_next_split(self.ctx.z3_ctx.as_ptr(), self.cb, t.z3_ast, idx, phase) }
     }
 
     /// The Z3 context associated with this callback invocation.
@@ -613,7 +613,7 @@ impl Solver {
 
         unsafe {
             Z3_solver_propagate_init(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_slv,
                 raw,
                 Some(push_trampoline),
@@ -622,14 +622,14 @@ impl Solver {
             );
             // Register all optional trampolines unconditionally. The default trait
             // implementations are no-ops, so there is no cost for unneeded events.
-            Z3_solver_propagate_fixed(self.ctx.z3_ctx.0, self.z3_slv, Some(fixed_trampoline));
-            Z3_solver_propagate_final(self.ctx.z3_ctx.0, self.z3_slv, Some(final_trampoline));
-            Z3_solver_propagate_eq(self.ctx.z3_ctx.0, self.z3_slv, Some(eq_trampoline));
-            Z3_solver_propagate_diseq(self.ctx.z3_ctx.0, self.z3_slv, Some(diseq_trampoline));
-            Z3_solver_propagate_created(self.ctx.z3_ctx.0, self.z3_slv, Some(created_trampoline));
-            Z3_solver_propagate_decide(self.ctx.z3_ctx.0, self.z3_slv, Some(decide_trampoline));
+            Z3_solver_propagate_fixed(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(fixed_trampoline));
+            Z3_solver_propagate_final(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(final_trampoline));
+            Z3_solver_propagate_eq(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(eq_trampoline));
+            Z3_solver_propagate_diseq(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(diseq_trampoline));
+            Z3_solver_propagate_created(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(created_trampoline));
+            Z3_solver_propagate_decide(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(decide_trampoline));
             Z3_solver_propagate_on_binding(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_slv,
                 Some(on_binding_trampoline),
             );
@@ -644,7 +644,7 @@ impl Solver {
     /// Only Bool and Bit-Vector expressions can be registered.
     pub fn propagate_register(&self, expr: &Dynamic) {
         unsafe {
-            Z3_solver_propagate_register(self.ctx.z3_ctx.0, self.z3_slv, expr.z3_ast);
+            Z3_solver_propagate_register(self.ctx.z3_ctx.as_ptr(), self.z3_slv, expr.z3_ast);
         }
     }
 }

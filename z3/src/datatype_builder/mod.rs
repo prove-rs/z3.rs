@@ -82,7 +82,7 @@ fn build_datatype_sort(
 
         let raw_constructor = unsafe {
             Z3_get_datatype_sort_constructor(
-                ctx.z3_ctx.0,
+                ctx.z3_ctx.as_ptr(),
                 sort.get_z3_sort(),
                 j.try_into().unwrap(),
             )
@@ -91,7 +91,7 @@ fn build_datatype_sort(
         let constructor: FuncDecl = unsafe { FuncDecl::wrap(ctx, raw_constructor) };
 
         let tester_func = unsafe {
-            Z3_get_datatype_sort_recognizer(ctx.z3_ctx.0, sort.get_z3_sort(), j.try_into().unwrap())
+            Z3_get_datatype_sort_recognizer(ctx.z3_ctx.as_ptr(), sort.get_z3_sort(), j.try_into().unwrap())
                 .unwrap()
         };
         let tester = unsafe { FuncDecl::wrap(ctx, tester_func) };
@@ -100,7 +100,7 @@ fn build_datatype_sort(
         for k in 0..num_fs {
             let accessor_func = unsafe {
                 Z3_get_datatype_sort_constructor_accessor(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     sort.get_z3_sort(),
                     j.try_into().unwrap(),
                     k.try_into().unwrap(),
@@ -187,7 +187,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
 
     unsafe {
         Z3_mk_datatypes(
-            ctx.z3_ctx.0,
+            ctx.z3_ctx.as_ptr(),
             num.try_into().unwrap(),
             names.as_ptr(),
             raw_sorts.as_mut_ptr(),

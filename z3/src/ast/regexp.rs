@@ -36,8 +36,8 @@ impl Regexp {
             Self::wrap(ctx, {
                 let c_str = CString::new(s).unwrap();
                 Z3_mk_seq_to_re(
-                    ctx.z3_ctx.0,
-                    Z3_mk_string(ctx.z3_ctx.0, c_str.as_ptr()).unwrap(),
+                    ctx.z3_ctx.as_ptr(),
+                    Z3_mk_string(ctx.z3_ctx.as_ptr(), c_str.as_ptr()).unwrap(),
                 )
                 .unwrap()
             })
@@ -52,14 +52,14 @@ impl Regexp {
             Self::wrap(ctx, {
                 let lo_cs = CString::new(lo.to_string()).unwrap();
                 let hi_cs = CString::new(hi.to_string()).unwrap();
-                let lo_z3s = Z3_mk_string(ctx.z3_ctx.0, lo_cs.as_ptr()).unwrap();
-                Z3_inc_ref(ctx.z3_ctx.0, lo_z3s);
-                let hi_z3s = Z3_mk_string(ctx.z3_ctx.0, hi_cs.as_ptr()).unwrap();
-                Z3_inc_ref(ctx.z3_ctx.0, hi_z3s);
+                let lo_z3s = Z3_mk_string(ctx.z3_ctx.as_ptr(), lo_cs.as_ptr()).unwrap();
+                Z3_inc_ref(ctx.z3_ctx.as_ptr(), lo_z3s);
+                let hi_z3s = Z3_mk_string(ctx.z3_ctx.as_ptr(), hi_cs.as_ptr()).unwrap();
+                Z3_inc_ref(ctx.z3_ctx.as_ptr(), hi_z3s);
 
-                let ret = Z3_mk_re_range(ctx.z3_ctx.0, lo_z3s, hi_z3s);
-                Z3_dec_ref(ctx.z3_ctx.0, lo_z3s);
-                Z3_dec_ref(ctx.z3_ctx.0, hi_z3s);
+                let ret = Z3_mk_re_range(ctx.z3_ctx.as_ptr(), lo_z3s, hi_z3s);
+                Z3_dec_ref(ctx.z3_ctx.as_ptr(), lo_z3s);
+                Z3_dec_ref(ctx.z3_ctx.as_ptr(), hi_z3s);
                 ret.unwrap()
             })
         }
@@ -69,7 +69,7 @@ impl Regexp {
     pub fn r#loop(&self, lo: u32, hi: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_re_loop(self.ctx.z3_ctx.0, self.z3_ast, lo, hi).unwrap()
+                Z3_mk_re_loop(self.ctx.z3_ctx.as_ptr(), self.z3_ast, lo, hi).unwrap()
             })
         }
     }
@@ -79,7 +79,7 @@ impl Regexp {
     pub fn power(&self, n: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_re_power(self.ctx.z3_ctx.0, self.z3_ast, n).unwrap()
+                Z3_mk_re_power(self.ctx.z3_ctx.as_ptr(), self.z3_ast, n).unwrap()
             })
         }
     }
@@ -90,8 +90,8 @@ impl Regexp {
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_full(
-                    ctx.z3_ctx.0,
-                    Z3_mk_re_sort(ctx.z3_ctx.0, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap()).unwrap(),
+                    ctx.z3_ctx.as_ptr(),
+                    Z3_mk_re_sort(ctx.z3_ctx.as_ptr(), Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap()).unwrap(),
                 )
                 .unwrap()
             })
@@ -104,8 +104,8 @@ impl Regexp {
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_allchar(
-                    ctx.z3_ctx.0,
-                    Z3_mk_re_sort(ctx.z3_ctx.0, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap()).unwrap(),
+                    ctx.z3_ctx.as_ptr(),
+                    Z3_mk_re_sort(ctx.z3_ctx.as_ptr(), Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap()).unwrap(),
                 )
                 .unwrap()
             })
@@ -118,8 +118,8 @@ impl Regexp {
         unsafe {
             Self::wrap(ctx, {
                 Z3_mk_re_empty(
-                    ctx.z3_ctx.0,
-                    Z3_mk_re_sort(ctx.z3_ctx.0, Z3_mk_string_sort(ctx.z3_ctx.0).unwrap()).unwrap(),
+                    ctx.z3_ctx.as_ptr(),
+                    Z3_mk_re_sort(ctx.z3_ctx.as_ptr(), Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap()).unwrap(),
                 )
                 .unwrap()
             })

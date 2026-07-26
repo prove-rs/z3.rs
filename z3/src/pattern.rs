@@ -35,12 +35,12 @@ impl Pattern {
             ctx: ctx.clone(),
             z3_pattern: unsafe {
                 let p = Z3_mk_pattern(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     terms.len().try_into().unwrap(),
                     terms.as_ptr() as *const Z3_ast,
                 )
                 .unwrap();
-                Z3_inc_ref(ctx.z3_ctx.0, Z3_pattern_to_ast(ctx.z3_ctx.0, p).unwrap());
+                Z3_inc_ref(ctx.z3_ctx.as_ptr(), Z3_pattern_to_ast(ctx.z3_ctx.as_ptr(), p).unwrap());
                 p
             },
         }
@@ -49,7 +49,7 @@ impl Pattern {
 
 impl fmt::Debug for Pattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_pattern_to_string(self.ctx.z3_ctx.0, self.z3_pattern) };
+        let p = unsafe { Z3_pattern_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_pattern) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -68,9 +68,9 @@ impl fmt::Display for Pattern {
 
 impl Drop for Pattern {
     fn drop(&mut self) {
-        let ast = unsafe { Z3_pattern_to_ast(self.ctx.z3_ctx.0, self.z3_pattern) }.unwrap();
+        let ast = unsafe { Z3_pattern_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_pattern) }.unwrap();
         unsafe {
-            Z3_dec_ref(self.ctx.z3_ctx.0, ast);
+            Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), ast);
         }
     }
 }

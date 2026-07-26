@@ -9,8 +9,8 @@ impl FuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
             Z3_inc_ref(
-                ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl).unwrap(),
+                ctx.z3_ctx.as_ptr(),
+                Z3_func_decl_to_ast(ctx.z3_ctx.as_ptr(), z3_func_decl).unwrap(),
             );
         }
         Self {
@@ -29,7 +29,7 @@ impl FuncDecl {
             Self::wrap(
                 ctx,
                 Z3_mk_func_decl(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     name.into().as_z3_symbol(),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
@@ -105,7 +105,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_partial_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+                Z3_mk_partial_order(ctx.z3_ctx.as_ptr(), a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -126,7 +126,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_piecewise_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+                Z3_mk_piecewise_linear_order(ctx.z3_ctx.as_ptr(), a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -147,7 +147,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_linear_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+                Z3_mk_linear_order(ctx.z3_ctx.as_ptr(), a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -168,7 +168,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_tree_order(ctx.z3_ctx.0, a.z3_sort, id as u32).unwrap(),
+                Z3_mk_tree_order(ctx.z3_ctx.as_ptr(), a.z3_sort, id as u32).unwrap(),
             )
         }
     }
@@ -189,7 +189,7 @@ impl FuncDecl {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_transitive_closure(ctx.z3_ctx.0, a.z3_func_decl).unwrap(),
+                Z3_mk_transitive_closure(ctx.z3_ctx.as_ptr(), a.z3_func_decl).unwrap(),
             )
         }
     }
@@ -207,7 +207,7 @@ impl FuncDecl {
     /// assert_eq!(f.arity(), 2);
     /// ```
     pub fn arity(&self) -> usize {
-        unsafe { Z3_get_arity(self.ctx.z3_ctx.0, self.z3_func_decl) as usize }
+        unsafe { Z3_get_arity(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) as usize }
     }
 
     /// Create a constant (if `args` has length 0) or function application (otherwise).
@@ -221,7 +221,7 @@ impl FuncDecl {
         unsafe {
             ast::Dynamic::wrap(&self.ctx, {
                 Z3_mk_app(
-                    self.ctx.z3_ctx.0,
+                    self.ctx.z3_ctx.as_ptr(),
                     self.z3_func_decl,
                     args.len().try_into().unwrap(),
                     args.as_ptr(),
@@ -233,7 +233,7 @@ impl FuncDecl {
 
     /// Return the `DeclKind` of this `FuncDecl`.
     pub fn kind(&self) -> DeclKind {
-        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx.0, self.z3_func_decl) }
+        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) }
     }
 
     /// Return the name of this `FuncDecl`.
@@ -242,7 +242,7 @@ impl FuncDecl {
     /// the `Symbol`.
     pub fn name(&self) -> String {
         unsafe {
-            let z3_ctx = self.ctx.z3_ctx.0;
+            let z3_ctx = self.ctx.z3_ctx.as_ptr();
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl).unwrap();
             match Z3_get_symbol_kind(z3_ctx, symbol) {
                 SymbolKind::String => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
@@ -257,7 +257,7 @@ impl FuncDecl {
     ///
     /// Returns `None` if `i >= |domain|`.
     pub fn domain(&self, i: usize) -> Option<SortKind> {
-        let z3_ctx = self.ctx.z3_ctx.0;
+        let z3_ctx = self.ctx.z3_ctx.as_ptr();
         let i = c_uint::try_from(i).unwrap();
 
         let domain_size = unsafe { Z3_get_domain_size(z3_ctx, self.z3_func_decl) };
@@ -275,7 +275,7 @@ impl FuncDecl {
 
     /// Returns the kind of range (output) of this `FuncDecl`.
     pub fn range(&self) -> SortKind {
-        let z3_ctx = self.ctx.z3_ctx.0;
+        let z3_ctx = self.ctx.z3_ctx.as_ptr();
         unsafe {
             Z3_get_sort_kind(
                 z3_ctx,
@@ -287,7 +287,7 @@ impl FuncDecl {
 
 impl fmt::Display for FuncDecl {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.0, self.z3_func_decl) };
+        let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -308,8 +308,8 @@ impl Drop for FuncDecl {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(
-                self.ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap(),
+                self.ctx.z3_ctx.as_ptr(),
+                Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap(),
             );
         }
     }
@@ -318,9 +318,9 @@ impl Drop for FuncDecl {
 unsafe impl Translate for FuncDecl {
     fn translate(&self, dest: &Context) -> Self {
         unsafe {
-            let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap();
-            let translated = Z3_translate(self.ctx.z3_ctx.0, func_decl_ast, dest.z3_ctx.0).unwrap();
-            let func_decl = Z3_to_func_decl(self.ctx.z3_ctx.0, translated).unwrap();
+            let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap();
+            let translated = Z3_translate(self.ctx.z3_ctx.as_ptr(), func_decl_ast, dest.z3_ctx.as_ptr()).unwrap();
+            let func_decl = Z3_to_func_decl(self.ctx.z3_ctx.as_ptr(), translated).unwrap();
             Self::wrap(dest, func_decl)
         }
     }

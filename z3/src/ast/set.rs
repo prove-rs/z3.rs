@@ -15,7 +15,7 @@ impl Set {
         let sort = Sort::set(eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -27,7 +27,7 @@ impl Set {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -35,7 +35,7 @@ impl Set {
     /// Creates a set that maps the domain to false by default
     pub fn empty(domain: &Sort) -> Set {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.0, domain.z3_sort).unwrap()) }
+        unsafe { Self::wrap(ctx, Z3_mk_empty_set(ctx.z3_ctx.as_ptr(), domain.z3_sort).unwrap()) }
     }
 
     /// Add an element to the set.
@@ -49,7 +49,7 @@ impl Set {
     {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_set_add(self.ctx.z3_ctx.0, self.z3_ast, element.get_z3_ast()).unwrap()
+                Z3_mk_set_add(self.ctx.z3_ctx.as_ptr(), self.z3_ast, element.get_z3_ast()).unwrap()
             })
         }
     }
@@ -65,7 +65,7 @@ impl Set {
     {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_set_del(self.ctx.z3_ctx.0, self.z3_ast, element.get_z3_ast()).unwrap()
+                Z3_mk_set_del(self.ctx.z3_ctx.as_ptr(), self.z3_ast, element.get_z3_ast()).unwrap()
             })
         }
     }
@@ -81,7 +81,7 @@ impl Set {
     {
         unsafe {
             Bool::wrap(&self.ctx, {
-                Z3_mk_set_member(self.ctx.z3_ctx.0, element.get_z3_ast(), self.z3_ast).unwrap()
+                Z3_mk_set_member(self.ctx.z3_ctx.as_ptr(), element.get_z3_ast(), self.z3_ast).unwrap()
             })
         }
     }

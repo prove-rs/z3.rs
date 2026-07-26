@@ -17,7 +17,7 @@ impl Char {
         let sort = Sort::char();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -29,7 +29,7 @@ impl Char {
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, pp.as_ptr(), sort.z3_sort).unwrap()
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), pp.as_ptr(), sort.z3_sort).unwrap()
             })
         }
     }
@@ -37,7 +37,7 @@ impl Char {
     /// Creates a character literal from a Unicode code point.
     pub fn from_u32(ch: u32) -> Char {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_char(ctx.z3_ctx.0, ch).unwrap()) }
+        unsafe { Self::wrap(ctx, Z3_mk_char(ctx.z3_ctx.as_ptr(), ch).unwrap()) }
     }
 
     /// Creates a character from a `char` value.
@@ -50,7 +50,7 @@ impl Char {
         unsafe {
             Z3String::wrap(
                 &self.ctx,
-                Z3_mk_seq_unit(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
+                Z3_mk_seq_unit(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap(),
             )
         }
     }
@@ -74,7 +74,7 @@ impl Char {
         unsafe {
             Self::wrap(
                 bv.get_ctx(),
-                Z3_mk_char_from_bv(bv.get_ctx().z3_ctx.0, bv.get_z3_ast()).unwrap(),
+                Z3_mk_char_from_bv(bv.get_ctx().z3_ctx.as_ptr(), bv.get_z3_ast()).unwrap(),
             )
         }
     }
