@@ -551,8 +551,8 @@ impl Drop for Optimize {
     fn drop(&mut self) {
         // Drop model handler from the global handler registry.
         // Note, the soundness of this relies on the assumption that the rust bindings
-        // have the only refcount on this Optimize instance (and thus that decref will actually)
-        // deallocate the optimizie; if another C++ refcount exists, then the optimize
+        // have the only refcount on this [Optimize] instance (and thus that decref will actually)
+        // deallocate the [Optimize]; if another C++ refcount exists, then the [Optimize]
         // will continue to exist, but retain a pointer to free'd memory
         self.clear_model_handler();
 
@@ -560,7 +560,7 @@ impl Drop for Optimize {
     }
 }
 
-// Z3_optimize_translate was added in Z3 4.16.0. This feature gate is temporary
+// [Z3_optimize_translate] was added in Z3 4.16.0. This feature gate is temporary
 // and will be removed once the minimum supported Z3 version is bumped to 4.16.0.
 #[cfg(feature = "z3_4_16")]
 unsafe impl Translate for Optimize {
