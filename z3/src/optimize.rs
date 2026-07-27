@@ -41,16 +41,17 @@ unsafe extern "C" fn model_handler_trampoline(ctx: *mut c_void) {
 
 impl Optimize {
     /// # Safety
-    /// If any rust code will be installing a model handler (through `[Optimize::set_model_handler]()`),
+    /// If any rust code will be installing a model handler (through [`Optimize::set_model_handler`]),
     /// then it is the responsibility of the caller to ensure that either:
-    /// * this is a fresh Z3_optimize handle
-    /// * this Z3_optimize handle was fully moved from its original source and no additional
-    ///   [Z3_optimize_dec_ref] will be made on it after [Optimize::drop]
+    /// * this is a fresh `Z3_optimize` handle
+    /// * this `Z3_optimize` handle was fully moved from its original source and no additional
+    ///   [`Z3_optimize_dec_ref`] will be made on it after [`Optimize::drop`]
     ///
-    /// Z3 exposes no API for clearing a model handler: the [Optimize::drop] impl will drop the [FffiStruct]
-    /// holding the [ModelHandlerState] context given to z3; if [Z3_optimize_dec_ref]
-    /// does not decrement to 0 and deallocate the [Optimize] then any existing references to it which use
-    /// a [Z3_optimize_check] will cause UB due to acccess of the now-dangling model handler context pointer.
+    /// Z3 exposes no API for clearing a model handler: the [`Optimize::drop`] impl will drop the
+    /// [`FfiState`] holding the [`ModelHandlerState`] context given to z3; if [`Z3_optimize_dec_ref`]
+    /// does not decrement to 0 and deallocate the [`Optimize`] then any existing references to it
+    /// which use a `Z3_optimize_check` will cause UB due to access of the now-dangling model
+    /// handler context pointer.
     unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {
             Z3_optimize_inc_ref(ctx.z3_ctx.0, z3_opt);
