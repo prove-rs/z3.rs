@@ -616,7 +616,7 @@ impl fmt::Debug for Solver {
 impl Drop for Solver {
     fn drop(&mut self) {
         if let Some(ptr) = self.propagator.replace(None) {
-            unsafe { drop(FfiState::<PropagatorState>::from_raw(ptr.as_ptr())); }
+            unsafe { drop(FfiState::<PropagatorState>::from_non_null(ptr)); }
         }
         unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
     }

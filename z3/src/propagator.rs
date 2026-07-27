@@ -1,7 +1,6 @@
 use std::cell::RefCell;
 use std::ffi::c_void;
 use std::marker::PhantomData;
-use std::ptr::NonNull;
 use z3_sys::*;
 
 use crate::ast::{Ast, Dynamic};
@@ -430,7 +429,9 @@ unsafe extern "C" fn fresh_trampoline(ctx: *mut c_void, new_ctx: Z3_context) -> 
         propagator: RefCell::new(fresh_propagator),
         fresh_factory: None,
     })
-    .into_raw()
+    .into_non_null()
+    .as_ptr()
+    .cast::<c_void>()
 }
 
 unsafe extern "C" fn fixed_trampoline(
@@ -604,7 +605,7 @@ impl Solver {
         if let Some(existing_nn) = self.propagator.get() {
             // Z3_solver_propagate_init may only be called once per solver.
             // On subsequent calls, swap the inner propagator and factory in-place.
-            let state = unsafe { FfiState::<PropagatorState>::borrow_raw(existing_nn.as_ptr()) };
+            let state = unsafe { FfiState::<PropagatorState>::borrow_raw(existing_nn.as_ptr().cast::<c_void>()) };
             *state.propagator.borrow_mut() = Box::new(propagator);
             *state
                 .fresh_factory
@@ -615,20 +616,18 @@ impl Solver {
         }
 
         // First call: heap-pin state and initialise Z3's propagation hooks.
-        let raw = FfiState::new(PropagatorState {
+        let new_nn = FfiState::new(PropagatorState {
             ctx: self.ctx.clone(),
             propagator: RefCell::new(Box::new(propagator)),
             fresh_factory: Some(RefCell::new(erased)),
         })
-        .into_raw();
-        // SAFETY: FfiState::into_raw wraps a Box, which is always non-null.
-        let new_nn = unsafe { NonNull::new_unchecked(raw) };
+        .into_non_null();
 
         unsafe {
             Z3_solver_propagate_init(
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_slv,
-                raw,
+                new_nn.as_ptr().cast::<c_void>(),
                 Some(push_trampoline),
                 Some(pop_trampoline),
                 Some(fresh_trampoline),
