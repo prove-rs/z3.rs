@@ -476,12 +476,10 @@ impl Optimize {
         }
     }
 
-    /// Remove a model handler previously set by [`Optimize::set_model_handler`].
-    ///
-    /// After this call the Z3-side callback registration is not actively cleared; do not
-    /// call [`Optimize::check`] again without first re-registering a handler or relying on
-    /// the fact that no callback will fire once this `Optimize` is dropped.
-    pub fn clear_model_handler(&self) {
+    /// Free the model handler allocation on drop. Z3's callback registration is not
+    /// cleared, so this must only be called when no further `check()` calls will occur
+    /// (i.e. from `Drop`).
+    pub(crate) fn clear_model_handler(&self) {
         if let Some(old_nn) = self.handler.replace(None) {
             unsafe { drop(FfiState::<ModelHandlerState>::from_non_null(old_nn)); }
         }

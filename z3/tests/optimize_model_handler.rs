@@ -1,5 +1,9 @@
 use std::cell::Cell;
 use std::rc::Rc;
+#[cfg(feature = "z3_4_16")]
+use std::sync::Arc;
+#[cfg(feature = "z3_4_16")]
+use std::sync::atomic::{AtomicBool, Ordering};
 use z3::ast::Int;
 use z3::*;
 
@@ -89,13 +93,6 @@ fn second_set_model_handler_replaces_first() {
 
     assert!(!first_fired.get(), "first handler should have been replaced and never fire");
     assert!(second_fired.get(), "second handler should have fired");
-}
-
-#[test]
-fn clear_model_handler_on_fresh_optimize_is_noop() {
-    let opt = Optimize::new();
-    // Should not panic or otherwise misbehave.
-    opt.clear_model_handler();
 }
 
 #[test]
@@ -199,4 +196,49 @@ fn drop_translated_instance_with_no_handler_does_not_corrupt_original() {
         original_handler_fired.load(Ordering::Relaxed),
         "original handler must have fired during check in its own context"
     );
+}
+
+#[cfg(feature = "z3_4_16")]
+#[test]
+fn translated_check_with_no_handler_after_original_drops() {
+    // Regression: dropping the original Optimize (which has a handler) must not
+    // leave a dangling Z3 callback on the translated instance. check() on the
+    // translated instance with no handler must not crash.
+    let x = Int::new_const("x");
+
+    let s = x.synchronized();
+    let translated = with_z3_config(&Config::new(), || {
+        let x = s.recover();
+        let opt = Optimize::new();
+        opt.assert(x.ge(0));
+        opt.assert(x.le(10));
+        opt.minimize(&x);
+        opt.set_model_handler(|_| {});
+        // opt drops here, freeing the handler allocation.
+        opt.synchronized()
+    })
+    .recover();
+
+    // translated has no handler; check() must not crash.
+    assert_eq!(translated.check(&[]), SatResult::Sat);
+}
+
+#[cfg(feature = "z3_4_16")]
+#[test]
+fn cloned_check_with_no_handler_after_original_drops() {
+    // Same as above but via Clone (same context) instead of translate.
+    let x = Int::new_const("x");
+    let cloned = {
+        let opt = Optimize::new();
+        opt.assert(x.ge(0));
+        opt.assert(x.le(10));
+        opt.minimize(&x);
+        opt.set_model_handler(|_| {});
+        let cloned = opt.clone();
+        // opt drops here, freeing the handler allocation.
+        cloned
+    };
+
+    // cloned has no handler; check() must not crash.
+    assert_eq!(cloned.check(&[]), SatResult::Sat);
 }
