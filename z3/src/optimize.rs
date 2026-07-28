@@ -552,9 +552,9 @@ impl Drop for Optimize {
     fn drop(&mut self) {
         // Drop model handler from the global handler registry.
         // Note, the soundness of this relies on the assumption that the rust bindings
-        // have the only refcount on this [Optimize] instance (and thus that decref will actually)
-        // deallocate the [Optimize]; if another C++ refcount exists, then the [Optimize]
-        // will continue to exist, but retain a pointer to free'd memory
+        // have the only refcount on this [Optimize] instance (and thus that decref will actually
+        // deallocate the [Optimize]); if another C++ refcount exists, then the [Optimize]
+        // will continue to exist, but retain a pointer to free'd memory, causing UB
         self.clear_model_handler();
 
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
