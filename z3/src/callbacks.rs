@@ -49,6 +49,8 @@ impl<S: 'static> FfiState<S> {
 impl<S: 'static> Drop for FfiState<S> {
     fn drop(&mut self) {
         // SAFETY: pointer was created by Box::into_raw in Self::new; we have unique ownership.
-        unsafe { drop(Box::from_raw(self.0.as_ptr())); }
+        unsafe {
+            drop(Box::from_raw(self.0.as_ptr()));
+        }
     }
 }

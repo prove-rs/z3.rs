@@ -114,10 +114,10 @@ mod version;
 pub mod ast_vector;
 pub mod quantifier_elimination;
 
+use crate::optimize::ModelHandlerState;
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
-use crate::optimize::ModelHandlerState;
 pub use crate::translate::synchronization::*;
 pub use crate::version::{Version, full_version, version};
 pub use ast_vector::AstVector;
