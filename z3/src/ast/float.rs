@@ -43,7 +43,12 @@ impl Float {
     pub fn nan(sort: &Sort) -> Float {
         let ctx = &Context::thread_local();
         assert!(matches!(sort.kind(), SortKind::FloatingPoint));
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_nan(ctx.z3_ctx.as_ptr(), sort.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_fpa_nan(ctx.z3_ctx.as_ptr(), sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     /// A single-precision [`Float`] NaN value.
@@ -98,7 +103,12 @@ impl Float {
         let sort = Sort::float(ebits, sbits);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -109,7 +119,12 @@ impl Float {
         let sort = Sort::float32();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -120,7 +135,12 @@ impl Float {
         let sort = Sort::double();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -263,7 +283,8 @@ impl Float {
         unsafe {
             Float::wrap(
                 &self.ctx,
-                Z3_mk_fpa_round_to_integral(self.ctx.z3_ctx.as_ptr(), rm.z3_ast, self.z3_ast).unwrap(),
+                Z3_mk_fpa_round_to_integral(self.ctx.z3_ctx.as_ptr(), rm.z3_ast, self.z3_ast)
+                    .unwrap(),
             )
         }
     }

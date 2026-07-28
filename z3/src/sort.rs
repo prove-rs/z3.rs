@@ -9,7 +9,10 @@ use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 impl Sort {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_sort: Z3_sort) -> Sort {
         unsafe {
-            Z3_inc_ref(ctx.z3_ctx.as_ptr(), Z3_sort_to_ast(ctx.z3_ctx.as_ptr(), z3_sort).unwrap());
+            Z3_inc_ref(
+                ctx.z3_ctx.as_ptr(),
+                Z3_sort_to_ast(ctx.z3_ctx.as_ptr(), z3_sort).unwrap(),
+            );
         }
         Sort {
             ctx: ctx.clone(),
@@ -56,7 +59,10 @@ impl Sort {
     pub fn float(ebits: u32, sbits: u32) -> Sort {
         unsafe {
             let ctx = &Context::thread_local();
-            Self::wrap(ctx, Z3_mk_fpa_sort(ctx.z3_ctx.as_ptr(), ebits, sbits).unwrap())
+            Self::wrap(
+                ctx,
+                Z3_mk_fpa_sort(ctx.z3_ctx.as_ptr(), ebits, sbits).unwrap(),
+            )
         }
     }
 
@@ -113,13 +119,23 @@ impl Sort {
     pub fn set(elt: &Sort) -> Sort {
         let ctx = &Context::thread_local();
 
-        unsafe { Self::wrap(ctx, Z3_mk_set_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_set_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap(),
+            )
+        }
     }
 
     pub fn seq(elt: &Sort) -> Sort {
         let ctx = &Context::thread_local();
 
-        unsafe { Self::wrap(ctx, Z3_mk_seq_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_seq_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap(),
+            )
+        }
     }
 
     /// Create an enumeration sort.

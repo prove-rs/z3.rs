@@ -53,7 +53,8 @@ impl BV {
     /// ```
     pub fn from_bits(bits: &[bool]) -> Option<BV> {
         let ctx = &Context::thread_local();
-        let ast = unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.as_ptr(), bits.len() as u32, bits.as_ptr())? };
+        let ast =
+            unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.as_ptr(), bits.len() as u32, bits.as_ptr())? };
         Some(unsafe { Self::wrap(ctx, ast) })
     }
 
@@ -62,7 +63,12 @@ impl BV {
         let sort = Sort::bitvector(sz);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -82,7 +88,12 @@ impl BV {
     pub fn from_i64(i: i64, sz: u32) -> BV {
         let ctx = &Context::thread_local();
         let sort = Sort::bitvector(sz);
-        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.as_ptr(), i, sort.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_int64(ctx.z3_ctx.as_ptr(), i, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     pub fn from_u64(u: u64, sz: u32) -> BV {

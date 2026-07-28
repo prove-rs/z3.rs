@@ -16,7 +16,12 @@ impl QuantifierElimination {
         unsafe {
             Bool::wrap(
                 ctx,
-                Z3_qe_lite(ctx.z3_ctx.as_ptr(), vars.z3_ast_vector, formula.get_z3_ast()).unwrap(),
+                Z3_qe_lite(
+                    ctx.z3_ctx.as_ptr(),
+                    vars.z3_ast_vector,
+                    formula.get_z3_ast(),
+                )
+                .unwrap(),
             )
         }
     }

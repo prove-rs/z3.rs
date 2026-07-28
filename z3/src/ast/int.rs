@@ -25,7 +25,12 @@ impl Int {
         let sort = Sort::int();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -47,7 +52,12 @@ impl Int {
     pub fn from_i64(i: i64) -> Int {
         let ctx = &Context::thread_local();
         let sort = Sort::int();
-        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.as_ptr(), i, sort.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_int64(ctx.z3_ctx.as_ptr(), i, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     /// Create an AST node representing the integer value `u`.

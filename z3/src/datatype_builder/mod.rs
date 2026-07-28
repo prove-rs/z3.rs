@@ -91,8 +91,12 @@ fn build_datatype_sort(
         let constructor: FuncDecl = unsafe { FuncDecl::wrap(ctx, raw_constructor) };
 
         let tester_func = unsafe {
-            Z3_get_datatype_sort_recognizer(ctx.z3_ctx.as_ptr(), sort.get_z3_sort(), j.try_into().unwrap())
-                .unwrap()
+            Z3_get_datatype_sort_recognizer(
+                ctx.z3_ctx.as_ptr(),
+                sort.get_z3_sort(),
+                j.try_into().unwrap(),
+            )
+            .unwrap()
         };
         let tester = unsafe { FuncDecl::wrap(ctx, tester_func) };
 

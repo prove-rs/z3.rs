@@ -74,7 +74,11 @@ impl Optimize {
     pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
         let source_cstring = CString::new(source_string).unwrap();
         unsafe {
-            Z3_optimize_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_opt, source_cstring.as_ptr());
+            Z3_optimize_from_string(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_opt,
+                source_cstring.as_ptr(),
+            );
         }
     }
 
@@ -113,7 +117,12 @@ impl Optimize {
     pub fn assert_and_track(&self, ast: &Bool, p: &Bool) {
         debug!("assert_and_track: {ast:?}");
         unsafe {
-            Z3_optimize_assert_and_track(self.ctx.z3_ctx.as_ptr(), self.z3_opt, ast.z3_ast, p.z3_ast)
+            Z3_optimize_assert_and_track(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_opt,
+                ast.z3_ast,
+                p.z3_ast,
+            )
         };
     }
 
@@ -192,7 +201,8 @@ impl Optimize {
     ///
     /// - [`Optimize::check`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        let Some(raw) = (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_opt) })
+        let Some(raw) =
+            (unsafe { Z3_optimize_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_opt) })
         else {
             return vec![];
         };
@@ -262,7 +272,8 @@ impl Optimize {
     ///
     /// This contains maximize/minimize objectives and grouped soft constraints.
     pub fn get_objectives(&self) -> Vec<Dynamic> {
-        let raw = unsafe { Z3_optimize_get_objectives(self.ctx.z3_ctx.as_ptr(), self.z3_opt).unwrap() };
+        let raw =
+            unsafe { Z3_optimize_get_objectives(self.ctx.z3_ctx.as_ptr(), self.z3_opt).unwrap() };
         unsafe { AstVector::wrap(&self.ctx, raw) }.to_vec()
     }
 
@@ -569,7 +580,8 @@ unsafe impl Translate for Optimize {
         unsafe {
             Optimize::wrap(
                 dest,
-                Z3_optimize_translate(self.ctx.z3_ctx.as_ptr(), self.z3_opt, dest.z3_ctx.as_ptr()).unwrap(),
+                Z3_optimize_translate(self.ctx.z3_ctx.as_ptr(), self.z3_opt, dest.z3_ctx.as_ptr())
+                    .unwrap(),
             )
         }
     }

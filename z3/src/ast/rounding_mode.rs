@@ -11,19 +11,34 @@ impl RoundingMode {
     /// Create a numeral of [`RoundingMode`] sort which represents the `TowardZero` rounding mode.
     pub fn round_towards_zero() -> RoundingMode {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_zero(ctx.z3_ctx.as_ptr()).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_fpa_round_toward_zero(ctx.z3_ctx.as_ptr()).unwrap(),
+            )
+        }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `TowardNegative` rounding mode.
     pub fn round_towards_negative() -> RoundingMode {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_negative(ctx.z3_ctx.as_ptr()).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_fpa_round_toward_negative(ctx.z3_ctx.as_ptr()).unwrap(),
+            )
+        }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `TowardPositive` rounding mode.
     pub fn round_towards_positive() -> RoundingMode {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.as_ptr()).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_fpa_round_toward_positive(ctx.z3_ctx.as_ptr()).unwrap(),
+            )
+        }
     }
 
     /// Create a numeral of [`RoundingMode`] sort which represents the `NearestTiesToAway` rounding mode.

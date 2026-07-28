@@ -318,8 +318,14 @@ impl Drop for FuncDecl {
 unsafe impl Translate for FuncDecl {
     fn translate(&self, dest: &Context) -> Self {
         unsafe {
-            let func_decl_ast = Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap();
-            let translated = Z3_translate(self.ctx.z3_ctx.as_ptr(), func_decl_ast, dest.z3_ctx.as_ptr()).unwrap();
+            let func_decl_ast =
+                Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap();
+            let translated = Z3_translate(
+                self.ctx.z3_ctx.as_ptr(),
+                func_decl_ast,
+                dest.z3_ctx.as_ptr(),
+            )
+            .unwrap();
             let func_decl = Z3_to_func_decl(self.ctx.z3_ctx.as_ptr(), translated).unwrap();
             Self::wrap(dest, func_decl)
         }

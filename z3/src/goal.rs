@@ -103,8 +103,9 @@ impl Goal {
         let mut formulas: Vec<Bool> = Vec::with_capacity(goal_size);
 
         for i in 0..goal_size {
-            let formula =
-                unsafe { Z3_goal_formula(self.ctx.z3_ctx.as_ptr(), self.z3_goal, i as u32).unwrap() };
+            let formula = unsafe {
+                Z3_goal_formula(self.ctx.z3_ctx.as_ptr(), self.z3_goal, i as u32).unwrap()
+            };
             formulas.push(unsafe { Bool::wrap(&self.ctx, formula) });
         }
         formulas
@@ -143,7 +144,8 @@ unsafe impl Translate for Goal {
         unsafe {
             Goal::wrap(
                 ctx,
-                Z3_goal_translate(self.ctx.z3_ctx.as_ptr(), self.z3_goal, ctx.z3_ctx.as_ptr()).unwrap(),
+                Z3_goal_translate(self.ctx.z3_ctx.as_ptr(), self.z3_goal, ctx.z3_ctx.as_ptr())
+                    .unwrap(),
             )
         }
     }

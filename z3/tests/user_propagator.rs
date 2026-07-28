@@ -1,7 +1,10 @@
 use std::cell::{Cell, RefCell};
 use std::rc::Rc;
-use z3::ast::{Ast, Bool, BV, Dynamic};
-use z3::{Context, FuncDecl, PrepareSynchronized, PropagatorCallbackHandle, SatResult, Solver, Sort, Translate, UserPropagator};
+use z3::ast::{Ast, BV, Bool, Dynamic};
+use z3::{
+    Context, FuncDecl, PrepareSynchronized, PropagatorCallbackHandle, SatResult, Solver, Sort,
+    Translate, UserPropagator,
+};
 
 // ── helpers ──────────────────────────────────────────────────────────────────
 
@@ -21,7 +24,10 @@ struct FixedCounter {
 
 impl FixedCounter {
     fn new(count: Rc<Cell<u32>>) -> Self {
-        Self { count, scope_stack: Vec::new() }
+        Self {
+            count,
+            scope_stack: Vec::new(),
+        }
     }
 }
 
@@ -52,7 +58,11 @@ struct ModelCounter {
 
 impl ModelCounter {
     fn new(model_count: Rc<Cell<u32>>) -> Self {
-        Self { model_count, fixed_exprs: Vec::new(), scope_stack: Vec::new() }
+        Self {
+            model_count,
+            fixed_exprs: Vec::new(),
+            scope_stack: Vec::new(),
+        }
     }
 }
 
@@ -100,7 +110,10 @@ impl TheoryNQueensPropagator {
         Self {
             n,
             solutions,
-            queens: queens.iter().map(|q| (Dynamic::from_ast(q), None)).collect(),
+            queens: queens
+                .iter()
+                .map(|q| (Dynamic::from_ast(q), None))
+                .collect(),
             scope_stack: Vec::new(),
         }
     }
@@ -128,7 +141,8 @@ impl TheoryNQueensPropagator {
 
 impl UserPropagator for TheoryNQueensPropagator {
     fn push(&mut self) {
-        self.scope_stack.push(self.queens.iter().map(|(_, v)| *v).collect());
+        self.scope_stack
+            .push(self.queens.iter().map(|(_, v)| *v).collect());
     }
 
     fn pop(&mut self, num_scopes: u32) {
@@ -294,10 +308,17 @@ fn final_check_fires_and_blocks_one_model() {
         }
         assert_eq!(result, SatResult::Sat);
         iters += 1;
-        assert!(iters <= 10, "solver should have become UNSAT within a few iterations");
+        assert!(
+            iters <= 10,
+            "solver should have become UNSAT within a few iterations"
+        );
     }
     // Bool has exactly 2 models; we should have blocked them both.
-    assert_eq!(count.get(), 2, "final_check should have been called for each model");
+    assert_eq!(
+        count.get(),
+        2,
+        "final_check should have been called for each model"
+    );
 }
 
 // ── N-Queens integration test ─────────────────────────────────────────────────
@@ -321,7 +342,10 @@ impl NQueensPropagator {
         Self {
             n,
             solutions,
-            queens: queens.iter().map(|q| (Dynamic::from_ast(q), None)).collect(),
+            queens: queens
+                .iter()
+                .map(|q| (Dynamic::from_ast(q), None))
+                .collect(),
             scope_stack: Vec::new(),
         }
     }
@@ -349,7 +373,8 @@ impl NQueensPropagator {
 
 impl UserPropagator for NQueensPropagator {
     fn push(&mut self) {
-        self.scope_stack.push(self.queens.iter().map(|(_, v)| *v).collect());
+        self.scope_stack
+            .push(self.queens.iter().map(|(_, v)| *v).collect());
     }
 
     fn pop(&mut self, num_scopes: u32) {
@@ -470,7 +495,11 @@ fn nqueens_theory_style_early_conflicts_find_same_solutions() {
     }
 
     let found = solutions.borrow();
-    assert_eq!(found.len(), 2, "theory-style early conflict propagator must find the same 2 solutions");
+    assert_eq!(
+        found.len(),
+        2,
+        "theory-style early conflict propagator must find the same 2 solutions"
+    );
 }
 
 // ── positive consequence ──────────────────────────────────────────────────────
@@ -494,7 +523,9 @@ fn positive_consequence_propagates_into_model() {
     let y_sync = y_dyn.synchronized();
     solver.set_propagator(
         PositiveConsequencePropagator { consequence: y_dyn },
-        move || PositiveConsequencePropagator { consequence: y_sync.recover() },
+        move || PositiveConsequencePropagator {
+            consequence: y_sync.recover(),
+        },
     );
     solver.propagate_register(&x);
     solver.assert(&x); // forces x = true, triggering the propagation
@@ -521,8 +552,14 @@ fn eq_callback_fires_when_expressions_equated() {
     let b = BV::new_const("eq_b", 8);
 
     solver.set_propagator(
-        EqDiseqTracker { eq_fired: eq_fired.clone(), diseq_fired: Rc::new(Cell::new(false)) },
-        || EqDiseqTracker { eq_fired: Rc::new(Cell::new(false)), diseq_fired: Rc::new(Cell::new(false)) },
+        EqDiseqTracker {
+            eq_fired: eq_fired.clone(),
+            diseq_fired: Rc::new(Cell::new(false)),
+        },
+        || EqDiseqTracker {
+            eq_fired: Rc::new(Cell::new(false)),
+            diseq_fired: Rc::new(Cell::new(false)),
+        },
     );
     solver.propagate_register(&a);
     solver.propagate_register(&b);
@@ -532,7 +569,10 @@ fn eq_callback_fires_when_expressions_equated() {
     solver.assert(a.eq(BV::from_u64(42, 8)));
 
     assert_eq!(solver.check(), SatResult::Sat);
-    assert!(eq_fired.get(), "eq callback must fire when two registered expressions are equated");
+    assert!(
+        eq_fired.get(),
+        "eq callback must fire when two registered expressions are equated"
+    );
 }
 
 #[test]
@@ -545,8 +585,14 @@ fn diseq_callback_fires_when_expressions_disequal() {
     let b = BV::new_const("diseq_b", 8);
 
     solver.set_propagator(
-        EqDiseqTracker { eq_fired: Rc::new(Cell::new(false)), diseq_fired: diseq_fired.clone() },
-        || EqDiseqTracker { eq_fired: Rc::new(Cell::new(false)), diseq_fired: Rc::new(Cell::new(false)) },
+        EqDiseqTracker {
+            eq_fired: Rc::new(Cell::new(false)),
+            diseq_fired: diseq_fired.clone(),
+        },
+        || EqDiseqTracker {
+            eq_fired: Rc::new(Cell::new(false)),
+            diseq_fired: Rc::new(Cell::new(false)),
+        },
     );
     solver.propagate_register(&a);
     solver.propagate_register(&b);
@@ -556,7 +602,10 @@ fn diseq_callback_fires_when_expressions_disequal() {
     solver.assert(a.eq(&b).not());
 
     assert_eq!(solver.check(), SatResult::Sat);
-    assert!(diseq_fired.get(), "diseq callback must fire when two registered expressions are found disequal");
+    assert!(
+        diseq_fired.get(),
+        "diseq callback must fire when two registered expressions are found disequal"
+    );
 }
 
 // ── set_propagator lifecycle ──────────────────────────────────────────────────
@@ -580,7 +629,11 @@ fn second_set_propagator_replaces_first() {
     solver.assert(x.eq(&zero));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    assert_eq!(first_fixed.get(), 0, "first propagator should not fire after replacement");
+    assert_eq!(
+        first_fixed.get(),
+        0,
+        "first propagator should not fire after replacement"
+    );
     assert!(second_fixed.get() >= 1, "second propagator should fire");
 }
 
@@ -635,8 +688,12 @@ fn callback_thread_local_context_matches_propagator_context() {
     let solver = Solver::new();
     let x = Bool::new_const("x_ctx_check");
     solver.set_propagator(
-        ContextSanityChecker { fired: fired.clone() },
-        || ContextSanityChecker { fired: Rc::new(Cell::new(false)) },
+        ContextSanityChecker {
+            fired: fired.clone(),
+        },
+        || ContextSanityChecker {
+            fired: Rc::new(Cell::new(false)),
+        },
     );
     solver.propagate_register(&x);
     solver.assert(&x);
@@ -711,7 +768,13 @@ struct DecideTracker {
 impl UserPropagator for DecideTracker {
     fn push(&mut self) {}
     fn pop(&mut self, _: u32) {}
-    fn decide(&mut self, _cb: &PropagatorCallbackHandle<'_>, _t: &Dynamic, _idx: u32, _phase: bool) {
+    fn decide(
+        &mut self,
+        _cb: &PropagatorCallbackHandle<'_>,
+        _t: &Dynamic,
+        _idx: u32,
+        _phase: bool,
+    ) {
         self.fired.set(true);
     }
 }
@@ -725,9 +788,14 @@ fn decide_callback_fires_for_registered_bv() {
     let x = BV::new_const("x_dec", 8);
     let y = BV::new_const("y_dec", 8);
 
-    solver.set_propagator(DecideTracker { fired: fired.clone() }, || {
-        DecideTracker { fired: Rc::new(Cell::new(false)) }
-    });
+    solver.set_propagator(
+        DecideTracker {
+            fired: fired.clone(),
+        },
+        || DecideTracker {
+            fired: Rc::new(Cell::new(false)),
+        },
+    );
     solver.propagate_register(&x);
     solver.propagate_register(&y);
 
@@ -737,7 +805,10 @@ fn decide_callback_fires_for_registered_bv() {
     solver.assert(y.bvugt(BV::from_u64(200, 8)));
 
     assert_eq!(solver.check(), SatResult::Sat);
-    assert!(fired.get(), "decide callback must fire when Z3 splits on a registered expression");
+    assert!(
+        fired.get(),
+        "decide callback must fire when Z3 splits on a registered expression"
+    );
 }
 
 // ── created callback + propagate_declare ─────────────────────────────────────
@@ -784,14 +855,23 @@ fn created_callback_fires_for_propagate_declare_function() {
     let fx = f.apply(&[&x]).as_bool().unwrap();
 
     solver.set_propagator(
-        CreatedTracker { created_fired: created_fired.clone(), fixed_fired: fixed_fired.clone() },
-        || CreatedTracker { created_fired: Rc::new(Cell::new(false)), fixed_fired: Rc::new(Cell::new(false)) },
+        CreatedTracker {
+            created_fired: created_fired.clone(),
+            fixed_fired: fixed_fired.clone(),
+        },
+        || CreatedTracker {
+            created_fired: Rc::new(Cell::new(false)),
+            fixed_fired: Rc::new(Cell::new(false)),
+        },
     );
 
     solver.assert(&fx);
     assert_eq!(solver.check(), SatResult::Sat);
 
-    assert!(created_fired.get(), "created callback must fire when Z3 internalizes a propagate_declare term");
+    assert!(
+        created_fired.get(),
+        "created callback must fire when Z3 internalizes a propagate_declare term"
+    );
     assert!(
         fixed_fired.get(),
         "fixed callback must fire for the term registered via cb.register() inside created"

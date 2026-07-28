@@ -15,7 +15,12 @@ impl Seq {
         let sort = Sort::seq(eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -48,13 +53,23 @@ impl Seq {
     pub fn empty(eltype: &Sort) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
-        unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.as_ptr(), sort.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_seq_empty(ctx.z3_ctx.as_ptr(), sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     /// Create a unit sequence of `a`.
     pub fn unit<A: Ast>(a: &A) -> Self {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.as_ptr(), a.get_z3_ast()).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_seq_unit(ctx.z3_ctx.as_ptr(), a.get_z3_ast()).unwrap(),
+            )
+        }
     }
 
     /// Retrieve the unit sequence positioned at position `index`.
@@ -121,7 +136,8 @@ impl Seq {
         unsafe {
             Bool::wrap(
                 &self.ctx,
-                Z3_mk_seq_contains(self.ctx.z3_ctx.as_ptr(), self.z3_ast, containee.z3_ast).unwrap(),
+                Z3_mk_seq_contains(self.ctx.z3_ctx.as_ptr(), self.z3_ast, containee.z3_ast)
+                    .unwrap(),
             )
         }
     }

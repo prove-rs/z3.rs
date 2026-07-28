@@ -68,7 +68,11 @@ impl Statistics {
         unsafe {
             let size = Z3_stats_size(self.ctx.z3_ctx.as_ptr(), self.z3_stats);
             for idx in 0..size {
-                let k = CStr::from_ptr(Z3_stats_get_key(self.ctx.z3_ctx.as_ptr(), self.z3_stats, idx));
+                let k = CStr::from_ptr(Z3_stats_get_key(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_stats,
+                    idx,
+                ));
                 if k.to_str().unwrap() == key {
                     return Some(self.value_at_idx(idx));
                 }

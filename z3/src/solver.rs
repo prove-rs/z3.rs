@@ -59,7 +59,11 @@ impl Solver {
     pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
         let source_cstring = CString::new(source_string).unwrap();
         unsafe {
-            Z3_solver_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_slv, source_cstring.as_ptr());
+            Z3_solver_from_string(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                source_cstring.as_ptr(),
+            );
         }
     }
 
@@ -121,7 +125,9 @@ impl Solver {
     pub fn assert_and_track<T: Into<Bool>>(&self, ast: T, p: &Bool) {
         let ast = ast.into();
         debug!("assert_and_track: {ast:?}");
-        unsafe { Z3_solver_assert_and_track(self.ctx.z3_ctx.as_ptr(), self.z3_slv, ast.z3_ast, p.z3_ast) };
+        unsafe {
+            Z3_solver_assert_and_track(self.ctx.z3_ctx.as_ptr(), self.z3_slv, ast.z3_ast, p.z3_ast)
+        };
     }
 
     /// Remove all assertions from the solver.
@@ -174,7 +180,12 @@ impl Solver {
     pub fn check_assumptions(&self, assumptions: &[Bool]) -> SatResult {
         let a: Vec<Z3_ast> = assumptions.iter().map(|a| a.z3_ast).collect();
         match unsafe {
-            Z3_solver_check_assumptions(self.ctx.z3_ctx.as_ptr(), self.z3_slv, a.len() as u32, a.as_ptr())
+            Z3_solver_check_assumptions(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                a.len() as u32,
+                a.as_ptr(),
+            )
         } {
             Z3_L_FALSE => SatResult::Unsat,
             Z3_L_UNDEF => SatResult::Unknown,
@@ -216,7 +227,8 @@ impl Solver {
     /// - [`Solver::check_assumptions`]
     /// - [`Solver::assert_and_track`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        let Some(raw) = (unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_slv) })
+        let Some(raw) =
+            (unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_slv) })
         else {
             return vec![];
         };
@@ -616,7 +628,9 @@ impl fmt::Debug for Solver {
 impl Drop for Solver {
     fn drop(&mut self) {
         if let Some(ptr) = self.propagator.replace(None) {
-            unsafe { drop(FfiState::<PropagatorState>::from_non_null(ptr)); }
+            unsafe {
+                drop(FfiState::<PropagatorState>::from_non_null(ptr));
+            }
         }
         unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
     }
@@ -635,7 +649,8 @@ unsafe impl Translate for Solver {
         unsafe {
             Solver::wrap(
                 dest,
-                Z3_solver_translate(self.ctx.z3_ctx.as_ptr(), self.z3_slv, dest.z3_ctx.as_ptr()).unwrap(),
+                Z3_solver_translate(self.ctx.z3_ctx.as_ptr(), self.z3_slv, dest.z3_ctx.as_ptr())
+                    .unwrap(),
             )
         }
     }

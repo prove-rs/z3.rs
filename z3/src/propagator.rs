@@ -605,7 +605,9 @@ impl Solver {
         if let Some(existing_nn) = self.propagator.get() {
             // Z3_solver_propagate_init may only be called once per solver.
             // On subsequent calls, swap the inner propagator and factory in-place.
-            let state = unsafe { FfiState::<PropagatorState>::borrow_raw(existing_nn.as_ptr().cast::<c_void>()) };
+            let state = unsafe {
+                FfiState::<PropagatorState>::borrow_raw(existing_nn.as_ptr().cast::<c_void>())
+            };
             *state.propagator.borrow_mut() = Box::new(propagator);
             *state
                 .fresh_factory
@@ -634,12 +636,32 @@ impl Solver {
             );
             // Register all optional trampolines unconditionally. The default trait
             // implementations are no-ops, so there is no cost for unneeded events.
-            Z3_solver_propagate_fixed(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(fixed_trampoline));
-            Z3_solver_propagate_final(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(final_trampoline));
+            Z3_solver_propagate_fixed(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                Some(fixed_trampoline),
+            );
+            Z3_solver_propagate_final(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                Some(final_trampoline),
+            );
             Z3_solver_propagate_eq(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(eq_trampoline));
-            Z3_solver_propagate_diseq(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(diseq_trampoline));
-            Z3_solver_propagate_created(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(created_trampoline));
-            Z3_solver_propagate_decide(self.ctx.z3_ctx.as_ptr(), self.z3_slv, Some(decide_trampoline));
+            Z3_solver_propagate_diseq(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                Some(diseq_trampoline),
+            );
+            Z3_solver_propagate_created(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                Some(created_trampoline),
+            );
+            Z3_solver_propagate_decide(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_slv,
+                Some(decide_trampoline),
+            );
             Z3_solver_propagate_on_binding(
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_slv,

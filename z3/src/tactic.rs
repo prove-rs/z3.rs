@@ -21,12 +21,14 @@ impl ApplyResult {
     }
 
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal> {
-        let num_subgoals =
-            unsafe { Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result) };
+        let num_subgoals = unsafe {
+            Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result)
+        };
         (0..num_subgoals).map(move |i| unsafe {
             Goal::wrap(
                 &self.ctx,
-                Z3_apply_result_get_subgoal(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result, i).unwrap(),
+                Z3_apply_result_get_subgoal(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result, i)
+                    .unwrap(),
             )
         })
     }
@@ -136,8 +138,12 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_and_then(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, then_tactic.z3_tactic)
-                    .unwrap(),
+                Z3_tactic_and_then(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_tactic,
+                    then_tactic.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -148,8 +154,12 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_or_else(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, else_tactic.z3_tactic)
-                    .unwrap(),
+                Z3_tactic_or_else(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_tactic,
+                    else_tactic.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -160,7 +170,13 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_cond(self.ctx.z3_ctx.as_ptr(), p.z3_probe, self.z3_tactic, t.z3_tactic).unwrap(),
+                Z3_tactic_cond(
+                    self.ctx.z3_ctx.as_ptr(),
+                    p.z3_probe,
+                    self.z3_tactic,
+                    t.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -184,7 +200,13 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &p.ctx,
-                Z3_tactic_cond(p.ctx.z3_ctx.as_ptr(), p.z3_probe, t1.z3_tactic, t2.z3_tactic).unwrap(),
+                Z3_tactic_cond(
+                    p.ctx.z3_ctx.as_ptr(),
+                    p.z3_probe,
+                    t1.z3_tactic,
+                    t2.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }

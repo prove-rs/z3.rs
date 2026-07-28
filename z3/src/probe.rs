@@ -60,7 +60,12 @@ impl Probe {
     pub fn new(name: &str) -> Probe {
         let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
-        unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.as_ptr(), probe_name.as_ptr()).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_probe(ctx.z3_ctx.as_ptr(), probe_name.as_ptr()).unwrap(),
+            )
+        }
     }
 
     /// Execute the probe over the goal.

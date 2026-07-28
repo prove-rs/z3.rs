@@ -49,8 +49,9 @@ impl Model {
     pub fn get_const_interp<T: Ast>(&self, ast: &T) -> Option<T> {
         let func = ast.safe_decl().ok()?;
 
-        let ret =
-            unsafe { Z3_model_get_const_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, func.z3_func_decl) };
+        let ret = unsafe {
+            Z3_model_get_const_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, func.z3_func_decl)
+        };
         Some(unsafe { T::wrap(&self.ctx, ret?) })
     }
 
@@ -84,8 +85,9 @@ impl Model {
                 _ => None,
             }
         } else {
-            let ret =
-                unsafe { Z3_model_get_func_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl) };
+            let ret = unsafe {
+                Z3_model_get_func_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
+            };
             Some(unsafe { FuncInterp::wrap(&self.ctx, ret?) })
         }
     }
@@ -142,8 +144,9 @@ impl Model {
     /// Returns the universe of the given sort (the finite set of values Z3 assigned to it),
     /// or `None` if the sort has no interpretation in the model.
     pub fn get_sort_universe(&self, sort: &Sort) -> Option<AstVector> {
-        let z3_av =
-            unsafe { Z3_model_get_sort_universe(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, sort.z3_sort) }?;
+        let z3_av = unsafe {
+            Z3_model_get_sort_universe(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, sort.z3_sort)
+        }?;
         Some(unsafe { AstVector::wrap(&self.ctx, z3_av) })
     }
 
@@ -218,12 +221,17 @@ impl Iterator for ModelIter<'_> {
         if self.idx >= self.len {
             None
         } else {
-            let num_consts =
-                unsafe { Z3_model_get_num_consts(self.model.ctx.z3_ctx.as_ptr(), self.model.z3_mdl) };
+            let num_consts = unsafe {
+                Z3_model_get_num_consts(self.model.ctx.z3_ctx.as_ptr(), self.model.z3_mdl)
+            };
             if self.idx < num_consts {
                 let const_decl = unsafe {
-                    Z3_model_get_const_decl(self.model.ctx.z3_ctx.as_ptr(), self.model.z3_mdl, self.idx)
-                        .unwrap()
+                    Z3_model_get_const_decl(
+                        self.model.ctx.z3_ctx.as_ptr(),
+                        self.model.z3_mdl,
+                        self.idx,
+                    )
+                    .unwrap()
                 };
                 self.idx += 1;
                 Some(unsafe { FuncDecl::wrap(&self.model.ctx, const_decl) })
@@ -281,7 +289,8 @@ unsafe impl Translate for Model {
         unsafe {
             Model::wrap(
                 dest,
-                Z3_model_translate(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, dest.z3_ctx.as_ptr()).unwrap(),
+                Z3_model_translate(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, dest.z3_ctx.as_ptr())
+                    .unwrap(),
             )
         }
     }

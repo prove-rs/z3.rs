@@ -45,7 +45,12 @@ impl Fixedpoint {
             unsafe { Z3_mk_string_symbol(self.ctx.z3_ctx.as_ptr(), cname.as_ptr()).unwrap() }
         });
         unsafe {
-            Z3_fixedpoint_add_rule(self.ctx.z3_ctx.as_ptr(), self.z3_fp, rule.get_z3_ast(), name_sym);
+            Z3_fixedpoint_add_rule(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_fp,
+                rule.get_z3_ast(),
+                name_sym,
+            );
         }
     }
 
@@ -124,13 +129,20 @@ impl Fixedpoint {
         unsafe {
             let cname = CString::new(name).unwrap();
             let name_sym = Z3_mk_string_symbol(self.ctx.z3_ctx.as_ptr(), cname.as_ptr()).unwrap();
-            Z3_fixedpoint_update_rule(self.ctx.z3_ctx.as_ptr(), self.z3_fp, rule.get_z3_ast(), name_sym);
+            Z3_fixedpoint_update_rule(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_fp,
+                rule.get_z3_ast(),
+                name_sym,
+            );
         }
     }
 
     /// Get the number of levels explored during the last query.
     pub fn get_num_levels(&self, pred: &FuncDecl) -> u32 {
-        unsafe { Z3_fixedpoint_get_num_levels(self.ctx.z3_ctx.as_ptr(), self.z3_fp, pred.z3_func_decl) }
+        unsafe {
+            Z3_fixedpoint_get_num_levels(self.ctx.z3_ctx.as_ptr(), self.z3_fp, pred.z3_func_decl)
+        }
     }
 
     /// Get the cover (approximation) at a given level.
@@ -172,7 +184,11 @@ impl Fixedpoint {
     /// Register a relation as fixedpoint-defined (least-fixedpoint semantics).
     pub fn register_relation(&self, pred: &FuncDecl) {
         unsafe {
-            Z3_fixedpoint_register_relation(self.ctx.z3_ctx.as_ptr(), self.z3_fp, pred.z3_func_decl);
+            Z3_fixedpoint_register_relation(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_fp,
+                pred.z3_func_decl,
+            );
         }
     }
 
@@ -197,7 +213,8 @@ impl Fixedpoint {
     pub fn from_string(&self, s: &str) -> Result<(), String> {
         let cs = CString::new(s).map_err(|_| "String contains null byte")?;
         unsafe {
-            let result = Z3_fixedpoint_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr());
+            let result =
+                Z3_fixedpoint_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr());
             match result {
                 Some(_) => Ok(()),
                 None => Err("Failed to parse fixedpoint from string".to_string()),
@@ -227,7 +244,12 @@ impl Default for Fixedpoint {
 impl fmt::Display for Fixedpoint {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let s = unsafe {
-            let s = Z3_fixedpoint_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_fp, 0, std::ptr::null_mut());
+            let s = Z3_fixedpoint_to_string(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_fp,
+                0,
+                std::ptr::null_mut(),
+            );
             std::ffi::CStr::from_ptr(s).to_string_lossy().into_owned()
         };
         write!(f, "{s}")

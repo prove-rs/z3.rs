@@ -40,7 +40,10 @@ impl Pattern {
                     terms.as_ptr() as *const Z3_ast,
                 )
                 .unwrap();
-                Z3_inc_ref(ctx.z3_ctx.as_ptr(), Z3_pattern_to_ast(ctx.z3_ctx.as_ptr(), p).unwrap());
+                Z3_inc_ref(
+                    ctx.z3_ctx.as_ptr(),
+                    Z3_pattern_to_ast(ctx.z3_ctx.as_ptr(), p).unwrap(),
+                );
                 p
             },
         }

@@ -47,7 +47,8 @@ impl FuncInterp {
             .map(|i| unsafe {
                 FuncEntry::wrap(
                     &self.ctx,
-                    Z3_func_interp_get_entry(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, i).unwrap(),
+                    Z3_func_interp_get_entry(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, i)
+                        .unwrap(),
                 )
             })
             .collect()
@@ -66,7 +67,9 @@ impl FuncInterp {
 
     /// Sets the else value of the function interpretation.
     pub fn set_else(&self, ast: &Dynamic) {
-        unsafe { Z3_func_interp_set_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, ast.z3_ast) }
+        unsafe {
+            Z3_func_interp_set_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, ast.z3_ast)
+        }
     }
 }
 

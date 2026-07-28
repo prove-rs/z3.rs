@@ -91,7 +91,11 @@ impl Regexp {
             Self::wrap(ctx, {
                 Z3_mk_re_full(
                     ctx.z3_ctx.as_ptr(),
-                    Z3_mk_re_sort(ctx.z3_ctx.as_ptr(), Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap()).unwrap(),
+                    Z3_mk_re_sort(
+                        ctx.z3_ctx.as_ptr(),
+                        Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap(),
+                    )
+                    .unwrap(),
                 )
                 .unwrap()
             })
@@ -105,7 +109,11 @@ impl Regexp {
             Self::wrap(ctx, {
                 Z3_mk_re_allchar(
                     ctx.z3_ctx.as_ptr(),
-                    Z3_mk_re_sort(ctx.z3_ctx.as_ptr(), Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap()).unwrap(),
+                    Z3_mk_re_sort(
+                        ctx.z3_ctx.as_ptr(),
+                        Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap(),
+                    )
+                    .unwrap(),
                 )
                 .unwrap()
             })
@@ -119,7 +127,11 @@ impl Regexp {
             Self::wrap(ctx, {
                 Z3_mk_re_empty(
                     ctx.z3_ctx.as_ptr(),
-                    Z3_mk_re_sort(ctx.z3_ctx.as_ptr(), Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap()).unwrap(),
+                    Z3_mk_re_sort(
+                        ctx.z3_ctx.as_ptr(),
+                        Z3_mk_string_sort(ctx.z3_ctx.as_ptr()).unwrap(),
+                    )
+                    .unwrap(),
                 )
                 .unwrap()
             })

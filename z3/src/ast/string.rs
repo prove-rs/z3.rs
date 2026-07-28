@@ -18,7 +18,12 @@ impl String {
         let sort = Sort::string();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.as_ptr(), name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -120,8 +125,13 @@ impl String {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_mk_seq_extract(self.ctx.z3_ctx.as_ptr(), self.z3_ast, offset.z3_ast, length.z3_ast)
-                    .unwrap(),
+                Z3_mk_seq_extract(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_ast,
+                    offset.z3_ast,
+                    length.z3_ast,
+                )
+                .unwrap(),
             )
         }
     }
@@ -132,7 +142,12 @@ impl String {
         unsafe {
             Bool::wrap(
                 &self.ctx,
-                Z3_mk_seq_in_re(self.ctx.z3_ctx.as_ptr(), self.get_z3_ast(), regex.get_z3_ast()).unwrap(),
+                Z3_mk_seq_in_re(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.get_z3_ast(),
+                    regex.get_z3_ast(),
+                )
+                .unwrap(),
             )
         }
     }

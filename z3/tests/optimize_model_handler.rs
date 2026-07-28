@@ -44,7 +44,11 @@ fn handler_receives_non_empty_model() {
     });
 
     assert_eq!(opt.check(&[]), SatResult::Sat);
-    assert_ne!(last_value.get(), -1, "handler should have been called with a model value");
+    assert_ne!(
+        last_value.get(),
+        -1,
+        "handler should have been called with a model value"
+    );
 }
 
 #[test]
@@ -63,7 +67,10 @@ fn handler_fires_multiple_times_for_improving_sequence() {
     opt.set_model_handler(move |model| {
         count2.set(count2.get() + 1);
         if let Some(v) = model.eval(&x, true).and_then(|v| v.as_i64()) {
-            assert!((0..=10).contains(&v), "in-flight model value {v} out of expected range");
+            assert!(
+                (0..=10).contains(&v),
+                "in-flight model value {v} out of expected range"
+            );
         }
     });
 
@@ -83,15 +90,22 @@ fn second_set_model_handler_replaces_first() {
 
     let first_fired = Rc::new(Cell::new(false));
     let first2 = first_fired.clone();
-    opt.set_model_handler(move |_| { first2.set(true); });
+    opt.set_model_handler(move |_| {
+        first2.set(true);
+    });
 
     let second_fired = Rc::new(Cell::new(false));
     let second2 = second_fired.clone();
-    opt.set_model_handler(move |_| { second2.set(true); });
+    opt.set_model_handler(move |_| {
+        second2.set(true);
+    });
 
     assert_eq!(opt.check(&[]), SatResult::Sat);
 
-    assert!(!first_fired.get(), "first handler should have been replaced and never fire");
+    assert!(
+        !first_fired.get(),
+        "first handler should have been replaced and never fire"
+    );
     assert!(second_fired.get(), "second handler should have fired");
 }
 
@@ -129,7 +143,9 @@ fn translate_with_no_handler_gives_no_handler() {
     // Registering a handler on the translated instance must work normally.
     let fired = Rc::new(Cell::new(false));
     let fired2 = fired.clone();
-    translated.set_model_handler(move |_| { fired2.set(true); });
+    translated.set_model_handler(move |_| {
+        fired2.set(true);
+    });
     assert_eq!(translated.check(&[]), SatResult::Sat);
     assert!(fired.get());
 }
@@ -151,7 +167,9 @@ fn translate_does_not_carry_handler_across_contexts() {
         opt.assert(x.ge(0));
         opt.assert(x.le(10));
         opt.minimize(&x);
-        opt.set_model_handler(move |_| { fired2.store(true, Ordering::Relaxed); });
+        opt.set_model_handler(move |_| {
+            fired2.store(true, Ordering::Relaxed);
+        });
         // Sanity: original handler fires in its own context.
         assert_eq!(opt.check(&[]), SatResult::Sat);
         opt.synchronized()
@@ -162,9 +180,14 @@ fn translate_does_not_carry_handler_across_contexts() {
     // Register a fresh handler to confirm check works and only the new one fires.
     let new_fired = Rc::new(Cell::new(false));
     let new_fired2 = new_fired.clone();
-    translated.set_model_handler(move |_| { new_fired2.set(true); });
+    translated.set_model_handler(move |_| {
+        new_fired2.set(true);
+    });
     assert_eq!(translated.check(&[]), SatResult::Sat);
-    assert!(new_fired.get(), "explicitly registered handler on translated instance must fire");
+    assert!(
+        new_fired.get(),
+        "explicitly registered handler on translated instance must fire"
+    );
 }
 
 #[cfg(feature = "z3_4_16")]
@@ -182,7 +205,9 @@ fn drop_translated_instance_with_no_handler_does_not_corrupt_original() {
         opt.assert(x.ge(0));
         opt.assert(x.le(10));
         opt.minimize(&x);
-        opt.set_model_handler(move |_| { fired2.store(true, Ordering::Relaxed); });
+        opt.set_model_handler(move |_| {
+            fired2.store(true, Ordering::Relaxed);
+        });
         assert_eq!(opt.check(&[]), SatResult::Sat);
         opt.synchronized()
     })

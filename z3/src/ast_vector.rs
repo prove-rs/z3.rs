@@ -76,7 +76,8 @@ impl AstVector {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_ast_vector_get(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector, index as u32).unwrap(),
+                Z3_ast_vector_get(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector, index as u32)
+                    .unwrap(),
             )
         }
     }
@@ -101,7 +102,11 @@ impl AstVector {
     /// Push an element to the end of the vector.
     pub fn push(&self, ast: &impl Ast) {
         unsafe {
-            Z3_ast_vector_push(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector, ast.get_z3_ast());
+            Z3_ast_vector_push(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_ast_vector,
+                ast.get_z3_ast(),
+            );
         }
     }
 
@@ -110,7 +115,11 @@ impl AstVector {
     /// New elements (if any) are uninitialized.
     pub fn resize(&self, new_size: usize) {
         unsafe {
-            Z3_ast_vector_resize(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector, new_size as u32);
+            Z3_ast_vector_resize(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_ast_vector,
+                new_size as u32,
+            );
         }
     }
 
@@ -124,8 +133,12 @@ impl AstVector {
         unsafe {
             AstVector::wrap(
                 target_ctx,
-                Z3_ast_vector_translate(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector, target_ctx.z3_ctx.as_ptr())
-                    .unwrap(),
+                Z3_ast_vector_translate(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_ast_vector,
+                    target_ctx.z3_ctx.as_ptr(),
+                )
+                .unwrap(),
             )
         }
     }
