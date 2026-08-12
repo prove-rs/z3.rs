@@ -338,7 +338,7 @@ pub struct Pattern {
 }
 
 /// Collection of subgoals resulting from applying of a tactic to a goal.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct ApplyResult {
     ctx: Context,
     z3_apply_result: Z3_apply_result,
