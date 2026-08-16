@@ -85,7 +85,7 @@ jobs:
       - name: Build z3-sys and z3 with vendored Z3
         run: |
           source ~/emsdk/emsdk_env.sh
-          cargo build --target=wasm32-unknown-emscripten --features "vendored,num"
+          cargo build -p z3 --target=wasm32-unknown-emscripten --features "vendored,num"
         env:
           SCCACHE_GHA_ENABLED: "true"
           CMAKE_C_COMPILER_LAUNCHER: "sccache"

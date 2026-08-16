@@ -34,6 +34,12 @@ impl ApplyResult {
     }
 }
 
+impl Clone for ApplyResult {
+    fn clone(&self) -> Self {
+        unsafe { Self::wrap(&self.ctx, self.z3_apply_result) }
+    }
+}
+
 impl Drop for ApplyResult {
     fn drop(&mut self) {
         unsafe {

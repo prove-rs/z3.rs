@@ -4,6 +4,7 @@ use std::convert::TryInto;
 use std::ffi::{CStr, CString, c_void};
 use std::fmt;
 use std::iter::FusedIterator;
+use std::ptr::NonNull;
 use z3_sys::*;
 
 #[cfg(feature = "z3_4_16")]
@@ -493,17 +494,19 @@ impl Optimize {
             );
 
             // Swap in the new pointer and free any previous handler state.
-            if let Some(old_nn) = self.handler.replace(Some(new_nn)) {
-                drop(FfiState::<ModelHandlerState>::from_non_null(old_nn));
-            }
+            self.replace_model_handler(Some(new_nn));
         }
     }
 
-    /// Free the model handler allocation on drop. Z3's callback registration is not
-    /// cleared, so this must only be called when no further `check()` calls will occur
-    /// (i.e. from `Drop`).
-    pub(crate) fn clear_model_handler(&self) {
-        if let Some(old_nn) = self.handler.replace(None) {
+    /// Swap in `new` as the current model handler state, freeing whatever state was
+    /// previously registered. This does not touch Z3's callback registration; callers are
+    /// responsible for calling [`Z3_optimize_register_model_eh`] themselves before swapping in
+    /// a new handler, since Z3 exposes no API for clearing a registered handler.
+    ///
+    /// Passing `None` frees the current handler state without registering a replacement,
+    /// which is only sound when no further `check()` calls will occur (i.e. from `Drop`).
+    fn replace_model_handler(&self, new: Option<NonNull<ModelHandlerState>>) {
+        if let Some(old_nn) = self.handler.replace(new) {
             unsafe {
                 drop(FfiState::<ModelHandlerState>::from_non_null(old_nn));
             }
@@ -566,7 +569,7 @@ impl Drop for Optimize {
         // have the only refcount on this [Optimize] instance (and thus that decref will actually)
         // deallocate the [Optimize]; if another C++ refcount exists, then the [Optimize]
         // will continue to exist, but retain a pointer to free'd memory
-        self.clear_model_handler();
+        self.replace_model_handler(None);
 
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_opt) };
     }
