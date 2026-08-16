@@ -1,14 +1,15 @@
 use log::debug;
 use std::borrow::Borrow;
 use std::convert::TryInto;
-use std::ffi::{CStr, CString};
+use std::ffi::{CStr, CString, c_void};
 use std::fmt;
 use std::iter::FusedIterator;
-
+use std::ptr::NonNull;
 use z3_sys::*;
 
 #[cfg(feature = "z3_4_16")]
 use crate::Translate;
+use crate::callbacks::FfiState;
 use crate::solver::Solvable;
 use crate::{
     AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
@@ -21,7 +22,37 @@ use num::{
     rational::BigRational,
 };
 
+/// Heap-allocated state for a model handler registered with an [`Optimize`] solver.
+pub(crate) struct ModelHandlerState {
+    callback: Box<dyn Fn(&Model) + 'static>,
+    model: Model,
+}
+
+/// Trampoline called by Z3 for each incremental model found during optimization.
+///
+/// # Safety
+/// `ctx` must be a pointer previously returned by `FfiState::<ModelHandlerState>::into_raw`
+/// and the state must still be live (i.e., the owning `Optimize` has not been dropped or had
+/// its handler replaced).
+unsafe extern "C" fn model_handler_trampoline(ctx: *mut c_void) {
+    // SAFETY: invariant above; pointer is valid and live.
+    let state = unsafe { FfiState::<ModelHandlerState>::borrow_raw(ctx) };
+    (state.callback)(&state.model);
+}
+
 impl Optimize {
+    /// # Safety
+    /// If any rust code will be installing a model handler (through [`Optimize::set_model_handler`]),
+    /// then it is the responsibility of the caller to ensure that either:
+    /// * this is a fresh `Z3_optimize` handle
+    /// * this `Z3_optimize` handle was fully moved from its original source and no additional
+    ///   [`Z3_optimize_dec_ref`] will be made on it after [`Optimize::drop`]
+    ///
+    /// Z3 exposes no API for clearing a model handler: the [`Optimize::drop`] impl will drop the
+    /// [`FfiState`] holding the [`ModelHandlerState`] context given to z3; if [`Z3_optimize_dec_ref`]
+    /// does not decrement to 0 and deallocate the [`Optimize`] then any existing references to it
+    /// which use a `Z3_optimize_check` will cause UB due to access of the now-dangling model
+    /// handler context pointer.
     unsafe fn wrap(ctx: &Context, z3_opt: Z3_optimize) -> Optimize {
         unsafe {
             Z3_optimize_inc_ref(ctx.z3_ctx.0, z3_opt);
@@ -29,6 +60,7 @@ impl Optimize {
         Optimize {
             ctx: ctx.clone(),
             z3_opt,
+            handler: std::cell::Cell::new(None),
         }
     }
 
@@ -379,6 +411,96 @@ impl Optimize {
                 .map(|ast| Dynamic::wrap(&self.ctx, ast))
         }
     }
+
+    /// Register a model handler that is invoked for every incrementally improved model
+    /// produced by the optimization process. Only one model handler can be registered within
+    /// each optimization solver; calling this method a second time replaces the first handler.
+    ///
+    /// The [`Model`] passed to the handler is the same object for every invocation, updated
+    /// in-place by Z3. To capture a snapshot, copy out the values you need inside the handler.
+    ///
+    /// # Example
+    ///
+    /// Collect each improving cost as Z3 works toward the minimum, then verify the result:
+    ///
+    /// ```
+    /// # use z3::ast::{Ast, Int};
+    /// # use z3::*;
+    /// use std::cell::RefCell;
+    /// use std::rc::Rc;
+    ///
+    /// // Minimise 3·x + 5·y  subject to  x + y >= 10,  x >= 0,  y >= 0.
+    /// // The optimum is x = 10, y = 0 → cost = 30.
+    /// let x = Int::new_const("x");
+    /// let y = Int::new_const("y");
+    /// let opt = Optimize::new();
+    /// opt.assert((&x + &y).ge(10));
+    /// opt.assert(x.ge(0));
+    /// opt.assert(y.ge(0));
+    /// let cost = &x * 3i64 + &y * 5i64;
+    /// opt.minimize(&cost);
+    ///
+    /// // `Rc<RefCell<_>>` lets the handler share data with the outer scope
+    /// // without requiring the captured type to be `Send`.
+    /// let improving_costs: Rc<RefCell<Vec<i64>>> = Default::default();
+    /// let costs = improving_costs.clone();
+    /// let cost_snap = cost.clone();
+    ///
+    /// opt.set_model_handler(move |model| {
+    ///     // Z3 passes the same `Model` object on every call, updating it in-place.
+    ///     // Evaluate and copy out whatever values you need before returning.
+    ///     if let Some(c) = model.eval(&cost_snap, true).and_then(|v| v.as_i64()) {
+    ///         costs.borrow_mut().push(c);
+    ///     }
+    /// });
+    ///
+    /// assert_eq!(opt.check(&[]), SatResult::Sat);
+    ///
+    /// let seq = improving_costs.borrow();
+    /// assert!(!seq.is_empty(), "at least one improving model must be produced");
+    /// assert_eq!(*seq.last().unwrap(), 30, "proven optimum is 30");
+    /// // Each call produces a strictly better solution than the previous one.
+    /// assert!(seq.windows(2).all(|w| w[0] >= w[1]));
+    /// ```
+    pub fn set_model_handler<F: Fn(&Model) + 'static>(&self, callback: F) {
+        unsafe {
+            let model = Model::new_empty(&self.ctx);
+            let z3_model = model.z3_mdl;
+            let new_nn = FfiState::new(ModelHandlerState {
+                callback: Box::new(callback),
+                model,
+            })
+            .into_non_null();
+
+            // Register with Z3 before freeing the old state so Z3 never holds a dangling
+            // pointer in the window between the two operations.
+            Z3_optimize_register_model_eh(
+                self.ctx.z3_ctx.0,
+                self.z3_opt,
+                z3_model,
+                new_nn.as_ptr().cast::<c_void>(),
+                Some(model_handler_trampoline),
+            );
+
+            // Swap in the new pointer and free any previous handler state.
+            self.replace_model_handler(Some(new_nn));
+        }
+    }
+
+    /// Swap in `new` as the current model handler state, freeing whatever state was
+    /// previously registered. This does not touch Z3's callback registration; callers are
+    /// responsible for calling [`Z3_optimize_register_model_eh`] themselves before swapping in
+    /// a new handler, since Z3 exposes no API for clearing a registered handler.
+    ///
+    /// Passing `None` frees the current handler state without registering a replacement,
+    /// which is only sound when no further `check()` calls will occur (i.e. from `Drop`).
+    fn replace_model_handler(&self, new: Option<NonNull<ModelHandlerState>>) {
+        if let Some(old_nn) = self.handler.replace(new) {
+            unsafe {
+                drop(FfiState::<ModelHandlerState>::from_non_null(old_nn));
+            }
+        }
+    }
 }
 
 struct OptimizeIterator<T> {
@@ -431,11 +553,18 @@ impl fmt::Debug for Optimize {
 
 impl Drop for Optimize {
     fn drop(&mut self) {
+        // Drop model handler from the global handler registry.
+        // Note, the soundness of this relies on the assumption that the rust bindings
+        // have the only refcount on this [Optimize] instance (and thus that decref will actually
+        // deallocate the [Optimize]); if another C++ refcount exists, then the [Optimize]
+        // will continue to exist, but retain a pointer to free'd memory, causing UB
+        self.replace_model_handler(None);
+
         unsafe { Z3_optimize_dec_ref(self.ctx.z3_ctx.0, self.z3_opt) };
     }
 }
 
-// Z3_optimize_translate was added in Z3 4.16.0. This feature gate is temporary
+// [Z3_optimize_translate] was added in Z3 4.16.0. This feature gate is temporary
 // and will be removed once the minimum supported Z3 version is bumped to 4.16.0.
 #[cfg(feature = "z3_4_16")]
 unsafe impl Translate for Optimize {

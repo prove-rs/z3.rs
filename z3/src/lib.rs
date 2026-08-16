@@ -80,11 +80,14 @@
 #![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
 
+use std::cell::Cell;
 use std::ffi::CString;
+use std::ptr::NonNull;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
 pub mod ast;
+mod callbacks;
 mod config;
 mod context;
 pub mod datatype_builder;
@@ -111,6 +114,7 @@ mod version;
 pub mod ast_vector;
 pub mod quantifier_elimination;
 
+use crate::optimize::ModelHandlerState;
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
@@ -197,6 +201,9 @@ pub struct Model {
 pub struct Optimize {
     ctx: Context,
     z3_opt: Z3_optimize,
+    // Heap-allocated `optimize::ModelHandlerState`; None when no handler is registered.
+    // Safety invariant: Some(ptr) implies a valid, live allocation owned by this Optimize.
+    handler: Cell<Option<NonNull<ModelHandlerState>>>,
 }
 
 /// Context for Horn clause / Datalog solving.
