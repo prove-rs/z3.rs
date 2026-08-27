@@ -64,7 +64,7 @@ failing — so `cargo check`/rust-analyzer keep working on a fresh checkout.
 APIs that require a newer Z3 than the minimum are gated behind auto-derived `cfg`s instead of
 Cargo features, so no manual opt-in is needed and editor tooling picks them up correctly.
 **`Optimize::translate` and `Optimize::clone` require Z3 ≥ 4.16.0** (`Z3_optimize_translate` was
-added in that release) and are gated behind `#[cfg(z3_4_16)]`, which `z3/build.rs` sets
+added in that release) and are gated behind `#[cfg(z3_4_16_0)]`, which `z3/build.rs` sets
 automatically once it observes a linked Z3 ≥ 4.16.0 — no feature flag or configuration needed.
 
 Z3 has, on occasion, inserted new variants into the middle of a C enum instead of appending them
