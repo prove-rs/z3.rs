@@ -35,10 +35,10 @@ The [`z3-src` crate][z3-src] contains the Z3 source distribution and logic to ha
 
 Starting with version 0.20.0, z3-rs aims to track the latest Z3 release and stay up-to-date with API changes.
 
-| z3      | z3-sys   | upstream Z3                                         |
-|---------|----------|-----------------------------------------------------|
-| ≤0.19.x | ≤0.10.x  | ≥4.8.12                                             |
-| ≥0.20.0 | ≥0.11.0  | ≥4.8.17 (≥4.16.0 for `Optimize::translate`/`Clone`) |
+| z3      | z3-sys   | upstream Z3                                          |
+|---------|----------|-------------------------------------------------------|
+| ≤0.19.x | ≤0.10.x  | ≥4.8.12                                              |
+| ≥0.20.0 | ≥0.11.0  | ≥4.13.3 (auto-detected; ≥4.16.0 for `Optimize::translate`/`Clone`) |
 
 ### ≤0.19.x (z3-sys ≤0.10.x): broad version support
 
@@ -54,21 +54,25 @@ Both functions and enums are tracked in version control
 (`z3-sys/src/generated/functions.rs` and `z3-sys/src/generated/enums.rs`). There is by default no
 dynamic bindgen step on every build.
 
-The baseline minimum upstream Z3 version is **4.8.17**. This floor is set by two constraints:
+The minimum supported upstream Z3 version is **4.13.3** (the version shipped by Ubuntu 26.04),
+enforced automatically: `z3-sys`'s build script detects the linked Z3 version (from
+`z3_version.h`, pkg-config, vcpkg, or the `Z3_SYS_Z3_VERSION` env var, in that priority order)
+and fails the build with an actionable error if it's below the minimum. If the version can't be
+detected at all (e.g. no Z3 installed yet), the build assumes the minimum and warns, rather than
+failing — so `cargo check`/rust-analyzer keep working on a fresh checkout.
 
-- **API surface**: `Regexp::power`, `Regexp::allchar`, and `Regexp::diff` require Z3 ≥ 4.8.15.
-- **`DeclKind` enum correctness**: Z3 4.8.17 inserted `SeqMap`/`SeqMapi`/`SeqFoldl`/`SeqFoldli`
-  into the sequence range (values 1569–1572), shifting all string operation variants up by four.
-  Using these bindings against Z3 < 4.8.17 will return incorrect `DeclKind` values for string
-  operations (`StrToInt` etc.) when calling `FuncDecl::kind()`.
+APIs that require a newer Z3 than the minimum are gated behind auto-derived `cfg`s instead of
+Cargo features, so no manual opt-in is needed and editor tooling picks them up correctly.
+**`Optimize::translate` and `Optimize::clone` require Z3 ≥ 4.16.0** (`Z3_optimize_translate` was
+added in that release) and are gated behind `#[cfg(z3_ge_4_16)]`, which `z3/build.rs` sets
+automatically once it observes a linked Z3 ≥ 4.16.0 — no feature flag or configuration needed.
 
-**`Optimize::translate` and `Optimize::clone` require Z3 ≥ 4.16.0** (`Z3_optimize_translate`
-was added in that release) and are temporarily gated behind the `z3_4_16` feature flag:
-
-```toml
-[dependencies]
-z3 = { version = "0.20", features = ["z3_4_16"] }
-```
+Z3 has, on occasion, inserted new variants into the middle of a C enum instead of appending them
+(e.g. Z3 4.8.16 inserted `Z3_OP_RECURSIVE` into `Z3_decl_kind`, and 4.8.17 inserted
+`SeqMap`/`SeqMapi`/`SeqFoldl`/`SeqFoldli`, in both cases shifting the numeric value of every
+later variant). `z3-sys/build.rs` keeps a hand-maintained table of such known changes
+(`z3-sys/enum_compat.rs`) and warns if the detected version falls outside a recorded safe range;
+none of the currently-known cases affect any version at or above the 4.13.3 minimum.
 
 FFI bindings can be regenerated for new Z3 versions by running
 `cargo xtask gen-bindings`.

@@ -1,8 +1,8 @@
 use std::cell::Cell;
 use std::rc::Rc;
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 use std::sync::Arc;
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 use std::sync::atomic::{AtomicBool, Ordering};
 use z3::ast::Int;
 use z3::*;
@@ -123,7 +123,7 @@ fn drop_with_active_handler_does_not_panic() {
 
 // ── translate interaction (requires Z3 >= 4.16.0) ───────────────────────────
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn translate_with_no_handler_gives_no_handler() {
     let x = Int::new_const("x");
@@ -150,7 +150,7 @@ fn translate_with_no_handler_gives_no_handler() {
     assert!(fired.get());
 }
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn translate_does_not_carry_handler_across_contexts() {
     // Handler on the original; translated instance should start with no handler.
@@ -190,7 +190,7 @@ fn translate_does_not_carry_handler_across_contexts() {
     );
 }
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn drop_translated_instance_with_no_handler_does_not_corrupt_original() {
     let x = Int::new_const("x");
@@ -223,7 +223,7 @@ fn drop_translated_instance_with_no_handler_does_not_corrupt_original() {
     );
 }
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn translated_check_with_no_handler_after_original_drops() {
     // Regression: dropping the original Optimize (which has a handler) must not
@@ -248,7 +248,7 @@ fn translated_check_with_no_handler_after_original_drops() {
     assert_eq!(translated.check(&[]), SatResult::Sat);
 }
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn cloned_check_with_no_handler_after_original_drops() {
     // Same as above but via Clone (same context) instead of translate.

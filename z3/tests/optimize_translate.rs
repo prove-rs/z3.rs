@@ -1,4 +1,4 @@
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn test_optimize_translate() {
     use z3::ast::Int;
@@ -27,7 +27,7 @@ fn test_optimize_translate() {
     assert_eq!(opt.check(&[]), SatResult::Unsat);
 }
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_ge_4_16)]
 #[test]
 fn test_optimize_clone() {
     use z3::ast::Int;
