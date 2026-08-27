@@ -7,7 +7,7 @@ use std::iter::FusedIterator;
 use std::ptr::NonNull;
 use z3_sys::*;
 
-#[cfg(z3_ge_4_16)]
+#[cfg(z3_4_16)]
 use crate::Translate;
 use crate::callbacks::FfiState;
 use crate::solver::Solvable;
@@ -327,7 +327,7 @@ impl Optimize {
     /// - [`Optimize::into_solutions`]
     /// - [`Optimize::check_and_get_model`]
     // Requires Z3 >= 4.16.0 (auto-detected; see z3/build.rs).
-    #[cfg(z3_ge_4_16)]
+    #[cfg(z3_4_16)]
     pub fn solutions<T: Solvable>(
         &self,
         t: T,
@@ -566,7 +566,7 @@ impl Drop for Optimize {
 }
 
 // [Z3_optimize_translate] was added in Z3 4.16.0 (auto-detected; see z3/build.rs).
-#[cfg(z3_ge_4_16)]
+#[cfg(z3_4_16)]
 unsafe impl Translate for Optimize {
     fn translate(&self, dest: &Context) -> Optimize {
         unsafe {
@@ -581,7 +581,7 @@ unsafe impl Translate for Optimize {
 /// Creates a new [`Optimize`] with the same assertions, objectives, and parameters
 /// as the original
 // Requires Z3 >= 4.16.0 (auto-detected; see z3/build.rs).
-#[cfg(z3_ge_4_16)]
+#[cfg(z3_4_16)]
 impl Clone for Optimize {
     fn clone(&self) -> Self {
         self.translate(&Context::thread_local())

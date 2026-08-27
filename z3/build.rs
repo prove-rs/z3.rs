@@ -1,7 +1,7 @@
 use std::env;
 
 /// Version thresholds that gate specific APIs. Add an entry here alongside
-/// the `#[cfg(z3_ge_{major}_{minor})]` attribute(s) it controls.
+/// the `#[cfg(z3_{major}_{minor})]` attribute(s) it controls.
 const KNOWN_THRESHOLDS: &[(u32, u32)] = &[
     (4, 16), // Optimize::solutions(), Translate/Clone for Optimize (see src/optimize.rs)
 ];
@@ -10,7 +10,7 @@ fn main() {
     // Declare every cfg we might emit up front, regardless of which branch
     // below runs, so `-D warnings` never trips on `unexpected_cfgs`.
     for (major, minor) in KNOWN_THRESHOLDS {
-        println!("cargo::rustc-check-cfg=cfg(z3_ge_{major}_{minor})");
+        println!("cargo::rustc-check-cfg=cfg(z3_{major}_{minor})");
     }
     println!("cargo::rustc-check-cfg=cfg(z3_version_major, values(any()))");
     println!("cargo::rustc-check-cfg=cfg(z3_version_minor, values(any()))");
@@ -36,7 +36,7 @@ fn main() {
     println!("cargo::rustc-cfg=z3_version_minor=\"{minor}\"");
     for (t_major, t_minor) in KNOWN_THRESHOLDS {
         if (major, minor) >= (*t_major, *t_minor) {
-            println!("cargo::rustc-cfg=z3_ge_{t_major}_{t_minor}");
+            println!("cargo::rustc-cfg=z3_{t_major}_{t_minor}");
         }
     }
 }
