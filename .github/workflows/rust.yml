@@ -51,7 +51,6 @@ jobs:
         run: cargo test --workspace --features num
 
   build_on_wasm:
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
@@ -92,7 +91,6 @@ jobs:
           CMAKE_CXX_COMPILER_LAUNCHER: "sccache"
 
   build_with_vendored_z3:
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         build: [linux, macos, windows]
@@ -137,7 +135,6 @@ jobs:
           SCCACHE_MSVC_Z7: "1"
 
   build_with_vcpkg_installed_z3:
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         build: [linux, macos, windows]
@@ -203,7 +200,6 @@ jobs:
         run: cargo clippy --workspace --all-targets --features num
 
   build_with_gh_release_z3:
-    if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
     strategy:
       matrix:
         build: [linux, macos, windows]

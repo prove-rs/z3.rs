@@ -298,6 +298,8 @@ impl Optimize {
 
     /// Iterate over solutions to the given [`Solvable`], cloning this [`Optimize`].
     ///
+    /// Only available when Z3 >= 4.16.0 was detected at build time.
+    ///
     /// The [`Optimize`] given to this method is [`Clone`]'d when producing the iterator: no change
     /// is made to the optimizer passed to the function.
     ///
