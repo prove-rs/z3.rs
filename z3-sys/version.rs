@@ -65,3 +65,59 @@ fn find_macro_value(contents: &str, name: &str) -> Option<u32> {
     }
     None
 }
+
+/// Parses a version out of `z3 --version` output, e.g. `"Z3 version 4.13.3 -
+/// 64 bit"`. Used as a fallback when no pkg-config metadata is available
+/// (e.g. Z3 installed from a prebuilt release archive with no `.pc` file).
+pub(crate) fn parse_cli_output(s: &str) -> Option<Version> {
+    let after = s.split("version").nth(1)?;
+    let token = after.split_whitespace().next()?;
+    parse_dotted(token)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn parses_dotted_versions() {
+        assert_eq!(
+            parse_dotted("4.13.3"),
+            Some(Version {
+                major: 4,
+                minor: 13,
+                patch: 3
+            })
+        );
+        assert_eq!(
+            parse_dotted("5.0"),
+            Some(Version {
+                major: 5,
+                minor: 0,
+                patch: 0
+            })
+        );
+        assert_eq!(parse_dotted("not-a-version"), None);
+    }
+
+    #[test]
+    fn parses_cli_output() {
+        assert_eq!(
+            parse_cli_output("Z3 version 4.13.3 - 64 bit"),
+            Some(Version {
+                major: 4,
+                minor: 13,
+                patch: 3
+            })
+        );
+        assert_eq!(
+            parse_cli_output("Z3 version 5.0.0"),
+            Some(Version {
+                major: 5,
+                minor: 0,
+                patch: 0
+            })
+        );
+        assert_eq!(parse_cli_output("not z3 output"), None);
+    }
+}

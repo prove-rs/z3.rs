@@ -40,7 +40,8 @@ fn main() {
             let detected = pkg_config::Config::new()
                 .probe("z3")
                 .ok()
-                .and_then(|lib| detect_pkg_config_version(&lib));
+                .and_then(|lib| detect_pkg_config_version(&lib))
+                .or_else(detect_cli_version);
             println!("cargo:rerun-if-env-changed=Z3_LIBRARY_PATH_OVERRIDE");
             if let Ok(lib_path) = env::var("Z3_LIBRARY_PATH_OVERRIDE") {
                 println!("cargo:rustc-link-search=native={lib_path}");
@@ -101,6 +102,20 @@ fn detect_pkg_config_version(lib: &pkg_config::Library) -> Option<version::Versi
             .iter()
             .find_map(|dir| version::parse_header(&dir.join("z3_version.h")))
     })
+}
+
+/// Falls back to shelling out to the `z3` CLI binary for version detection
+/// when no pkg-config metadata is available (e.g. Z3 installed from a
+/// prebuilt release archive, which ships no `.pc` file).
+fn detect_cli_version() -> Option<version::Version> {
+    let output = std::process::Command::new("z3")
+        .arg("--version")
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    version::parse_cli_output(&String::from_utf8_lossy(&output.stdout))
 }
 
 #[cfg(feature = "vendored")]
