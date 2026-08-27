@@ -2,6 +2,7 @@ use std::env;
 #[cfg(feature = "gh-release")]
 use std::path::PathBuf;
 
+#[cfg(not(feature = "bindgen"))]
 mod enum_compat;
 mod version;
 
@@ -93,6 +94,9 @@ fn emit_version_metadata(version: Option<version::Version>) {
     println!("cargo:min_supported_minor={}", min.minor);
     println!("cargo:min_supported_patch={}", min.patch);
 
+    // With `bindgen`, enums are regenerated fresh from the actual linked header on every
+    // build, so the static compatibility table doesn't apply.
+    #[cfg(not(feature = "bindgen"))]
     enum_compat::warn_on_mismatches(version);
 }
 

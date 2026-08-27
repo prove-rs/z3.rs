@@ -68,11 +68,14 @@ added in that release) and are gated behind `#[cfg(z3_ge_4_16)]`, which `z3/buil
 automatically once it observes a linked Z3 ≥ 4.16.0 — no feature flag or configuration needed.
 
 Z3 has, on occasion, inserted new variants into the middle of a C enum instead of appending them
-(e.g. Z3 4.8.16 inserted `Z3_OP_RECURSIVE` into `Z3_decl_kind`, and 4.8.17 inserted
-`SeqMap`/`SeqMapi`/`SeqFoldl`/`SeqFoldli`, in both cases shifting the numeric value of every
-later variant). `z3-sys/build.rs` keeps a hand-maintained table of such known changes
-(`z3-sys/enum_compat.rs`) and warns if the detected version falls outside a recorded safe range;
-none of the currently-known cases affect any version at or above the 4.13.3 minimum.
+(e.g. Z3 4.8.16 inserted `Z3_OP_RECURSIVE` into `Z3_decl_kind`, 4.13.2 inserted
+`SeqMap`/`SeqMapi`/`SeqFoldl`/`SeqFoldli`, 4.14.1 inserted `Z3_OP_SBV2INT`, and 5.0.0 inserted
+13 `Z3_OP_FINITE_SET_*` variants, each shifting the numeric value of every later variant).
+`z3-sys/build.rs` keeps a hand-maintained table of such known changes (`z3-sys/enum_compat.rs`)
+and warns if the detected version falls outside a recorded safe range. The 4.13.2 and 4.14.1
+breaks are both below the current bundled/committed numbering (Z3 5.0.0), so a linked Z3 anywhere
+from the 4.13.3 minimum up to (but not including) 5.0.0 has incorrect `Z3_OP_INTERNAL`,
+`Z3_OP_RECURSIVE`, and `Z3_OP_UNINTERPRETED` values — `enum_compat.rs` will warn in that case.
 
 FFI bindings can be regenerated for new Z3 versions by running
 `cargo xtask gen-bindings`.
