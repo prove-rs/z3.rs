@@ -57,8 +57,8 @@ pub(crate) fn warn_on_mismatches(detected: Version) {
         return;
     }
     println!(
-        "cargo:warning=z3-sys: some enum numbering (e.g. Z3_decl_kind) may differ for Z3 \
-         {detected}; bindings were generated for Z3 >= {current}. Consider regenerating with the \
-         `bindgen` feature if you observe unexpected enum values.",
+        "cargo:warning=z3-sys: attempting to link against Z3 {detected} with `z3-sys` bindings for Z3 >= {current}; \
+         enum numbering (e.g. Z3_decl_kind) may differ across these versions. \
+         Consider updating Z3 or else enabling the `bindgen` feature to ensure compatibility.",
     );
 }
