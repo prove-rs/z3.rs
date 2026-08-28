@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.2...z3-v0.21.0) - 2026-08-28
+
+### Added
+
+- [**breaking**] auto-detect z3 version ([#583](https://github.com/prove-rs/z3.rs/pull/583)) (by @toolCHAINZ) - #583
+- Optimize::set_model_handler ([#577](https://github.com/prove-rs/z3.rs/pull/577)) (by @toolCHAINZ) - #577
+
+### Fixed
+
+- add missing inc_ref to ApplyResult's Clone ([#578](https://github.com/prove-rs/z3.rs/pull/578)) (by @Ollie-Pearce) - #578
+
+### Other
+
+- bump z3 to use z3-sys 0.12.0 ([#575](https://github.com/prove-rs/z3.rs/pull/575)) (by @toolCHAINZ) - #575
+
+### Contributors
+
+* @toolCHAINZ
+* @Ollie-Pearce
+
 ## [0.20.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.1...z3-v0.20.2) - 2026-06-26
 
 ### Added
