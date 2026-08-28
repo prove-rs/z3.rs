@@ -2,6 +2,10 @@ use std::env;
 #[cfg(feature = "gh-release")]
 use std::path::PathBuf;
 
+#[cfg(not(feature = "bindgen"))]
+mod enum_compat;
+mod version;
+
 macro_rules! assert_one_of_features {
     ($($feature:literal),*) => {{
         let mut active_count = 0;
@@ -24,19 +28,30 @@ fn main() {
     let active_feature = assert_one_of_features!("vendored", "vcpkg", "gh-release");
 
     println!("cargo:rerun-if-changed=build.rs");
+    println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
+    let override_version = env::var("Z3_SYS_Z3_VERSION")
+        .ok()
+        .and_then(|s| version::parse_dotted(&s));
 
-    match active_feature {
+    let detected_version = match active_feature {
         Some("vendored") => build_from_source(),
         Some("gh-release") => install_from_gh_release(),
         Some("vcpkg") => find_library_by_vcpkg(),
         _ => {
-            pkg_config::Config::new().probe("z3").ok();
+            let detected = pkg_config::Config::new()
+                .probe("z3")
+                .ok()
+                .and_then(|lib| detect_pkg_config_version(&lib))
+                .or_else(detect_cli_version);
             println!("cargo:rerun-if-env-changed=Z3_LIBRARY_PATH_OVERRIDE");
             if let Ok(lib_path) = env::var("Z3_LIBRARY_PATH_OVERRIDE") {
                 println!("cargo:rustc-link-search=native={lib_path}");
             }
+            detected
         }
-    }
+    };
+
+    emit_version_metadata(override_version.or(detected_version));
 
     #[cfg(feature = "bundled")]
     println!(
@@ -49,14 +64,77 @@ fn main() {
     generate_bindings();
 }
 
+/// Emits the detected Z3 version (or the assumed minimum, if detection
+/// failed) as `links`-passthrough metadata for downstream crates (see
+/// `DEP_Z3_VERSION_*` / `DEP_Z3_MIN_SUPPORTED_*` in `z3/build.rs`), and warns
+/// if it's below the minimum supported version.
+fn emit_version_metadata(version: Option<version::Version>) {
+    let min = version::MIN_SUPPORTED;
+    let version = match version {
+        Some(v) if v < min => {
+            println!(
+                "cargo:warning=z3-sys: detected Z3 {v}, but z3-sys requires Z3 >= {min}. \
+                 Upgrade your Z3 installation, or if this detection is wrong, override with \
+                 Z3_SYS_Z3_VERSION=<version> (must still satisfy the minimum). Proceeding with \
+                 the detected version; the build may fail or behave incorrectly."
+            );
+            v
+        }
+        Some(v) => v,
+        None => {
+            println!(
+                "cargo:warning=z3-sys: could not detect linked Z3 version; assuming minimum \
+                 supported {min}. Newer version-gated APIs will be unavailable. Set \
+                 Z3_SYS_Z3_VERSION to override."
+            );
+            min
+        }
+    };
+
+    println!("cargo:version_major={}", version.major);
+    println!("cargo:version_minor={}", version.minor);
+    println!("cargo:version_patch={}", version.patch);
+    println!("cargo:min_supported_major={}", min.major);
+    println!("cargo:min_supported_minor={}", min.minor);
+    println!("cargo:min_supported_patch={}", min.patch);
+
+    // With `bindgen`, enums are regenerated fresh from the actual linked header on every
+    // build, so the static compatibility table doesn't apply.
+    #[cfg(not(feature = "bindgen"))]
+    enum_compat::warn_on_mismatches(version);
+}
+
+fn detect_pkg_config_version(lib: &pkg_config::Library) -> Option<version::Version> {
+    version::parse_dotted(&lib.version).or_else(|| {
+        lib.include_paths
+            .iter()
+            .find_map(|dir| version::parse_header(&dir.join("z3_version.h")))
+    })
+}
+
+/// Falls back to shelling out to the `z3` CLI binary for version detection
+/// when no pkg-config metadata is available (e.g. Z3 installed from a
+/// prebuilt release archive, which ships no `.pc` file).
+fn detect_cli_version() -> Option<version::Version> {
+    let output = std::process::Command::new("z3")
+        .arg("--version")
+        .output()
+        .ok()?;
+    if !output.status.success() {
+        return None;
+    }
+    version::parse_cli_output(&String::from_utf8_lossy(&output.stdout))
+}
+
 #[cfg(feature = "vendored")]
-fn build_from_source() {
+fn build_from_source() -> Option<version::Version> {
     let artifacts = z3_src::build();
     artifacts.print_cargo_metadata();
+    version::parse_header(&artifacts.include_dir().join("z3_version.h"))
 }
 
 #[cfg(not(feature = "vendored"))]
-fn build_from_source() {
+fn build_from_source() -> Option<version::Version> {
     unreachable!()
 }
 
@@ -100,10 +178,10 @@ mod gh_release {
     use zip::ZipArchive;
     use zip::read::root_dir_common_filter;
 
-    pub(super) fn install_from_gh_release() {
+    pub(super) fn install_from_gh_release() -> Option<crate::version::Version> {
         let target_os = env::var("CARGO_CFG_TARGET_OS").unwrap();
         let target_arch = env::var("CARGO_CFG_TARGET_ARCH").unwrap();
-        let lib = retrieve_gh_release_z3(&target_os, &target_arch);
+        let (lib, version) = retrieve_gh_release_z3(&target_os, &target_arch);
         println!(
             "cargo:rustc-link-search=native={}",
             lib.parent().unwrap().display()
@@ -113,9 +191,13 @@ mod gh_release {
         } else {
             println!("cargo:rustc-link-lib=static=z3");
         }
+        version
     }
 
-    fn retrieve_gh_release_z3(target_os: &str, target_arch: &str) -> PathBuf {
+    fn retrieve_gh_release_z3(
+        target_os: &str,
+        target_arch: &str,
+    ) -> (PathBuf, Option<crate::version::Version>) {
         let arch = match target_arch {
             "aarch64" => "arm64",
             "x86_64" => "x64",
@@ -131,8 +213,8 @@ mod gh_release {
                 panic!("Unsupported OS: {}", os);
             }
         };
-        println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
         let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("5.0.0".to_string());
+        let version = crate::version::parse_dotted(&z3_version);
         let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{z3_version}"));
 
         if !z3_dir.exists() {
@@ -162,7 +244,7 @@ mod gh_release {
             z3_dir.display()
         );
 
-        lib
+        (lib, version)
     }
 
     pub fn download_unzip(client: &Client, url: String, dir: &Path) -> reqwest::Result<()> {
@@ -234,20 +316,23 @@ mod gh_release {
 use gh_release::install_from_gh_release;
 
 #[cfg(not(feature = "gh-release"))]
-fn install_from_gh_release() {
+fn install_from_gh_release() -> Option<version::Version> {
     unreachable!()
 }
 
 #[cfg(feature = "vcpkg")]
-fn find_library_by_vcpkg() {
-    vcpkg::Config::new()
+fn find_library_by_vcpkg() -> Option<version::Version> {
+    let lib = vcpkg::Config::new()
         .emit_includes(true)
         .find_package("z3")
         .expect("vcpkg could not find z3");
+    lib.include_paths
+        .iter()
+        .find_map(|dir| version::parse_header(&dir.join("z3_version.h")))
 }
 
 #[cfg(not(feature = "vcpkg"))]
-fn find_library_by_vcpkg() {
+fn find_library_by_vcpkg() -> Option<version::Version> {
     unreachable!()
 }
 

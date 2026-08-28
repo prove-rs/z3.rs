@@ -33,50 +33,27 @@ The [`z3-src` crate][z3-src] contains the Z3 source distribution and logic to ha
 
 ## Z3 Version Compatibility
 
-Starting with version 0.20.0, z3-rs aims to track the latest Z3 release and stay up-to-date with API changes.
+> [!IMPORTANT]
+> Starting with version `0.21.0`, the `z3` and `z3-sys` crates have a minimum supported Z3 versions of 4.13.3.
 
-| z3      | z3-sys   | upstream Z3                                         |
-|---------|----------|-----------------------------------------------------|
-| ≤0.19.x | ≤0.10.x  | ≥4.8.12                                             |
-| ≥0.20.0 | ≥0.11.0  | ≥4.8.17 (≥4.16.0 for `Optimize::translate`/`Clone`) |
+Z3 incompatibility has two causes:
 
-### ≤0.19.x (z3-sys ≤0.10.x): broad version support
+* Z3 sometimes adds APIs, making new C FFI targets, and causing linker errors if naively attempting to link against a too-new symbol in an old Z3 version.
+* Z3 sometimes shuffles existing enum values while adding new ones.
 
-Function and opaque structure FFI bindings were generated and committed sometime around Z3 4.8.12
-and updated ad-hoc, but enum bindings were re-generated via bindgen on every build.
-This let the enums track whatever Z3 version was linked, giving broad 4.8.12–4.16.0 support. The cost was
-that new high-level Z3 APIs could not easily be defined without feature-gating, and were often
-omitted entirely.
+The first issue means that using some z3 features imposes a minimum supported version. The second issue means that
+`z3-sys` has a separate range of compatibility based on enum changes, independent of what high-level Z3 versions are used.
 
-### ≥0.20.0 (z3-sys ≥0.11.0): static generated bindings
+Starting with version `0.21.0`, this crate attempts to auto-detect the linked Z3 version and automatically enables all compatible features (without requiring user-enabled features). If
+this version detection fails, it assumes the minimum supported version (4.13.3) and warns.
 
-Both functions and enums are tracked in version control
-(`z3-sys/src/generated/functions.rs` and `z3-sys/src/generated/enums.rs`). There is by default no
-dynamic bindgen step on every build.
-
-The baseline minimum upstream Z3 version is **4.8.17**. This floor is set by two constraints:
-
-- **API surface**: `Regexp::power`, `Regexp::allchar`, and `Regexp::diff` require Z3 ≥ 4.8.15.
-- **`DeclKind` enum correctness**: Z3 4.8.17 inserted `SeqMap`/`SeqMapi`/`SeqFoldl`/`SeqFoldli`
-  into the sequence range (values 1569–1572), shifting all string operation variants up by four.
-  Using these bindings against Z3 < 4.8.17 will return incorrect `DeclKind` values for string
-  operations (`StrToInt` etc.) when calling `FuncDecl::kind()`.
-
-**`Optimize::translate` and `Optimize::clone` require Z3 ≥ 4.16.0** (`Z3_optimize_translate`
-was added in that release) and are temporarily gated behind the `z3_4_16` feature flag:
-
-```toml
-[dependencies]
-z3 = { version = "0.20", features = ["z3_4_16"] }
-```
-
-FFI bindings can be regenerated for new Z3 versions by running
-`cargo xtask gen-bindings`.
-
-Users who wish to generate FFI bindings at build-time for their system's Z3 can build with
-the `bindgen` feature enabled; note though that while the low-level bindings may work,
-the high-level bindings will not be able to link against (old) versions of z3 that do not
-export the necessary symbols.
+> [!TIP]
+> The `z3-sys` crate will display a warning if you attempt to link against an incompatible Z3 version. Use `--features bindgen` or update Z3 to fix this.
+> ```
+> ~/R/z3.rs ❯❯❯ Z3_SYS_Z3_VERSION=4.16.0 cargo test --features gh-release
+>    Compiling z3-sys v0.13.0 (/repos/z3.rs/z3-sys)
+> warning: z3-sys@0.13.0: z3-sys: attempting to link against Z3 4.16.0 with `z3-sys` bindings for Z3 >= 5.0.0; enum numbering (e.g. Z3_decl_kind) may differ across these versions. Consider updating Z3 or else enabling the `bindgen` feature to ensure compatibility.
+> ```
 
 ## When should I use `z3-sys` instead of `z3`?
 

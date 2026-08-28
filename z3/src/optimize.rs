@@ -7,7 +7,7 @@ use std::iter::FusedIterator;
 use std::ptr::NonNull;
 use z3_sys::*;
 
-#[cfg(feature = "z3_4_16")]
+#[cfg(z3_4_16_0)]
 use crate::Translate;
 use crate::callbacks::FfiState;
 use crate::solver::Solvable;
@@ -298,6 +298,8 @@ impl Optimize {
 
     /// Iterate over solutions to the given [`Solvable`], cloning this [`Optimize`].
     ///
+    /// Only available when Z3 >= 4.16.0 was detected at build time.
+    ///
     /// The [`Optimize`] given to this method is [`Clone`]'d when producing the iterator: no change
     /// is made to the optimizer passed to the function.
     ///
@@ -324,9 +326,8 @@ impl Optimize {
     ///
     /// - [`Optimize::into_solutions`]
     /// - [`Optimize::check_and_get_model`]
-    // Requires the `z3_4_16` feature (Z3 >= 4.16.0). This gate is temporary and will
-    // be removed once the minimum supported Z3 version is bumped to 4.16.0.
-    #[cfg(feature = "z3_4_16")]
+    // Requires Z3 >= 4.16.0 (auto-detected; see z3/build.rs).
+    #[cfg(z3_4_16_0)]
     pub fn solutions<T: Solvable>(
         &self,
         t: T,
@@ -564,9 +565,8 @@ impl Drop for Optimize {
     }
 }
 
-// [Z3_optimize_translate] was added in Z3 4.16.0. This feature gate is temporary
-// and will be removed once the minimum supported Z3 version is bumped to 4.16.0.
-#[cfg(feature = "z3_4_16")]
+// [Z3_optimize_translate] was added in Z3 4.16.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_4_16_0)]
 unsafe impl Translate for Optimize {
     fn translate(&self, dest: &Context) -> Optimize {
         unsafe {
@@ -580,9 +580,8 @@ unsafe impl Translate for Optimize {
 
 /// Creates a new [`Optimize`] with the same assertions, objectives, and parameters
 /// as the original
-// Requires the `z3_4_16` feature (Z3 >= 4.16.0). This gate is temporary and will
-// be removed once the minimum supported Z3 version is bumped to 4.16.0.
-#[cfg(feature = "z3_4_16")]
+// Requires Z3 >= 4.16.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_4_16_0)]
 impl Clone for Optimize {
     fn clone(&self) -> Self {
         self.translate(&Context::thread_local())

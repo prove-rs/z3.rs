@@ -79,6 +79,8 @@
 #![allow(clippy::unreadable_literal)]
 #![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, doc(auto_cfg))]
 
 use std::cell::Cell;
 use std::ffi::CString;
