@@ -66,16 +66,20 @@ fn main() {
 
 /// Emits the detected Z3 version (or the assumed minimum, if detection
 /// failed) as `links`-passthrough metadata for downstream crates (see
-/// `DEP_Z3_VERSION_*` / `DEP_Z3_MIN_SUPPORTED_*` in `z3/build.rs`), and
-/// enforces the minimum supported version.
+/// `DEP_Z3_VERSION_*` / `DEP_Z3_MIN_SUPPORTED_*` in `z3/build.rs`), and warns
+/// if it's below the minimum supported version.
 fn emit_version_metadata(version: Option<version::Version>) {
     let min = version::MIN_SUPPORTED;
     let version = match version {
-        Some(v) if v < min => panic!(
-            "Detected Z3 {v}, but z3-sys requires Z3 >= {min}. Upgrade your Z3 installation, \
-             or if this detection is wrong, override with Z3_SYS_Z3_VERSION=<version> (must \
-             still satisfy the minimum)."
-        ),
+        Some(v) if v < min => {
+            println!(
+                "cargo:warning=z3-sys: detected Z3 {v}, but z3-sys requires Z3 >= {min}. \
+                 Upgrade your Z3 installation, or if this detection is wrong, override with \
+                 Z3_SYS_Z3_VERSION=<version> (must still satisfy the minimum). Proceeding with \
+                 the detected version; the build may fail or behave incorrectly."
+            );
+            v
+        }
         Some(v) => v,
         None => {
             println!(
