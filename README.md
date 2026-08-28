@@ -50,7 +50,7 @@ this version detection fails, it assumes the minimum supported version (4.13.3) 
 > [!TIP]
 > The `z3-sys` crate will display a warning if you attempt to link against an incompatible Z3 version. Use `--features bindgen` or update Z3 to fix this.
 > ```
-> ~/R/z3.rs ❯❯❯ Z3_SYS_Z3_VERSION=4.16.0 cargo test --features gh-release
+> $ Z3_SYS_Z3_VERSION=4.16.0 cargo test --features gh-release
 >    Compiling z3-sys v0.13.0 (/repos/z3.rs/z3-sys)
 > warning: z3-sys@0.13.0: z3-sys: attempting to link against Z3 4.16.0 with `z3-sys` bindings for Z3 >= 5.0.0; enum numbering (e.g. Z3_decl_kind) may differ across these versions. Consider updating Z3 or else enabling the `bindgen` feature to ensure compatibility.
 > ```
