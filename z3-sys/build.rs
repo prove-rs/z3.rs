@@ -6,6 +6,9 @@ use std::path::PathBuf;
 mod enum_compat;
 mod version;
 
+#[cfg(feature = "gh-release")]
+const GH_RELEASE_VERSION: &str = "5.1.0";
+
 macro_rules! assert_one_of_features {
     ($($feature:literal),*) => {{
         let mut active_count = 0;
@@ -213,7 +216,7 @@ mod gh_release {
                 panic!("Unsupported OS: {}", os);
             }
         };
-        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or("5.0.0".to_string());
+        let z3_version = env::var("Z3_SYS_Z3_VERSION").unwrap_or(GH_RELEASE_VERSION.to_string());
         let version = crate::version::parse_dotted(&z3_version);
         let z3_dir = PathBuf::from(env::var("OUT_DIR").unwrap()).join(format!("z3-{z3_version}"));
 

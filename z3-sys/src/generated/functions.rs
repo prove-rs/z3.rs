@@ -4756,13 +4756,13 @@ unsafe extern "C" {
     ///
     /// # Preconditions
     ///
-    /// - `Z3_algebraic_is_value(c, a)`
+    /// - `Z3_is_algebraic_number(c, a)`
     pub fn Z3_algebraic_get_poly(c: Z3_context, a: Z3_ast) -> Option<Z3_ast_vector>;
     /// Return which root of the polynomial the algebraic number represents.
     ///
     /// # Preconditions
     ///
-    /// - `Z3_algebraic_is_value(c, a)`
+    /// - `Z3_is_algebraic_number(c, a)`
     pub fn Z3_algebraic_get_i(c: Z3_context, a: Z3_ast) -> ::core::ffi::c_uint;
     /// Return the nonzero subresultants of `p` and `q` with respect to the "variable" `x`.
     ///
@@ -5340,7 +5340,8 @@ unsafe extern "C" {
         c: Z3_context,
         o: Z3_optimize,
     ) -> Option<Z3_ast_vector>;
-    /// Set parameters on optimization context.
+    /// Set parameters on optimization context, including parameters for
+    /// the underlying SMT solver.
     ///
     /// - `c`: - context
     /// - `o`: - optimization context
