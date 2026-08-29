@@ -1,3 +1,5 @@
+#[cfg(z3_5_0_0)]
+use crate::ast::FiniteSet;
 use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set};
 use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
@@ -137,6 +139,22 @@ impl Dynamic {
                     }
                 }
                 _ => None,
+            }
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `FiniteSet`
+    // Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+    #[cfg(z3_5_0_0)]
+    pub fn as_finite_set(&self) -> Option<FiniteSet> {
+        unsafe {
+            if Z3_is_finite_set_sort(
+                self.ctx.z3_ctx.0,
+                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
+            ) {
+                Some(FiniteSet::wrap(&self.ctx, self.z3_ast))
+            } else {
+                None
             }
         }
     }
