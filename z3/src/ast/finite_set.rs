@@ -1,4 +1,4 @@
-use crate::ast::{Array, Ast, Bool, Int, binop, unop};
+use crate::ast::{Array, Ast, Bool, Dynamic, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
 use z3_sys::*;
@@ -126,5 +126,71 @@ impl FiniteSet {
         difference(Z3_mk_finite_set_difference, Self);
         /// Check if the set is a subset of another set.
         subset(Z3_mk_finite_set_subset, Bool);
+    }
+}
+
+impl Sort {
+    /// Create a finite set sort with the given element sort.
+    pub fn finite_set(elt: &Sort) -> Sort {
+        let ctx = &Context::thread_local();
+
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_finite_set_sort(ctx.z3_ctx.0, elt.z3_sort).unwrap(),
+            )
+        }
+    }
+
+    /// Return `true` if this `Sort` is a `FiniteSet`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// let int_sort = Sort::int();
+    /// let finite_set_sort = Sort::finite_set(&int_sort);
+    /// assert!(finite_set_sort.is_finite_set());
+    /// assert!(!int_sort.is_finite_set());
+    /// ```
+    pub fn is_finite_set(&self) -> bool {
+        unsafe { Z3_is_finite_set_sort(self.ctx.z3_ctx.0, self.z3_sort) }
+    }
+
+    /// Return the element `Sort` of this `FiniteSet` `Sort`.
+    ///
+    /// Returns `None` if this `Sort` is not a `FiniteSet`.
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// let int_sort = Sort::int();
+    /// let finite_set_sort = Sort::finite_set(&int_sort);
+    /// assert_eq!(finite_set_sort.finite_set_basis().unwrap(), int_sort);
+    /// assert!(int_sort.finite_set_basis().is_none());
+    /// ```
+    pub fn finite_set_basis(&self) -> Option<Sort> {
+        if self.is_finite_set() {
+            unsafe {
+                let basis_sort = Z3_get_finite_set_sort_basis(self.ctx.z3_ctx.0, self.z3_sort)?;
+                Some(Self::wrap(&self.ctx, basis_sort))
+            }
+        } else {
+            None
+        }
+    }
+}
+
+impl Dynamic {
+    /// Returns `None` if the `Dynamic` is not actually a `FiniteSet`
+    pub fn as_finite_set(&self) -> Option<FiniteSet> {
+        unsafe {
+            if Z3_is_finite_set_sort(
+                self.ctx.z3_ctx.0,
+                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
+            ) {
+                Some(FiniteSet::wrap(&self.ctx, self.z3_ast))
+            } else {
+                None
+            }
+        }
     }
 }

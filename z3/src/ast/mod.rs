@@ -621,6 +621,7 @@ impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
 impl_from_try_into_dynamic!(Set, as_set);
+// Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
 #[cfg(z3_5_0_0)]
 impl_ast!(FiniteSet);
 #[cfg(z3_5_0_0)]
