@@ -1657,6 +1657,42 @@ fn test_array_example1() {
 }
 
 #[test]
+/// <https://github.com/prove-rs/z3.rs/issues/461>
+fn get_interp_of_arity_0_non_array_func_decl() {
+    let solver = Solver::new();
+    let f = FuncDecl::new("hi", &[], &Sort::int());
+    solver.assert(f.apply(&[]).as_int().unwrap().eq(Int::from_u64(5)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_func_interp(&f).is_none());
+
+    let interp = model.get_interp(&f).unwrap();
+    let const_interp = interp.as_const().unwrap();
+    assert!(const_interp.to_string() == "5");
+}
+
+#[test]
+/// <https://github.com/prove-rs/z3.rs/issues/460>
+fn func_interp_get_else_on_partial_interp() {
+    let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    let solver = Solver::new();
+    solver.assert(
+        f.apply(&[&Int::from_u64(0)])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let f_i = model.get_func_interp(&f).unwrap();
+
+    // The else value may or may not be assigned by Z3 depending on how the model was
+    // constructed; either way, `get_else` must not panic.
+    let _ = f_i.get_else();
+}
+
+#[test]
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 fn return_number_args_in_given_entry() {
     let f = FuncDecl::new("f", &[&Sort::int(), &Sort::int()], &Sort::int());
