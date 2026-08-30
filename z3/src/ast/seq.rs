@@ -38,8 +38,8 @@ impl Seq {
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, Seq};
     /// let solver = Solver::new();
-    /// let empty_seq = Seq::empty(&Sort::int());
-    /// let any_seq = Seq::new_const("any_seq", &Sort::int());
+    /// let empty_seq = Seq::empty(&Sort::int().as_dyn());
+    /// let any_seq = Seq::new_const("any_seq", &Sort::int().as_dyn());
     /// let concatenated = Seq::concat(&[&empty_seq, &any_seq]);
     ///
     /// solver.assert(&concatenated._eq(&any_seq));
@@ -75,7 +75,7 @@ impl Seq {
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Int, Seq};
     /// # let solver = Solver::new();
-    /// let seq = Seq::fresh_const("", &Sort::bool());
+    /// let seq = Seq::fresh_const("", &Sort::bool().as_dyn());
     ///
     /// solver.assert(
     ///     &seq.nth(0)

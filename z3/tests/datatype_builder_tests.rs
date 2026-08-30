@@ -7,7 +7,7 @@ fn test_datatype_accessor_constructors() {
     let _ = env_logger::try_init();
 
     // Ensure the convenience constructors produce the expected enum variants.
-    let as_sort = DatatypeAccessor::sort(Sort::int());
+    let as_sort = DatatypeAccessor::sort(Sort::int().as_dyn());
     match as_sort {
         DatatypeAccessor::Sort(s) => {
             // A Sort::int() compared to itself should be equal.
@@ -36,7 +36,10 @@ fn test_create_datatypes_with_explicit_accessors_and_constructors() {
     // high-level DatatypeBuilder and DatatypeAccessor helpers, and exercises
     // constructors, testers and accessors via the solver.
     let tree_builder = DatatypeBuilder::new("TreeX")
-        .variant("leaf", vec![("val", DatatypeAccessor::sort(Sort::int()))])
+        .variant(
+            "leaf",
+            vec![("val", DatatypeAccessor::sort(Sort::int().as_dyn()))],
+        )
         .variant(
             "node",
             vec![("children", DatatypeAccessor::datatype("ListX"))],
@@ -75,36 +78,43 @@ fn test_create_datatypes_with_explicit_accessors_and_constructors() {
     let twenty = ast::Int::from_i64(20);
 
     // Create Tree.leaf(10) and Tree.leaf(20)
-    let leaf_ten = tree_sort.variants[0].constructor.apply(&[&ten]);
-    let leaf_twenty = tree_sort.variants[0].constructor.apply(&[&twenty]);
+    let leaf_ten = tree_sort.variants[0]
+        .constructor
+        .apply(vec![ast::Dynamic::from_ast(&ten)]);
+    let leaf_twenty = tree_sort.variants[0]
+        .constructor
+        .apply(vec![ast::Dynamic::from_ast(&twenty)]);
 
     // Create List.cons(leaf_twenty, nil)
-    let nil = list_sort.variants[0].constructor.apply(&[]);
-    let cons_twenty_nil = list_sort.variants[1]
-        .constructor
-        .apply(&[&leaf_twenty, &nil]);
+    let nil = list_sort.variants[0].constructor.apply(vec![]);
+    let cons_twenty_nil = list_sort.variants[1].constructor.apply(vec![
+        ast::Dynamic::from_ast(&leaf_twenty),
+        ast::Dynamic::from_ast(&nil),
+    ]);
 
     // Create List.cons(leaf_ten, cons_twenty_nil)
-    let cons_ten_cons_twenty_nil = list_sort.variants[1]
-        .constructor
-        .apply(&[&leaf_ten, &cons_twenty_nil]);
+    let cons_ten_cons_twenty_nil = list_sort.variants[1].constructor.apply(vec![
+        ast::Dynamic::from_ast(&leaf_ten),
+        ast::Dynamic::from_ast(&cons_twenty_nil),
+    ]);
 
     // Create Tree.node(cons_ten_cons_twenty_nil)
     let node = tree_sort.variants[1]
         .constructor
-        .apply(&[&cons_ten_cons_twenty_nil]);
+        .apply(vec![ast::Dynamic::from_ast(&cons_ten_cons_twenty_nil)]);
 
     // Assert that accessing children of node yields the list we constructed.
-    let children = tree_sort.variants[1].accessors[0].apply(&[&node]);
+    let children = tree_sort.variants[1].accessors[0].apply(vec![ast::Dynamic::from_ast(&node)]);
     solver.assert(children.eq(&cons_ten_cons_twenty_nil));
 
     // Assert that the first element of that list (car) is leaf_ten
-    let first = list_sort.variants[1].accessors[0].apply(&[&cons_ten_cons_twenty_nil]);
+    let first = list_sort.variants[1].accessors[0]
+        .apply(vec![ast::Dynamic::from_ast(&cons_ten_cons_twenty_nil)]);
     solver.assert(first.eq(&leaf_ten));
 
     // Assert that accessing val from leaf_ten gives 10
     let val_from_leaf = tree_sort.variants[0].accessors[0]
-        .apply(&[&leaf_ten])
+        .apply(vec![ast::Dynamic::from_ast(&leaf_ten)])
         .as_int()
         .unwrap();
     solver.assert(val_from_leaf.eq(&ten));

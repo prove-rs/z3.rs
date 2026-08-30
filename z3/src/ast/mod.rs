@@ -679,10 +679,10 @@ fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", Sort::int(), &Sort::int());
 ///
 /// let x = ast::Int::new_const("x");
-/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x: ast::Int = f.apply(x.clone());
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
 ///     &[&x],
@@ -694,7 +694,7 @@ fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(f.apply(ast::Int::from_u64(3)));
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
@@ -735,10 +735,10 @@ pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", Sort::int(), &Sort::int());
 ///
 /// let x = ast::Int::new_const("x");
-/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x: ast::Int = f.apply(x.clone());
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
 ///     &[&x],
@@ -750,7 +750,7 @@ pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(f.apply(ast::Int::from_u64(3)));
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
@@ -800,10 +800,10 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", Sort::int(), &Sort::int());
 ///
 /// let x = ast::Int::new_const("x");
-/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x: ast::Int = f.apply(x.clone());
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
 ///     true,
@@ -820,7 +820,7 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(f.apply(ast::Int::from_u64(3)));
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 #[allow(clippy::too_many_arguments)]

@@ -84,8 +84,11 @@
 
 use std::cell::Cell;
 use std::ffi::CString;
+use std::marker::PhantomData;
 use std::ptr::NonNull;
 use z3_sys::*;
+
+use crate::ast::Dynamic;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
 pub mod ast;
@@ -125,6 +128,7 @@ pub use crate::version::{Version, full_version, version};
 pub use ast_vector::AstVector;
 pub use context::Context;
 pub use datatype_builder::DatatypeAccessor;
+pub use func_decl::{FuncDeclDomain, FuncDeclReturn};
 pub use solver::Solvable;
 /// Configuration used to initialize [logical contexts](Context).
 ///
@@ -157,19 +161,24 @@ pub enum Symbol {
 }
 
 /// Sorts represent the various 'types' of [`Ast`s](ast::Ast).
+///
+/// The type parameter `A` names the concrete [`ast::Ast`] type this sort classifies (e.g.
+/// `Sort<ast::Int>`), when statically known. Sorts that are runtime-derived (loaded from a
+/// [`Model`], or otherwise not known at construction time) use the default `A = Dynamic`.
 //
 // Note for in-crate users: Never construct a `Sort` directly; only use
 // `Sort::new()` which handles Z3 refcounting properly.
-pub struct Sort {
+pub struct Sort<A = Dynamic> {
     ctx: Context,
     z3_sort: Z3_sort,
+    phantom: PhantomData<A>,
 }
 
 /// A struct to represent when two sorts are of different types.
 #[derive(Debug)]
-pub struct SortDiffers {
-    left: Sort,
-    right: Sort,
+pub struct SortDiffers<A = Dynamic, B = Dynamic> {
+    left: Sort<A>,
+    right: Sort<B>,
 }
 
 /// A struct to represent when an ast is not a function application.
@@ -225,29 +234,40 @@ pub struct Fixedpoint {
 /// the sort (i.e., type) of each of its arguments. Note that, in Z3,
 /// a constant is a function with 0 arguments.
 ///
+/// The type parameters track the domain and range at the Rust type level: `A` is the argument
+/// list shape (see [`FuncDeclDomain`] — `()`, a single `Sort<T>`, a tuple of sorts, or the
+/// dynamic-arity default `Vec<Sort<Dynamic>>`), and `R` is the concrete [`ast::Ast`] type
+/// [`apply`](FuncDecl::apply) returns (see [`FuncDeclReturn`], defaulting to `Dynamic`).
+///
 /// # See also:
 ///
 /// - [`RecFuncDecl`]
 //
 // Note for in-crate users: Never construct a `FuncDecl` directly; only use
 // `FuncDecl::new()` which handles Z3 refcounting properly.
-pub struct FuncDecl {
+pub struct FuncDecl<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R: FuncDeclReturn = Dynamic> {
     ctx: Context,
     z3_func_decl: Z3_func_decl,
+    phantom_a: PhantomData<A>,
+    phantom_r: PhantomData<R>,
 }
 
 /// Stores the interpretation of a function in a Z3 model.
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_interp.html>
-pub struct FuncInterp {
+pub struct FuncInterp<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R: FuncDeclReturn = Dynamic> {
     ctx: Context,
     z3_func_interp: Z3_func_interp,
+    phantom_a: PhantomData<A>,
+    phantom_r: PhantomData<R>,
 }
 
 /// Store the value of the interpretation of a function in a particular point.
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
-pub struct FuncEntry {
+pub struct FuncEntry<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R: FuncDeclReturn = Dynamic> {
     ctx: Context,
     z3_func_entry: Z3_func_entry,
+    phantom_a: PhantomData<A>,
+    phantom_r: PhantomData<R>,
 }
 
 /// Recursive function declaration. Every function has an associated declaration.
@@ -274,31 +294,39 @@ pub use z3_sys::DeclKind;
 ///
 /// Example:
 /// ```
-/// # use z3::{ DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
+/// # use z3::{ DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Dynamic, Int}};
 /// # let solver = Solver::new();
 /// // Like Rust's Option<int> type
 /// let option_int = DatatypeBuilder::new("OptionInt")
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(Sort::int()))],
+///     vec![("value", DatatypeAccessor::Sort(Sort::int().as_dyn()))],
 /// )
 /// .finish();
 ///
 /// // Assert x.is_none()
 /// let x = Datatype::new_const("x", &option_int.sort);
-/// solver.assert(&option_int.variants[0].tester.apply(&[&x]).as_bool().unwrap());
+/// solver.assert(
+///     &option_int.variants[0]
+///         .tester
+///         .apply(vec![Dynamic::from_ast(&x)])
+///         .as_bool()
+///         .unwrap(),
+/// );
 ///
 /// // Assert y == Some(3)
 /// let y = Datatype::new_const("y", &option_int.sort);
-/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(3)]);
+/// let value = option_int.variants[1]
+///     .constructor
+///     .apply(vec![Dynamic::from_ast(&Int::from_i64(3))]);
 /// solver.assert(&y._eq(&value.as_datatype().unwrap()));
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
 /// // Get the value out of Some(3)
-/// let ast = option_int.variants[1].accessors[0].apply(&[&y]);
+/// let ast = option_int.variants[1].accessors[0].apply(vec![Dynamic::from_ast(&y)]);
 /// assert_eq!(3, model.eval(&ast.as_int().unwrap(), true).unwrap().as_i64().unwrap());
 /// ```
 #[derive(Debug)]

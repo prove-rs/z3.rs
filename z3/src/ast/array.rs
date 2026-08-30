@@ -125,9 +125,9 @@ impl Array {
     /// # use z3::{ast, Config, Context, ast::{Array, Int}, Sort};
     /// # use z3::ast::Ast;
     /// # use std::convert::TryInto;
-    /// let arr = Array::const_array(&Sort::int(), &Int::from_u64(9));
+    /// let arr = Array::const_array(&Sort::int().as_dyn(), &Int::from_u64(9));
     /// assert!(arr.is_const_array());
-    /// let arr2 = Array::fresh_const("a", &Sort::int(), &Sort::int());
+    /// let arr2 = Array::fresh_const("a", &Sort::int().as_dyn(), &Sort::int().as_dyn());
     /// assert!(!arr2.is_const_array());
     /// ```
     pub fn is_const_array(&self) -> bool {

@@ -15,6 +15,8 @@ impl FuncInterp {
         Self {
             ctx: ctx.clone(),
             z3_func_interp,
+            phantom_a: std::marker::PhantomData,
+            phantom_r: std::marker::PhantomData,
         }
     }
 
@@ -103,7 +105,7 @@ impl fmt::Debug for FuncInterp {
     }
 }
 
-impl Drop for FuncInterp {
+impl<A: crate::FuncDeclDomain, R: crate::FuncDeclReturn> Drop for FuncInterp<A, R> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_interp_dec_ref(self.ctx.z3_ctx.0, self.z3_func_interp);
