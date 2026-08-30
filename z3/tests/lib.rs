@@ -1241,6 +1241,73 @@ fn test_dynamic_as_set() {
 }
 
 #[test]
+fn test_dynamic_narrow_parameterized() {
+    let _ = env_logger::try_init();
+
+    let arr = ast::Array::new_const("a", &Sort::int(), &Sort::bool());
+    let dynamic_arr = ast::Dynamic::from(arr);
+
+    // The domain and range sorts both match.
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Int, ast::Bool>>()
+            .is_some()
+    );
+    // Swapped domain/range don't match, even though both are still "some `Array`".
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Bool, ast::Int>>()
+            .is_none()
+    );
+    // Wrong domain only.
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Real, ast::Bool>>()
+            .is_none()
+    );
+    // Fully dynamic still matches anything.
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Dynamic, ast::Dynamic>>()
+            .is_some()
+    );
+
+    let set = ast::Set::new_const("s", &Sort::int());
+    let dynamic_set = ast::Dynamic::from(set);
+    assert!(dynamic_set.narrow::<ast::Set<ast::Int>>().is_some());
+    assert!(dynamic_set.narrow::<ast::Set<ast::Bool>>().is_none());
+    // In Z3, a `Set` is represented as an `Array` to `Bool`, so this also narrows.
+    assert!(
+        dynamic_set
+            .narrow::<ast::Array<ast::Int, ast::Bool>>()
+            .is_some()
+    );
+
+    let seq = ast::Seq::new_const("q", &Sort::int());
+    let dynamic_seq = ast::Dynamic::from(seq);
+    assert!(dynamic_seq.narrow::<ast::Seq<ast::Int>>().is_some());
+    assert!(dynamic_seq.narrow::<ast::Seq<ast::Bool>>().is_none());
+
+    // Nested: an array of `Int`-indexed `Bool` sets.
+    let array_of_sets = ast::Array::new_const(
+        "array_of_sets",
+        &Sort::int(),
+        &Sort::set(&Sort::int().as_dyn()),
+    );
+    let dynamic_array_of_sets = ast::Dynamic::from(array_of_sets);
+    assert!(
+        dynamic_array_of_sets
+            .narrow::<ast::Array<ast::Int, ast::Set<ast::Int>>>()
+            .is_some()
+    );
+    assert!(
+        dynamic_array_of_sets
+            .narrow::<ast::Array<ast::Int, ast::Set<ast::Bool>>>()
+            .is_none()
+    );
+}
+
+#[test]
 fn test_array_store_select() {
     let _ = env_logger::try_init();
 

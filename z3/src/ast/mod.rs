@@ -835,6 +835,91 @@ macro_rules! impl_into_dynamic_generic {
     };
 }
 
+/// A marker for [`Ast`] node types whose values always inhabit one particular, statically
+/// determinable [`Sort`] shape -- including, for generic node types like `Array<D, R>`, the
+/// shape of their domain/range/element marker types.
+///
+/// This is what lets [`Dynamic::narrow`] safely recover a specific parameterization such as
+/// `Array<Int, Bool>`, and not just the fully dynamic `Array<Dynamic, Dynamic>`: each impl
+/// below checks the actual runtime [`Sort`] against what `T` claims to represent before the
+/// underlying [`Z3_ast`] is reinterpreted as `T`.
+///
+/// [`Dynamic::narrow`]: dynamic::Dynamic::narrow
+pub trait SortMarker: Ast {
+    /// Returns `true` if `sort` is a [`Sort`] that a value of this type could have.
+    fn sort_matches(sort: &Sort) -> bool;
+}
+
+macro_rules! impl_sort_marker_by_kind {
+    ($($ast:ident => $kind:expr),+ $(,)?) => {
+        $(
+            impl SortMarker for $ast {
+                fn sort_matches(sort: &Sort) -> bool {
+                    sort.kind() == $kind
+                }
+            }
+        )+
+    };
+}
+
+impl_sort_marker_by_kind! {
+    Bool => SortKind::Bool,
+    Int => SortKind::Int,
+    Real => SortKind::Real,
+    Float => SortKind::FloatingPoint,
+    BV => SortKind::Bv,
+    Datatype => SortKind::Datatype,
+    Regexp => SortKind::Re,
+    RoundingMode => SortKind::RoundingMode,
+}
+
+impl SortMarker for Char {
+    fn sort_matches(sort: &Sort) -> bool {
+        unsafe { Z3_is_char_sort(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
+    }
+}
+
+impl SortMarker for String {
+    fn sort_matches(sort: &Sort) -> bool {
+        unsafe { Z3_is_string_sort(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
+    }
+}
+
+impl SortMarker for Dynamic {
+    fn sort_matches(_sort: &Sort) -> bool {
+        true
+    }
+}
+
+impl<D: SortMarker, R: SortMarker> SortMarker for Array<D, R> {
+    fn sort_matches(sort: &Sort) -> bool {
+        sort.array_domain().is_some_and(|d| D::sort_matches(&d))
+            && sort.array_range().is_some_and(|r| R::sort_matches(&r))
+    }
+}
+
+impl<Elt: SortMarker> SortMarker for Set<Elt> {
+    fn sort_matches(sort: &Sort) -> bool {
+        sort.array_range()
+            .is_some_and(|r| r.kind() == SortKind::Bool)
+            && sort.array_domain().is_some_and(|d| Elt::sort_matches(&d))
+    }
+}
+
+impl<Elt: SortMarker> SortMarker for Seq<Elt> {
+    fn sort_matches(sort: &Sort) -> bool {
+        if sort.kind() != SortKind::Seq {
+            return false;
+        }
+        let Some(basis) =
+            (unsafe { Z3_get_seq_sort_basis(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) })
+        else {
+            return false;
+        };
+        Elt::sort_matches(&unsafe { Sort::wrap(&sort.ctx, basis) })
+    }
+}
+
 impl_ast!(Bool);
 impl_from_try_into_dynamic!(Bool, as_bool);
 impl_ast!(Int);
