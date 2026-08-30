@@ -9,7 +9,7 @@ use crate::{
 impl FuncInterp {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_interp: Z3_func_interp) -> Self {
         unsafe {
-            Z3_func_interp_inc_ref(ctx.z3_ctx.0, z3_func_interp);
+            Z3_func_interp_inc_ref(ctx.z3_ctx.as_ptr(), z3_func_interp);
         }
 
         Self {
@@ -22,12 +22,12 @@ impl FuncInterp {
 
     /// Returns the number of arguments in the function interpretation.
     pub fn get_arity(&self) -> usize {
-        unsafe { Z3_func_interp_get_arity(self.ctx.z3_ctx.0, self.z3_func_interp) as usize }
+        unsafe { Z3_func_interp_get_arity(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) as usize }
     }
 
     /// Returns the number of entries in the function interpretation.
     pub fn get_num_entries(&self) -> u32 {
-        unsafe { Z3_func_interp_get_num_entries(self.ctx.z3_ctx.0, self.z3_func_interp) }
+        unsafe { Z3_func_interp_get_num_entries(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) }
     }
 
     /// Adds an entry to the function interpretation.
@@ -35,7 +35,7 @@ impl FuncInterp {
         let v: AstVector = args.into();
         unsafe {
             Z3_func_interp_add_entry(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_func_interp,
                 v.z3_ast_vector,
                 value.z3_ast,
@@ -49,7 +49,8 @@ impl FuncInterp {
             .map(|i| unsafe {
                 FuncEntry::wrap(
                     &self.ctx,
-                    Z3_func_interp_get_entry(self.ctx.z3_ctx.0, self.z3_func_interp, i).unwrap(),
+                    Z3_func_interp_get_entry(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, i)
+                        .unwrap(),
                 )
             })
             .collect()
@@ -61,14 +62,16 @@ impl FuncInterp {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_func_interp_get_else(self.ctx.z3_ctx.0, self.z3_func_interp).unwrap(),
+                Z3_func_interp_get_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp).unwrap(),
             )
         }
     }
 
     /// Sets the else value of the function interpretation.
     pub fn set_else(&self, ast: &Dynamic) {
-        unsafe { Z3_func_interp_set_else(self.ctx.z3_ctx.0, self.z3_func_interp, ast.z3_ast) }
+        unsafe {
+            Z3_func_interp_set_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, ast.z3_ast)
+        }
     }
 }
 
@@ -108,7 +111,7 @@ impl fmt::Debug for FuncInterp {
 impl<A: crate::FuncDeclDomain, R: crate::FuncDeclReturn> Drop for FuncInterp<A, R> {
     fn drop(&mut self) {
         unsafe {
-            Z3_func_interp_dec_ref(self.ctx.z3_ctx.0, self.z3_func_interp);
+            Z3_func_interp_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp);
         }
     }
 }

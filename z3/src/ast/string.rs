@@ -18,7 +18,12 @@ impl String {
         let sort = Sort::string();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -31,7 +36,7 @@ impl String {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -45,7 +50,7 @@ impl String {
     /// `z3::ast::String::from_str(s).unwrap().as_string()` returns a
     /// `String` equal to the original value.
     pub fn as_string(&self) -> Option<std::string::String> {
-        let z3_ctx = self.get_ctx().z3_ctx.0;
+        let z3_ctx = self.get_ctx().z3_ctx.as_ptr();
         unsafe {
             let bytes = Z3_get_string(z3_ctx, self.get_z3_ast());
             if bytes.is_null() {
@@ -77,7 +82,7 @@ impl String {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_mk_seq_at(self.ctx.z3_ctx.0, self.z3_ast, index.z3_ast).unwrap(),
+                Z3_mk_seq_at(self.ctx.z3_ctx.as_ptr(), self.z3_ast, index.z3_ast).unwrap(),
             )
         }
     }
@@ -120,8 +125,13 @@ impl String {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_mk_seq_extract(self.ctx.z3_ctx.0, self.z3_ast, offset.z3_ast, length.z3_ast)
-                    .unwrap(),
+                Z3_mk_seq_extract(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_ast,
+                    offset.z3_ast,
+                    length.z3_ast,
+                )
+                .unwrap(),
             )
         }
     }
@@ -132,7 +142,12 @@ impl String {
         unsafe {
             Bool::wrap(
                 &self.ctx,
-                Z3_mk_seq_in_re(self.ctx.z3_ctx.0, self.get_z3_ast(), regex.get_z3_ast()).unwrap(),
+                Z3_mk_seq_in_re(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.get_z3_ast(),
+                    regex.get_z3_ast(),
+                )
+                .unwrap(),
             )
         }
     }
@@ -214,7 +229,7 @@ impl FromStr for String {
         let string = CString::new(string)?;
         Ok(unsafe {
             Self::wrap(ctx, {
-                Z3_mk_string(ctx.z3_ctx.0, string.as_c_str().as_ptr()).unwrap()
+                Z3_mk_string(ctx.z3_ctx.as_ptr(), string.as_c_str().as_ptr()).unwrap()
             })
         })
     }

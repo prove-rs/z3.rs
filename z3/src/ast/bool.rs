@@ -14,7 +14,12 @@ impl Bool {
         let sort = Sort::bool();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -27,7 +32,7 @@ impl Bool {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -38,9 +43,9 @@ impl Bool {
         unsafe {
             Self::wrap(ctx, {
                 if b {
-                    Z3_mk_true(ctx.z3_ctx.0).unwrap()
+                    Z3_mk_true(ctx.z3_ctx.as_ptr()).unwrap()
                 } else {
-                    Z3_mk_false(ctx.z3_ctx.0).unwrap()
+                    Z3_mk_false(ctx.z3_ctx.as_ptr()).unwrap()
                 }
             })
         }
@@ -49,7 +54,7 @@ impl Bool {
     /// If `self` is the Boolean value `true` or `false`, return its value. Otherwise, return [None].
     pub fn as_bool(&self) -> Option<bool> {
         unsafe {
-            match Z3_get_bool_value(self.ctx.z3_ctx.0, self.z3_ast) {
+            match Z3_get_bool_value(self.ctx.z3_ctx.as_ptr(), self.z3_ast) {
                 Z3_L_TRUE => Some(true),
                 Z3_L_FALSE => Some(false),
                 _ => None,
@@ -65,7 +70,7 @@ impl Bool {
         unsafe {
             T::wrap(&self.ctx, {
                 Z3_mk_ite(
-                    self.ctx.z3_ctx.0,
+                    self.ctx.z3_ctx.as_ptr(),
                     self.z3_ast,
                     then_expr.get_z3_ast(),
                     else_expr.get_z3_ast(),
@@ -110,7 +115,7 @@ impl Bool {
                     .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
                     .unzip();
                 Z3_mk_pble(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     values.len() as u32,
                     values.as_ptr(),
                     coefficients.as_ptr(),
@@ -137,7 +142,7 @@ impl Bool {
                     .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
                     .unzip();
                 Z3_mk_pbge(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     values.len() as u32,
                     values.as_ptr(),
                     coefficients.as_ptr(),
@@ -160,7 +165,7 @@ impl Bool {
                     .map(|(boolean, coefficient)| (boolean.z3_ast, coefficient))
                     .unzip();
                 Z3_mk_pbeq(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     values.len() as u32,
                     values.as_ptr(),
                     coefficients.as_ptr(),

@@ -16,27 +16,27 @@ pub struct Algebraic {
 impl Algebraic {
     /// Check if the given AST is a value in the Z3 real algebraic number package.
     pub fn is_value(ast: &impl Ast) -> bool {
-        unsafe { Z3_algebraic_is_value(ast.get_ctx().z3_ctx.0, ast.get_z3_ast()) }
+        unsafe { Z3_algebraic_is_value(ast.get_ctx().z3_ctx.as_ptr(), ast.get_z3_ast()) }
     }
 
     /// Check if the algebraic number is positive.
     pub fn is_positive(&self) -> bool {
-        unsafe { Z3_algebraic_is_pos(self.ctx.z3_ctx.0, self.z3_ast) }
+        unsafe { Z3_algebraic_is_pos(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
     }
 
     /// Check if the algebraic number is negative.
     pub fn is_negative(&self) -> bool {
-        unsafe { Z3_algebraic_is_neg(self.ctx.z3_ctx.0, self.z3_ast) }
+        unsafe { Z3_algebraic_is_neg(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
     }
 
     /// Check if the algebraic number is zero.
     pub fn is_zero(&self) -> bool {
-        unsafe { Z3_algebraic_is_zero(self.ctx.z3_ctx.0, self.z3_ast) }
+        unsafe { Z3_algebraic_is_zero(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
     }
 
     /// Return the sign of the algebraic number: -1 if negative, 0 if zero, 1 if positive.
     pub fn sign(&self) -> i32 {
-        unsafe { Z3_algebraic_sign(self.ctx.z3_ctx.0, self.z3_ast) }
+        unsafe { Z3_algebraic_sign(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
     }
 
     /// Add two algebraic numbers.
@@ -45,7 +45,7 @@ impl Algebraic {
         unsafe {
             Algebraic::wrap(
                 &a.ctx,
-                Z3_algebraic_add(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast).unwrap(),
+                Z3_algebraic_add(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast).unwrap(),
             )
         }
     }
@@ -56,7 +56,7 @@ impl Algebraic {
         unsafe {
             Algebraic::wrap(
                 &a.ctx,
-                Z3_algebraic_sub(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast).unwrap(),
+                Z3_algebraic_sub(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast).unwrap(),
             )
         }
     }
@@ -67,7 +67,7 @@ impl Algebraic {
         unsafe {
             Algebraic::wrap(
                 &a.ctx,
-                Z3_algebraic_mul(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast).unwrap(),
+                Z3_algebraic_mul(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast).unwrap(),
             )
         }
     }
@@ -78,7 +78,7 @@ impl Algebraic {
         unsafe {
             Algebraic::wrap(
                 &a.ctx,
-                Z3_algebraic_div(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast).unwrap(),
+                Z3_algebraic_div(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast).unwrap(),
             )
         }
     }
@@ -88,7 +88,7 @@ impl Algebraic {
         unsafe {
             Algebraic::wrap(
                 &self.ctx,
-                Z3_algebraic_root(self.ctx.z3_ctx.0, self.z3_ast, k).unwrap(),
+                Z3_algebraic_root(self.ctx.z3_ctx.as_ptr(), self.z3_ast, k).unwrap(),
             )
         }
     }
@@ -98,7 +98,7 @@ impl Algebraic {
         unsafe {
             Algebraic::wrap(
                 &self.ctx,
-                Z3_algebraic_power(self.ctx.z3_ctx.0, self.z3_ast, k).unwrap(),
+                Z3_algebraic_power(self.ctx.z3_ctx.as_ptr(), self.z3_ast, k).unwrap(),
             )
         }
     }
@@ -106,19 +106,19 @@ impl Algebraic {
     /// Return true if `a < b`.
     pub fn lt(a: &Algebraic, b: &Algebraic) -> bool {
         assert_eq!(a.ctx.z3_ctx, b.ctx.z3_ctx);
-        unsafe { Z3_algebraic_lt(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast) }
+        unsafe { Z3_algebraic_lt(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast) }
     }
 
     /// Return true if `a > b`.
     pub fn gt(a: &Algebraic, b: &Algebraic) -> bool {
         assert_eq!(a.ctx.z3_ctx, b.ctx.z3_ctx);
-        unsafe { Z3_algebraic_gt(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast) }
+        unsafe { Z3_algebraic_gt(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast) }
     }
 
     /// Return true if `a == b` (algebraic equality).
     pub fn eq_algebraic(a: &Algebraic, b: &Algebraic) -> bool {
         assert_eq!(a.ctx.z3_ctx, b.ctx.z3_ctx);
-        unsafe { Z3_algebraic_eq(a.ctx.z3_ctx.0, a.z3_ast, b.z3_ast) }
+        unsafe { Z3_algebraic_eq(a.ctx.z3_ctx.as_ptr(), a.z3_ast, b.z3_ast) }
     }
 }
 
