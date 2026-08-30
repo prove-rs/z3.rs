@@ -1,7 +1,8 @@
 [package]
 name = "z3"
 rust-version = "1.85.0"
-version = "0.20.2"
+version = "0.21.0"
+build = "build.rs"
 authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>", "Mark DenHoed <mark.denhoed@cs.ox.ac.uk>"]
 
 description = "High-level rust bindings for the Z3 SMT solver from Microsoft Research"
@@ -27,11 +28,6 @@ bundled = ["z3-sys/bundled"]
 
 num = ["dep:num"]
 
-# Temporary feature gate for APIs requiring Z3 >= 4.16.0.
-# This flag will be removed and these APIs will become unconditional once
-# the minimum supported Z3 version is bumped to 4.16.0.
-z3_4_16 = []
-
 [dependencies]
 log = "0.4"
 
@@ -45,4 +41,4 @@ rayon = "1.10.0"
 
 [dependencies.z3-sys]
 path = "../z3-sys"
-version = "0.12.0"
+version = "0.13.0"
