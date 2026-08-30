@@ -2,15 +2,17 @@ use crate::ast::{Ast, Dynamic, Int, varop};
 use crate::ast::{Bool, IntoAst};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use std::marker::PhantomData;
 use z3_sys::*;
 
-/// [`Ast`] node representing a sequence value.
-pub struct Seq {
+/// [`Ast`] node representing a sequence value, whose elements are all of sort `Elt`.
+pub struct Seq<Elt = Dynamic> {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) phantom: PhantomData<Elt>,
 }
-impl Seq {
-    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Self {
+impl<Elt: Ast> Seq<Elt> {
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort<Elt>) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
         unsafe {
@@ -25,7 +27,7 @@ impl Seq {
         }
     }
 
-    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Self {
+    pub fn fresh_const(prefix: &str, eltype: &Sort<Elt>) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
         unsafe {
@@ -43,14 +45,14 @@ impl Seq {
     /// use z3::{ast, Config, Context, Solver, Sort};
     /// use z3::ast::{Ast, Seq};
     /// let solver = Solver::new();
-    /// let empty_seq = Seq::empty(&Sort::int().as_dyn());
-    /// let any_seq = Seq::new_const("any_seq", &Sort::int().as_dyn());
+    /// let empty_seq = Seq::empty(&Sort::int());
+    /// let any_seq = Seq::new_const("any_seq", &Sort::int());
     /// let concatenated = Seq::concat(&[&empty_seq, &any_seq]);
     ///
     /// solver.assert(&concatenated._eq(&any_seq));
     /// assert_eq!(solver.check(), z3::SatResult::Sat);
     /// ```
-    pub fn empty(eltype: &Sort) -> Self {
+    pub fn empty(eltype: &Sort<Elt>) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
         unsafe {
@@ -62,7 +64,7 @@ impl Seq {
     }
 
     /// Create a unit sequence of `a`.
-    pub fn unit<A: Ast>(a: &A) -> Self {
+    pub fn unit(a: &Elt) -> Self {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(
@@ -90,19 +92,17 @@ impl Seq {
     /// # use z3::{ast, Config, Context, Solver, Sort};
     /// # use z3::ast::{Ast, Bool, Int, Seq};
     /// # let solver = Solver::new();
-    /// let seq = Seq::fresh_const("", &Sort::bool().as_dyn());
+    /// let seq = Seq::fresh_const("", &Sort::bool());
     ///
     /// solver.assert(
     ///     &seq.nth(0)
     ///         .simplify()
-    ///         .as_bool()
-    ///         .unwrap()
     /// );
     /// ```
-    pub fn nth<T: Into<Int>>(&self, index: T) -> Dynamic {
+    pub fn nth<T: Into<Int>>(&self, index: T) -> Elt {
         let index = index.into();
         unsafe {
-            Dynamic::wrap(
+            Elt::wrap(
                 &self.ctx,
                 Z3_mk_seq_nth(self.ctx.z3_ctx.as_ptr(), self.z3_ast, index.z3_ast).unwrap(),
             )

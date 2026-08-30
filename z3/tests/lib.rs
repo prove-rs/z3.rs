@@ -1177,11 +1177,11 @@ fn test_set_membership() {
     let _ = env_logger::try_init();
 
     let solver = Solver::new();
-    let set = ast::Set::new_const("integer_set", &Sort::int().as_dyn());
+    let set = ast::Set::new_const("integer_set", &Sort::int());
     let one = ast::Int::from_u64(1);
 
     solver.push();
-    solver.assert(set.eq(ast::Set::empty(&Sort::int().as_dyn())));
+    solver.assert(set.eq(ast::Set::empty(&Sort::int())));
 
     solver.push();
     solver.assert(set.member(&one));
@@ -1212,7 +1212,7 @@ fn test_set_membership() {
 
     solver.push();
     // A singleton set of 1 will contain 1
-    solver.assert(set.eq(ast::Set::empty(&Sort::int().as_dyn()).add(&one)));
+    solver.assert(set.eq(ast::Set::empty(&Sort::int()).add(&one)));
     solver.assert(set.member(&one));
     assert_eq!(solver.check(), SatResult::Sat);
     solver.pop(1);
@@ -1227,18 +1227,17 @@ fn test_dynamic_as_set() {
     let array_of_sets = ast::Array::new_const("array_of_sets", &Sort::int().as_dyn(), &set_sort);
     let array_of_arrays =
         ast::Array::new_const("array_of_arrays", &Sort::int().as_dyn(), &array_sort);
-    assert!(
-        array_of_sets
-            .select(&ast::Int::from_u64(0))
-            .as_set()
-            .is_some()
-    );
-    assert!(
-        array_of_arrays
-            .select(&ast::Int::from_u64(0))
-            .as_set()
-            .is_none()
-    );
+
+    // `select` is now statically typed by the array's range sort, so these already come back
+    // as `Set`/`Array` values rather than `Dynamic`; round-trip through `Dynamic` to also
+    // exercise the runtime discrimination.
+    let selected_set: ast::Set =
+        array_of_sets.select(&ast::Dynamic::from_ast(&ast::Int::from_u64(0)));
+    assert!(ast::Dynamic::from(selected_set).as_set().is_some());
+
+    let selected_array: ast::Array =
+        array_of_arrays.select(&ast::Dynamic::from_ast(&ast::Int::from_u64(0)));
+    assert!(ast::Dynamic::from(selected_array).as_set().is_none());
 }
 
 #[test]
@@ -1248,12 +1247,7 @@ fn test_array_store_select() {
     let solver = Solver::new();
     let zero = ast::Int::from_u64(0);
     let one = ast::Int::from_u64(1);
-    let set = ast::Array::new_const(
-        "integer_array",
-        &Sort::int().as_dyn(),
-        &Sort::int().as_dyn(),
-    )
-    .store(&zero, &one);
+    let set = ast::Array::new_const("integer_array", &Sort::int(), &Sort::int()).store(&zero, &one);
 
     solver.assert(set.select(&zero).eq(one).not());
     assert_eq!(solver.check(), SatResult::Unsat);
@@ -1663,11 +1657,7 @@ fn test_regex_union2() {
 fn test_array_example1() {
     let g = Goal::new(true, false, false);
 
-    let aex = Array::new_const(
-        "MyArray",
-        &Sort::int().as_dyn(),
-        &Sort::bitvector(32).as_dyn(),
-    );
+    let aex = Array::new_const("MyArray", &Sort::int(), &Sort::bitvector(32));
 
     let sel = aex.select(&Int::from_u64(0));
 

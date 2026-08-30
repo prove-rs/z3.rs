@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use z3_sys::*;
 
-use crate::ast::{BV, Bool, Char, Dynamic, Float, Int, Real};
+use crate::ast::{Array, BV, Bool, Char, Dynamic, Float, Int, Real, Seq, Set};
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
 impl<A> Sort<A> {
@@ -214,7 +214,7 @@ impl Sort<Dynamic> {
         }
     }
 
-    pub fn array(domain: &Sort<Dynamic>, range: &Sort<Dynamic>) -> Sort<Dynamic> {
+    pub fn array<D, R>(domain: &Sort<D>, range: &Sort<R>) -> Sort<Array<D, R>> {
         let ctx = &Context::thread_local();
 
         unsafe {
@@ -225,7 +225,7 @@ impl Sort<Dynamic> {
         }
     }
 
-    pub fn set(elt: &Sort<Dynamic>) -> Sort<Dynamic> {
+    pub fn set<Elt>(elt: &Sort<Elt>) -> Sort<Set<Elt>> {
         let ctx = &Context::thread_local();
 
         unsafe {
@@ -236,7 +236,7 @@ impl Sort<Dynamic> {
         }
     }
 
-    pub fn seq(elt: &Sort<Dynamic>) -> Sort<Dynamic> {
+    pub fn seq<Elt>(elt: &Sort<Elt>) -> Sort<Seq<Elt>> {
         let ctx = &Context::thread_local();
 
         unsafe {
