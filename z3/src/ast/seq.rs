@@ -15,7 +15,12 @@ impl Seq {
         let sort = Sort::seq(eltype);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap()
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
@@ -27,7 +32,7 @@ impl Seq {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -48,13 +53,23 @@ impl Seq {
     pub fn empty(eltype: &Sort) -> Self {
         let ctx = &Context::thread_local();
         let sort = Sort::seq(eltype);
-        unsafe { Self::wrap(ctx, Z3_mk_seq_empty(ctx.z3_ctx.0, sort.z3_sort).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_seq_empty(ctx.z3_ctx.as_ptr(), sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     /// Create a unit sequence of `a`.
     pub fn unit<A: Ast>(a: &A) -> Self {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_mk_seq_unit(ctx.z3_ctx.0, a.get_z3_ast()).unwrap()) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_seq_unit(ctx.z3_ctx.as_ptr(), a.get_z3_ast()).unwrap(),
+            )
+        }
     }
 
     /// Retrieve the unit sequence positioned at position `index`.
@@ -63,7 +78,7 @@ impl Seq {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_mk_seq_at(self.ctx.z3_ctx.0, self.z3_ast, index.z3_ast).unwrap(),
+                Z3_mk_seq_at(self.ctx.z3_ctx.as_ptr(), self.z3_ast, index.z3_ast).unwrap(),
             )
         }
     }
@@ -89,7 +104,7 @@ impl Seq {
         unsafe {
             Dynamic::wrap(
                 &self.ctx,
-                Z3_mk_seq_nth(self.ctx.z3_ctx.0, self.z3_ast, index.z3_ast).unwrap(),
+                Z3_mk_seq_nth(self.ctx.z3_ctx.as_ptr(), self.z3_ast, index.z3_ast).unwrap(),
             )
         }
     }
@@ -98,7 +113,7 @@ impl Seq {
         unsafe {
             Int::wrap(
                 &self.ctx,
-                Z3_mk_seq_length(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
+                Z3_mk_seq_length(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap(),
             )
         }
     }
@@ -121,7 +136,8 @@ impl Seq {
         unsafe {
             Bool::wrap(
                 &self.ctx,
-                Z3_mk_seq_contains(self.ctx.z3_ctx.0, self.z3_ast, containee.z3_ast).unwrap(),
+                Z3_mk_seq_contains(self.ctx.z3_ctx.as_ptr(), self.z3_ast, containee.z3_ast)
+                    .unwrap(),
             )
         }
     }

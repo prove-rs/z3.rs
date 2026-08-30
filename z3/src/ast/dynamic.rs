@@ -19,7 +19,12 @@ impl Dynamic {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(), sort.z3_sort).unwrap(),
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap(),
             )
         }
     }
@@ -30,7 +35,7 @@ impl Dynamic {
             Self::wrap(&ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort).unwrap()
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
@@ -38,8 +43,8 @@ impl Dynamic {
     pub fn sort_kind(&self) -> SortKind {
         unsafe {
             Z3_get_sort_kind(
-                self.ctx.z3_ctx.0,
-                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast).unwrap(),
+                self.ctx.z3_ctx.as_ptr(),
+                Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap(),
             )
         }
     }
@@ -80,8 +85,8 @@ impl Dynamic {
     pub fn as_char(&self) -> Option<Char> {
         unsafe {
             if Z3_is_char_sort(
-                self.ctx.z3_ctx.0,
-                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
+                self.ctx.z3_ctx.as_ptr(),
+                Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast)?,
             ) {
                 Some(Char::wrap(&self.ctx, self.z3_ast))
             } else {
@@ -94,8 +99,8 @@ impl Dynamic {
     pub fn as_string(&self) -> Option<ast::String> {
         unsafe {
             if Z3_is_string_sort(
-                self.ctx.z3_ctx.0,
-                Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
+                self.ctx.z3_ctx.as_ptr(),
+                Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast)?,
             ) {
                 Some(ast::String::wrap(&self.ctx, self.z3_ast))
             } else {
@@ -126,10 +131,10 @@ impl Dynamic {
             match self.sort_kind() {
                 SortKind::Array => {
                     match Z3_get_sort_kind(
-                        self.ctx.z3_ctx.0,
+                        self.ctx.z3_ctx.as_ptr(),
                         Z3_get_array_sort_range(
-                            self.ctx.z3_ctx.0,
-                            Z3_get_sort(self.ctx.z3_ctx.0, self.z3_ast)?,
+                            self.ctx.z3_ctx.as_ptr(),
+                            Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast)?,
                         )?,
                     ) {
                         SortKind::Bool => Some(Set::wrap(&self.ctx, self.z3_ast)),

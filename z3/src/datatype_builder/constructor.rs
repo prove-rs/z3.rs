@@ -74,7 +74,7 @@ impl Constructor {
 
         let z3_constructor = unsafe {
             Z3_mk_constructor(
-                ctx.z3_ctx.0,
+                ctx.z3_ctx.as_ptr(),
                 cname.as_z3_symbol(),
                 rname.as_z3_symbol(),
                 num_fs.try_into().unwrap(),
@@ -97,7 +97,7 @@ impl Constructor {
 impl Drop for Constructor {
     fn drop(&mut self) {
         unsafe {
-            Z3_del_constructor(self.ctx.z3_ctx.0, self.z3_constructor);
+            Z3_del_constructor(self.ctx.z3_ctx.as_ptr(), self.z3_constructor);
         }
     }
 }
@@ -128,7 +128,7 @@ impl ConstructorList {
 
         let z3_constructor_list = unsafe {
             Z3_mk_constructor_list(
-                ctx.z3_ctx.0,
+                ctx.z3_ctx.as_ptr(),
                 num_cs.try_into().unwrap(),
                 cs_handles.as_mut_ptr(),
             )
@@ -147,7 +147,7 @@ impl ConstructorList {
 impl Drop for ConstructorList {
     fn drop(&mut self) {
         unsafe {
-            Z3_del_constructor_list(self.ctx.z3_ctx.0, self.z3_constructor_list);
+            Z3_del_constructor_list(self.ctx.z3_ctx.as_ptr(), self.z3_constructor_list);
         }
     }
 }

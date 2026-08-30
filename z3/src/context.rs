@@ -12,6 +12,12 @@ use crate::{Config, ContextHandle};
 #[derive(Clone, Debug, PartialEq, Eq)]
 pub(crate) struct ContextInternal(pub(crate) Z3_context);
 
+impl ContextInternal {
+    pub(crate) fn as_ptr(&self) -> Z3_context {
+        self.0
+    }
+}
+
 impl Drop for ContextInternal {
     fn drop(&mut self) {
         unsafe { Z3_del_context(self.0) };
@@ -122,7 +128,7 @@ impl Context {
     }
 
     pub fn get_z3_context(&self) -> Z3_context {
-        self.z3_ctx.0
+        self.z3_ctx.as_ptr()
     }
 
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
@@ -148,7 +154,7 @@ impl Context {
     pub fn update_param_value(&mut self, k: &str, v: &str) {
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
-        unsafe { Z3_update_param_value(self.z3_ctx.0, ks.as_ptr(), vs.as_ptr()) };
+        unsafe { Z3_update_param_value(self.z3_ctx.as_ptr(), ks.as_ptr(), vs.as_ptr()) };
     }
 
     /// Update a global parameter.
@@ -167,7 +173,7 @@ impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
         unsafe {
-            Z3_interrupt(self.ctx.z3_ctx.0);
+            Z3_interrupt(self.ctx.z3_ctx.as_ptr());
         }
     }
 }

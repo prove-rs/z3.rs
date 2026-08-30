@@ -10,8 +10,8 @@ impl RecFuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
         unsafe {
             Z3_inc_ref(
-                ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(ctx.z3_ctx.0, z3_func_decl).unwrap(),
+                ctx.z3_ctx.as_ptr(),
+                Z3_func_decl_to_ast(ctx.z3_ctx.as_ptr(), z3_func_decl).unwrap(),
             );
         }
         Self {
@@ -23,7 +23,7 @@ impl RecFuncDecl {
     pub fn new<S: Into<Symbol>>(name: S, domain: &[&Sort], range: &Sort) -> Self {
         let ctx = &Context::thread_local();
         assert!(domain.iter().all(|s| s.ctx.z3_ctx == ctx.z3_ctx));
-        assert_eq!(ctx.z3_ctx.0, range.ctx.z3_ctx.0);
+        assert_eq!(ctx.z3_ctx.as_ptr(), range.ctx.z3_ctx.as_ptr());
 
         let domain: Vec<_> = domain.iter().map(|s| s.z3_sort).collect();
 
@@ -31,7 +31,7 @@ impl RecFuncDecl {
             Self::wrap(
                 ctx,
                 Z3_mk_rec_func_decl(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     name.into().as_z3_symbol(),
                     domain.len().try_into().unwrap(),
                     domain.as_ptr(),
@@ -80,11 +80,11 @@ impl RecFuncDecl {
         unsafe {
             assert_eq!(
                 body.get_sort().z3_sort,
-                Z3_get_range(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap()
+                Z3_get_range(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap()
             );
 
             Z3_add_rec_def(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_func_decl,
                 self.arity() as u32,
                 args.as_mut_ptr(),
@@ -96,7 +96,7 @@ impl RecFuncDecl {
 
 impl fmt::Display for RecFuncDecl {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.0, self.z3_func_decl) };
+        let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -117,8 +117,8 @@ impl Drop for RecFuncDecl {
     fn drop(&mut self) {
         unsafe {
             Z3_dec_ref(
-                self.ctx.z3_ctx.0,
-                Z3_func_decl_to_ast(self.ctx.z3_ctx.0, self.z3_func_decl).unwrap(),
+                self.ctx.z3_ctx.as_ptr(),
+                Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap(),
             );
         }
     }
