@@ -5,7 +5,7 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use z3_sys::*;
 
-use crate::ast::{Array, BV, Bool, Char, Dynamic, Float, Int, Real, Seq, Set};
+use crate::ast::{Array, Ast, BV, Bool, Char, Dynamic, Float, Int, Real, Seq, Set, SortMarker};
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
 impl<A> Sort<A> {
@@ -36,99 +36,103 @@ impl<A> Sort<A> {
         unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.0, self.z3_sort) }
     }
 
-    /// Returns `Some(e)` where `e` is the number of exponent bits if the sort
-    /// is a `FloatingPoint` and `None` otherwise.
-    pub fn float_exponent_size(&self) -> Option<u32> {
-        if self.kind() == SortKind::FloatingPoint {
-            Some(unsafe { Z3_fpa_get_ebits(self.ctx.z3_ctx.0, self.z3_sort) })
-        } else {
-            None
-        }
-    }
-
-    /// Returns `Some(s)` where `s` is the number of significand bits if the sort
-    /// is a `FloatingPoint` and `None` otherwise.
-    pub fn float_significand_size(&self) -> Option<u32> {
-        if self.kind() == SortKind::FloatingPoint {
-            Some(unsafe { Z3_fpa_get_sbits(self.ctx.z3_ctx.0, self.z3_sort) })
-        } else {
-            None
-        }
+    /// Attempt to narrow this `Sort` to a specific parameterization `T`, e.g.
+    /// `Sort<Array<Int, Bool>>` or `Sort<Float>`, checking the actual runtime shape of the
+    /// sort (including, for parameterized `T`, its domain/range/element sorts) rather than
+    /// just trusting a phantom marker.
+    ///
+    /// This is the only way to reach the type-specific accessors that live on a concrete
+    /// `Sort<Array<D, R>>` (`domain`/`range`) or `Sort<Float>` (`exponent_size`/
+    /// `significand_size`) starting from a `Sort<Dynamic>`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Sort, ast::{Array, Bool, Int}};
+    /// let sort = Sort::array(&Sort::int(), &Sort::bool()).as_dyn();
+    /// assert!(sort.narrow::<Array<Int, Bool>>().is_some());
+    /// assert!(sort.narrow::<Array<Bool, Int>>().is_none());
+    /// ```
+    pub fn narrow<T: SortMarker>(&self) -> Option<Sort<T>> {
+        T::sort_matches(&self.as_dyn()).then(|| unsafe { Sort::wrap(&self.ctx, self.z3_sort) })
     }
 }
 
-impl<A> Sort<A> {
-    /// Return if this Sort is for an `Array` or a `Set`.
-    ///
-    /// # Examples
-    /// ```
-    /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
-    /// let bool_sort = Sort::bool().as_dyn();
-    /// let int_sort = Sort::int().as_dyn();
-    /// let array_sort = Sort::array(&int_sort, &bool_sort);
-    /// let set_sort = Sort::set(&int_sort);
-    /// assert!(array_sort.is_array());
-    /// assert!(set_sort.is_array());
-    /// assert!(!int_sort.is_array());
-    /// assert!(!bool_sort.is_array());
-    /// ```
-    pub fn is_array(&self) -> bool {
-        self.kind() == SortKind::Array
-    }
-
+impl<D: Ast, R: Ast> Sort<Array<D, R>> {
     /// Return the `Sort` of the domain for `Array`s of this `Sort`.
     ///
-    /// If this `Sort` is an `Array` or `Set`, it has a domain sort, so return it.
-    /// If this is not an `Array` or `Set` `Sort`, return `None`.
     /// # Examples
     /// ```
-    /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
-    /// let bool_sort = Sort::bool().as_dyn();
-    /// let int_sort = Sort::int().as_dyn();
-    /// let array_sort = Sort::array(&int_sort, &bool_sort);
-    /// let set_sort = Sort::set(&int_sort);
-    /// assert_eq!(array_sort.array_domain().unwrap(), int_sort);
-    /// assert_eq!(set_sort.array_domain().unwrap(), int_sort);
-    /// assert!(int_sort.array_domain().is_none());
-    /// assert!(bool_sort.array_domain().is_none());
+    /// # use z3::Sort;
+    /// let array_sort = Sort::array(&Sort::int(), &Sort::bool());
+    /// assert_eq!(array_sort.domain(), Sort::int());
     /// ```
-    pub fn array_domain(&self) -> Option<Sort<Dynamic>> {
-        if self.is_array() {
-            unsafe {
-                let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort)?;
-                Some(Sort::wrap(&self.ctx, domain_sort))
-            }
-        } else {
-            None
+    pub fn domain(&self) -> Sort<D> {
+        unsafe {
+            Sort::wrap(
+                &self.ctx,
+                Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort).unwrap(),
+            )
         }
     }
 
     /// Return the `Sort` of the range for `Array`s of this `Sort`.
     ///
-    /// If this `Sort` is an `Array` it has a range sort, so return it.
-    /// If this `Sort` is a `Set`, it has an implied range sort of `Bool`.
-    /// If this is not an `Array` or `Set` `Sort`, return `None`.
     /// # Examples
     /// ```
-    /// # use z3::{Config, Context, Sort, ast::Ast, ast::Int, ast::Bool};
-    /// let bool_sort = Sort::bool().as_dyn();
-    /// let int_sort = Sort::int().as_dyn();
-    /// let array_sort = Sort::array(&int_sort, &bool_sort);
-    /// let set_sort = Sort::set(&int_sort);
-    /// assert_eq!(array_sort.array_range().unwrap(), bool_sort);
-    /// assert_eq!(set_sort.array_range().unwrap(), bool_sort);
-    /// assert!(int_sort.array_range().is_none());
-    /// assert!(bool_sort.array_range().is_none());
+    /// # use z3::Sort;
+    /// let array_sort = Sort::array(&Sort::int(), &Sort::bool());
+    /// assert_eq!(array_sort.range(), Sort::bool());
     /// ```
-    pub fn array_range(&self) -> Option<Sort<Dynamic>> {
-        if self.is_array() {
-            unsafe {
-                let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.0, self.z3_sort)?;
-                Some(Sort::wrap(&self.ctx, range_sort))
-            }
-        } else {
-            None
+    pub fn range(&self) -> Sort<R> {
+        unsafe {
+            Sort::wrap(
+                &self.ctx,
+                Z3_get_array_sort_range(self.ctx.z3_ctx.0, self.z3_sort).unwrap(),
+            )
         }
+    }
+}
+
+impl<Elt: Ast> Sort<Set<Elt>> {
+    /// Return the `Sort` of the elements of `Set`s of this `Sort`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// let set_sort = Sort::set(&Sort::int());
+    /// assert_eq!(set_sort.domain(), Sort::int());
+    /// ```
+    pub fn domain(&self) -> Sort<Elt> {
+        unsafe {
+            Sort::wrap(
+                &self.ctx,
+                Z3_get_array_sort_domain(self.ctx.z3_ctx.0, self.z3_sort).unwrap(),
+            )
+        }
+    }
+}
+
+impl Sort<Float> {
+    /// Return the number of exponent bits of this `FloatingPoint` `Sort`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// assert_eq!(Sort::double().exponent_size(), 11);
+    /// ```
+    pub fn exponent_size(&self) -> u32 {
+        unsafe { Z3_fpa_get_ebits(self.ctx.z3_ctx.0, self.z3_sort) }
+    }
+
+    /// Return the number of significand bits of this `FloatingPoint` `Sort`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// assert_eq!(Sort::double().significand_size(), 53);
+    /// ```
+    pub fn significand_size(&self) -> u32 {
+        unsafe { Z3_fpa_get_sbits(self.ctx.z3_ctx.0, self.z3_sort) }
     }
 }
 

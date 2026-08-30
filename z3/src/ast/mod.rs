@@ -891,18 +891,31 @@ impl SortMarker for Dynamic {
     }
 }
 
+/// Look up the domain/range sorts of an `Array`-shaped `Sort`, or `None` if `sort` isn't
+/// actually an `Array` sort. Used by the `SortMarker` impls for `Array`/`Set` below, which
+/// can't yet assume the phantom marker is accurate -- that's exactly what they're checking.
+fn array_domain_and_range(sort: &Sort) -> Option<(Sort, Sort)> {
+    if sort.kind() != SortKind::Array {
+        return None;
+    }
+    unsafe {
+        let domain = Z3_get_array_sort_domain(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort)?;
+        let range = Z3_get_array_sort_range(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort)?;
+        Some((Sort::wrap(&sort.ctx, domain), Sort::wrap(&sort.ctx, range)))
+    }
+}
+
 impl<D: SortMarker, R: SortMarker> SortMarker for Array<D, R> {
     fn sort_matches(sort: &Sort) -> bool {
-        sort.array_domain().is_some_and(|d| D::sort_matches(&d))
-            && sort.array_range().is_some_and(|r| R::sort_matches(&r))
+        array_domain_and_range(sort)
+            .is_some_and(|(d, r)| D::sort_matches(&d) && R::sort_matches(&r))
     }
 }
 
 impl<Elt: SortMarker> SortMarker for Set<Elt> {
     fn sort_matches(sort: &Sort) -> bool {
-        sort.array_range()
-            .is_some_and(|r| r.kind() == SortKind::Bool)
-            && sort.array_domain().is_some_and(|d| Elt::sort_matches(&d))
+        array_domain_and_range(sort)
+            .is_some_and(|(d, r)| r.kind() == SortKind::Bool && Elt::sort_matches(&d))
     }
 }
 

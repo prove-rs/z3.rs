@@ -228,23 +228,18 @@ fn test_floating_point_bits() {
     let float128 = ast::Float::new_const("float128", 15, 113);
     let i = ast::Int::new_const("int");
 
-    let exp32 = Sort::float_exponent_size(&float32.get_sort());
-    let sig32 = Sort::float_significand_size(&float32.get_sort());
-    let exp64 = Sort::float_exponent_size(&float64.get_sort());
-    let sig64 = Sort::float_significand_size(&float64.get_sort());
-    let exp128 = Sort::float_exponent_size(&float128.get_sort());
-    let sig128 = Sort::float_significand_size(&float128.get_sort());
-    let expi = Sort::float_exponent_size(&i.get_sort());
-    let sigi = Sort::float_significand_size(&i.get_sort());
+    let float32_sort = float32.get_sort().narrow::<ast::Float>().unwrap();
+    let float64_sort = float64.get_sort().narrow::<ast::Float>().unwrap();
+    let float128_sort = float128.get_sort().narrow::<ast::Float>().unwrap();
 
-    assert!(exp32 == Some(8));
-    assert!(sig32 == Some(24));
-    assert!(exp64 == Some(11));
-    assert!(sig64 == Some(53));
-    assert!(exp128 == Some(15));
-    assert!(sig128 == Some(113));
-    assert!(expi.is_none());
-    assert!(sigi.is_none());
+    assert_eq!(float32_sort.exponent_size(), 8);
+    assert_eq!(float32_sort.significand_size(), 24);
+    assert_eq!(float64_sort.exponent_size(), 11);
+    assert_eq!(float64_sort.significand_size(), 53);
+    assert_eq!(float128_sort.exponent_size(), 15);
+    assert_eq!(float128_sort.significand_size(), 113);
+
+    assert!(i.get_sort().narrow::<ast::Float>().is_none());
 }
 
 #[test]
