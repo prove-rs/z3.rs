@@ -12,7 +12,7 @@ use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 impl ApplyResult {
     unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
         unsafe {
-            Z3_apply_result_inc_ref(ctx.z3_ctx.0, z3_apply_result);
+            Z3_apply_result_inc_ref(ctx.z3_ctx.as_ptr(), z3_apply_result);
         }
         ApplyResult {
             ctx: ctx.clone(),
@@ -21,12 +21,14 @@ impl ApplyResult {
     }
 
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal> {
-        let num_subgoals =
-            unsafe { Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.0, self.z3_apply_result) };
+        let num_subgoals = unsafe {
+            Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result)
+        };
         (0..num_subgoals).map(move |i| unsafe {
             Goal::wrap(
                 &self.ctx,
-                Z3_apply_result_get_subgoal(self.ctx.z3_ctx.0, self.z3_apply_result, i).unwrap(),
+                Z3_apply_result_get_subgoal(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result, i)
+                    .unwrap(),
             )
         })
     }
@@ -41,7 +43,7 @@ impl Clone for ApplyResult {
 impl Drop for ApplyResult {
     fn drop(&mut self) {
         unsafe {
-            Z3_apply_result_dec_ref(self.ctx.z3_ctx.0, self.z3_apply_result);
+            Z3_apply_result_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result);
         }
     }
 }
@@ -58,10 +60,10 @@ impl Tactic {
     /// ```
     pub fn list_all() -> Vec<Result<String, Utf8Error>> {
         let ctx = &Context::thread_local();
-        let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.0) };
+        let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.as_ptr()) };
         (0..p)
             .map(move |n| {
-                let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.0, n) };
+                let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.as_ptr(), n) };
                 unsafe { CStr::from_ptr(t) }.to_str().map(String::from)
             })
             .collect()
@@ -69,7 +71,7 @@ impl Tactic {
 
     unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
         unsafe {
-            Z3_tactic_inc_ref(ctx.z3_ctx.0, z3_tactic);
+            Z3_tactic_inc_ref(ctx.z3_ctx.as_ptr(), z3_tactic);
         }
         Tactic {
             ctx: ctx.clone(),
@@ -94,7 +96,7 @@ impl Tactic {
         let tactic_name = CString::new(name).unwrap();
 
         unsafe {
-            let tactic = Z3_mk_tactic(ctx.z3_ctx.0, tactic_name.as_ptr())
+            let tactic = Z3_mk_tactic(ctx.z3_ctx.as_ptr(), tactic_name.as_ptr())
                 .unwrap_or_else(|| panic!("{name} is an invalid tactic"));
             Self::wrap(ctx, tactic)
         }
@@ -103,13 +105,13 @@ impl Tactic {
     /// Return a tactic that just return the given goal.
     pub fn create_skip() -> Tactic {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.0).unwrap()) }
+        unsafe { Self::wrap(ctx, Z3_tactic_skip(ctx.z3_ctx.as_ptr()).unwrap()) }
     }
 
     /// Return a tactic that always fails.
     pub fn create_fail() -> Tactic {
         let ctx = &Context::thread_local();
-        unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.0).unwrap()) }
+        unsafe { Self::wrap(ctx, Z3_tactic_fail(ctx.z3_ctx.as_ptr()).unwrap()) }
     }
 
     /// Return a tactic that keeps applying `t` until the goal is not modified anymore or the maximum
@@ -119,7 +121,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_tactic_repeat(ctx.z3_ctx.0, t.z3_tactic, max).unwrap(),
+                Z3_tactic_repeat(ctx.z3_ctx.as_ptr(), t.z3_tactic, max).unwrap(),
             )
         }
     }
@@ -131,7 +133,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_try_for(self.ctx.z3_ctx.0, self.z3_tactic, timeout_ms).unwrap(),
+                Z3_tactic_try_for(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, timeout_ms).unwrap(),
             )
         }
     }
@@ -142,8 +144,12 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_and_then(self.ctx.z3_ctx.0, self.z3_tactic, then_tactic.z3_tactic)
-                    .unwrap(),
+                Z3_tactic_and_then(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_tactic,
+                    then_tactic.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -154,8 +160,12 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_or_else(self.ctx.z3_ctx.0, self.z3_tactic, else_tactic.z3_tactic)
-                    .unwrap(),
+                Z3_tactic_or_else(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_tactic,
+                    else_tactic.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -166,7 +176,13 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_cond(self.ctx.z3_ctx.0, p.z3_probe, self.z3_tactic, t.z3_tactic).unwrap(),
+                Z3_tactic_cond(
+                    self.ctx.z3_ctx.as_ptr(),
+                    p.z3_probe,
+                    self.z3_tactic,
+                    t.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -177,7 +193,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_when(self.ctx.z3_ctx.0, p.z3_probe, self.z3_tactic).unwrap(),
+                Z3_tactic_when(self.ctx.z3_ctx.as_ptr(), p.z3_probe, self.z3_tactic).unwrap(),
             )
         }
     }
@@ -190,7 +206,13 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &p.ctx,
-                Z3_tactic_cond(p.ctx.z3_ctx.0, p.z3_probe, t1.z3_tactic, t2.z3_tactic).unwrap(),
+                Z3_tactic_cond(
+                    p.ctx.z3_ctx.as_ptr(),
+                    p.z3_probe,
+                    t1.z3_tactic,
+                    t2.z3_tactic,
+                )
+                .unwrap(),
             )
         }
     }
@@ -200,7 +222,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &p.ctx,
-                Z3_tactic_fail_if(p.ctx.z3_ctx.0, p.z3_probe).unwrap(),
+                Z3_tactic_fail_if(p.ctx.z3_ctx.as_ptr(), p.z3_probe).unwrap(),
             )
         }
     }
@@ -210,7 +232,7 @@ impl Tactic {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_tactic_using_params(self.ctx.z3_ctx.0, self.z3_tactic, params.z3_params)
+                Z3_tactic_using_params(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, params.z3_params)
                     .unwrap(),
             )
         }
@@ -222,9 +244,9 @@ impl Tactic {
     pub fn apply(&self, goal: &Goal, params: Option<&Params>) -> Result<ApplyResult, String> {
         unsafe {
             let z3_apply_result = match params {
-                None => Z3_tactic_apply(self.ctx.z3_ctx.0, self.z3_tactic, goal.z3_goal),
+                None => Z3_tactic_apply(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, goal.z3_goal),
                 Some(params) => Z3_tactic_apply_ex(
-                    self.ctx.z3_ctx.0,
+                    self.ctx.z3_ctx.as_ptr(),
                     self.z3_tactic,
                     goal.z3_goal,
                     params.z3_params,
@@ -233,8 +255,8 @@ impl Tactic {
             if let Some(z3_apply_result) = z3_apply_result {
                 Ok(ApplyResult::wrap(&self.ctx, z3_apply_result))
             } else {
-                let code = Z3_get_error_code(self.ctx.z3_ctx.0);
-                let msg = Z3_get_error_msg(self.ctx.z3_ctx.0, code);
+                let code = Z3_get_error_code(self.ctx.z3_ctx.as_ptr());
+                let msg = Z3_get_error_msg(self.ctx.z3_ctx.as_ptr(), code);
                 Err(String::from(CStr::from_ptr(msg).to_str().unwrap_or(
                     "Couldn't retrieve error message from z3: got invalid UTF-8",
                 )))
@@ -263,7 +285,7 @@ impl Tactic {
         unsafe {
             Solver::wrap(
                 &self.ctx,
-                Z3_mk_solver_from_tactic(self.ctx.z3_ctx.0, self.z3_tactic).unwrap(),
+                Z3_mk_solver_from_tactic(self.ctx.z3_ctx.as_ptr(), self.z3_tactic).unwrap(),
             )
         }
     }
@@ -271,7 +293,7 @@ impl Tactic {
 
 impl fmt::Display for Tactic {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_tactic_get_help(self.ctx.z3_ctx.0, self.z3_tactic) };
+        let p = unsafe { Z3_tactic_get_help(self.ctx.z3_ctx.as_ptr(), self.z3_tactic) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -291,7 +313,7 @@ impl fmt::Debug for Tactic {
 impl Drop for Tactic {
     fn drop(&mut self) {
         unsafe {
-            Z3_tactic_dec_ref(self.ctx.z3_ctx.0, self.z3_tactic);
+            Z3_tactic_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_tactic);
         }
     }
 }

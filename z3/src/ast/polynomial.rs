@@ -34,7 +34,7 @@ impl Polynomial {
             AstVector::wrap(
                 ctx,
                 Z3_polynomial_subresultants(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     p.get_z3_ast(),
                     q.get_z3_ast(),
                     x.get_z3_ast(),
