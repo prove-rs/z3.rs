@@ -40,7 +40,7 @@ impl Float {
     }
 
     /// A NaN (Not a Number) value of the given ([`Float`]) [`Sort`].
-    pub fn nan(sort: &Sort) -> Float {
+    pub fn nan(sort: &Sort<Float>) -> Float {
         let ctx = &Context::thread_local();
         assert!(matches!(sort.kind(), SortKind::FloatingPoint));
         unsafe {

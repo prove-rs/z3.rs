@@ -45,19 +45,19 @@ impl RecFuncDecl {
     /// Adds the body to a recursive function.
     ///
     /// ```
-    /// # use z3::{Config, Context, RecFuncDecl, Solver, Sort, Symbol, ast::Int, SatResult};
+    /// # use z3::{Config, Context, RecFuncDecl, Solver, Sort, Symbol, ast::{Ast, Dynamic, Int}, SatResult};
     /// # use std::convert::TryInto;
     /// let mut f = RecFuncDecl::new(
     ///     "f",
-    ///     &[&Sort::int()],
-    ///     &Sort::int());
+    ///     &[&Sort::int().as_dyn()],
+    ///     &Sort::int().as_dyn());
     /// let n = Int::new_const("n");
     /// f.add_def(
     ///     &[&n],
     ///     &Int::add(&[&n, &Int::from_i64(1)])
     /// );
     ///
-    /// let f_of_n = &f.apply(&[&n.clone()]);
+    /// let f_of_n = &f.apply(vec![Dynamic::from_ast(&n)]);
     ///
     /// let solver = Solver::new();
     /// let forall: z3::ast::Bool = z3::ast::forall_const(

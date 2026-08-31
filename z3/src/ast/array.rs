@@ -1,21 +1,23 @@
 use crate::ast::{Ast, Dynamic};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use std::marker::PhantomData;
 use z3_sys::*;
 
 /// [`Ast`] node representing an array value.
-/// An array in Z3 is a mapping from indices to values.
-pub struct Array {
+/// An array in Z3 is a mapping from indices of sort `D` to values of sort `R`.
+pub struct Array<D = Dynamic, R = Dynamic> {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) phantom: PhantomData<(D, R)>,
 }
 
-impl Array {
+impl<D: Ast, R: Ast> Array<D, R> {
     /// Create an `Array` which maps from indices of the `domain` `Sort` to
     /// values of the `range` `Sort`.
     ///
     /// All values in the `Array` will be unconstrained.
-    pub fn new_const<S: Into<Symbol>>(name: S, domain: &Sort, range: &Sort) -> Array {
+    pub fn new_const<S: Into<Symbol>>(name: S, domain: &Sort<D>, range: &Sort<R>) -> Array<D, R> {
         let ctx = &Context::thread_local();
         let sort = Sort::array(domain, range);
         unsafe {
@@ -30,7 +32,7 @@ impl Array {
         }
     }
 
-    pub fn fresh_const(prefix: &str, domain: &Sort, range: &Sort) -> Array {
+    pub fn fresh_const(prefix: &str, domain: &Sort<D>, range: &Sort<R>) -> Array<D, R> {
         let ctx = &Context::thread_local();
         let sort = Sort::array(domain, range);
         unsafe {
@@ -44,10 +46,7 @@ impl Array {
 
     /// Create a "constant array", that is, an `Array` initialized so that all of the
     /// indices in the `domain` map to the given value `val`
-    pub fn const_array<A>(domain: &Sort, val: &A) -> Array
-    where
-        A: Ast,
-    {
+    pub fn const_array(domain: &Sort<D>, val: &R) -> Array<D, R> {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
@@ -57,25 +56,9 @@ impl Array {
     }
 
     /// Get the value at a given index in the array.
-    ///
-    /// Note that the `index` _must be_ of the array's `domain` sort.
-    /// The return type will be of the array's `range` sort.
-    //
-    // We avoid the binop! macro because the argument has a non-Self type
-    pub fn select<A>(&self, index: &A) -> Dynamic
-    where
-        A: Ast,
-    {
-        // TODO: We could validate here that the index is of the correct type.
-        // This would require us either to keep around the original `domain` argument
-        // from when the Array was constructed, or to do an additional Z3 query
-        // to find the domain sort first.
-        // But if we did this check ourselves, we'd just panic, so it doesn't seem
-        // like a huge advantage over just letting Z3 panic itself when it discovers the
-        // problem.
-        // This way we also avoid the redundant check every time this method is called.
+    pub fn select(&self, index: &D) -> R {
         unsafe {
-            Dynamic::wrap(&self.ctx, {
+            R::wrap(&self.ctx, {
                 Z3_mk_select(self.ctx.z3_ctx.as_ptr(), self.z3_ast, index.get_z3_ast()).unwrap()
             })
         }
@@ -83,11 +66,11 @@ impl Array {
 
     /// n-ary Array read. `idxs` are the indices of the array that gets read.
     /// This is useful for applying lambdas.
-    pub fn select_n(&self, idxs: &[&dyn Ast]) -> Dynamic {
+    pub fn select_n(&self, idxs: &[&dyn Ast]) -> R {
         let idxs: Vec<_> = idxs.iter().map(|idx| idx.get_z3_ast()).collect();
 
         unsafe {
-            Dynamic::wrap(&self.ctx, {
+            R::wrap(&self.ctx, {
                 Z3_mk_select_n(
                     self.ctx.z3_ctx.as_ptr(),
                     self.z3_ast,
@@ -100,16 +83,7 @@ impl Array {
     }
 
     /// Update the value at a given index in the array.
-    ///
-    /// Note that the `index` _must be_ of the array's `domain` sort,
-    /// and the `value` _must be_ of the array's `range` sort.
-    //
-    // We avoid the trinop! macro because the arguments have non-Self types
-    pub fn store<A1, A2>(&self, index: &A1, value: &A2) -> Self
-    where
-        A1: Ast,
-        A2: Ast,
-    {
+    pub fn store(&self, index: &D, value: &R) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
                 Z3_mk_store(

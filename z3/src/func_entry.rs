@@ -14,6 +14,8 @@ impl FuncEntry {
         Self {
             ctx: ctx.clone(),
             z3_func_entry,
+            phantom_a: std::marker::PhantomData,
+            phantom_r: std::marker::PhantomData,
         }
     }
 
@@ -62,7 +64,7 @@ impl fmt::Debug for FuncEntry {
     }
 }
 
-impl Drop for FuncEntry {
+impl<A: crate::FuncDeclDomain, R: crate::FuncDeclReturn> Drop for FuncEntry<A, R> {
     fn drop(&mut self) {
         unsafe {
             Z3_func_entry_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_func_entry);
