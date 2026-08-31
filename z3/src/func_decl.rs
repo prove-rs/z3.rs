@@ -283,6 +283,36 @@ impl FuncDecl {
             )
         }
     }
+
+    /// Create an [`ast::Array`] with the same interpretation as this (unary) function
+    /// declaration, i.e. `self.as_array().select(x) == self.apply(&[x])` for every `x`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{ast::Int, FuncDecl, SatResult, Solver, Sort};
+    /// # use z3::ast::Ast;
+    /// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    /// let arr = f.as_array();
+    /// let x = Int::new_const("x");
+    ///
+    /// let solver = Solver::new();
+    /// solver.assert(
+    ///     arr.select(&x)
+    ///         .as_int()
+    ///         .unwrap()
+    ///         .eq(f.apply(&[&x]).as_int().unwrap())
+    ///         .not(),
+    /// );
+    /// assert_eq!(solver.check(), SatResult::Unsat);
+    /// ```
+    pub fn as_array(&self) -> ast::Array {
+        unsafe {
+            ast::Array::wrap(
+                &self.ctx,
+                Z3_mk_as_array(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap(),
+            )
+        }
+    }
 }
 
 impl fmt::Display for FuncDecl {
