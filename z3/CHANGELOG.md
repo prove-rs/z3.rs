@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.0...z3-v0.21.1) - 2026-08-31
+
+### Added
+
+- FuncDecl::as_array() ([#591](https://github.com/prove-rs/z3.rs/pull/591)) (by @toolCHAINZ) - #591
+
+### Other
+
+- Replace internal usages of z3_ctx.0 with z3_ctx.as_ptr() ([#587](https://github.com/prove-rs/z3.rs/pull/587)) (by @toolCHAINZ) - #587
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.21.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.2...z3-v0.21.0) - 2026-08-28
 
 ### Added
