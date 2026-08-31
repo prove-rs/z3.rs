@@ -3,7 +3,8 @@ use std::{ffi::CStr, iter::FusedIterator};
 use z3_sys::*;
 
 use crate::{
-    AstVector, Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Sort, Translate, ast::Ast,
+    AstVector, Context, FuncDecl, FuncInterp, Interp, Model, Optimize, Solver, Sort, Translate,
+    ast::{Ast, Dynamic},
 };
 
 impl Model {
@@ -55,9 +56,11 @@ impl Model {
         Some(unsafe { T::wrap(&self.ctx, ret?) })
     }
 
-    /// Returns the interpretation of the given `f` in the `Model`
-    /// Returns `None` if there is no interpretation in the `Model`
-    pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp> {
+    /// Returns the interpretation of the given `f` in the `Model`, regardless of whether
+    /// `f` is a constant (arity 0) or a function (arity > 0).
+    ///
+    /// Returns `None` if there is no interpretation in the `Model`.
+    pub fn get_interp(&self, f: &FuncDecl) -> Option<Interp> {
         if f.arity() == 0 {
             let ret = unsafe {
                 Z3_model_get_const_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
@@ -68,27 +71,36 @@ impl Model {
                     Z3_get_range(self.ctx.z3_ctx.as_ptr(), f.z3_func_decl).unwrap(),
                 )
             };
-            match sort_kind {
-                SortKind::Array => {
-                    if unsafe { Z3_is_as_array(self.ctx.z3_ctx.as_ptr(), ret) } {
-                        let fd = unsafe {
-                            FuncDecl::wrap(
-                                &self.ctx,
-                                Z3_get_as_array_func_decl(self.ctx.z3_ctx.as_ptr(), ret).unwrap(),
-                            )
-                        };
-                        self.get_func_interp(&fd)
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
+            if sort_kind == SortKind::Array
+                && unsafe { Z3_is_as_array(self.ctx.z3_ctx.as_ptr(), ret) }
+            {
+                let fd = unsafe {
+                    FuncDecl::wrap(
+                        &self.ctx,
+                        Z3_get_as_array_func_decl(self.ctx.z3_ctx.as_ptr(), ret).unwrap(),
+                    )
+                };
+                self.get_interp(&fd)
+            } else {
+                Some(Interp::Const(unsafe { Dynamic::wrap(&self.ctx, ret) }))
             }
         } else {
             let ret = unsafe {
                 Z3_model_get_func_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
-            };
-            Some(unsafe { FuncInterp::wrap(&self.ctx, ret?) })
+            }?;
+            Some(Interp::Func(unsafe { FuncInterp::wrap(&self.ctx, ret) }))
+        }
+    }
+
+    /// Returns the function-table interpretation of the given `f` in the `Model`.
+    ///
+    /// Returns `None` if `f` has no interpretation in the `Model`, or if its interpretation
+    /// is a plain constant rather than a function table (see [`Model::get_interp`] and
+    /// [`Model::get_const_interp`] for that case).
+    pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp> {
+        match self.get_interp(f)? {
+            Interp::Func(func_interp) => Some(func_interp),
+            Interp::Const(_) => None,
         }
     }
 

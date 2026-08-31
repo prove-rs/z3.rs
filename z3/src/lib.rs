@@ -243,6 +243,25 @@ pub struct FuncInterp {
     z3_func_interp: Z3_func_interp,
 }
 
+/// The interpretation of a [`FuncDecl`] in a [`Model`].
+///
+/// A `FuncDecl` with arity 0 (a constant) is interpreted directly as an [`ast::Dynamic`],
+/// unless it is an array-sorted constant that Z3 represents as an alias for another
+/// `FuncDecl`'s [`FuncInterp`] (an "as-array" value), in which case that [`FuncInterp`] is
+/// returned instead. A `FuncDecl` with arity greater than 0 is always interpreted as a
+/// [`FuncInterp`].
+///
+/// # See also:
+///
+/// - [`Model::get_interp`]
+pub enum Interp {
+    /// The interpretation of a constant (arity-0 `FuncDecl`).
+    Const(ast::Dynamic),
+    /// The interpretation of a function (arity > 0, or an array-sorted constant that
+    /// aliases another `FuncDecl`'s interpretation).
+    Func(FuncInterp),
+}
+
 /// Store the value of the interpretation of a function in a particular point.
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 pub struct FuncEntry {
