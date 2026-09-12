@@ -189,7 +189,7 @@ mod gh_release {
             "cargo:rustc-link-search=native={}",
             lib.parent().unwrap().display()
         );
-        if cfg!(target_os = "windows") {
+        if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
             println!("cargo:rustc-link-lib=static=libz3");
         } else {
             println!("cargo:rustc-link-lib=static=z3");
@@ -235,7 +235,7 @@ mod gh_release {
             println!("Found cached z3 at {}", z3_dir.display());
         }
 
-        let lib = if cfg!(target_os = "windows") {
+        let lib = if target_os == "windows" {
             z3_dir.join("bin/libz3.lib")
         } else {
             z3_dir.join("bin/libz3.a")
