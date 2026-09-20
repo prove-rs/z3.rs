@@ -5,13 +5,9 @@ use z3_sys::*;
 use crate::ast::Bool;
 use crate::{Context, Goal, Translate, ast, ast::Ast};
 
-// todo: is this sound? This should be through `wrap`, no?
 impl Clone for Goal {
     fn clone(&self) -> Self {
-        Self {
-            ctx: self.ctx.clone(),
-            z3_goal: self.z3_goal,
-        }
+        unsafe { Self::wrap(&self.ctx, self.z3_goal) }
     }
 }
 
