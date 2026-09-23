@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [501.1.0](https://github.com/prove-rs/z3.rs/compare/z3-src-v501.0.0...z3-src-v501.1.0) - 2026-09-23
+
+### Added
+
+- Improve Windows cross-compilation support ([#592](https://github.com/prove-rs/z3.rs/pull/592)) (by @MI3Guy) - #592
+
+### Contributors
+
+* @MI3Guy
+
 ## [416.0.2](https://github.com/prove-rs/z3.rs/compare/z3-src-v416.0.1...z3-src-v416.0.2) - 2026-04-12
 
 ### Fixed
