@@ -2,6 +2,11 @@
 name = "z3-src"
 semver_check = false  # version scheme (416.0.x) encodes Z3 version, not conventional semver
 
+[[package]]
+name = "z3-sys"
+semver_check = false  # cargo-semver-checks enables all features at once, incl. mutually
+# exclusive backends and a codegen-only `bindgen` feature that needs a real header source
+
 [changelog]
 body = """
 
