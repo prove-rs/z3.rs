@@ -7,6 +7,11 @@ name = "z3-sys"
 semver_check = false  # cargo-semver-checks enables all features at once, incl. mutually
 # exclusive backends and a codegen-only `bindgen` feature that needs a real header source
 
+[[package]]
+name = "z3"
+semver_check = false # same issue as above; can re-enable both when release-plz gets
+# the ability to select which features are passed to cargo-semver-checks
+
 [changelog]
 body = """
 
