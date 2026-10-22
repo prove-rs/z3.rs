@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.1...z3-v0.22.0) - 2026-10-22
+
+### Other
+
+- [**breaking**] update z3-src for 5.3.0 and bump z3-sys bindings to 5.3.0 ([#598](https://github.com/prove-rs/z3.rs/pull/598)) (by @toolCHAINZ) - #598
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.21.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.0...z3-v0.21.1) - 2026-09-23
 
 ### Added
