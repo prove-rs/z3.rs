@@ -1431,8 +1431,8 @@ fn test_tactic_conditions() {
 fn test_probe_debug() {
     let _v: Vec<String> = Probe::list_all().into_iter().map(|x| x.unwrap()).collect();
     assert_eq!(
-        "A probe to give an upper bound of Ackermann congruence lemmas that a formula might generate.",
-        Probe::describe("ackr-bound-probe").unwrap(),
+        "true if the goal is in QF_BV.",
+        Probe::describe("is-qfbv").unwrap(),
     );
 }
 
