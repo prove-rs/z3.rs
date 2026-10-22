@@ -108,6 +108,9 @@ pub enum SortKind {
     /// Corresponds to `Z3_TYPE_VAR` in the C API.
     #[doc(alias = "Z3_TYPE_VAR")]
     TypeVar = 14,
+    /// Corresponds to `Z3_FINITE_FIELD_SORT` in the C API.
+    #[doc(alias = "Z3_FINITE_FIELD_SORT")]
+    FiniteField = 15,
     /// Corresponds to `Z3_UNKNOWN_SORT` in the C API.
     #[doc(alias = "Z3_UNKNOWN_SORT")]
     Unknown = 1000,
@@ -1023,99 +1026,102 @@ pub enum DeclKind {
     /// Corresponds to `Z3_OP_SEQ_FOLDLI` in the C API.
     #[doc(alias = "Z3_OP_SEQ_FOLDLI")]
     SeqFoldli = 1572,
+    /// Corresponds to `Z3_OP_SEQ_POWER` in the C API.
+    #[doc(alias = "Z3_OP_SEQ_POWER")]
+    SeqPower = 1573,
     /// Corresponds to `Z3_OP_STR_TO_INT` in the C API.
     #[doc(alias = "Z3_OP_STR_TO_INT")]
-    StrToInt = 1573,
+    StrToInt = 1574,
     /// Corresponds to `Z3_OP_INT_TO_STR` in the C API.
     #[doc(alias = "Z3_OP_INT_TO_STR")]
-    IntToStr = 1574,
+    IntToStr = 1575,
     /// Corresponds to `Z3_OP_UBV_TO_STR` in the C API.
     #[doc(alias = "Z3_OP_UBV_TO_STR")]
-    UbvToStr = 1575,
+    UbvToStr = 1576,
     /// Corresponds to `Z3_OP_SBV_TO_STR` in the C API.
     #[doc(alias = "Z3_OP_SBV_TO_STR")]
-    SbvToStr = 1576,
+    SbvToStr = 1577,
     /// Corresponds to `Z3_OP_STR_TO_CODE` in the C API.
     #[doc(alias = "Z3_OP_STR_TO_CODE")]
-    StrToCode = 1577,
+    StrToCode = 1578,
     /// Corresponds to `Z3_OP_STR_FROM_CODE` in the C API.
     #[doc(alias = "Z3_OP_STR_FROM_CODE")]
-    StrFromCode = 1578,
+    StrFromCode = 1579,
     /// Corresponds to `Z3_OP_STRING_LT` in the C API.
     #[doc(alias = "Z3_OP_STRING_LT")]
-    StringLt = 1579,
+    StringLt = 1580,
     /// Corresponds to `Z3_OP_STRING_LE` in the C API.
     #[doc(alias = "Z3_OP_STRING_LE")]
-    StringLe = 1580,
+    StringLe = 1581,
     /// Corresponds to `Z3_OP_RE_PLUS` in the C API.
     #[doc(alias = "Z3_OP_RE_PLUS")]
-    RePlus = 1581,
+    RePlus = 1582,
     /// Corresponds to `Z3_OP_RE_STAR` in the C API.
     #[doc(alias = "Z3_OP_RE_STAR")]
-    ReStar = 1582,
+    ReStar = 1583,
     /// Corresponds to `Z3_OP_RE_OPTION` in the C API.
     #[doc(alias = "Z3_OP_RE_OPTION")]
-    ReOption = 1583,
+    ReOption = 1584,
     /// Corresponds to `Z3_OP_RE_CONCAT` in the C API.
     #[doc(alias = "Z3_OP_RE_CONCAT")]
-    ReConcat = 1584,
+    ReConcat = 1585,
     /// Corresponds to `Z3_OP_RE_UNION` in the C API.
     #[doc(alias = "Z3_OP_RE_UNION")]
-    ReUnion = 1585,
+    ReUnion = 1586,
     /// Corresponds to `Z3_OP_RE_RANGE` in the C API.
     #[doc(alias = "Z3_OP_RE_RANGE")]
-    ReRange = 1586,
+    ReRange = 1587,
     /// Corresponds to `Z3_OP_RE_DIFF` in the C API.
     #[doc(alias = "Z3_OP_RE_DIFF")]
-    ReDiff = 1587,
+    ReDiff = 1588,
     /// Corresponds to `Z3_OP_RE_INTERSECT` in the C API.
     #[doc(alias = "Z3_OP_RE_INTERSECT")]
-    ReIntersect = 1588,
+    ReIntersect = 1589,
     /// Corresponds to `Z3_OP_RE_LOOP` in the C API.
     #[doc(alias = "Z3_OP_RE_LOOP")]
-    ReLoop = 1589,
+    ReLoop = 1590,
     /// Corresponds to `Z3_OP_RE_POWER` in the C API.
     #[doc(alias = "Z3_OP_RE_POWER")]
-    RePower = 1590,
+    RePower = 1591,
     /// Corresponds to `Z3_OP_RE_COMPLEMENT` in the C API.
     #[doc(alias = "Z3_OP_RE_COMPLEMENT")]
-    ReComplement = 1591,
+    ReComplement = 1592,
     /// Corresponds to `Z3_OP_RE_EMPTY_SET` in the C API.
     #[doc(alias = "Z3_OP_RE_EMPTY_SET")]
-    ReEmptySet = 1592,
+    ReEmptySet = 1593,
     /// Corresponds to `Z3_OP_RE_FULL_SET` in the C API.
     #[doc(alias = "Z3_OP_RE_FULL_SET")]
-    ReFullSet = 1593,
+    ReFullSet = 1594,
     /// Corresponds to `Z3_OP_RE_FULL_CHAR_SET` in the C API.
     #[doc(alias = "Z3_OP_RE_FULL_CHAR_SET")]
-    ReFullCharSet = 1594,
+    ReFullCharSet = 1595,
     /// Corresponds to `Z3_OP_RE_OF_PRED` in the C API.
     #[doc(alias = "Z3_OP_RE_OF_PRED")]
-    ReOfPred = 1595,
+    ReOfPred = 1596,
     /// Corresponds to `Z3_OP_RE_REVERSE` in the C API.
     #[doc(alias = "Z3_OP_RE_REVERSE")]
-    ReReverse = 1596,
+    ReReverse = 1597,
     /// Corresponds to `Z3_OP_RE_DERIVATIVE` in the C API.
     #[doc(alias = "Z3_OP_RE_DERIVATIVE")]
-    ReDerivative = 1597,
+    ReDerivative = 1598,
     /// Corresponds to `Z3_OP_CHAR_CONST` in the C API.
     #[doc(alias = "Z3_OP_CHAR_CONST")]
-    CharConst = 1598,
+    CharConst = 1599,
     /// Corresponds to `Z3_OP_CHAR_LE` in the C API.
     #[doc(alias = "Z3_OP_CHAR_LE")]
-    CharLe = 1599,
+    CharLe = 1600,
     /// Corresponds to `Z3_OP_CHAR_TO_INT` in the C API.
     #[doc(alias = "Z3_OP_CHAR_TO_INT")]
-    CharToInt = 1600,
+    CharToInt = 1601,
     /// Corresponds to `Z3_OP_CHAR_TO_BV` in the C API.
     #[doc(alias = "Z3_OP_CHAR_TO_BV")]
-    CharToBv = 1601,
+    CharToBv = 1602,
     /// Corresponds to `Z3_OP_CHAR_FROM_BV` in the C API.
     #[doc(alias = "Z3_OP_CHAR_FROM_BV")]
-    CharFromBv = 1602,
+    CharFromBv = 1603,
     /// Corresponds to `Z3_OP_CHAR_IS_DIGIT` in the C API.
     #[doc(alias = "Z3_OP_CHAR_IS_DIGIT")]
-    CharIsDigit = 1603,
+    CharIsDigit = 1604,
     /// A label (used by the Boogie Verification condition generator).
     /// The label has two parameters, a string and a Boolean polarity.
     /// It takes one argument, a formula.
@@ -1370,6 +1376,21 @@ pub enum DeclKind {
     /// kind used for uninterpreted symbols.
     #[doc(alias = "Z3_OP_UNINTERPRETED")]
     Uninterpreted = 49167,
+    /// Corresponds to `Z3_OP_FF_NUM` in the C API.
+    #[doc(alias = "Z3_OP_FF_NUM")]
+    FfNum = 53248,
+    /// Corresponds to `Z3_OP_FF_ADD` in the C API.
+    #[doc(alias = "Z3_OP_FF_ADD")]
+    FfAdd = 53249,
+    /// Corresponds to `Z3_OP_FF_MUL` in the C API.
+    #[doc(alias = "Z3_OP_FF_MUL")]
+    FfMul = 53250,
+    /// Corresponds to `Z3_OP_FF_NEG` in the C API.
+    #[doc(alias = "Z3_OP_FF_NEG")]
+    FfNeg = 53251,
+    /// Corresponds to `Z3_OP_FF_BITSUM` in the C API.
+    #[doc(alias = "Z3_OP_FF_BITSUM")]
+    FfBitsum = 53252,
 }
 pub type Z3_decl_kind = DeclKind;
 /// The different kinds of parameters that can be associated with parameter sets.
