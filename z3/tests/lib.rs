@@ -1657,6 +1657,126 @@ fn test_array_example1() {
 }
 
 #[test]
+/// <https://github.com/prove-rs/z3.rs/issues/461>
+fn get_interp_of_arity_0_non_array_func_decl() {
+    let solver = Solver::new();
+    let f = FuncDecl::new("hi", &[], &Sort::int());
+    solver.assert(f.apply(&[]).as_int().unwrap().eq(Int::from_u64(5)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_func_interp(&f).is_none());
+
+    let interp = model.get_interp(&f).unwrap();
+    let const_interp = interp.as_const().unwrap();
+    assert!(const_interp.to_string() == "5");
+}
+
+#[test]
+/// <https://github.com/prove-rs/z3.rs/issues/460>
+fn func_interp_get_else_on_partial_interp() {
+    let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    let solver = Solver::new();
+    solver.assert(
+        f.apply(&[&Int::from_u64(0)])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let f_i = model.get_func_interp(&f).unwrap();
+
+    // The else value may or may not be assigned by Z3 depending on how the model was
+    // constructed; either way, `get_else` must not panic.
+    let _ = f_i.get_else();
+}
+
+#[test]
+fn get_interp_returns_none_for_arity_0_without_interp() {
+    let f = FuncDecl::new("unconstrained_const", &[], &Sort::int());
+    let solver = Solver::new();
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_interp(&f).is_none());
+    assert!(model.get_func_interp(&f).is_none());
+}
+
+#[test]
+fn get_interp_returns_none_for_arity_gt_0_without_interp() {
+    let f = FuncDecl::new("unconstrained_fn", &[&Sort::int()], &Sort::int());
+    let solver = Solver::new();
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_interp(&f).is_none());
+    assert!(model.get_func_interp(&f).is_none());
+}
+
+#[test]
+fn get_interp_of_arity_gt_0_returns_func_variant() {
+    let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    let solver = Solver::new();
+    solver.assert(
+        f.apply(&[&Int::from_u64(0)])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    let interp = model.get_interp(&f).unwrap();
+    assert!(interp.as_const().is_none());
+    let func_interp = interp.as_func().unwrap();
+    assert!(func_interp.to_string() == model.get_func_interp(&f).unwrap().to_string());
+}
+
+#[test]
+fn get_interp_of_array_const_returns_const_variant() {
+    let aex = Array::new_const("MyArray", &Sort::int(), &Sort::bitvector(32));
+    let sel = aex.select(&Int::from_u64(0));
+    let solver = Solver::new();
+    solver.assert(sel.eq(BV::from_u64(42, 32)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    let fd = aex.decl();
+    let interp = model.get_interp(&fd).unwrap();
+    assert!(interp.as_func().is_none());
+    let const_interp = interp.as_const().unwrap();
+    assert!(const_interp.to_string() == "((as const (Array Int (_ BitVec 32))) #x0000002a)");
+    assert!(model.get_func_interp(&fd).is_none());
+}
+
+#[test]
+fn interp_display_and_debug_match_underlying_variant() {
+    let f = FuncDecl::new("hi", &[], &Sort::int());
+    let solver = Solver::new();
+    solver.assert(f.apply(&[]).as_int().unwrap().eq(Int::from_u64(5)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let const_interp = model.get_interp(&f).unwrap();
+    assert!(const_interp.to_string() == "5");
+    assert!(format!("{const_interp:?}") == "5");
+
+    let g = FuncDecl::new("g", &[&Sort::int()], &Sort::int());
+    let solver = Solver::new();
+    solver.assert(
+        g.apply(&[&Int::from_u64(0)])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let func_interp = model.get_interp(&g).unwrap();
+    assert!(func_interp.to_string() == func_interp.as_func().unwrap().to_string());
+    assert!(format!("{func_interp:?}") == func_interp.to_string());
+}
+
+#[test]
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 fn return_number_args_in_given_entry() {
     let f = FuncDecl::new("f", &[&Sort::int(), &Sort::int()], &Sort::int());
