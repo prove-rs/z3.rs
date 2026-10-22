@@ -7,7 +7,7 @@ mod enum_compat;
 mod version;
 
 #[cfg(feature = "gh-release")]
-const GH_RELEASE_VERSION: &str = "5.1.0";
+const GH_RELEASE_VERSION: &str = "5.3.0";
 
 /// Returns the single active feature from a mutually exclusive set, or `None` if zero or
 /// more than one is enabled. When more than one is enabled (e.g. a tool like
