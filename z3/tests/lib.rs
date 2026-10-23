@@ -1,5 +1,4 @@
 use log::info;
-use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
 use z3::ast::{Array, Ast, BV, Bool, Int, atleast, atmost};
@@ -37,20 +36,20 @@ fn test_fixedpoint_horn_clauses() {
     let _ = env_logger::try_init();
 
     let fp = Fixedpoint::new();
-    let bool_sort = Sort::bool();
+    let bool_sort = Sort::bool().as_dyn();
 
     // Three 0-ary predicates (propositions in the Horn clause system).
-    let p_decl = FuncDecl::new("p", &[], &bool_sort);
-    let q_decl = FuncDecl::new("q", &[], &bool_sort);
-    let r_decl = FuncDecl::new("r", &[], &bool_sort);
+    let p_decl = FuncDecl::new("p", vec![], &bool_sort);
+    let q_decl = FuncDecl::new("q", vec![], &bool_sort);
+    let r_decl = FuncDecl::new("r", vec![], &bool_sort);
 
     fp.register_relation(&p_decl);
     fp.register_relation(&q_decl);
     fp.register_relation(&r_decl);
 
-    let p = p_decl.apply(&[]).as_bool().unwrap();
-    let q = q_decl.apply(&[]).as_bool().unwrap();
-    let r = r_decl.apply(&[]).as_bool().unwrap();
+    let p = p_decl.apply(vec![]).as_bool().unwrap();
+    let q = q_decl.apply(vec![]).as_bool().unwrap();
+    let r = r_decl.apply(vec![]).as_bool().unwrap();
 
     // Rules: p => q, q => r
     fp.add_rule(&p.implies(&q), Some("p_to_q"));
@@ -229,23 +228,18 @@ fn test_floating_point_bits() {
     let float128 = ast::Float::new_const("float128", 15, 113);
     let i = ast::Int::new_const("int");
 
-    let exp32 = Sort::float_exponent_size(&float32.get_sort());
-    let sig32 = Sort::float_significand_size(&float32.get_sort());
-    let exp64 = Sort::float_exponent_size(&float64.get_sort());
-    let sig64 = Sort::float_significand_size(&float64.get_sort());
-    let exp128 = Sort::float_exponent_size(&float128.get_sort());
-    let sig128 = Sort::float_significand_size(&float128.get_sort());
-    let expi = Sort::float_exponent_size(&i.get_sort());
-    let sigi = Sort::float_significand_size(&i.get_sort());
+    let float32_sort = float32.get_sort().narrow::<ast::Float>().unwrap();
+    let float64_sort = float64.get_sort().narrow::<ast::Float>().unwrap();
+    let float128_sort = float128.get_sort().narrow::<ast::Float>().unwrap();
 
-    assert!(exp32 == Some(8));
-    assert!(sig32 == Some(24));
-    assert!(exp64 == Some(11));
-    assert!(sig64 == Some(53));
-    assert!(exp128 == Some(15));
-    assert!(sig128 == Some(113));
-    assert!(expi.is_none());
-    assert!(sigi.is_none());
+    assert_eq!(float32_sort.exponent_size(), 8);
+    assert_eq!(float32_sort.significand_size(), 24);
+    assert_eq!(float64_sort.exponent_size(), 11);
+    assert_eq!(float64_sort.significand_size(), 53);
+    assert_eq!(float128_sort.exponent_size(), 15);
+    assert_eq!(float128_sort.significand_size(), 113);
+
+    assert!(i.get_sort().narrow::<ast::Float>().is_none());
 }
 
 #[test]
@@ -376,8 +370,8 @@ fn function_ref_count() {
 
     let int_sort = Sort::int();
 
-    let _f = FuncDecl::new("f", &[&int_sort], &int_sort);
-    let _g = FuncDecl::new("g", &[&int_sort], &int_sort);
+    let _f = FuncDecl::new("f", int_sort.clone(), &int_sort);
+    let _g = FuncDecl::new("g", int_sort.clone(), &int_sort);
 
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -597,10 +591,10 @@ fn test_string_as_string() {
 fn test_rec_func_def() {
     let _ = env_logger::try_init();
 
-    let fac = RecFuncDecl::new("fac", &[&Sort::int()], &Sort::int());
+    let fac = RecFuncDecl::new("fac", &[&Sort::int().as_dyn()], &Sort::int().as_dyn());
     let n = ast::Int::new_const("n");
     let n_minus_1 = &n - 1;
-    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
+    let fac_of_n_minus_1 = fac.apply(vec![ast::Dynamic::from_ast(&n_minus_1)]);
     let cond: ast::Bool = n.le(0);
     let body = cond.ite(
         &ast::Int::from_i64(1),
@@ -614,9 +608,19 @@ fn test_rec_func_def() {
 
     let solver = Solver::new();
 
-    solver.assert(x.eq(fac.apply(&[&ast::Int::from_i64(4)]).as_int().unwrap()));
+    solver.assert(
+        x.eq(fac
+            .apply(vec![ast::Dynamic::from_ast(&ast::Int::from_i64(4))])
+            .as_int()
+            .unwrap()),
+    );
     solver.assert(y.eq(ast::Int::mul(&[&ast::Int::from_i64(5), &x])));
-    solver.assert(y.eq(fac.apply(&[&ast::Int::from_i64(5)]).as_int().unwrap()));
+    solver.assert(
+        y.eq(fac
+            .apply(vec![ast::Dynamic::from_ast(&ast::Int::from_i64(5))])
+            .as_int()
+            .unwrap()),
+    );
     solver.assert(y.eq(120));
 
     assert_eq!(solver.check(), SatResult::Sat);
@@ -626,10 +630,10 @@ fn test_rec_func_def() {
 fn test_rec_func_def_unsat() {
     let _ = env_logger::try_init();
 
-    let fac = RecFuncDecl::new("fac", &[&Sort::int()], &Sort::int());
+    let fac = RecFuncDecl::new("fac", &[&Sort::int().as_dyn()], &Sort::int().as_dyn());
     let n = ast::Int::new_const("n");
     let n_minus_1 = ast::Int::sub(&[&n, &ast::Int::from_i64(1)]);
-    let fac_of_n_minus_1 = fac.apply(&[&n_minus_1]);
+    let fac_of_n_minus_1 = fac.apply(vec![ast::Dynamic::from_ast(&n_minus_1)]);
     let cond: ast::Bool = n.le(0);
     let body = cond.ite(
         &ast::Int::from_i64(1),
@@ -643,9 +647,19 @@ fn test_rec_func_def_unsat() {
 
     let solver = Solver::new();
 
-    solver.assert(x.eq(fac.apply(&[&ast::Int::from_i64(4)]).as_int().unwrap()));
+    solver.assert(
+        x.eq(fac
+            .apply(vec![ast::Dynamic::from_ast(&ast::Int::from_i64(4))])
+            .as_int()
+            .unwrap()),
+    );
     solver.assert(y.eq(ast::Int::mul(&[&ast::Int::from_i64(5), &x])));
-    solver.assert(y.eq(fac.apply(&[&ast::Int::from_i64(5)]).as_int().unwrap()));
+    solver.assert(
+        y.eq(fac
+            .apply(vec![ast::Dynamic::from_ast(&ast::Int::from_i64(5))])
+            .as_int()
+            .unwrap()),
+    );
 
     // If fac was an uninterpreted function, this assertion would work.
     // To see this, comment out `fac.add_def(&[&n.into()], &body);`
@@ -809,43 +823,48 @@ fn test_datatype_builder() {
 
     let maybe_int = DatatypeBuilder::new("MaybeInt")
         .variant("Nothing", vec![])
-        .variant("Just", vec![("int", DatatypeAccessor::Sort(Sort::int()))])
+        .variant(
+            "Just",
+            vec![("int", DatatypeAccessor::Sort(Sort::int().as_dyn()))],
+        )
         .finish();
 
-    let nothing = maybe_int.variants[0].constructor.apply(&[]);
+    let nothing = maybe_int.variants[0].constructor.apply(vec![]);
     let five = ast::Int::from_i64(5);
-    let just_five = maybe_int.variants[1].constructor.apply(&[&five]);
+    let just_five = maybe_int.variants[1]
+        .constructor
+        .apply(vec![ast::Dynamic::from_ast(&five)]);
 
     let nothing_is_nothing = maybe_int.variants[0]
         .tester
-        .apply(&[&nothing])
+        .apply(vec![ast::Dynamic::from_ast(&nothing)])
         .as_bool()
         .unwrap();
     solver.assert(&nothing_is_nothing);
 
     let nothing_is_just = maybe_int.variants[1]
         .tester
-        .apply(&[&nothing])
+        .apply(vec![ast::Dynamic::from_ast(&nothing)])
         .as_bool()
         .unwrap();
     solver.assert(nothing_is_just.not());
 
     let just_five_is_nothing = maybe_int.variants[0]
         .tester
-        .apply(&[&just_five])
+        .apply(vec![ast::Dynamic::from_ast(&just_five)])
         .as_bool()
         .unwrap();
     solver.assert(just_five_is_nothing.not());
 
     let just_five_is_just = maybe_int.variants[1]
         .tester
-        .apply(&[&just_five])
+        .apply(vec![ast::Dynamic::from_ast(&just_five)])
         .as_bool()
         .unwrap();
     solver.assert(&just_five_is_just);
 
     let five_two = maybe_int.variants[1].accessors[0]
-        .apply(&[&just_five])
+        .apply(vec![ast::Dynamic::from_ast(&just_five)])
         .as_int()
         .unwrap();
     solver.assert(five.eq(&five_two));
@@ -856,7 +875,7 @@ fn test_datatype_builder() {
         .unwrap()
         .update_field(&maybe_int.variants[1].accessors[0], &four);
     let four_two = maybe_int.variants[1].accessors[0]
-        .apply(&[&just_four])
+        .apply(vec![ast::Dynamic::from_ast(&just_four)])
         .as_int()
         .unwrap();
     solver.assert(four.eq(four_two));
@@ -875,54 +894,57 @@ fn test_recursive_datatype() {
         .variant(
             "cons",
             vec![
-                ("car", DatatypeAccessor::Sort(Sort::int())),
+                ("car", DatatypeAccessor::Sort(Sort::int().as_dyn())),
                 ("cdr", DatatypeAccessor::Datatype("List".into())),
             ],
         )
         .finish();
 
     assert_eq!(list_sort.variants.len(), 2);
-    let nil = list_sort.variants[0].constructor.apply(&[]);
+    let nil = list_sort.variants[0].constructor.apply(vec![]);
     let five = ast::Int::from_i64(5);
-    let cons_five_nil = list_sort.variants[1].constructor.apply(&[&five, &nil]);
+    let cons_five_nil = list_sort.variants[1].constructor.apply(vec![
+        ast::Dynamic::from_ast(&five),
+        ast::Dynamic::from_ast(&nil),
+    ]);
 
     let nil_is_nil = list_sort.variants[0]
         .tester
-        .apply(&[&nil])
+        .apply(vec![ast::Dynamic::from_ast(&nil)])
         .as_bool()
         .unwrap();
     solver.assert(&nil_is_nil);
 
     let nil_is_cons = list_sort.variants[1]
         .tester
-        .apply(&[&nil])
+        .apply(vec![ast::Dynamic::from_ast(&nil)])
         .as_bool()
         .unwrap();
     solver.assert(nil_is_cons.not());
 
     let cons_five_nil_is_nil = list_sort.variants[0]
         .tester
-        .apply(&[&cons_five_nil])
+        .apply(vec![ast::Dynamic::from_ast(&cons_five_nil)])
         .as_bool()
         .unwrap();
     solver.assert(cons_five_nil_is_nil.not());
 
     let cons_five_nil_is_cons = list_sort.variants[1]
         .tester
-        .apply(&[&cons_five_nil])
+        .apply(vec![ast::Dynamic::from_ast(&cons_five_nil)])
         .as_bool()
         .unwrap();
     solver.assert(&cons_five_nil_is_cons);
 
     let car_cons_five_is_five = list_sort.variants[1].accessors[0]
-        .apply(&[&cons_five_nil])
+        .apply(vec![ast::Dynamic::from_ast(&cons_five_nil)])
         .as_int()
         .unwrap();
     solver.assert(car_cons_five_is_five.eq(&five));
     assert_eq!(solver.check(), SatResult::Sat);
 
     let cdr_cons_five_is_nil = list_sort.variants[1].accessors[1]
-        .apply(&[&cons_five_nil])
+        .apply(vec![ast::Dynamic::from_ast(&cons_five_nil)])
         .as_datatype()
         .unwrap();
     solver.assert(cdr_cons_five_is_nil.eq(nil.as_datatype().unwrap()));
@@ -936,7 +958,10 @@ fn test_mutually_recursive_datatype() {
     let solver = Solver::new();
 
     let tree_builder = DatatypeBuilder::new("Tree")
-        .variant("leaf", vec![("val", DatatypeAccessor::Sort(Sort::int()))])
+        .variant(
+            "leaf",
+            vec![("val", DatatypeAccessor::Sort(Sort::int().as_dyn()))],
+        )
         .variant(
             "node",
             vec![("children", DatatypeAccessor::Datatype("TreeList".into()))],
@@ -965,39 +990,54 @@ fn test_mutually_recursive_datatype() {
     assert_eq!(tree_list_sort.variants[1].accessors.len(), 2);
 
     let ten = ast::Int::from_i64(10);
-    let leaf_ten = tree_sort.variants[0].constructor.apply(&[&ten]);
+    let leaf_ten = tree_sort.variants[0]
+        .constructor
+        .apply(vec![ast::Dynamic::from_ast(&ten)]);
     let leaf_ten_val_is_ten = tree_sort.variants[0].accessors[0]
-        .apply(&[&leaf_ten])
+        .apply(vec![ast::Dynamic::from_ast(&leaf_ten)])
         .as_int()
         .unwrap();
     solver.assert(leaf_ten_val_is_ten.eq(ten.clone()));
     assert_eq!(solver.check(), SatResult::Sat);
 
-    let nil = tree_list_sort.variants[0].constructor.apply(&[]);
+    let nil = tree_list_sort.variants[0].constructor.apply(vec![]);
     let twenty = ast::Int::from_i64(20);
-    let leaf_twenty = tree_sort.variants[0].constructor.apply(&[&twenty]);
-    let cons_leaf_twenty_nil = tree_list_sort.variants[1]
+    let leaf_twenty = tree_sort.variants[0]
         .constructor
-        .apply(&[&leaf_twenty, &nil]);
-    let cons_leaf_ten_cons_leaf_twenty_nil = tree_list_sort.variants[1]
-        .constructor
-        .apply(&[&leaf_ten, &cons_leaf_twenty_nil]);
+        .apply(vec![ast::Dynamic::from_ast(&twenty)]);
+    let cons_leaf_twenty_nil = tree_list_sort.variants[1].constructor.apply(vec![
+        ast::Dynamic::from_ast(&leaf_twenty),
+        ast::Dynamic::from_ast(&nil),
+    ]);
+    let cons_leaf_ten_cons_leaf_twenty_nil = tree_list_sort.variants[1].constructor.apply(vec![
+        ast::Dynamic::from_ast(&leaf_ten),
+        ast::Dynamic::from_ast(&cons_leaf_twenty_nil),
+    ]);
 
     // n1 = Tree.node(TreeList.cons(Tree.leaf(10), TreeList.cons(Tree.leaf(20), TreeList.nil)))
     let n1 = tree_sort.variants[1]
         .constructor
-        .apply(&[&cons_leaf_ten_cons_leaf_twenty_nil]);
+        .apply(vec![ast::Dynamic::from_ast(
+            &cons_leaf_ten_cons_leaf_twenty_nil,
+        )]);
 
-    let n1_cons_nil = tree_list_sort.variants[1].constructor.apply(&[&n1, &nil]);
+    let n1_cons_nil = tree_list_sort.variants[1].constructor.apply(vec![
+        ast::Dynamic::from_ast(&n1),
+        ast::Dynamic::from_ast(&nil),
+    ]);
     // n2 = Tree.node(TreeList.cons(n1, TreeList.nil))
-    let n2 = tree_sort.variants[1].constructor.apply(&[&n1_cons_nil]);
+    let n2 = tree_sort.variants[1]
+        .constructor
+        .apply(vec![ast::Dynamic::from_ast(&n1_cons_nil)]);
 
     solver.assert(n2.eq(&n1).not());
 
     // assert(TreeList.car(Tree.children(n2)) == n1)
     solver.assert(
         tree_list_sort.variants[1].accessors[0]
-            .apply(&[&tree_sort.variants[1].accessors[0].apply(&[&n2])])
+            .apply(vec![ast::Dynamic::from_ast(
+                &tree_sort.variants[1].accessors[0].apply(vec![ast::Dynamic::from_ast(&n2)]),
+            )])
             .eq(&n1),
     );
     assert_eq!(solver.check(), SatResult::Sat);
@@ -1177,20 +1217,87 @@ fn test_set_membership() {
 fn test_dynamic_as_set() {
     let _ = env_logger::try_init();
 
-    let set_sort = Sort::set(&Sort::int());
-    let array_sort = Sort::array(&Sort::int(), &Sort::int());
-    let array_of_sets = ast::Array::new_const("array_of_sets", &Sort::int(), &set_sort);
-    let array_of_arrays = ast::Array::new_const("array_of_arrays", &Sort::int(), &array_sort);
+    let set_sort = Sort::set(&Sort::int().as_dyn());
+    let array_sort = Sort::array(&Sort::int().as_dyn(), &Sort::int().as_dyn());
+    let array_of_sets = ast::Array::new_const("array_of_sets", &Sort::int().as_dyn(), &set_sort);
+    let array_of_arrays =
+        ast::Array::new_const("array_of_arrays", &Sort::int().as_dyn(), &array_sort);
+
+    // `select` is now statically typed by the array's range sort, so these already come back
+    // as `Set`/`Array` values rather than `Dynamic`; round-trip through `Dynamic` to also
+    // exercise the runtime discrimination.
+    let selected_set: ast::Set =
+        array_of_sets.select(&ast::Dynamic::from_ast(&ast::Int::from_u64(0)));
+    assert!(ast::Dynamic::from(selected_set).as_set().is_some());
+
+    let selected_array: ast::Array =
+        array_of_arrays.select(&ast::Dynamic::from_ast(&ast::Int::from_u64(0)));
+    assert!(ast::Dynamic::from(selected_array).as_set().is_none());
+}
+
+#[test]
+fn test_dynamic_narrow_parameterized() {
+    let _ = env_logger::try_init();
+
+    let arr = ast::Array::new_const("a", &Sort::int(), &Sort::bool());
+    let dynamic_arr = ast::Dynamic::from(arr);
+
+    // The domain and range sorts both match.
     assert!(
-        array_of_sets
-            .select(&ast::Int::from_u64(0))
-            .as_set()
+        dynamic_arr
+            .narrow::<ast::Array<ast::Int, ast::Bool>>()
+            .is_some()
+    );
+    // Swapped domain/range don't match, even though both are still "some `Array`".
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Bool, ast::Int>>()
+            .is_none()
+    );
+    // Wrong domain only.
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Real, ast::Bool>>()
+            .is_none()
+    );
+    // Fully dynamic still matches anything.
+    assert!(
+        dynamic_arr
+            .narrow::<ast::Array<ast::Dynamic, ast::Dynamic>>()
+            .is_some()
+    );
+
+    let set = ast::Set::new_const("s", &Sort::int());
+    let dynamic_set = ast::Dynamic::from(set);
+    assert!(dynamic_set.narrow::<ast::Set<ast::Int>>().is_some());
+    assert!(dynamic_set.narrow::<ast::Set<ast::Bool>>().is_none());
+    // In Z3, a `Set` is represented as an `Array` to `Bool`, so this also narrows.
+    assert!(
+        dynamic_set
+            .narrow::<ast::Array<ast::Int, ast::Bool>>()
+            .is_some()
+    );
+
+    let seq = ast::Seq::new_const("q", &Sort::int());
+    let dynamic_seq = ast::Dynamic::from(seq);
+    assert!(dynamic_seq.narrow::<ast::Seq<ast::Int>>().is_some());
+    assert!(dynamic_seq.narrow::<ast::Seq<ast::Bool>>().is_none());
+
+    // Nested: an array of `Int`-indexed `Bool` sets.
+    let array_of_sets = ast::Array::new_const(
+        "array_of_sets",
+        &Sort::int(),
+        &Sort::set(&Sort::int().as_dyn()),
+    );
+    let dynamic_array_of_sets = ast::Dynamic::from(array_of_sets);
+    assert!(
+        dynamic_array_of_sets
+            .narrow::<ast::Array<ast::Int, ast::Set<ast::Int>>>()
             .is_some()
     );
     assert!(
-        array_of_arrays
-            .select(&ast::Int::from_u64(0))
-            .as_set()
+        dynamic_array_of_sets
+            .narrow::<ast::Array<ast::Int, ast::Set<ast::Bool>>>()
             .is_none()
     );
 }
@@ -1556,12 +1663,12 @@ fn test_ast_safe_decl() {
     let x_not = x.not();
     assert_eq!(x_not.safe_decl().unwrap().kind(), DeclKind::Not);
 
-    let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    let f = FuncDecl::new("f", Sort::int(), Sort::int());
     assert_eq!(f.domain(0), Some(SortKind::Int));
     assert_eq!(f.range(), SortKind::Int);
 
     let x = ast::Int::new_const("x");
-    let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+    let f_x: ast::Int = f.apply(x.clone());
     let f_x_pattern: Pattern = Pattern::new(&[&f_x]);
     let forall = ast::forall_const(&[&x], &[&f_x_pattern], &x.eq(&f_x));
     assert!(forall.safe_decl().is_err());
@@ -1620,9 +1727,9 @@ fn test_array_example1() {
 
     let xc = Int::new_const("x");
 
-    let fd = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+    let fd = FuncDecl::new("f", vec![Sort::int().as_dyn()], Sort::int().as_dyn());
 
-    let fapp = fd.apply(&[&xc as &dyn Ast]);
+    let fapp = fd.apply(vec![ast::Dynamic::from_ast(&xc)]);
 
     g.assert(&Int::from_u64(123).eq(xc.clone().add(&fapp.as_int().unwrap())));
 
@@ -1659,20 +1766,33 @@ fn test_array_example1() {
 #[test]
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 fn return_number_args_in_given_entry() {
-    let f = FuncDecl::new("f", &[&Sort::int(), &Sort::int()], &Sort::int());
+    let f = FuncDecl::new(
+        "f",
+        vec![Sort::int().as_dyn(), Sort::int().as_dyn()],
+        Sort::int().as_dyn(),
+    );
 
     let solver = Solver::new();
     solver.assert(
-        f.apply(&[&Int::from_u64(0), &Int::from_u64(1)])
-            .eq(Int::from_u64(10)),
+        f.apply(vec![
+            ast::Dynamic::from_ast(&Int::from_u64(0)),
+            ast::Dynamic::from_ast(&Int::from_u64(1)),
+        ])
+        .eq(Int::from_u64(10)),
     );
     solver.assert(
-        f.apply(&[&Int::from_u64(1), &Int::from_u64(2)])
-            .eq(Int::from_u64(20)),
+        f.apply(vec![
+            ast::Dynamic::from_ast(&Int::from_u64(1)),
+            ast::Dynamic::from_ast(&Int::from_u64(2)),
+        ])
+        .eq(Int::from_u64(20)),
     );
     solver.assert(
-        f.apply(&[&Int::from_u64(1), &Int::from_u64(0)])
-            .eq(Int::from_u64(10)),
+        f.apply(vec![
+            ast::Dynamic::from_ast(&Int::from_u64(1)),
+            ast::Dynamic::from_ast(&Int::from_u64(0)),
+        ])
+        .eq(Int::from_u64(10)),
     );
 
     assert!(solver.check() == SatResult::Sat);
@@ -1712,14 +1832,14 @@ fn iterate_all_solutions() {
             .iter()
             .map(|fd| {
                 modifications.push(
-                    fd.apply(&[])
-                        .eq(model.get_const_interp(&fd.apply(&[])).unwrap())
+                    fd.apply(vec![])
+                        .eq(model.get_const_interp(&fd.apply(vec![])).unwrap())
                         .not(),
                 );
                 format!(
                     "{} = {}",
                     fd.name(),
-                    model.get_const_interp(&fd.apply(&[])).unwrap()
+                    model.get_const_interp(&fd.apply(vec![])).unwrap()
                 )
             })
             .collect::<Vec<_>>()
@@ -1839,14 +1959,14 @@ fn test_model_iter() {
     fn consume_model(model: Model) -> Vec<ast::Dynamic> {
         let mut asts = vec![];
         for func in &model {
-            asts.push(func.apply(&[]));
+            asts.push(func.apply(vec![]));
         }
         asts
     }
 
     assert_eq!(
         consume_model(model),
-        vec![ast::Dynamic::new_const("a", &Sort::int())]
+        vec![ast::Dynamic::new_const("a", &Sort::int().as_dyn())]
     );
 }
 

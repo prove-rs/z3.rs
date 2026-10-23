@@ -598,6 +598,341 @@ macro_rules! impl_from_try_into_dynamic {
     };
 }
 
+/// Like `impl_ast!`, but for `Ast` node types that are themselves generic over one or more
+/// marker type parameters (e.g. `Array<D, R>`, `Seq<Elt>`), which classify the sorts of the
+/// values the node carries (its index/element sorts) the same way `Sort<A>`'s own marker `A`
+/// classifies the sort itself. None of the boilerplate below actually needs to touch the
+/// marker parameters (they're phantom-only), so no bounds are required on them.
+macro_rules! impl_ast_generic {
+    ($ast:ident < $($param:ident),+ >) => {
+        impl<$($param),+> Ast for $ast<$($param),+> {
+            unsafe fn wrap(ctx: &Context, ast: Z3_ast) -> Self {
+                Self {
+                    ctx: ctx.clone(),
+                    z3_ast: {
+                        debug!(
+                            "new ast: id = {}, pointer = {:p}",
+                            unsafe { Z3_get_ast_id(ctx.z3_ctx.as_ptr(), ast) },
+                            ast
+                        );
+                        unsafe {
+                            Z3_inc_ref(ctx.z3_ctx.as_ptr(), ast);
+                        }
+                        ast
+                    },
+                    phantom: std::marker::PhantomData,
+                }
+            }
+
+            fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other)
+            }
+
+            fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.ne(other)
+            }
+
+            fn get_ctx(&self) -> &Context {
+                &self.ctx
+            }
+
+            fn get_z3_ast(&self) -> Z3_ast {
+                self.z3_ast
+            }
+        }
+
+        impl<$($param),+> $ast<$($param),+> {
+            pub fn ast_eq<T: IntoAst<Self>>(&self, other: T) -> bool
+            where
+                Self: Sized,
+            {
+                let other = other.into_ast(self);
+                assert_eq!(self.get_ctx(), other.get_ctx());
+                unsafe {
+                    Z3_is_eq_ast(
+                        self.get_ctx().z3_ctx.as_ptr(),
+                        self.get_z3_ast(),
+                        other.get_z3_ast(),
+                    )
+                }
+            }
+
+            pub fn ne<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other).not()
+            }
+
+            #[deprecated = "Please use eq instead"]
+            pub fn _eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.eq(other)
+            }
+
+            /// Compare this `Ast` with another `Ast`, and get a [`Bool`]
+            /// representing the result.
+            ///
+            /// This operation works with all possible `Ast`s (int, real, BV, etc), but the two
+            /// `Ast`s being compared must be the same type.
+            pub fn eq<T: IntoAst<Self>>(&self, other: T) -> Bool
+            where
+                Self: Sized,
+            {
+                self.safe_eq(other).unwrap()
+            }
+
+            #[deprecated = "Please use safe_eq instead"]
+            pub fn _safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+            where
+                Self: Sized,
+            {
+                self.safe_eq(other)
+            }
+
+            /// Compare this `Ast` with another `Ast`, and get a Result.  Errors if the sort does not
+            /// match for the two values.
+            pub fn safe_eq<T: IntoAst<Self>>(&self, other: T) -> Result<Bool, SortDiffers>
+            where
+                Self: Sized,
+            {
+                let other = other.into_ast(self);
+
+                let left_sort = self.get_sort();
+                let right_sort = other.get_sort();
+                match left_sort == right_sort {
+                    true => Ok(unsafe {
+                        Bool::wrap(self.get_ctx(), {
+                            Z3_mk_eq(
+                                self.get_ctx().z3_ctx.as_ptr(),
+                                self.get_z3_ast(),
+                                other.get_z3_ast(),
+                            )
+                            .unwrap()
+                        })
+                    }),
+                    false => Err(SortDiffers::new(left_sort, right_sort)),
+                }
+            }
+        }
+
+        impl<T: IntoAst<$ast<$($param),+>> + Clone, $($param),+> PartialEq<T> for $ast<$($param),+> {
+            fn eq(&self, other: &T) -> bool {
+                let other = other.clone().into_ast(self);
+                unsafe { Z3_is_eq_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast, other.z3_ast) }
+            }
+        }
+
+        impl<$($param),+> Eq for $ast<$($param),+> {}
+
+        impl<$($param),+> From<$ast<$($param),+>> for Z3_ast {
+            fn from(ast: $ast<$($param),+>) -> Self {
+                ast.z3_ast
+            }
+        }
+
+        impl<$($param),+> Clone for $ast<$($param),+> {
+            fn clone(&self) -> Self {
+                debug!(
+                    "clone ast: id = {}, pointer = {:p}",
+                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx.as_ptr(), self.z3_ast) },
+                    self.z3_ast
+                );
+                unsafe { Self::wrap(&self.ctx, self.z3_ast) }
+            }
+        }
+
+        impl<$($param),+> Drop for $ast<$($param),+> {
+            fn drop(&mut self) {
+                debug!(
+                    "drop ast: id = {}, pointer = {:p}",
+                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx.as_ptr(), self.z3_ast) },
+                    self.z3_ast
+                );
+                unsafe {
+                    Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_ast);
+                }
+            }
+        }
+
+        impl<$($param),+> Hash for $ast<$($param),+> {
+            fn hash<H: Hasher>(&self, state: &mut H) {
+                unsafe {
+                    let u = Z3_get_ast_hash(self.ctx.z3_ctx.as_ptr(), self.z3_ast);
+                    u.hash(state);
+                }
+            }
+        }
+
+        impl<$($param),+> fmt::Debug for $ast<$($param),+> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                let p = unsafe { Z3_ast_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast) };
+                if p.is_null() {
+                    return Result::Err(fmt::Error);
+                }
+                match unsafe { CStr::from_ptr(p) }.to_str() {
+                    Ok(s) => write!(f, "{}", s),
+                    Err(_) => Result::Err(fmt::Error),
+                }
+            }
+        }
+
+        impl<$($param),+> fmt::Display for $ast<$($param),+> {
+            fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+                <Self as fmt::Debug>::fmt(self, f)
+            }
+        }
+
+        impl<$($param),+> From<&$ast<$($param),+>> for $ast<$($param),+> {
+            fn from(value: &Self) -> Self {
+                value.clone()
+            }
+        }
+
+        impl<$($param),+> Solvable for $ast<$($param),+> {
+            type ModelInstance = Self;
+            fn read_from_model(
+                &self,
+                model: &Model,
+                model_completion: bool,
+            ) -> Option<Self::ModelInstance> {
+                model.eval(self, model_completion)
+            }
+
+            fn generate_constraint(&self, model: &Self::ModelInstance) -> Bool {
+                model.eq(self.clone()).not()
+            }
+        }
+    };
+}
+
+/// Upcast a generic `Ast` node type (see `impl_ast_generic!`) to `Dynamic`, for any
+/// instantiation of its marker type parameters. The reverse direction (`TryFrom<Dynamic>`)
+/// can only recover the fully-dynamic instantiation, since Z3 doesn't hand back static
+/// domain/range/element types from a `Dynamic` value -- see the manual `TryFrom` impls next
+/// to each `impl_ast_generic!` call below.
+macro_rules! impl_into_dynamic_generic {
+    ($ast:ident < $($param:ident),+ >) => {
+        impl<$($param),+> From<$ast<$($param),+>> for Dynamic {
+            fn from(ast: $ast<$($param),+>) -> Self {
+                unsafe { Dynamic::wrap(&ast.ctx, ast.z3_ast) }
+            }
+        }
+
+        impl<$($param),+> From<&$ast<$($param),+>> for Dynamic {
+            fn from(ast: &$ast<$($param),+>) -> Self {
+                unsafe { Dynamic::wrap(&ast.ctx, ast.z3_ast) }
+            }
+        }
+    };
+}
+
+/// A marker for [`Ast`] node types whose values always inhabit one particular, statically
+/// determinable [`Sort`] shape -- including, for generic node types like `Array<D, R>`, the
+/// shape of their domain/range/element marker types.
+///
+/// This is what lets [`Dynamic::narrow`] safely recover a specific parameterization such as
+/// `Array<Int, Bool>`, and not just the fully dynamic `Array<Dynamic, Dynamic>`: each impl
+/// below checks the actual runtime [`Sort`] against what `T` claims to represent before the
+/// underlying [`Z3_ast`] is reinterpreted as `T`.
+///
+/// [`Dynamic::narrow`]: dynamic::Dynamic::narrow
+pub trait SortMarker: Ast {
+    /// Returns `true` if `sort` is a [`Sort`] that a value of this type could have.
+    fn sort_matches(sort: &Sort) -> bool;
+}
+
+macro_rules! impl_sort_marker_by_kind {
+    ($($ast:ident => $kind:expr),+ $(,)?) => {
+        $(
+            impl SortMarker for $ast {
+                fn sort_matches(sort: &Sort) -> bool {
+                    sort.kind() == $kind
+                }
+            }
+        )+
+    };
+}
+
+impl_sort_marker_by_kind! {
+    Bool => SortKind::Bool,
+    Int => SortKind::Int,
+    Real => SortKind::Real,
+    Float => SortKind::FloatingPoint,
+    BV => SortKind::Bv,
+    Datatype => SortKind::Datatype,
+    Regexp => SortKind::Re,
+    RoundingMode => SortKind::RoundingMode,
+}
+
+impl SortMarker for Char {
+    fn sort_matches(sort: &Sort) -> bool {
+        unsafe { Z3_is_char_sort(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
+    }
+}
+
+impl SortMarker for String {
+    fn sort_matches(sort: &Sort) -> bool {
+        unsafe { Z3_is_string_sort(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
+    }
+}
+
+impl SortMarker for Dynamic {
+    fn sort_matches(_sort: &Sort) -> bool {
+        true
+    }
+}
+
+/// Look up the domain/range sorts of an `Array`-shaped `Sort`, or `None` if `sort` isn't
+/// actually an `Array` sort. Used by the `SortMarker` impls for `Array`/`Set` below, which
+/// can't yet assume the phantom marker is accurate -- that's exactly what they're checking.
+fn array_domain_and_range(sort: &Sort) -> Option<(Sort, Sort)> {
+    if sort.kind() != SortKind::Array {
+        return None;
+    }
+    unsafe {
+        let domain = Z3_get_array_sort_domain(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort)?;
+        let range = Z3_get_array_sort_range(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort)?;
+        Some((Sort::wrap(&sort.ctx, domain), Sort::wrap(&sort.ctx, range)))
+    }
+}
+
+impl<D: SortMarker, R: SortMarker> SortMarker for Array<D, R> {
+    fn sort_matches(sort: &Sort) -> bool {
+        array_domain_and_range(sort)
+            .is_some_and(|(d, r)| D::sort_matches(&d) && R::sort_matches(&r))
+    }
+}
+
+impl<Elt: SortMarker> SortMarker for Set<Elt> {
+    fn sort_matches(sort: &Sort) -> bool {
+        array_domain_and_range(sort)
+            .is_some_and(|(d, r)| r.kind() == SortKind::Bool && Elt::sort_matches(&d))
+    }
+}
+
+impl<Elt: SortMarker> SortMarker for Seq<Elt> {
+    fn sort_matches(sort: &Sort) -> bool {
+        if sort.kind() != SortKind::Seq {
+            return false;
+        }
+        let Some(basis) =
+            (unsafe { Z3_get_seq_sort_basis(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) })
+        else {
+            return false;
+        };
+        Elt::sort_matches(&unsafe { Sort::wrap(&sort.ctx, basis) })
+    }
+}
+
 impl_ast!(Bool);
 impl_from_try_into_dynamic!(Bool, as_bool);
 impl_ast!(Int);
@@ -612,12 +947,37 @@ impl_ast!(Char);
 impl_from_try_into_dynamic!(Char, as_char);
 impl_ast!(BV);
 impl_from_try_into_dynamic!(BV, as_bv);
-impl_ast!(Array);
-impl_from_try_into_dynamic!(Array, as_array);
-impl_ast!(Set);
-impl_from_try_into_dynamic!(Set, as_set);
-impl_ast!(Seq);
-impl_from_try_into_dynamic!(Seq, as_seq);
+
+impl_ast_generic!(Array<D, R>);
+impl_into_dynamic_generic!(Array<D, R>);
+impl TryFrom<Dynamic> for Array {
+    type Error = std::string::String;
+    fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
+        ast.as_array()
+            .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
+    }
+}
+
+impl_ast_generic!(Set<Elt>);
+impl_into_dynamic_generic!(Set<Elt>);
+impl TryFrom<Dynamic> for Set {
+    type Error = std::string::String;
+    fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
+        ast.as_set()
+            .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
+    }
+}
+
+impl_ast_generic!(Seq<Elt>);
+impl_into_dynamic_generic!(Seq<Elt>);
+impl TryFrom<Dynamic> for Seq {
+    type Error = std::string::String;
+    fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
+        ast.as_seq()
+            .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
+    }
+}
+
 impl_ast!(Regexp);
 
 impl_ast!(Datatype);
@@ -679,10 +1039,10 @@ fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", Sort::int(), &Sort::int());
 ///
 /// let x = ast::Int::new_const("x");
-/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x: ast::Int = f.apply(x.clone());
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::forall_const(
 ///     &[&x],
@@ -694,7 +1054,7 @@ fn _atleast(args: &[Z3_ast], k: u32) -> Bool {
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(f.apply(ast::Int::from_u64(3)));
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
@@ -735,10 +1095,10 @@ pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// # use std::convert::TryInto;
 /// # let cfg = Config::new();
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", Sort::int(), &Sort::int());
 ///
 /// let x = ast::Int::new_const("x");
-/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x: ast::Int = f.apply(x.clone());
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let exists: ast::Bool = ast::exists_const(
 ///     &[&x],
@@ -750,7 +1110,7 @@ pub fn forall_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(f.apply(ast::Int::from_u64(3)));
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> Bool {
@@ -800,10 +1160,10 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// # use z3::ast::Ast;
 /// # use std::convert::TryInto;
 /// # let solver = Solver::new();
-/// let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
+/// let f = FuncDecl::new("f", Sort::int(), &Sort::int());
 ///
 /// let x = ast::Int::new_const("x");
-/// let f_x: ast::Int = f.apply(&[&x]).try_into().unwrap();
+/// let f_x: ast::Int = f.apply(x.clone());
 /// let f_x_pattern: Pattern = Pattern::new(&[ &f_x ]);
 /// let forall: ast::Bool = ast::quantifier_const(
 ///     true,
@@ -820,7 +1180,7 @@ pub fn exists_const(bounds: &[&dyn Ast], patterns: &[&Pattern], body: &Bool) -> 
 /// assert_eq!(solver.check(), SatResult::Sat);
 /// let model = solver.get_model().unwrap();
 ///
-/// let f_f_3: ast::Int = f.apply(&[&f.apply(&[&ast::Int::from_u64(3)])]).try_into().unwrap();
+/// let f_f_3: ast::Int = f.apply(f.apply(ast::Int::from_u64(3)));
 /// assert_eq!(3, model.eval(&f_f_3, true).unwrap().as_u64().unwrap());
 /// ```
 #[allow(clippy::too_many_arguments)]

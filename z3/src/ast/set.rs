@@ -1,16 +1,18 @@
-use crate::ast::{Ast, Bool, binop, unop, varop};
+use crate::ast::{Ast, Bool, Dynamic, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use std::marker::PhantomData;
 use z3_sys::*;
 
-/// [`Ast`] node representing a set value.
-pub struct Set {
+/// [`Ast`] node representing a set value, whose elements are all of sort `Elt`.
+pub struct Set<Elt = Dynamic> {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) phantom: PhantomData<Elt>,
 }
 
-impl Set {
-    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> Set {
+impl<Elt: Ast> Set<Elt> {
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort<Elt>) -> Set<Elt> {
         let ctx = &Context::thread_local();
         let sort = Sort::set(eltype);
         unsafe {
@@ -25,7 +27,7 @@ impl Set {
         }
     }
 
-    pub fn fresh_const(prefix: &str, eltype: &Sort) -> Set {
+    pub fn fresh_const(prefix: &str, eltype: &Sort<Elt>) -> Set<Elt> {
         let ctx = &Context::thread_local();
         let sort = Sort::set(eltype);
         unsafe {
@@ -38,25 +40,20 @@ impl Set {
     }
 
     /// Creates a set that maps the domain to false by default
-    pub fn empty(domain: &Sort) -> Set {
+    pub fn empty(eltype: &Sort<Elt>) -> Set<Elt> {
         let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_empty_set(ctx.z3_ctx.as_ptr(), domain.z3_sort).unwrap(),
+                Z3_mk_empty_set(ctx.z3_ctx.as_ptr(), eltype.z3_sort).unwrap(),
             )
         }
     }
 
     /// Add an element to the set.
-    ///
-    /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn add<A>(&self, element: &A) -> Set
-    where
-        A: Ast,
-    {
+    pub fn add(&self, element: &Elt) -> Set<Elt> {
         unsafe {
             Self::wrap(&self.ctx, {
                 Z3_mk_set_add(self.ctx.z3_ctx.as_ptr(), self.z3_ast, element.get_z3_ast()).unwrap()
@@ -65,14 +62,9 @@ impl Set {
     }
 
     /// Remove an element from the set.
-    ///
-    /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn del<A>(&self, element: &A) -> Set
-    where
-        A: Ast,
-    {
+    pub fn del(&self, element: &Elt) -> Set<Elt> {
         unsafe {
             Self::wrap(&self.ctx, {
                 Z3_mk_set_del(self.ctx.z3_ctx.as_ptr(), self.z3_ast, element.get_z3_ast()).unwrap()
@@ -81,14 +73,9 @@ impl Set {
     }
 
     /// Check if an item is a member of the set.
-    ///
-    /// Note that the `element` _must be_ of the `Set`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn member<A>(&self, element: &A) -> Bool
-    where
-        A: Ast,
-    {
+    pub fn member(&self, element: &Elt) -> Bool {
         unsafe {
             Bool::wrap(&self.ctx, {
                 Z3_mk_set_member(self.ctx.z3_ctx.as_ptr(), element.get_z3_ast(), self.z3_ast)

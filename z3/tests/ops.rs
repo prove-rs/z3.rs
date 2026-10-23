@@ -306,13 +306,16 @@ fn test_ast_attributes() {
     assert_ast_attributes(&not_a, false);
     assert_ast_attributes(a_or_b, false);
 
-    assert_ast_attributes(&Array::new_const("arr", &Sort::int(), &Sort::bool()), true);
+    assert_ast_attributes(
+        &Array::new_const("arr", &Sort::int().as_dyn(), &Sort::bool().as_dyn()),
+        true,
+    );
     assert_ast_attributes(&BV::new_const("bv", 512), true);
     assert_ast_attributes(&Real::new_const("r"), true);
     assert_ast_attributes(&ast::String::new_const("st"), true);
 
     let int_expr = Int::new_const("i");
-    let set_expr = ast::Set::new_const("set", &Sort::int());
+    let set_expr = ast::Set::new_const("set", &Sort::int().as_dyn());
     assert_ast_attributes(&int_expr, true);
     assert_ast_attributes(&set_expr, true);
     assert_ast_attributes(&set_expr.add(&Dynamic::from_ast(&int_expr)), false);
@@ -320,17 +323,21 @@ fn test_ast_attributes() {
 
 #[test]
 fn test_func_decl_attributes() {
-    let const_decl = FuncDecl::new("c", &[], &Sort::bool());
+    let const_decl = FuncDecl::new("c", (), Sort::bool());
     assert_eq!(const_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(const_decl.name(), "c");
     assert_eq!(const_decl.arity(), 0);
 
-    let unary_decl = FuncDecl::new("unary", &[&Sort::bool()], &Sort::bool());
+    let unary_decl = FuncDecl::new("unary", Sort::bool(), Sort::bool());
     assert_eq!(unary_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(unary_decl.name(), "unary");
     assert_eq!(unary_decl.arity(), 1);
 
-    let binary_decl = FuncDecl::new("binary", &[&Sort::bool(), &Sort::bool()], &Sort::bool());
+    let binary_decl = FuncDecl::new(
+        "binary",
+        vec![Sort::bool().as_dyn(), Sort::bool().as_dyn()],
+        Sort::bool(),
+    );
     assert_eq!(binary_decl.kind(), DeclKind::Uninterpreted);
     assert_eq!(binary_decl.name(), "binary");
     assert_eq!(binary_decl.arity(), 2);

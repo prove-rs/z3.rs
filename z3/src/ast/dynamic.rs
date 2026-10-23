@@ -1,4 +1,4 @@
-use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set};
+use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set, SortMarker};
 use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
 use z3_sys::*;
@@ -49,116 +49,80 @@ impl Dynamic {
         }
     }
 
+    /// Attempt to narrow this `Dynamic` to a specific [`Ast`] type `T`, including a specific
+    /// parameterization of a generic type such as `Array<Int, Bool>` or `Seq<BV>`.
+    ///
+    /// Returns `None` if the runtime [`Sort`] of this value doesn't match what `T` requires.
+    /// For a parameterized `T` this recursively checks its domain/range/element marker types
+    /// too, so e.g. `narrow::<Array<Int, Bool>>()` only succeeds for arrays whose domain sort
+    /// is `Int` and whose range sort is `Bool` -- unlike [`Dynamic::as_array`], which can only
+    /// recover the fully-dynamic `Array<Dynamic, Dynamic>`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::ast::{Array, Ast, Bool, Dynamic, Int};
+    /// # use z3::Sort;
+    /// let arr = Array::new_const("a", &Sort::int(), &Sort::bool());
+    /// let dyn_arr: Dynamic = arr.into();
+    /// assert!(dyn_arr.narrow::<Array<Int, Bool>>().is_some());
+    /// assert!(dyn_arr.narrow::<Array<Bool, Int>>().is_none());
+    /// ```
+    pub fn narrow<T: SortMarker>(&self) -> Option<T> {
+        T::sort_matches(&self.get_sort()).then(|| unsafe { T::wrap(&self.ctx, self.z3_ast) })
+    }
+
     /// Returns `None` if the `Dynamic` is not actually a `Bool`
     pub fn as_bool(&self) -> Option<Bool> {
-        match self.sort_kind() {
-            SortKind::Bool => Some(unsafe { Bool::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually an `Int`
     pub fn as_int(&self) -> Option<Int> {
-        match self.sort_kind() {
-            SortKind::Int => Some(unsafe { Int::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Real`
     pub fn as_real(&self) -> Option<Real> {
-        match self.sort_kind() {
-            SortKind::Real => Some(unsafe { Real::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Float`
     pub fn as_float(&self) -> Option<Float> {
-        match self.sort_kind() {
-            SortKind::FloatingPoint => Some(unsafe { Float::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Char`
     pub fn as_char(&self) -> Option<Char> {
-        unsafe {
-            if Z3_is_char_sort(
-                self.ctx.z3_ctx.as_ptr(),
-                Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast)?,
-            ) {
-                Some(Char::wrap(&self.ctx, self.z3_ast))
-            } else {
-                None
-            }
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `String`
     pub fn as_string(&self) -> Option<ast::String> {
-        unsafe {
-            if Z3_is_string_sort(
-                self.ctx.z3_ctx.as_ptr(),
-                Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast)?,
-            ) {
-                Some(ast::String::wrap(&self.ctx, self.z3_ast))
-            } else {
-                None
-            }
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `BV`
     pub fn as_bv(&self) -> Option<BV> {
-        match self.sort_kind() {
-            SortKind::Bv => Some(unsafe { BV::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually an `Array`
     pub fn as_array(&self) -> Option<Array> {
-        match self.sort_kind() {
-            SortKind::Array => Some(unsafe { Array::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Set`
     pub fn as_set(&self) -> Option<Set> {
-        unsafe {
-            match self.sort_kind() {
-                SortKind::Array => {
-                    match Z3_get_sort_kind(
-                        self.ctx.z3_ctx.as_ptr(),
-                        Z3_get_array_sort_range(
-                            self.ctx.z3_ctx.as_ptr(),
-                            Z3_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_ast)?,
-                        )?,
-                    ) {
-                        SortKind::Bool => Some(Set::wrap(&self.ctx, self.z3_ast)),
-                        _ => None,
-                    }
-                }
-                _ => None,
-            }
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Seq`.
     pub fn as_seq(&self) -> Option<Seq> {
-        match self.sort_kind() {
-            SortKind::Seq => Some(unsafe { Seq::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Datatype`
     pub fn as_datatype(&self) -> Option<Datatype> {
-        match self.sort_kind() {
-            SortKind::Datatype => Some(unsafe { Datatype::wrap(&self.ctx, self.z3_ast) }),
-            _ => None,
-        }
+        self.narrow()
     }
 }
