@@ -94,40 +94,39 @@ impl Int {
         }
     }
 
-    pub fn from_i128(ctx: &Context, v: i128) -> Int {
-        let int_sort = Sort::int(ctx);
-        let s = v.to_string();
-        let c_str = CString::new(s).unwrap();
+    /// Create an AST node representing the integer value `i`.
+    pub fn from_i128(i: i128) -> Int {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
+        let c_str = CString::new(i.to_string()).unwrap();
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_numeral(ctx.z3_ctx.0, c_str.as_ptr(), int_sort.z3_sort),
+                Z3_mk_numeral(ctx.z3_ctx.as_ptr(), c_str.as_ptr(), sort.z3_sort).unwrap(),
             )
         }
     }
 
-    pub fn from_u128(ctx: &Context, v: u128) -> Int {
-        let int_sort = Sort::int(ctx);
-        let s = v.to_string();
-        let c_str = CString::new(s).unwrap();
+    /// Create an AST node representing the integer value `u`.
+    pub fn from_u128(u: u128) -> Int {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
+        let c_str = CString::new(u.to_string()).unwrap();
         unsafe {
             Self::wrap(
                 ctx,
-                Z3_mk_numeral(ctx.z3_ctx.0, c_str.as_ptr(), int_sort.z3_sort),
+                Z3_mk_numeral(ctx.z3_ctx.as_ptr(), c_str.as_ptr(), sort.z3_sort).unwrap(),
             )
         }
     }
 
     pub fn as_i128(&self) -> Option<i128> {
-        if !unsafe { Z3_is_numeral_ast(self.get_ctx().z3_ctx.0, self.get_z3_ast()) } {
+        if !unsafe { Z3_is_numeral_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast) } {
             return None;
         }
 
         let c_str = unsafe {
-            std::ffi::CStr::from_ptr(Z3_get_numeral_string(
-                self.get_ctx().z3_ctx.0,
-                self.get_z3_ast(),
-            ))
+            std::ffi::CStr::from_ptr(Z3_get_numeral_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast))
         };
 
         let s = c_str.to_string_lossy();
@@ -135,15 +134,12 @@ impl Int {
     }
 
     pub fn as_u128(&self) -> Option<u128> {
-        if !unsafe { Z3_is_numeral_ast(self.get_ctx().z3_ctx.0, self.get_z3_ast()) } {
+        if !unsafe { Z3_is_numeral_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast) } {
             return None;
         }
 
         let c_str = unsafe {
-            std::ffi::CStr::from_ptr(Z3_get_numeral_string(
-                self.get_ctx().z3_ctx.0,
-                self.get_z3_ast(),
-            ))
+            std::ffi::CStr::from_ptr(Z3_get_numeral_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast))
         };
 
         let s = c_str.to_string_lossy();
