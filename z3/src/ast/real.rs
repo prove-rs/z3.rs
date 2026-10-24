@@ -1,7 +1,7 @@
-use crate::ast::IntoAstCtx;
-use crate::ast::{Ast, IntoAst};
+use crate::ast::Ast;
 use crate::ast::{Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
+#[cfg(feature = "num")]
 use num::BigRational;
 use std::ffi::{CStr, CString};
 use z3_sys::*;
@@ -11,67 +11,84 @@ pub struct Real {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
 impl Real {
-    pub fn from_big_rational(ctx: &Context, value: &BigRational) -> Real {
+    #[cfg(feature = "num")]
+    pub fn from_big_rational(value: &BigRational) -> Real {
         let num = value.numer();
         let den = value.denom();
-        Real::from_real_str(ctx, &num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
+        Real::from_rational_str(&num.to_str_radix(10), &den.to_str_radix(10)).unwrap()
     }
 
-    pub fn from_real_str(ctx: &Context, num: &str, den: &str) -> Option<Real> {
-        let sort = Sort::real(ctx);
+    #[deprecated = "Please use from_rational_str instead"]
+    pub fn from_real_str(num: &str, den: &str) -> Option<Real> {
+        Self::from_rational_str(num, den)
+    }
+
+    pub fn from_rational_str(num: &str, den: &str) -> Option<Real> {
+        let ctx = &Context::thread_local();
+        let sort = Sort::real();
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, fraction_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
-                return None;
-            }
-
-            numeral_ptr
+            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), fraction_cstring.as_ptr(), sort.z3_sort)?
         };
         Some(unsafe { Real::wrap(ctx, ast) })
     }
 }
-
 impl Real {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Real {
-        let sort = Sort::real(ctx);
+    pub fn new_const<S: Into<Symbol>>(name: S) -> Real {
+        let ctx = &Context::thread_local();
+        let sort = Sort::real();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str) -> Real {
-        let sort = Sort::real(ctx);
+    pub fn fresh_const(prefix: &str) -> Real {
+        let ctx = &Context::thread_local();
+        let sort = Sort::real();
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
 
-    pub fn from_real(ctx: &Context, num: i32, den: i32) -> Real {
+    #[deprecated = "Please use from_rational instead"]
+    pub fn from_real(num: i32, den: i32) -> Real {
+        Self::from_rational(num as i64, den as i64)
+    }
+
+    pub fn from_rational(num: i64, den: i64) -> Real {
+        let ctx = &Context::thread_local();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_real(
-                    ctx.z3_ctx.0,
-                    num as ::std::os::raw::c_int,
-                    den as ::std::os::raw::c_int,
-                )
+                // Use the int64 fraction API, not Z3_mk_real (which takes C `int`):
+                // casting the i64 args to c_int silently truncates any value outside
+                // the i32 range (e.g. 634909090909091/100000000000 wrapped to garbage).
+                Z3_mk_real_int64(ctx.z3_ctx.as_ptr(), num, den).unwrap()
             })
         }
     }
 
+    #[deprecated = "Please use as_rational instead"]
     pub fn as_real(&self) -> Option<(i64, i64)> {
+        self.as_rational()
+    }
+
+    pub fn as_rational(&self) -> Option<(i64, i64)> {
         unsafe {
             let mut num: i64 = 0;
             let mut den: i64 = 0;
-            if Z3_get_numeral_small(self.ctx.z3_ctx.0, self.z3_ast, &mut num, &mut den) {
+            if Z3_get_numeral_small(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut num, &mut den) {
                 Some((num, den))
             } else {
                 None
@@ -82,7 +99,7 @@ impl Real {
     pub fn approx(&self, precision: usize) -> ::std::string::String {
         let s = unsafe {
             CStr::from_ptr(Z3_get_numeral_decimal_string(
-                self.ctx.z3_ctx.0,
+                self.ctx.z3_ctx.as_ptr(),
                 self.z3_ast,
                 precision as _,
             ))
@@ -96,7 +113,12 @@ impl Real {
     }
 
     pub fn from_int(ast: &Int) -> Real {
-        unsafe { Self::wrap(&ast.ctx, Z3_mk_int2real(ast.ctx.z3_ctx.0, ast.z3_ast)) }
+        unsafe {
+            Self::wrap(
+                &ast.ctx,
+                Z3_mk_int2real(ast.ctx.z3_ctx.as_ptr(), ast.z3_ast).unwrap(),
+            )
+        }
     }
 
     /// Create an integer from a real.
@@ -128,8 +150,9 @@ impl Real {
     }
 }
 
-impl IntoAst<Real> for BigRational {
-    fn into_ast(self, a: &Real) -> Real {
-        Real::from_big_rational(a.get_ctx(), &self)
+#[cfg(feature = "num")]
+impl From<BigRational> for Real {
+    fn from(v: BigRational) -> Real {
+        Real::from_big_rational(&v)
     }
 }

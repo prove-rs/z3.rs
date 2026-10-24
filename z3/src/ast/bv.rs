@@ -21,7 +21,7 @@ macro_rules! bv_overflow_check_signed {
             pub fn $f(&self, other: &BV, b: bool) -> Bool {
                 unsafe {
                     Ast::wrap(&self.ctx, {
-                        $z3fn(self.ctx.z3_ctx.0, self.z3_ast, other.z3_ast, b)
+                        $z3fn(self.ctx.z3_ctx.as_ptr(), self.z3_ast, other.z3_ast, b).unwrap()
                     })
                 }
             }
@@ -30,16 +30,12 @@ macro_rules! bv_overflow_check_signed {
 }
 
 impl BV {
-    pub fn from_str(ctx: &Context, sz: u32, value: &str) -> Option<BV> {
-        let sort = Sort::bitvector(ctx, sz);
+    pub fn from_str(sz: u32, value: &str) -> Option<BV> {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         let ast = unsafe {
             let bv_cstring = CString::new(value).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, bv_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
-                return None;
-            }
-
-            numeral_ptr
+            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), bv_cstring.as_ptr(), sort.z3_sort)?
         };
         Some(unsafe { Self::wrap(ctx, ast) })
     }
@@ -49,57 +45,72 @@ impl BV {
     /// # Examples
     /// ```
     /// # use z3::{ast::{Ast, BV}, Config, Context, Solver};
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
     /// // 0b00000010
-    /// let bv = BV::from_bits(&ctx, &[false, true, false, false, false, false, false, false]).unwrap();
-    /// let bv_none = BV::from_bits(&ctx, &[]);
-    /// assert_eq!(bv, BV::from_u64(&ctx, 2, 8));
+    /// let bv = BV::from_bits(&[false, true, false, false, false, false, false, false]).unwrap();
+    /// let bv_none = BV::from_bits(&[]);
+    /// assert_eq!(bv, 2);
     /// assert_eq!(bv_none, None);
     /// ```
-    pub fn from_bits(ctx: &Context, bits: &[bool]) -> Option<BV> {
-        let ast = unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.0, bits.len() as u32, bits.as_ptr()) };
-        if ast.is_null() {
-            None
-        } else {
-            Some(unsafe { Self::wrap(ctx, ast) })
-        }
+    pub fn from_bits(bits: &[bool]) -> Option<BV> {
+        let ctx = &Context::thread_local();
+        let ast =
+            unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.as_ptr(), bits.len() as u32, bits.as_ptr())? };
+        Some(unsafe { Self::wrap(ctx, ast) })
     }
 
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S, sz: u32) -> BV {
-        let sort = Sort::bitvector(ctx, sz);
+    pub fn new_const<S: Into<Symbol>>(name: S, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str, sz: u32) -> BV {
-        let sort = Sort::bitvector(ctx, sz);
+    pub fn fresh_const(prefix: &str, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
 
-    pub fn from_i64(ctx: &Context, i: i64, sz: u32) -> BV {
-        let sort = Sort::bitvector(ctx, sz);
-        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort)) }
+    pub fn from_i64(i: i64, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_int64(ctx.z3_ctx.as_ptr(), i, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
-    pub fn from_u64(ctx: &Context, u: u64, sz: u32) -> BV {
-        let sort = Sort::bitvector(ctx, sz);
-        unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort)) }
+    pub fn from_u64(u: u64, sz: u32) -> BV {
+        let ctx = &Context::thread_local();
+        let sort = Sort::bitvector(sz);
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_unsigned_int64(ctx.z3_ctx.as_ptr(), u, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_get_numeral_int64(self.ctx.z3_ctx.0, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -110,7 +121,7 @@ impl BV {
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_get_numeral_uint64(self.ctx.z3_ctx.0, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -126,11 +137,9 @@ impl BV {
     /// ```
     /// # use z3::{ast, Config, Context, SatResult, Solver};
     /// # use z3::ast::Ast;
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
-    /// let i = ast::Int::new_const(&ctx, "x");
-    /// solver.assert(&i._eq(&ast::Int::from_i64(&ctx, -3)));
+    /// # let solver = Solver::new();
+    /// let i = ast::Int::new_const("x");
+    /// solver.assert(&i.eq(&ast::Int::from_i64(-3)));
     ///
     /// let x = ast::BV::from_int(&i, 64);
     /// assert_eq!(64, x.get_size());
@@ -141,7 +150,12 @@ impl BV {
     /// assert_eq!(-3, model.eval(&x.to_int(true), true).unwrap().as_i64().expect("as_i64() shouldn't fail"));
     /// ```
     pub fn from_int(ast: &Int, sz: u32) -> BV {
-        unsafe { Self::wrap(&ast.ctx, Z3_mk_int2bv(ast.ctx.z3_ctx.0, sz, ast.z3_ast)) }
+        unsafe {
+            Self::wrap(
+                &ast.ctx,
+                Z3_mk_int2bv(ast.ctx.z3_ctx.as_ptr(), sz, ast.z3_ast).unwrap(),
+            )
+        }
     }
 
     /// Create an integer from a bitvector.
@@ -154,7 +168,7 @@ impl BV {
     /// Get the size of the bitvector (in bits)
     pub fn get_size(&self) -> u32 {
         let sort = self.get_sort();
-        unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx.0, sort.z3_sort) }
+        unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
     }
 
     // Bitwise ops
@@ -271,7 +285,7 @@ impl BV {
     pub fn extract(&self, high: u32, low: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_extract(self.ctx.z3_ctx.0, high, low, self.z3_ast)
+                Z3_mk_extract(self.ctx.z3_ctx.as_ptr(), high, low, self.z3_ast).unwrap()
             })
         }
     }
@@ -281,7 +295,7 @@ impl BV {
     pub fn sign_ext(&self, i: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_sign_ext(self.ctx.z3_ctx.0, i, self.z3_ast)
+                Z3_mk_sign_ext(self.ctx.z3_ctx.as_ptr(), i, self.z3_ast).unwrap()
             })
         }
     }
@@ -291,7 +305,7 @@ impl BV {
     pub fn zero_ext(&self, i: u32) -> Self {
         unsafe {
             Self::wrap(&self.ctx, {
-                Z3_mk_zero_ext(self.ctx.z3_ctx.0, i, self.z3_ast)
+                Z3_mk_zero_ext(self.ctx.z3_ctx.as_ptr(), i, self.z3_ast).unwrap()
             })
         }
     }
@@ -301,7 +315,7 @@ macro_rules! into_bv {
     ($t:ty) => {
         impl IntoAst<BV> for $t {
             fn into_ast(self, a: &BV) -> BV {
-                BV::from_u64(&a.ctx, self as u64, a.get_size())
+                BV::from_u64(self as u64, a.get_size())
             }
         }
     };
@@ -311,7 +325,7 @@ macro_rules! into_bv_signed {
     ($t:ty) => {
         impl IntoAst<BV> for $t {
             fn into_ast(self, a: &BV) -> BV {
-                BV::from_i64(&a.ctx, self as i64, a.get_size())
+                BV::from_i64(self as i64, a.get_size())
             }
         }
     };

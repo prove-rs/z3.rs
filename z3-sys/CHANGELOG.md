@@ -7,6 +7,205 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.13.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.13.0...z3-sys-v0.13.1) - 2026-09-23
+
+### Added
+
+- Improve Windows cross-compilation support ([#592](https://github.com/prove-rs/z3.rs/pull/592)) (by @MI3Guy) - #592
+
+### Fixed
+
+- Fall back to pkg-config on build feature conflict ([#595](https://github.com/prove-rs/z3.rs/pull/595)) (by @toolCHAINZ) - #595
+
+### Contributors
+
+* @toolCHAINZ
+* @MI3Guy
+
+## [0.13.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.12.0...z3-sys-v0.13.0) - 2026-08-28
+
+### Added
+
+- [**breaking**] auto-detect z3 version ([#583](https://github.com/prove-rs/z3.rs/pull/583)) (by @toolCHAINZ) - #583
+
+### Other
+
+- bump z3-sys to use 5.1.0 by default ([#585](https://github.com/prove-rs/z3.rs/pull/585)) (by @toolCHAINZ) - #585
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.12.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.11.0...z3-sys-v0.12.0) - 2026-07-23
+
+This release updates the generated FFI bindings to target Z3 5.0.0. The high-level `z3` crate is **not** being updated in lockstep because, at the time of this writing, Z3 5.0.0 is still making its way into package repositories; once it is a little more widely distributed, a `z3` release will follow targeting `z3-sys` 0.12.0 and Z3 5.0.0.
+
+### Other
+
+- [**breaking**] updated z3-sys generated bindings for z3 5 ([#572](https://github.com/prove-rs/z3.rs/pull/572)) (by @toolCHAINZ) - #572
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.11.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.9...z3-sys-v0.11.0) - 2026-04-01
+
+### Added
+
+- [**breaking**] add `vendored` build to pull z3 sources from crates.io ([#510](https://github.com/prove-rs/z3.rs/pull/510)) (by @toolCHAINZ) - #510
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.9](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.8...z3-sys-v0.10.9) - 2026-03-13
+
+### Other
+
+- Update zip dependency to latest ([#515](https://github.com/prove-rs/z3.rs/pull/515)) (by @ThomasTNO) - #515
+
+### Contributors
+
+* @ThomasTNO
+
+## [0.10.8](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.7...z3-sys-v0.10.8) - 2026-03-06
+
+### Fixed
+
+- *(z3-sys)* raise GitHub download timeout for gh-release ([#513](https://github.com/prove-rs/z3.rs/pull/513)) (by @milevin)
+
+### Contributors
+
+* @milevin
+
+## [0.10.7](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.6...z3-sys-v0.10.7) - 2026-02-24
+
+### Added
+
+- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ, @NikolajBjorner) - #500
+
+### Other
+
+- bump Z3 default version to 4.16.0 ([#504](https://github.com/prove-rs/z3.rs/pull/504)) (by @toolCHAINZ) - #504
+
+### Contributors
+
+* @toolCHAINZ
+* @NikolajBjorner
+
+## [0.10.6](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.5...z3-sys-v0.10.6) - 2026-02-21
+
+### Fixed
+
+- add rerun-if-env-changed for Z3_SYS_BUNDLED_DIR_OVERRIDE ([#496](https://github.com/prove-rs/z3.rs/pull/496)) (by @toolCHAINZ) - #496
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.5](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.4...z3-sys-v0.10.5) - 2026-02-13
+
+### Fixed
+
+- Z3_SYS_BUNDLED_DIR_OVERRIDE had extra z3 ([#491](https://github.com/prove-rs/z3.rs/pull/491)) (by @toolCHAINZ) - #491
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.4](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.3...z3-sys-v0.10.4) - 2025-12-27
+
+### Added
+
+- allow configuring tls provider for `gh-release` and `bundled` ([#486](https://github.com/prove-rs/z3.rs/pull/486)) (by @toolCHAINZ) - #486
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.3](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.2...z3-sys-v0.10.3) - 2025-11-20
+
+### Added
+
+- Use native-tls-vendored feature of reqwest dependency ([#472](https://github.com/prove-rs/z3.rs/pull/472)) (by @grebnetiew) - #472
+
+### Contributors
+
+* @grebnetiew
+
+## [0.10.2](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.1...z3-sys-v0.10.2) - 2025-11-17
+
+### Fixed
+
+- do not scrape GitHub when submodule exists ([#468](https://github.com/prove-rs/z3.rs/pull/468)) (by @toolCHAINZ) - #468
+
+### Other
+
+- bump bundled z3 ([#470](https://github.com/prove-rs/z3.rs/pull/470)) (by @toolCHAINZ) - #470
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.10.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.10.0...z3-sys-v0.10.1) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
+## [0.10.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.10...z3-sys-v0.10.0) - 2025-09-26
+
+### Added
+
+- Special Binary Relation FuncDecls ([#340](https://github.com/prove-rs/z3.rs/pull/340)) (by @grahnen) - #340
+
+### Changed
+
+- [**breaking**] Fallible z3-sys APIs now return Option<NonNull<T>> ([#450](https://github.com/prove-rs/z3.rs/pull/450)) (by @toolCHAINZ) - #450
+
+### Contributors
+
+* @toolCHAINZ
+* @grahnen
+
+## [0.9.10](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.9...z3-sys-v0.9.10) - 2025-09-08
+
+### Other
+
+- Add nostd tags ([#435](https://github.com/prove-rs/z3.rs/pull/435)) (by @toolCHAINZ) - #435
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.9.9](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.8...z3-sys-v0.9.9) - 2025-09-03
+
+### Added
+
+- *(z3-sys)* do not depend on std ([#425](https://github.com/prove-rs/z3.rs/pull/425)) (by @lucascool12)
+
+### Contributors
+
+* @lucascool12
+
+## [0.9.8](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.7...z3-sys-v0.9.8) - 2025-08-25
+
+### Fixed
+
+- use proper header path on overridden build ([#423](https://github.com/prove-rs/z3.rs/pull/423)) (by @toolCHAINZ) - #423
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.9.7](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.9.6...z3-sys-v0.9.7) - 2025-08-19
 
 ### Added

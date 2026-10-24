@@ -2,15 +2,13 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::result::Result;
 use std::str::Utf8Error;
-
 use z3_sys::*;
 
 use crate::{Context, Goal, Probe};
-
 impl Probe {
     unsafe fn wrap(ctx: &Context, z3_probe: Z3_probe) -> Probe {
         unsafe {
-            Z3_probe_inc_ref(ctx.z3_ctx.0, z3_probe);
+            Z3_probe_inc_ref(ctx.z3_ctx.as_ptr(), z3_probe);
         }
         Probe {
             ctx: ctx.clone(),
@@ -23,26 +21,31 @@ impl Probe {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Probe};
-    ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let probes: Vec<_> = Probe::list_all(&ctx).filter_map(|r| r.ok()).collect();
-    /// assert!(probes.contains(&"is-quasi-pb"));
+    /// # use z3::Probe;
+    /// let probes: Vec<_> = Probe::list_all().into_iter().filter_map(|r| r.ok()).collect();
+    /// assert!(probes.contains(&"is-quasi-pb".to_string()));
     /// ```
-    pub fn list_all(ctx: &Context) -> impl Iterator<Item = std::result::Result<&str, Utf8Error>> {
-        let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.0) };
-        (0..p).map(move |n| {
-            let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.0, n) };
-            unsafe { CStr::from_ptr(t) }.to_str()
-        })
+    pub fn list_all() -> Vec<Result<String, Utf8Error>> {
+        let ctx = &Context::thread_local();
+        let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.as_ptr()) };
+        (0..p)
+            .map(move |n| {
+                let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.as_ptr(), n) };
+                unsafe { CStr::from_ptr(t).to_str().map(String::from) }
+            })
+            .collect()
     }
 
     /// Return a string containing a description of the probe with
     /// the given `name`.
-    pub fn describe<'a>(ctx: &'a Context, name: &str) -> std::result::Result<&'a str, Utf8Error> {
+    pub fn describe(name: &str) -> std::result::Result<String, Utf8Error> {
+        let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
-        unsafe { CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.0, probe_name.as_ptr())).to_str() }
+        unsafe {
+            CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.as_ptr(), probe_name.as_ptr()))
+                .to_str()
+                .map(|s| s.to_string())
+        }
     }
 
     /// Return a probe associated with the given `name`.
@@ -50,15 +53,19 @@ impl Probe {
     /// # Example
     ///
     /// ```
-    /// use z3::{Config, Context, Probe};
+    /// # use z3::{Config, Context, Probe};
     ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::new(&ctx, "is-qfbv");
+    /// let probe = Probe::new("is-qfbv");
     /// ```
-    pub fn new(ctx: &Context, name: &str) -> Probe {
+    pub fn new(name: &str) -> Probe {
+        let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
-        unsafe { Self::wrap(ctx, Z3_mk_probe(ctx.z3_ctx.0, probe_name.as_ptr())) }
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_probe(ctx.z3_ctx.as_ptr(), probe_name.as_ptr()).unwrap(),
+            )
+        }
     }
 
     /// Execute the probe over the goal.
@@ -66,19 +73,17 @@ impl Probe {
     /// The probe always produce a double value. "Boolean" probes return
     /// `0.0` for `false`, and a value different from `0.0` for `true`.
     pub fn apply(&self, goal: &Goal) -> f64 {
-        unsafe { Z3_probe_apply(self.ctx.z3_ctx.0, self.z3_probe, goal.z3_goal) }
+        unsafe { Z3_probe_apply(self.ctx.z3_ctx.as_ptr(), self.z3_probe, goal.z3_goal) }
     }
 
     /// Return a probe that always evaluates to val.
     /// ```
-    /// use z3::{Config, Context, Probe};
-    ///
-    /// let cfg = Config::new();
-    /// let ctx = Context::new(&cfg);
-    /// let probe = Probe::constant(&ctx, 1.0);
+    /// # use z3::Probe;
+    /// let probe = Probe::constant(1.0);
     /// ```
-    pub fn constant(ctx: &Context, val: f64) -> Probe {
-        unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.0, val)) }
+    pub fn constant(val: f64) -> Probe {
+        let ctx = &Context::thread_local();
+        unsafe { Self::wrap(ctx, Z3_probe_const(ctx.z3_ctx.as_ptr(), val).unwrap()) }
     }
 
     /// Return a probe that evaluates to "true" when the value returned
@@ -89,7 +94,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_lt(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_lt(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -100,7 +105,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_gt(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_gt(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -111,7 +116,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_le(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_le(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -122,7 +127,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_ge(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_ge(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -133,7 +138,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_eq(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_eq(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -143,7 +148,7 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_and(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_and(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
@@ -153,14 +158,19 @@ impl Probe {
         unsafe {
             Self::wrap(
                 &self.ctx,
-                Z3_probe_or(self.ctx.z3_ctx.0, self.z3_probe, p.z3_probe),
+                Z3_probe_or(self.ctx.z3_ctx.as_ptr(), self.z3_probe, p.z3_probe).unwrap(),
             )
         }
     }
 
     /// Return a probe that evaluates to "true" when `p` does not evaluate to true.
     pub fn not(&self) -> Probe {
-        unsafe { Self::wrap(&self.ctx, Z3_probe_not(self.ctx.z3_ctx.0, self.z3_probe)) }
+        unsafe {
+            Self::wrap(
+                &self.ctx,
+                Z3_probe_not(self.ctx.z3_ctx.as_ptr(), self.z3_probe).unwrap(),
+            )
+        }
     }
 
     /// Return a probe that evaluates to "true" when the value returned
@@ -191,7 +201,7 @@ impl fmt::Debug for Probe {
 impl Drop for Probe {
     fn drop(&mut self) {
         unsafe {
-            Z3_probe_dec_ref(self.ctx.z3_ctx.0, self.z3_probe);
+            Z3_probe_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_probe);
         }
     }
 }

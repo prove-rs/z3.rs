@@ -1,0 +1,51 @@
+name: Release z3-src (prepare)
+
+on:
+  workflow_dispatch:
+    inputs:
+      z3_tag:
+        description: "Z3 git tag to release (e.g. z3-4.16.0)"
+        required: true
+        type: string
+
+jobs:
+  prepare-z3-src:
+    name: Prepare z3-src release PR
+    runs-on: ubuntu-latest
+    if: ${{ github.repository_owner == 'prove-rs' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.RELEASE_PLZ_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Create release branch
+        run: git checkout -b release/z3-src-${{ inputs.z3_tag }}
+
+      - name: Prepare z3-src
+        run: cargo xtask prepare-z3-src "${{ inputs.z3_tag }}"
+
+      - name: Commit version bump
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add z3-src/Cargo.toml z3-src/z3
+          git commit -m "chore: release z3-src (Z3 ${{ inputs.z3_tag }})"
+          git push origin release/z3-src-${{ inputs.z3_tag }}
+
+      - name: Open PR
+        run: |
+          gh pr create \
+            --title "chore: release z3-src (Z3 ${{ inputs.z3_tag }})" \
+            --body "Automated release PR. Review the submodule pointer and Cargo.toml version, then merge to publish." \
+            --base master \
+            --head release/z3-src-${{ inputs.z3_tag }}
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}

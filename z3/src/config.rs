@@ -21,12 +21,12 @@ impl Config {
     ///
     /// # See also
     ///
-    /// - [`Context::new()`](crate::Context::new)
+    /// - [`with_z3_config`](crate::with_z3_config)
     pub fn new() -> Config {
         Config {
             kvs: Vec::new(),
             z3_cfg: unsafe {
-                let p = Z3_mk_config();
+                let p = Z3_mk_config().unwrap();
                 debug!("new config {p:p}");
                 p
             },

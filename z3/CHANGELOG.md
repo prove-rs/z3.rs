@@ -7,6 +7,371 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.21.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.0...z3-v0.21.1) - 2026-09-23
+
+### Added
+
+- FuncDecl::as_array() ([#591](https://github.com/prove-rs/z3.rs/pull/591)) (by @toolCHAINZ) - #591
+
+### Fixed
+
+- Use wrap for Goal's clone impl ([#594](https://github.com/prove-rs/z3.rs/pull/594)) (by @Ollie-Pearce) - #594
+
+### Other
+
+- Replace internal usages of z3_ctx.0 with z3_ctx.as_ptr() ([#587](https://github.com/prove-rs/z3.rs/pull/587)) (by @toolCHAINZ) - #587
+
+### Contributors
+
+* @Ollie-Pearce
+* @toolCHAINZ
+
+## [0.21.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.2...z3-v0.21.0) - 2026-08-28
+
+### Added
+
+- [**breaking**] auto-detect z3 version ([#583](https://github.com/prove-rs/z3.rs/pull/583)) (by @toolCHAINZ) - #583
+- Optimize::set_model_handler ([#577](https://github.com/prove-rs/z3.rs/pull/577)) (by @toolCHAINZ) - #577
+
+### Fixed
+
+- add missing inc_ref to ApplyResult's Clone ([#578](https://github.com/prove-rs/z3.rs/pull/578)) (by @Ollie-Pearce) - #578
+
+### Other
+
+- bump z3 to use z3-sys 0.12.0 ([#575](https://github.com/prove-rs/z3.rs/pull/575)) (by @toolCHAINZ) - #575
+
+### Contributors
+
+* @toolCHAINZ
+* @Ollie-Pearce
+
+## [0.20.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.1...z3-v0.20.2) - 2026-06-26
+
+### Added
+
+- Add bindings for `get_lower`/`get_upper` in the `Optimize` solver. ([#565](https://github.com/prove-rs/z3.rs/pull/565)) (by @daemontus) - #565
+
+### Fixed
+
+- *(Real)* from_rational must not truncate i64 args to i32 ([#568](https://github.com/prove-rs/z3.rs/pull/568)) (by @progwriter)
+
+### Contributors
+
+* @progwriter
+* @daemontus
+
+## [0.20.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.20.0...z3-v0.20.1) - 2026-06-21
+
+### Other
+
+- enable "num" feature for z3 docs.rs build ([#562](https://github.com/prove-rs/z3.rs/pull/562)) (by @GreenBeard) - #562
+
+### Contributors
+
+* @GreenBeard
+
+## [0.20.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.15...z3-v0.20.0) - 2026-04-01
+
+### Added
+
+- add Char Ast and Sort ([#553](https://github.com/prove-rs/z3.rs/pull/553)) (by @toolCHAINZ) - #553
+- make num dependency optional ([#552](https://github.com/prove-rs/z3.rs/pull/552)) (by @toolCHAINZ) - #552
+- Add Optimize::solutions and tweak Optimize::assert ([#530](https://github.com/prove-rs/z3.rs/pull/530)) (by @toolCHAINZ) - #530
+- impl Translate and Clone for Optimize ([#529](https://github.com/prove-rs/z3.rs/pull/529)) (by @toolCHAINZ) - #529
+- [**breaking**] add `vendored` build to pull z3 sources from crates.io ([#510](https://github.com/prove-rs/z3.rs/pull/510)) (by @toolCHAINZ) - #510
+
+### Other
+
+- document minimum z3 version and feature gate optimize features ([#556](https://github.com/prove-rs/z3.rs/pull/556)) (by @toolCHAINZ) - #556
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.15](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.14...z3-v0.19.15) - 2026-03-19
+
+### Added
+
+- Implement Optimize Convenience Methods ([#520](https://github.com/prove-rs/z3.rs/pull/520)) (by @toolCHAINZ) - #520
+
+### Fixed
+
+- {Solver, Optimize}::check_and_get_model no longer take ownership ([#522](https://github.com/prove-rs/z3.rs/pull/522)) (by @toolCHAINZ) - #522
+
+### Other
+
+- add missing docs for Boolean operators and pseudo-boolean constraints ([#527](https://github.com/prove-rs/z3.rs/pull/527)) (by @matth2k) - #527
+- add missing doc comments for Solver::eval() and several Ast impls ([#526](https://github.com/prove-rs/z3.rs/pull/526)) (by @matth2k) - #526
+- Optimize::get_assertions ([#523](https://github.com/prove-rs/z3.rs/pull/523)) (by @toolCHAINZ) - #523
+
+### Contributors
+
+* @matth2k
+* @toolCHAINZ
+
+## [0.19.14](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.13...z3-v0.19.14) - 2026-03-13
+
+### Other
+
+- internal refactoring of datatype builder ([#517](https://github.com/prove-rs/z3.rs/pull/517)) (by @toolCHAINZ) - #517
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.13](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.12...z3-v0.19.13) - 2026-03-06
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.12](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.11...z3-v0.19.12) - 2026-03-04
+
+### Added
+
+- add `with` method to Tactic ([#511](https://github.com/prove-rs/z3.rs/pull/511)) (by @longlinh123456) - #511
+
+### Contributors
+
+* @longlinh123456
+
+## [0.19.11](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.10...z3-v0.19.11) - 2026-02-27
+
+### Added
+
+- add high-level API for model sorts/sort universes ([#506](https://github.com/prove-rs/z3.rs/pull/506)) (by @toolCHAINZ) - #506
+
+### Fixed
+
+- standardize AstVector display/debug impl ([#508](https://github.com/prove-rs/z3.rs/pull/508)) (by @toolCHAINZ) - #508
+
+### Other
+
+- FusedIterator and ExactSizeIterator for model/SortIter ([#509](https://github.com/prove-rs/z3.rs/pull/509)) (by @toolCHAINZ) - #509
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.10](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.9...z3-v0.19.10) - 2026-02-24
+
+### Added
+
+- algebraic numbers, polynomials, enhanced floats, AST vectors, and quantifier elimination ([#500](https://github.com/prove-rs/z3.rs/pull/500)) (by @toolCHAINZ, @NikolajBjorner) - #500
+
+### Contributors
+
+* @toolCHAINZ
+* @NikolajBjorner
+
+## [0.19.9](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.8...z3-v0.19.9) - 2026-02-21
+
+### Other
+
+- expand build flag documentation ([#499](https://github.com/prove-rs/z3.rs/pull/499)) (by @toolCHAINZ) - #499
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.8](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.7...z3-v0.19.8) - 2026-02-13
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.7](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.6...z3-v0.19.7) - 2025-12-27
+
+### Added
+
+- Add check_and_get_model method to Solver ([#484](https://github.com/prove-rs/z3.rs/pull/484)) (by @toolCHAINZ) - #484
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.6](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.5...z3-v0.19.6) - 2025-12-10
+
+### Added
+
+- impl Sum and Product for Int and Real ([#479](https://github.com/prove-rs/z3.rs/pull/479)) (by @toolCHAINZ) - #479
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.19.5](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.4...z3-v0.19.5) - 2025-11-20
+
+### Other
+
+- remove unused imports in z3::ast and use absolute paths in macros ([#471](https://github.com/prove-rs/z3.rs/pull/471)) (by @lixitrixi) - #471
+
+### Contributors
+
+* @lixitrixi
+
+## [0.19.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.3...z3-v0.19.4) - 2025-11-17
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.19.3](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.2...z3-v0.19.3) - 2025-11-16
+
+### Added
+
+- Implement support for bundling z3 without use of github checkout ([#464](https://github.com/prove-rs/z3.rs/pull/464)) (by @ThomasTNO) - #464
+
+### Contributors
+
+* @ThomasTNO
+
+## [0.19.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.1...z3-v0.19.2) - 2025-10-21
+
+### Added
+
+- Add `Datatype::update_field`, `FuncDecl::domain`, `FuncDecl::range` ([#455](https://github.com/prove-rs/z3.rs/pull/455)) (by @willcrichton) - #455
+- impl Default for Solver, Optimize, and Parser ([#456](https://github.com/prove-rs/z3.rs/pull/456)) (by @toolCHAINZ) - #456
+
+### Contributors
+
+* @willcrichton
+* @toolCHAINZ
+
+## [0.19.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.19.0...z3-v0.19.1) - 2025-09-26
+
+### Added
+
+- allow context closures to capture non-Sync data ([#452](https://github.com/prove-rs/z3.rs/pull/452)) (by @gmorenz) - #452
+
+### Contributors
+
+* @gmorenz
+
+## [0.19.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.2...z3-v0.19.0) - 2025-09-26
+
+### Added
+
+- impl Translate for FuncDecl ([#439](https://github.com/prove-rs/z3.rs/pull/439)) (by @toolCHAINZ) - #439
+- Special Binary Relation FuncDecls ([#340](https://github.com/prove-rs/z3.rs/pull/340)) (by @grahnen) - #340
+
+### Changed
+
+- Fallible z3-sys APIs now return Option<NonNull<T>> ([#450](https://github.com/prove-rs/z3.rs/pull/450)) (by @toolCHAINZ) - #450
+
+### Other
+
+- fix typos in example ([#448](https://github.com/prove-rs/z3.rs/pull/448)) (by @toolCHAINZ) - #448
+
+### Removed
+
+- [**breaking**] Context no longer implements Default and Context::new is now private ([#451](https://github.com/prove-rs/z3.rs/pull/451)) (by @toolCHAINZ) - #451
+
+### Contributors
+
+* @toolCHAINZ
+* @grahnen
+
+## [0.18.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.1...z3-v0.18.2) - 2025-09-10
+
+### Added
+
+- gate newer Z3 APIs behind features ([#444](https://github.com/prove-rs/z3.rs/pull/444)) (by @toolCHAINZ) - #444
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.18.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.18.0...z3-v0.18.1) - 2025-09-09
+
+### Fixed
+
+- Ast::ne -> Bool is now defined and preferred over PartialEq::ne ([#442](https://github.com/prove-rs/z3.rs/pull/442)) (by @toolCHAINZ) - #442
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.18.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.17.0...z3-v0.18.0) - 2025-09-08
+
+### Added
+
+- add consuming solutions iterator ([#433](https://github.com/prove-rs/z3.rs/pull/433)) (by @toolCHAINZ) - #433
+
+### Changed
+
+- [**breaking**] APIs accepting `Bool` no longer accept `bool` ([#436](https://github.com/prove-rs/z3.rs/pull/436)) (by @toolCHAINZ) - #436
+
+### Fixed
+
+- Solver::clone preserves tactics and params ([#440](https://github.com/prove-rs/z3.rs/pull/440)) (by @toolCHAINZ) - #440
+
+### Other
+
+- add simple example ([#437](https://github.com/prove-rs/z3.rs/pull/437)) (by @toolCHAINZ) - #437
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.17.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.2...z3-v0.17.0) - 2025-09-03
+
+### Added
+
+- Add the ability to iterate over solutions from a `Solver` ([#431](https://github.com/prove-rs/z3.rs/pull/431)) (by @toolCHAINZ) - #431
+
+### Changed
+
+- [**breaking**] rename `_eq` to `eq` and `*_real_*` to `*_rational_*` ([#305](https://github.com/prove-rs/z3.rs/pull/305)) (by @dragazo) - #305
+- deprecate legacy Context APIs ([#427](https://github.com/prove-rs/z3.rs/pull/427)) (by @toolCHAINZ) - #427
+
+### Contributors
+
+* @toolCHAINZ
+* @dragazo
+
+## [0.16.2](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.1...z3-v0.16.2) - 2025-08-25
+
+### Other
+
+- updated the following local packages: z3-sys
+
+## [0.16.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.16.0...z3-v0.16.1) - 2025-08-23
+
+### Other
+
+- A first pass at documenting how to define recursive datatypes ([#420](https://github.com/prove-rs/z3.rs/pull/420)) (by @Pat-Lafon) - #420
+
+### Contributors
+
+* @Pat-Lafon
+
+## [0.16.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.15.0...z3-v0.16.0) - 2025-08-21
+
+### Added
+
+- [**breaking**] Use an implicit thread-local z3 context by default ([#417](https://github.com/prove-rs/z3.rs/pull/417)) (by @toolCHAINZ) - #417
+
+### Contributors
+
+* @toolCHAINZ
+
+## [0.15.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.4...z3-v0.15.0) - 2025-08-19
+
+### Added
+
+- [**breaking**] trait-based conversions and operations ([#410](https://github.com/prove-rs/z3.rs/pull/410)) (by @toolCHAINZ) - #410
+
+### Other
+
+- add unit tests for rounding modes ([#389](https://github.com/prove-rs/z3.rs/pull/389)) (by @mehrad31415) - #389
+
+### Contributors
+
+* @mehrad31415
+* @toolCHAINZ
+
 ## [0.14.4](https://github.com/prove-rs/z3.rs/compare/z3-v0.14.3...z3-v0.14.4) - 2025-08-19
 
 ### Added

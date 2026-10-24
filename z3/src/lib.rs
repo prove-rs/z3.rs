@@ -1,19 +1,99 @@
 //! # Z3
 //!
 //! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
-
+//!
+//! This library aims to provide an idiomatic Rust wrapper around Z3.
+//!
+//! # Basic Usage
+//!
+//! The simplest way to use Z3 is to build a formula (also known as an [`Ast`](ast::Ast))
+//! and use Z3's [`Solver`] to find solutions to it.
+//!
+//! This example walks through the process of expressing a simple math problem in the language of
+//! SMT, asserting it into a Solver, and extracting answers from it. Z3 can encode much more varied
+//! and complex problems than this example shows (and some of these features are supported by
+//! the Rust bindings), but this covers the absolute basics.
+//!
+//! Consider the following problem:
+//!
+//! > Three friends, named Alice, Bob, and Charlie, wish to divide 30 apples amongst themselves,
+//! > subject to the following constraints:
+//! > - Everyone must get at least one apple.
+//! > - All apples must be accounted for.
+//! > - Alice must receive at least 5 apples.
+//! > - Bob must receive an even number of apples.
+//! > - Charlie must get at least as many apples as Bob.
+//! > - The number of apples Alice receives must be exactly 3 times more than the number Charlie receives.
+//! >
+//! > What are the possible distributions of apples they could make?
+//!
+//! To express this in Z3, we define symbolic [`Int`](ast::Int) [`Ast`](ast::Ast)s representing the number
+//! of apples each friend has, and [`assert`](Solver::assert) the constraints of the problem into a [`Solver`].
+//! We can then query the [`Solver`] for a solution:
+//!
+//! ```
+//!  # use z3::Solver;
+//!  # use z3::ast::{Bool, Int};
+//!  // define Int values representing the number of apples each friend has
+//!  let alice = Int::fresh_const("alice");
+//!  let bob = Int::fresh_const("bob");
+//!  let charlie = Int::fresh_const("charlie");
+//!  // instantiate a Solver
+//!  let solver = Solver::new();
+//!  // encode the constraints of the problem as Bool-valued Asts
+//!  // and assert them in the solver
+//!  solver.assert((&alice + &bob + &charlie).eq(30));
+//!  solver.assert(alice.gt(0));
+//!  solver.assert(bob.gt(0));
+//!  solver.assert(charlie.gt(0));
+//!  solver.assert(alice.ge(5));
+//!  solver.assert((&bob % 2).eq(0));
+//!  solver.assert(charlie.ge(&bob));
+//!  solver.assert(alice.eq(&charlie * 3));
+//!  // iterate over the solutions to our variables
+//!  for solution in solver
+//!      .solutions([alice, bob, charlie], false)
+//!      // we use take to ensure that this loop terminates in case there are very many solutions
+//!      .take(100) {
+//!      // extract concrete values for each modeled Int Ast
+//!      let solution: Vec<u64> = solution.iter().map(Int::as_u64).map(Option::unwrap).collect();
+//!      let alice = solution[0];
+//!      let bob = solution[1];
+//!      let charlie = solution[2];
+//!      println!("alice: {alice}, bob: {bob}, charlie: {charlie}");
+//!      // check that the concrete values match the constraints we gave the solver
+//!      assert_eq!(alice + bob + charlie, 30);
+//!      assert!(alice >= 5);
+//!      assert_eq!(bob % 2, 0);
+//!      assert!(charlie >= bob);
+//!      assert_eq!(alice, charlie * 3);
+//!  }
+//! ```
+//!
+//! In this case, there are 2 solutions, and the above snippet gives the following
+//! output:
+//! > `alice: 21, bob: 2, charlie: 7`
+//! >
+//! > `alice: 18, bob: 6, charlie: 6`
+//!
 #![allow(clippy::unreadable_literal)]
 #![warn(clippy::doc_markdown)]
 #![deny(missing_debug_implementations)]
+#![cfg_attr(docsrs, feature(doc_cfg))]
+#![cfg_attr(docsrs, doc(auto_cfg))]
 
+use std::cell::Cell;
 use std::ffi::CString;
+use std::ptr::NonNull;
 use z3_sys::*;
 pub use z3_sys::{AstKind, GoalPrec, SortKind};
 
 pub mod ast;
+mod callbacks;
 mod config;
 mod context;
 pub mod datatype_builder;
+mod fixedpoint;
 mod func_decl;
 mod func_entry;
 mod func_interp;
@@ -33,18 +113,24 @@ mod tactic;
 mod translate;
 mod version;
 
+pub mod ast_vector;
+pub mod quantifier_elimination;
+
+use crate::optimize::ModelHandlerState;
 pub use crate::params::{get_global_param, reset_all_global_params, set_global_param};
 pub use crate::statistics::{StatisticsEntry, StatisticsValue};
 pub use crate::translate::Translate;
-pub use crate::version::{Version, full_version, version};
-pub use context::Context;
-
 pub use crate::translate::synchronization::*;
+pub use crate::version::{Version, full_version, version};
+pub use ast_vector::AstVector;
+pub use context::Context;
+pub use datatype_builder::DatatypeAccessor;
+pub use solver::Solvable;
 /// Configuration used to initialize [logical contexts](Context).
 ///
 /// # See also:
 ///
-/// - [`Context::new()`]
+/// - [`with_z3_config`]
 #[derive(Debug)]
 pub struct Config {
     kvs: Vec<(CString, CString)>,
@@ -117,6 +203,20 @@ pub struct Model {
 pub struct Optimize {
     ctx: Context,
     z3_opt: Z3_optimize,
+    // Heap-allocated `optimize::ModelHandlerState`; None when no handler is registered.
+    // Safety invariant: Some(ptr) implies a valid, live allocation owned by this Optimize.
+    handler: Cell<Option<NonNull<ModelHandlerState>>>,
+}
+
+/// Context for Horn clause / Datalog solving.
+///
+/// # See also
+///
+/// - [`Fixedpoint::add_rule`]
+/// - [`Fixedpoint::query`]
+pub struct Fixedpoint {
+    ctx: Context,
+    z3_fp: Z3_fixedpoint,
 }
 
 /// Function declaration. Every constant and function have an associated declaration.
@@ -174,26 +274,24 @@ pub use z3_sys::DeclKind;
 ///
 /// Example:
 /// ```
-/// # use z3::{ Config, Context, DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
-/// # let cfg = Config::new();
-/// # let ctx = Context::new(&cfg);
-/// # let solver = Solver::new(&ctx);
+/// # use z3::{ DatatypeAccessor, DatatypeBuilder, SatResult, Solver, Sort, ast::{Ast, Datatype, Int}};
+/// # let solver = Solver::new();
 /// // Like Rust's Option<int> type
-/// let option_int = DatatypeBuilder::new(&ctx, "OptionInt")
+/// let option_int = DatatypeBuilder::new("OptionInt")
 /// .variant("None", vec![])
 /// .variant(
 ///     "Some",
-///     vec![("value", DatatypeAccessor::Sort(Sort::int(&ctx)))],
+///     vec![("value", DatatypeAccessor::Sort(Sort::int()))],
 /// )
 /// .finish();
 ///
 /// // Assert x.is_none()
-/// let x = Datatype::new_const(&ctx, "x", &option_int.sort);
+/// let x = Datatype::new_const("x", &option_int.sort);
 /// solver.assert(&option_int.variants[0].tester.apply(&[&x]).as_bool().unwrap());
 ///
 /// // Assert y == Some(3)
-/// let y = Datatype::new_const(&ctx, "y", &option_int.sort);
-/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(&ctx, 3)]);
+/// let y = Datatype::new_const("y", &option_int.sort);
+/// let value = option_int.variants[1].constructor.apply(&[&Int::from_i64(3)]);
 /// solver.assert(&y._eq(&value.as_datatype().unwrap()));
 ///
 /// assert_eq!(solver.check(), SatResult::Sat);
@@ -208,13 +306,6 @@ pub struct DatatypeBuilder {
     ctx: Context,
     name: Symbol,
     constructors: Vec<(String, Vec<(String, DatatypeAccessor)>)>,
-}
-
-/// Wrapper which can point to a sort (by value) or to a custom datatype (by name).
-#[derive(Debug)]
-pub enum DatatypeAccessor {
-    Sort(Sort),
-    Datatype(Symbol),
 }
 
 /// Inner variant for a custom [datatype sort](DatatypeSort).
@@ -256,7 +347,7 @@ pub struct Pattern {
 }
 
 /// Collection of subgoals resulting from applying of a tactic to a goal.
-#[derive(Clone, Debug)]
+#[derive(Debug)]
 pub struct ApplyResult {
     ctx: Context,
     z3_apply_result: Z3_apply_result,
@@ -311,4 +402,63 @@ pub struct Probe {
 pub struct Statistics {
     ctx: Context,
     z3_stats: Z3_stats,
+}
+
+/// Runs the provided callback with all inner Z3 calls using the provided [`Context`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
+///
+/// Most users should prefer to use [`with_z3_config`] instead; this function is present
+/// to allow advanced users to use a [`Context`] they unsafely created themselves.
+///
+/// # See also
+///
+/// - [`with_z3_config`]
+pub fn with_z3_context<T: FnOnce() -> R + Send + Sync, R: Send + Sync>(
+    ctx: &Context,
+    callback: T,
+) -> R {
+    let old = Context::thread_local();
+    Context::set_thread_local(ctx);
+    let res = callback();
+    Context::set_thread_local(&old);
+    res
+}
+
+/// Runs the provided callback with all inner Z3 calls using a [`Context`] derived
+/// from the provided [`Config`].
+///
+/// Requires that the closure and return type be [`Send`] and [`Sync`] to prevent
+/// mixing Z3 objects belonging to multiple [`Context`]s. If you need to move Z3 data
+/// into or out of the closure, use [`PrepareSynchronized::synchronized()`].
+///
+/// # Examples
+///
+/// ```
+///  # use z3::{Config, Solver, with_z3_config};
+///  # fn make_my_assertions(s: &Solver) {}
+///  let mut cfg = Config::new();
+///  // Set a timeout of 5 seconds
+///  cfg.set_timeout_msec(5000);
+///
+///  with_z3_config(&cfg, || {
+///     let solver = Solver::new();
+///
+///     make_my_assertions(&solver);
+///
+///     // this check will have a five-second timeout
+///     solver.check()
+///  });
+/// ```
+///
+/// # See also
+///
+/// - [`with_z3_context`]
+pub fn with_z3_config<T: FnOnce() -> R + Send + Sync, R: Send + Sync>(
+    cfg: &Config,
+    callback: T,
+) -> R {
+    with_z3_context(&Context::new(cfg), callback)
 }

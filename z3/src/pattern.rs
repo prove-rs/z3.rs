@@ -1,7 +1,6 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-
 use z3_sys::*;
 
 use crate::{Context, Pattern, ast::Ast};
@@ -25,7 +24,8 @@ impl Pattern {
     ///
     /// - `ast::forall_const()`
     /// - `ast::exists_const()`
-    pub fn new(ctx: &Context, terms: &[&dyn Ast]) -> Pattern {
+    pub fn new(terms: &[&dyn Ast]) -> Pattern {
+        let ctx = &Context::thread_local();
         assert!(!terms.is_empty());
         assert!(terms.iter().all(|t| t.get_ctx().z3_ctx == ctx.z3_ctx));
 
@@ -35,11 +35,15 @@ impl Pattern {
             ctx: ctx.clone(),
             z3_pattern: unsafe {
                 let p = Z3_mk_pattern(
-                    ctx.z3_ctx.0,
+                    ctx.z3_ctx.as_ptr(),
                     terms.len().try_into().unwrap(),
                     terms.as_ptr() as *const Z3_ast,
+                )
+                .unwrap();
+                Z3_inc_ref(
+                    ctx.z3_ctx.as_ptr(),
+                    Z3_pattern_to_ast(ctx.z3_ctx.as_ptr(), p).unwrap(),
                 );
-                Z3_inc_ref(ctx.z3_ctx.0, p as Z3_ast);
                 p
             },
         }
@@ -48,7 +52,7 @@ impl Pattern {
 
 impl fmt::Debug for Pattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
-        let p = unsafe { Z3_pattern_to_string(self.ctx.z3_ctx.0, self.z3_pattern) };
+        let p = unsafe { Z3_pattern_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_pattern) };
         if p.is_null() {
             return Result::Err(fmt::Error);
         }
@@ -67,8 +71,9 @@ impl fmt::Display for Pattern {
 
 impl Drop for Pattern {
     fn drop(&mut self) {
+        let ast = unsafe { Z3_pattern_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_pattern) }.unwrap();
         unsafe {
-            Z3_dec_ref(self.ctx.z3_ctx.0, self.z3_pattern as Z3_ast);
+            Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), ast);
         }
     }
 }

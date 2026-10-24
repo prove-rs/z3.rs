@@ -1,5 +1,5 @@
-use crate::Context;
 use crate::translate::Translate;
+use crate::{Config, Context};
 use std::fmt::{Debug, Formatter};
 use std::sync::Mutex;
 
@@ -58,7 +58,7 @@ impl<T: Translate> Synchronized<T> {
     /// allowing it to be moved and referenced across threads
     /// soundly. None of this effects the original data.
     pub fn new(data: &T) -> Self {
-        let ctx = Context::default();
+        let ctx = Context::new(&Config::new());
         let data = data.translate(&ctx);
         Self(Mutex::new(data))
     }
@@ -67,7 +67,8 @@ impl<T: Translate> Synchronized<T> {
 impl<T: Translate> Synchronized<T> {
     /// Unwrap the `SendableHandle`, translate its contents for the given [`Context`]
     /// and return the inner data.
-    pub fn recover(&self, ctx: &Context) -> T {
+    pub fn recover(&self) -> T {
+        let ctx = &Context::thread_local();
         self.0.lock().unwrap().translate(ctx)
     }
 }
@@ -77,7 +78,7 @@ impl<T: Translate> Synchronized<T> {
 /// memory safety, at the expense of some extra cloning.
 impl<T: Translate> Clone for Synchronized<T> {
     fn clone(&self) -> Self {
-        let ctx = Context::default();
+        let ctx = Context::new(&Config::new());
         let data = self.0.lock().unwrap().translate(&ctx);
         Self(Mutex::new(data))
     }

@@ -1,9 +1,10 @@
-use crate::ast::IntoAstCtx;
 use crate::ast::{Ast, BV, Real, binop};
-use crate::ast::{Bool, IntoAst, unop, varop};
+use crate::ast::{Bool, unop, varop};
 use crate::{Context, Sort, Symbol};
+#[cfg(feature = "num")]
 use num::BigInt;
 use std::ffi::CString;
+use std::str::FromStr;
 use z3_sys::*;
 
 /// [`Ast`] node representing an integer value.
@@ -11,62 +12,70 @@ pub struct Int {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
 }
-
+#[cfg(feature = "num")]
 impl Int {
-    pub fn from_big_int(ctx: &Context, value: &BigInt) -> Int {
-        Int::from_str(ctx, &value.to_str_radix(10)).unwrap()
-    }
-
-    pub fn from_str(ctx: &Context, value: &str) -> Option<Int> {
-        let sort = Sort::int(ctx);
-        let ast = unsafe {
-            let int_cstring = CString::new(value).unwrap();
-            let numeral_ptr = Z3_mk_numeral(ctx.z3_ctx.0, int_cstring.as_ptr(), sort.z3_sort);
-            if numeral_ptr.is_null() {
-                return None;
-            }
-
-            numeral_ptr
-        };
-        Some(unsafe { Int::wrap(ctx, ast) })
+    pub fn from_big_int(value: &BigInt) -> Int {
+        Int::from_str(&value.to_str_radix(10)).unwrap()
     }
 }
 
 impl Int {
-    pub fn new_const<S: Into<Symbol>>(ctx: &Context, name: S) -> Int {
-        let sort = Sort::int(ctx);
+    pub fn new_const<S: Into<Symbol>>(name: S) -> Int {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
         unsafe {
             Self::wrap(ctx, {
-                Z3_mk_const(ctx.z3_ctx.0, name.into().as_z3_symbol(ctx), sort.z3_sort)
+                Z3_mk_const(
+                    ctx.z3_ctx.as_ptr(),
+                    name.into().as_z3_symbol(),
+                    sort.z3_sort,
+                )
+                .unwrap()
             })
         }
     }
 
-    pub fn fresh_const(ctx: &Context, prefix: &str) -> Int {
-        let sort = Sort::int(ctx);
+    /// Declare and create a fresh Integer uninterpreted constant with name `prefix`.
+    pub fn fresh_const(prefix: &str) -> Int {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
         unsafe {
             Self::wrap(ctx, {
                 let pp = CString::new(prefix).unwrap();
                 let p = pp.as_ptr();
-                Z3_mk_fresh_const(ctx.z3_ctx.0, p, sort.z3_sort)
+                Z3_mk_fresh_const(ctx.z3_ctx.as_ptr(), p, sort.z3_sort).unwrap()
             })
         }
     }
 
-    pub fn from_i64(ctx: &Context, i: i64) -> Int {
-        let sort = Sort::int(ctx);
-        unsafe { Self::wrap(ctx, Z3_mk_int64(ctx.z3_ctx.0, i, sort.z3_sort)) }
+    /// Create an AST node representing the integer value `i`.
+    pub fn from_i64(i: i64) -> Int {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_int64(ctx.z3_ctx.as_ptr(), i, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
-    pub fn from_u64(ctx: &Context, u: u64) -> Int {
-        let sort = Sort::int(ctx);
-        unsafe { Self::wrap(ctx, Z3_mk_unsigned_int64(ctx.z3_ctx.0, u, sort.z3_sort)) }
+    /// Create an AST node representing the integer value `u`.
+    pub fn from_u64(u: u64) -> Int {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_unsigned_int64(ctx.z3_ctx.as_ptr(), u, sort.z3_sort).unwrap(),
+            )
+        }
     }
 
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_get_numeral_int64(self.ctx.z3_ctx.0, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -77,7 +86,7 @@ impl Int {
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_get_numeral_uint64(self.ctx.z3_ctx.0, self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
                 Some(tmp)
             } else {
                 None
@@ -142,7 +151,12 @@ impl Int {
     }
 
     pub fn from_real(ast: &Real) -> Int {
-        unsafe { Self::wrap(&ast.ctx, Z3_mk_real2int(ast.ctx.z3_ctx.0, ast.z3_ast)) }
+        unsafe {
+            Self::wrap(
+                &ast.ctx,
+                Z3_mk_real2int(ast.ctx.z3_ctx.as_ptr(), ast.z3_ast).unwrap(),
+            )
+        }
     }
 
     /// Create a real from an integer.
@@ -160,11 +174,9 @@ impl Int {
     /// ```
     /// # use z3::{ast, Config, Context, SatResult, Solver};
     /// # use z3::ast::Ast;
-    /// # let cfg = Config::new();
-    /// # let ctx = Context::new(&cfg);
-    /// # let solver = Solver::new(&ctx);
-    /// let bv = ast::BV::new_const(&ctx, "x", 32);
-    /// solver.assert(&bv._eq(&ast::BV::from_i64(&ctx, -3, 32)));
+    /// # let solver = Solver::new();
+    /// let bv = ast::BV::new_const("x", 32);
+    /// solver.assert(&bv._eq(&ast::BV::from_i64(-3, 32)));
     ///
     /// let x = ast::Int::from_bv(&bv, true);
     ///
@@ -176,7 +188,7 @@ impl Int {
     pub fn from_bv(ast: &BV, signed: bool) -> Int {
         unsafe {
             Self::wrap(&ast.ctx, {
-                Z3_mk_bv2int(ast.ctx.z3_ctx.0, ast.z3_ast, signed)
+                Z3_mk_bv2int(ast.ctx.z3_ctx.as_ptr(), ast.z3_ast, signed).unwrap()
             })
         }
     }
@@ -223,15 +235,9 @@ impl Int {
 
 macro_rules! into_int {
     ($t:ty) => {
-        impl IntoAst<Int> for $t {
-            fn into_ast(self, a: &Int) -> Int {
-                Int::from_u64(&a.ctx, self as u64)
-            }
-        }
-
-        impl IntoAstCtx<Int> for $t {
-            fn into_ast_ctx(self, a: &Context) -> Int {
-                Int::from_u64(&a, self as u64)
+        impl From<$t> for Int {
+            fn from(value: $t) -> Self {
+                Int::from_u64(value as u64)
             }
         }
     };
@@ -239,15 +245,9 @@ macro_rules! into_int {
 
 macro_rules! into_int_signed {
     ($t:ty) => {
-        impl IntoAst<Int> for $t {
-            fn into_ast(self, a: &Int) -> Int {
-                Int::from_i64(&a.ctx, self as i64)
-            }
-        }
-
-        impl IntoAstCtx<Int> for $t {
-            fn into_ast_ctx(self, a: &Context) -> Int {
-                Int::from_i64(&a, self as i64)
+        impl From<$t> for Int {
+            fn from(value: $t) -> Self {
+                Int::from_i64(value as i64)
             }
         }
     };
@@ -263,8 +263,24 @@ into_int_signed!(i16);
 into_int_signed!(i32);
 into_int_signed!(i64);
 
-impl IntoAst<Int> for BigInt {
-    fn into_ast(self, a: &Int) -> Int {
-        Int::from_big_int(&a.ctx, &self)
+#[cfg(feature = "num")]
+impl From<BigInt> for Int {
+    fn from(value: BigInt) -> Self {
+        Int::from_big_int(&value)
+    }
+}
+
+// todo: when we add a proper error type return that instead
+impl FromStr for Int {
+    type Err = ();
+    fn from_str(value: &str) -> Result<Int, Self::Err> {
+        let ctx = &Context::thread_local();
+        let sort = Sort::int();
+        let ast = unsafe {
+            let int_cstring = CString::new(value).unwrap();
+            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), int_cstring.as_ptr(), sort.z3_sort)
+        }
+        .ok_or(())?;
+        Ok(unsafe { Int::wrap(ctx, ast) })
     }
 }
