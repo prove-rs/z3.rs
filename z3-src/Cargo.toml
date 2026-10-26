@@ -31,6 +31,7 @@ exclude = [
     "z3/codeql",
     "z3/a3",
     "z3/noarch",
+    "z3/fstar", # benchmark paths exceed Windows' MAX_PATH
     # Misc non-build files
     "z3/z3guide.jpeg",
     "z3/RELEASE_NOTES.md",
