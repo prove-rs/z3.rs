@@ -3,7 +3,7 @@ use crate::ast::{Bool, unop, varop};
 use crate::{Context, Sort, Symbol};
 #[cfg(feature = "num")]
 use num::BigInt;
-use std::ffi::CString;
+use std::ffi::{CStr, CString};
 use std::str::FromStr;
 use z3_sys::*;
 
@@ -96,54 +96,43 @@ impl Int {
 
     /// Create an AST node representing the integer value `i`.
     pub fn from_i128(i: i128) -> Int {
-        let ctx = &Context::thread_local();
-        let sort = Sort::int();
-        let c_str = CString::new(i.to_string()).unwrap();
-        unsafe {
-            Self::wrap(
-                ctx,
-                Z3_mk_numeral(ctx.z3_ctx.as_ptr(), c_str.as_ptr(), sort.z3_sort).unwrap(),
-            )
-        }
+        Int::from_str(&i.to_string()).unwrap()
     }
 
     /// Create an AST node representing the integer value `u`.
     pub fn from_u128(u: u128) -> Int {
-        let ctx = &Context::thread_local();
-        let sort = Sort::int();
-        let c_str = CString::new(u.to_string()).unwrap();
-        unsafe {
-            Self::wrap(
-                ctx,
-                Z3_mk_numeral(ctx.z3_ctx.as_ptr(), c_str.as_ptr(), sort.z3_sort).unwrap(),
-            )
-        }
+        Int::from_str(&u.to_string()).unwrap()
     }
 
+    /// Return the value of this integer as an `i128`.
+    ///
+    /// Returns `None` if this is not a numeral, or if the value does not fit in an `i128`.
     pub fn as_i128(&self) -> Option<i128> {
-        if !unsafe { Z3_is_numeral_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast) } {
-            return None;
-        }
-
-        let c_str = unsafe {
-            std::ffi::CStr::from_ptr(Z3_get_numeral_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast))
-        };
-
-        let s = c_str.to_string_lossy();
-        s.parse::<i128>().ok()
+        self.numeral_string()?.parse().ok()
     }
 
+    /// Return the value of this integer as a `u128`.
+    ///
+    /// Returns `None` if this is not a numeral, or if the value is negative or
+    /// does not fit in a `u128`.
     pub fn as_u128(&self) -> Option<u128> {
-        if !unsafe { Z3_is_numeral_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast) } {
+        self.numeral_string()?.parse().ok()
+    }
+
+    /// Return the decimal representation of this integer, if it is a numeral.
+    fn numeral_string(&self) -> Option<String> {
+        let z3_ctx = self.ctx.z3_ctx.as_ptr();
+        if !unsafe { Z3_is_numeral_ast(z3_ctx, self.z3_ast) } {
             return None;
         }
-
-        let c_str = unsafe {
-            std::ffi::CStr::from_ptr(Z3_get_numeral_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast))
-        };
-
-        let s = c_str.to_string_lossy();
-        s.parse::<u128>().ok()
+        let p = unsafe { Z3_get_numeral_string(z3_ctx, self.z3_ast) };
+        if p.is_null() {
+            return None;
+        }
+        unsafe { CStr::from_ptr(p) }
+            .to_str()
+            .ok()
+            .map(|s| s.to_string())
     }
 
     pub fn from_real(ast: &Real) -> Int {
@@ -258,6 +247,18 @@ into_int_signed!(i8);
 into_int_signed!(i16);
 into_int_signed!(i32);
 into_int_signed!(i64);
+
+impl From<u128> for Int {
+    fn from(value: u128) -> Self {
+        Int::from_u128(value)
+    }
+}
+
+impl From<i128> for Int {
+    fn from(value: i128) -> Self {
+        Int::from_i128(value)
+    }
+}
 
 #[cfg(feature = "num")]
 impl From<BigInt> for Int {

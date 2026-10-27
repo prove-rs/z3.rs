@@ -1869,11 +1869,21 @@ fn test_int_i128_u128() {
         assert_eq!(back, val, "u128 failed for {val}");
     }
 
-    let val: i128 = 12345;
-    let int_i = Int::from_i128(val);
-    let int_u = Int::from_u128(val as u128);
-    // Both should print the same SMT-LIB numeral string
-    assert_eq!(int_i.to_string(), int_u.to_string());
+    // Values outside the target range
+    assert_eq!(Int::from_i128(-1).as_u128(), None);
+    assert_eq!(Int::from_u128(u128::MAX).as_i128(), None);
+    let too_big = Int::add(&[Int::from_u128(u128::MAX), Int::from_u64(1)]);
+    assert_eq!(too_big.simplify().as_u128(), None);
+    let too_small = Int::sub(&[Int::from_i128(i128::MIN), Int::from_u64(1)]);
+    assert_eq!(too_small.simplify().as_i128(), None);
+
+    // Non-numerals
+    assert_eq!(Int::new_const("x").as_i128(), None);
+    assert_eq!(Int::new_const("x").as_u128(), None);
+
+    // From impls
+    assert_eq!(Int::from(i128::MIN).as_i128(), Some(i128::MIN));
+    assert_eq!(Int::from(u128::MAX).as_u128(), Some(u128::MAX));
 }
 
 #[test]
