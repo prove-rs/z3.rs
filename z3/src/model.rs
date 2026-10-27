@@ -23,9 +23,8 @@ impl Model {
 
     /// Creates a new, empty model, not tied to any particular solver.
     ///
-    /// Interpretations can be added with [`Model::add_const_interp`] and
-    /// [`Model::add_func_interp`], and the model can then be queried with e.g.
-    /// [`Model::eval`].
+    /// Interpretations can be added with [`Model::add_const_interp`], and the model can
+    /// then be queried with e.g. [`Model::eval`].
     ///
     /// # Examples
     /// ```
@@ -150,41 +149,6 @@ impl Model {
                 f.z3_func_decl,
                 value.get_z3_ast(),
             );
-        }
-    }
-
-    /// Creates a new, empty function interpretation for `f` in the `Model` with
-    /// `default_value` as its else value, replacing any existing interpretation.
-    ///
-    /// Entries can be added to the returned [`FuncInterp`] with [`FuncInterp::add_entry`];
-    /// changes to it are reflected in the `Model`.
-    ///
-    /// # Panics
-    ///
-    /// Panics if `f` has arity 0, or if the sort of `default_value` is not the range of `f`.
-    pub fn add_func_interp<T: Ast>(&self, f: &FuncDecl, default_value: &T) -> FuncInterp {
-        assert!(
-            f.ctx.z3_ctx == self.ctx.z3_ctx && default_value.get_ctx().z3_ctx == self.ctx.z3_ctx
-        );
-        assert!(
-            f.arity() > 0,
-            "add_func_interp requires a FuncDecl with arity > 0"
-        );
-        assert!(
-            default_value.get_sort() == self.range_sort(f),
-            "add_func_interp: default value sort does not match the FuncDecl's range"
-        );
-        unsafe {
-            FuncInterp::wrap(
-                &self.ctx,
-                Z3_add_func_interp(
-                    self.ctx.z3_ctx.as_ptr(),
-                    self.z3_mdl,
-                    f.z3_func_decl,
-                    default_value.get_z3_ast(),
-                )
-                .unwrap(),
-            )
         }
     }
 
