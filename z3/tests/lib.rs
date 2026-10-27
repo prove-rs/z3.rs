@@ -1674,7 +1674,9 @@ fn get_interp_of_arity_0_non_array_func_decl() {
 
 #[test]
 /// <https://github.com/prove-rs/z3.rs/issues/460>
-fn func_interp_get_else_on_partial_interp() {
+///
+/// See `tests/model_partial.rs` for the case where the else value is missing.
+fn func_interp_get_else_on_total_interp() {
     let f = FuncDecl::new("f", &[&Sort::int()], &Sort::int());
     let solver = Solver::new();
     solver.assert(
@@ -1687,9 +1689,8 @@ fn func_interp_get_else_on_partial_interp() {
     let model = solver.get_model().unwrap();
     let f_i = model.get_func_interp(&f).unwrap();
 
-    // The else value may or may not be assigned by Z3 depending on how the model was
-    // constructed; either way, `get_else` must not panic.
-    let _ = f_i.get_else();
+    // By default (`model.partial=false`) Z3 assigns an else value to every interpretation.
+    assert!(f_i.get_else().is_some());
 }
 
 #[test]

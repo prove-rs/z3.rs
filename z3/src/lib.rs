@@ -245,10 +245,12 @@ pub struct FuncInterp {
 
 /// The interpretation of a [`FuncDecl`] in a [`Model`].
 ///
-/// A `FuncDecl` with arity 0 (a constant) is interpreted directly as an [`ast::Dynamic`],
-/// unless it is an array-sorted constant that Z3 represents as an alias for another
-/// `FuncDecl`'s [`FuncInterp`] (an "as-array" value), in which case that [`FuncInterp`] is
-/// returned instead. A `FuncDecl` with arity greater than 0 is always interpreted as a
+/// A `FuncDecl` with arity 0 (a constant) is always interpreted as an [`ast::Dynamic`], and a
+/// `FuncDecl` with arity greater than 0 is always interpreted as a [`FuncInterp`].
+///
+/// An array-sorted constant may be interpreted as an "as-array" value, e.g.
+/// `(_ as-array k!0)`, which refers to the [`FuncInterp`] of another `FuncDecl`. It is still
+/// returned as [`Interp::Const`]; use [`Model::get_func_interp`] to resolve it to that
 /// [`FuncInterp`].
 ///
 /// # See also:
@@ -257,8 +259,7 @@ pub struct FuncInterp {
 pub enum Interp {
     /// The interpretation of a constant (arity-0 `FuncDecl`).
     Const(ast::Dynamic),
-    /// The interpretation of a function (arity > 0, or an array-sorted constant that
-    /// aliases another `FuncDecl`'s interpretation).
+    /// The interpretation of a function (arity > 0 `FuncDecl`).
     Func(FuncInterp),
 }
 

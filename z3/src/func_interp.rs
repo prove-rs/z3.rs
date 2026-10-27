@@ -62,6 +62,10 @@ impl FuncInterp {
     }
 
     /// Adds an entry to the function interpretation.
+    ///
+    /// `args.len()` must equal [`FuncInterp::get_arity`], and entries must cover disjoint
+    /// arguments; otherwise the interpretation becomes invalid. This mutates the
+    /// interpretation stored in the [`Model`](crate::Model) it was obtained from.
     pub fn add_entry(&self, args: &[Dynamic], value: &Dynamic) {
         let v: AstVector = args.into();
         unsafe {
@@ -90,7 +94,10 @@ impl FuncInterp {
     /// Returns the else value of the function interpretation.
     ///
     /// Returns `None` if the interpretation is partial, i.e. Z3 has not assigned a
-    /// default value for arguments not covered by [`FuncInterp::get_entries`].
+    /// default value for arguments not covered by [`FuncInterp::get_entries`]. This happens
+    /// e.g. when the `model.partial` parameter is enabled. To obtain a value for such
+    /// arguments anyway, use [`Model::eval`](crate::Model::eval) with `model_completion`
+    /// set.
     pub fn get_else(&self) -> Option<Dynamic> {
         let ast =
             unsafe { Z3_func_interp_get_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) }?;
@@ -98,6 +105,9 @@ impl FuncInterp {
     }
 
     /// Sets the else value of the function interpretation.
+    ///
+    /// This mutates the interpretation stored in the [`Model`](crate::Model) it was obtained
+    /// from.
     pub fn set_else(&self, ast: &Dynamic) {
         unsafe {
             Z3_func_interp_set_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, ast.z3_ast)
