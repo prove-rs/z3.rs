@@ -1,6 +1,6 @@
 [package]
 name = "z3-src"
-version = "503.1.0"
+version = "503.2.1"
 edition = "2024"
 description = "Source distribution of the Z3 SMT solver, for use as a build dependency"
 license = "MIT"
@@ -31,6 +31,7 @@ exclude = [
     "z3/codeql",
     "z3/a3",
     "z3/noarch",
+    "z3/fstar", # benchmark paths exceed Windows' MAX_PATH
     # Misc non-build files
     "z3/z3guide.jpeg",
     "z3/RELEASE_NOTES.md",

@@ -429,6 +429,20 @@ pub type Z3_on_clause_eh = ::core::option::Option<
     ),
 >;
 
+/// Client proof checker callback, registered with [`Z3_set_proof_check_callback`].
+///
+/// Must return a non-null, null-terminated UTF-8 report; returning null reports an error.
+///
+/// [`Z3_set_proof_check_callback`]: crate::Z3_set_proof_check_callback
+pub type Z3_proof_check_eh = ::core::option::Option<
+    unsafe extern "C" fn(
+        user_context: *mut ::core::ffi::c_void,
+        c: Z3_context,
+        proof: Z3_ast,
+        assertions: Z3_ast_vector,
+    ) -> Z3_string,
+>;
+
 /// Callback invoked when the solver makes a decision during propagation.
 pub type Z3_decide_eh = ::core::option::Option<
     unsafe extern "C" fn(
