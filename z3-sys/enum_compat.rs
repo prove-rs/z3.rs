@@ -41,9 +41,14 @@ pub(crate) const KNOWN_ENUM_BREAKS: &[Version] = &[
     // Z3 5.0.0 inserted 13 Z3_OP_FINITE_SET_* variants into
     // Z3_decl_kind before Z3_OP_INTERNAL, shifting Z3_OP_INTERNAL,
     // Z3_OP_RECURSIVE, and Z3_OP_UNINTERPRETED from 45100-45102 to
-    // 49165-49167. This is the numbering currently committed in
-    // src/generated/enums.rs.
+    // 49165-49167.
     version!(5, 0, 0),
+    // Z3 5.3.0 inserted Z3_OP_SEQ_POWER (1573) into the sequence range of
+    // Z3_decl_kind, shifting Z3_OP_STR_TO_INT through Z3_OP_CHAR_IS_DIGIT
+    // up by one. Introduced by commit 6aa9416d4 ("Introduce powers in the
+    // legacy solver"). This is the numbering currently committed in
+    // src/generated/enums.rs.
+    version!(5, 3, 0),
 ];
 
 /// Warns (via `cargo:warning`) if `detected` falls outside the version era
