@@ -3,7 +3,8 @@ use std::{ffi::CStr, iter::FusedIterator};
 use z3_sys::*;
 
 use crate::{
-    AstVector, Context, FuncDecl, FuncInterp, Model, Optimize, Solver, Sort, Translate, ast::Ast,
+    AstVector, Context, FuncDecl, FuncInterp, Interp, Model, Optimize, Solver, Sort, Translate,
+    ast::{Ast, Dynamic},
 };
 
 impl Model {
@@ -18,6 +19,23 @@ impl Model {
             let m = Z3_mk_model(ctx.z3_ctx.as_ptr()).expect("Cannot allocate new Z3_model.");
             Self::wrap(ctx, m)
         }
+    }
+
+    /// Creates a new, empty model, not tied to any particular solver.
+    ///
+    /// Interpretations can be added with [`Model::add_const_interp`], and the model can
+    /// then be queried with e.g. [`Model::eval`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{Model, ast::{Ast, Int}};
+    /// let x = Int::new_const("x");
+    /// let model = Model::new();
+    /// model.add_const_interp(&x.decl(), &Int::from_i64(3));
+    /// assert_eq!(model.eval(&(&x + 1), true).unwrap().as_i64(), Some(4));
+    /// ```
+    pub fn new() -> Model {
+        Self::new_empty(&Context::thread_local())
     }
 
     unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
@@ -55,40 +73,91 @@ impl Model {
         Some(unsafe { T::wrap(&self.ctx, ret?) })
     }
 
-    /// Returns the interpretation of the given `f` in the `Model`
-    /// Returns `None` if there is no interpretation in the `Model`
-    pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp> {
+    /// Returns the interpretation of the given `f` in the `Model`, regardless of whether
+    /// `f` is a constant (arity 0) or a function (arity > 0).
+    ///
+    /// The variant is determined by arity alone: arity-0 declarations always yield
+    /// [`Interp::Const`] and others always yield [`Interp::Func`]. An array-sorted
+    /// constant may be returned as an "as-array" value such as `(_ as-array k!0)`; this is
+    /// still a valid array value (usable with `select` or [`Model::eval`]). Use
+    /// [`Model::get_func_interp`] to resolve it to the underlying function table.
+    ///
+    /// Returns `None` if there is no interpretation in the `Model`. Z3 uses this to mean that
+    /// the value of `f` does not matter; [`Model::eval`] with `model_completion` set will
+    /// still produce a value for it.
+    pub fn get_interp(&self, f: &FuncDecl) -> Option<Interp> {
         if f.arity() == 0 {
             let ret = unsafe {
                 Z3_model_get_const_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
             }?;
-            let sort_kind = unsafe {
-                Z3_get_sort_kind(
-                    self.ctx.z3_ctx.as_ptr(),
-                    Z3_get_range(self.ctx.z3_ctx.as_ptr(), f.z3_func_decl).unwrap(),
-                )
-            };
-            match sort_kind {
-                SortKind::Array => {
-                    if unsafe { Z3_is_as_array(self.ctx.z3_ctx.as_ptr(), ret) } {
-                        let fd = unsafe {
-                            FuncDecl::wrap(
-                                &self.ctx,
-                                Z3_get_as_array_func_decl(self.ctx.z3_ctx.as_ptr(), ret).unwrap(),
-                            )
-                        };
-                        self.get_func_interp(&fd)
-                    } else {
-                        None
-                    }
-                }
-                _ => None,
-            }
+            Some(Interp::Const(unsafe { Dynamic::wrap(&self.ctx, ret) }))
         } else {
             let ret = unsafe {
                 Z3_model_get_func_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
-            };
-            Some(unsafe { FuncInterp::wrap(&self.ctx, ret?) })
+            }?;
+            Some(Interp::Func(unsafe { FuncInterp::wrap(&self.ctx, ret) }))
+        }
+    }
+
+    /// Returns the function-table interpretation of the given `f` in the `Model`.
+    ///
+    /// If `f` is an array-sorted constant whose value is an "as-array" alias for another
+    /// function declaration (e.g. `(_ as-array k!0)`), the interpretation of that aliased
+    /// function is returned. Note that mutating the result (via [`FuncInterp::add_entry`]
+    /// or [`FuncInterp::set_else`]) then mutates the aliased function's interpretation.
+    ///
+    /// Returns `None` if `f` has no interpretation in the `Model`, or if its interpretation
+    /// is not a function table (see [`Model::get_interp`] and [`Model::get_const_interp`]
+    /// for that case).
+    pub fn get_func_interp(&self, f: &FuncDecl) -> Option<FuncInterp> {
+        match self.get_interp(f)? {
+            Interp::Func(func_interp) => Some(func_interp),
+            Interp::Const(value) => {
+                let fd = value.as_array()?.as_array_func_decl()?;
+                self.get_func_interp(&fd)
+            }
+        }
+    }
+
+    /// Returns `true` if the `Model` assigns an interpretation to `f`, regardless of its
+    /// arity.
+    pub fn has_interp(&self, f: &FuncDecl) -> bool {
+        unsafe { Z3_model_has_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl) }
+    }
+
+    /// Assigns `value` as the interpretation of the constant `f` in the `Model`, replacing
+    /// any existing interpretation.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `f` does not have arity 0, or if the sort of `value` is not the range of `f`.
+    pub fn add_const_interp<T: Ast>(&self, f: &FuncDecl, value: &T) {
+        assert!(f.ctx.z3_ctx == self.ctx.z3_ctx && value.get_ctx().z3_ctx == self.ctx.z3_ctx);
+        assert_eq!(
+            f.arity(),
+            0,
+            "add_const_interp requires an arity-0 FuncDecl"
+        );
+        assert!(
+            value.get_sort() == self.range_sort(f),
+            "add_const_interp: value sort does not match the FuncDecl's range"
+        );
+        unsafe {
+            Z3_add_const_interp(
+                self.ctx.z3_ctx.as_ptr(),
+                self.z3_mdl,
+                f.z3_func_decl,
+                value.get_z3_ast(),
+            );
+        }
+    }
+
+    fn range_sort(&self, f: &FuncDecl) -> Sort {
+        unsafe {
+            Sort::wrap(
+                &self.ctx,
+                Z3_get_range(self.ctx.z3_ctx.as_ptr(), f.z3_func_decl).unwrap(),
+            )
         }
     }
 
@@ -165,6 +234,12 @@ impl Model {
             let u = self.get_sort_universe(&s)?;
             Some((s, u))
         })
+    }
+}
+
+impl Default for Model {
+    fn default() -> Self {
+        Self::new()
     }
 }
 

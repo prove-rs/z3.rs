@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [503.2.2](https://github.com/prove-rs/z3.rs/compare/z3-src-v503.2.1...z3-src-v503.2.2) - 2026-10-27
+
+### Fixed
+
+- update z3 static windows vendored build library name ([#605](https://github.com/prove-rs/z3.rs/pull/605)) (by @toolCHAINZ)
+
+## [503.2.1](https://github.com/prove-rs/z3.rs/compare/z3-src-v503.2.0...z3-src-v503.2.1) - 2026-10-26
+
+### Fixed
+
+- ignore z3 fstar directory which cannot be extracted on windows
+
 ## [501.0.1](https://github.com/prove-rs/z3.rs/compare/z3-src-v501.0.0...z3-src-v501.0.1) - 2026-09-23
 
 ### Added

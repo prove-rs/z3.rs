@@ -149,6 +149,32 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_context`]
     pub fn Z3_del_context(c: Z3_context);
+    /// Register a client proof checker for `c`.
+    ///
+    /// Replaces the previous callback and user data. Passing a null callback
+    /// unregisters it. The client owns the callback and user data and must keep
+    /// them alive until replacement, unregistration, or context destruction.
+    ///
+    /// SMT-LIB evaluation through [`Z3_eval_smtlib2_string`] invokes the callback
+    /// after an unsatisfiable check-sat,
+    /// check-sat-assuming, or check-sat-using command. Automatic reports go to the
+    /// command context's diagnostic stream, included in the returned evaluation
+    /// text. Ordinary [`Z3_solver_check`] calls do not invoke it automatically.
+    ///
+    /// Automatic checking requires proof production to be enabled before
+    /// assertions are added. An unavailable proof is reported as a command error.
+    /// The automatic assertion vector contains the active input assertions and
+    /// current check assumptions. Named assertions tracked for unsat cores are
+    /// represented by their guarded assertions and tracking literals, matching
+    /// the proof premises.
+    ///
+    /// Registration survives SMT-LIB reset commands. The report is opaque:
+    /// Z3 does not interpret it or change the solver's satisfiability result.
+    pub fn Z3_set_proof_check_callback(
+        c: Z3_context,
+        user_context: *mut ::core::ffi::c_void,
+        callback: Z3_proof_check_eh,
+    );
     /// Increment the reference counter of the given AST.
     /// The context `c` should have been created using [`Z3_mk_context_rc`].
     /// This function is a NOOP if `c` was created using [`Z3_mk_context`].
@@ -290,6 +316,20 @@ unsafe extern "C" {
     ///
     /// Note that this type is not a floating point number.
     pub fn Z3_mk_real_sort(c: Z3_context) -> Option<Z3_sort>;
+    /// Create the Complex sort. Complex numbers are pairs of Reals.
+    ///
+    /// Use `Z3_mk_complex` to construct values and `Z3_mk_real_part` and
+    /// `Z3_mk_imag_part` to access their components. The arithmetic APIs
+    /// for addition, subtraction, multiplication, negation, and division
+    /// accept Complex expressions. Ordering and exponentiation do not.
+    pub fn Z3_mk_complex_sort(c: Z3_context) -> Option<Z3_sort>;
+    /// Create a complex number with the given real and imaginary components.
+    /// Integer components are coerced to Real.
+    pub fn Z3_mk_complex(c: Z3_context, re: Z3_ast, im: Z3_ast) -> Option<Z3_ast>;
+    /// Return the real component of a Complex expression.
+    pub fn Z3_mk_real_part(c: Z3_context, z: Z3_ast) -> Option<Z3_ast>;
+    /// Return the imaginary component of a Complex expression.
+    pub fn Z3_mk_imag_part(c: Z3_context, z: Z3_ast) -> Option<Z3_ast>;
     /// Create a bit-vector type of the given size.
     ///
     /// This type can also be seen as a machine integer.
@@ -782,7 +822,7 @@ unsafe extern "C" {
     /// Create an AST node representing `args[0] + ... + args[num_args-1]`.
     ///
     /// The array `args` must have `num_args` elements.
-    /// All arguments must have int or real sort.
+    /// All arguments must have Int, Real, or Complex sort.
     ///
     /// **Remark:** The number of arguments must be greater than zero.
     pub fn Z3_mk_add(
@@ -793,7 +833,7 @@ unsafe extern "C" {
     /// Create an AST node representing `args[0] * ... * args[num_args-1]`.
     ///
     /// The array `args` must have `num_args` elements.
-    /// All arguments must have int or real sort.
+    /// All arguments must have Int, Real, or Complex sort.
     ///
     /// **Remark:** Z3 has limited support for non-linear arithmetic.
     /// **Remark:** The number of arguments must be greater than zero.
@@ -805,7 +845,7 @@ unsafe extern "C" {
     /// Create an AST node representing `args[0] - ... - args[num_args - 1]`.
     ///
     /// The array `args` must have `num_args` elements.
-    /// All arguments must have int or real sort.
+    /// All arguments must have Int, Real, or Complex sort.
     ///
     /// **Remark:** The number of arguments must be greater than zero.
     pub fn Z3_mk_sub(
@@ -815,13 +855,15 @@ unsafe extern "C" {
     ) -> Option<Z3_ast>;
     /// Create an AST node representing `- arg`.
     ///
-    /// The arguments must have int or real type.
+    /// The argument must have Int, Real, or Complex sort.
     pub fn Z3_mk_unary_minus(c: Z3_context, arg: Z3_ast) -> Option<Z3_ast>;
     /// Create an AST node representing `arg1 div arg2`.
     ///
-    /// The arguments must either both have int type or both have real type.
-    /// If the arguments have int type, then the result type is an int type, otherwise the
-    /// the result type is real.
+    /// The arguments must have Int, Real, or Complex sort. Int arguments use
+    /// integer division. Real and Complex arguments use their respective division
+    /// operations, with Int embedded in Real and Int/Real embedded in Complex.
+    /// Complex division is lowered to Real component division; at a zero Complex
+    /// denominator, both components are the same totalized Real `0`/0 value.
     pub fn Z3_mk_div(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
     /// Create an AST node representing `arg1 mod arg2`.
     ///

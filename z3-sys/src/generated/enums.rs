@@ -111,6 +111,9 @@ pub enum SortKind {
     /// Corresponds to `Z3_FINITE_FIELD_SORT` in the C API.
     #[doc(alias = "Z3_FINITE_FIELD_SORT")]
     FiniteField = 15,
+    /// Corresponds to `Z3_COMPLEX_SORT` in the C API.
+    #[doc(alias = "Z3_COMPLEX_SORT")]
+    Complex = 16,
     /// Corresponds to `Z3_UNKNOWN_SORT` in the C API.
     #[doc(alias = "Z3_UNKNOWN_SORT")]
     Unknown = 1000,
@@ -243,6 +246,15 @@ pub enum DeclKind {
     /// Corresponds to `Z3_OP_ABS` in the C API.
     #[doc(alias = "Z3_OP_ABS")]
     Abs = 530,
+    /// Corresponds to `Z3_OP_COMPLEX` in the C API.
+    #[doc(alias = "Z3_OP_COMPLEX")]
+    Complex = 531,
+    /// Corresponds to `Z3_OP_REAL_PART` in the C API.
+    #[doc(alias = "Z3_OP_REAL_PART")]
+    RealPart = 532,
+    /// Corresponds to `Z3_OP_IMAG_PART` in the C API.
+    #[doc(alias = "Z3_OP_IMAG_PART")]
+    ImagPart = 533,
     /// Array store. It satisfies select(store(a,i,v),j) = if i = j then v else select(a,j).
     /// Array store takes at least 3 arguments.
     #[doc(alias = "Z3_OP_STORE")]
@@ -484,6 +496,9 @@ pub enum DeclKind {
     /// It has the same semantics as Z3_OP_BSMOD, but created in a context where the second operand can be assumed to be non-zero.
     #[doc(alias = "Z3_OP_BSMOD_I")]
     BsmodI = 1084,
+    /// Construct a bit-vector from Boolean bits, least-significant bit first.
+    #[doc(alias = "Z3_OP_MKBV")]
+    Mkbv = 1085,
     /// Undef/Null proof object.
     #[doc(alias = "Z3_OP_PR_UNDEF")]
     PrUndef = 1280,
@@ -891,6 +906,12 @@ pub enum DeclKind {
     /// of literal positions from the main clause and side clause.
     #[doc(alias = "Z3_OP_PR_HYPER_RESOLVE")]
     PrHyperResolve = 1321,
+    /// Clausal proof theory axiom addition, optionally carrying a proof certificate.
+    #[doc(alias = "Z3_OP_PR_TH_ASSUMPTION_ADD")]
+    PrThAssumptionAdd = 1322,
+    /// Clausal proof theory lemma addition, optionally carrying a proof certificate.
+    #[doc(alias = "Z3_OP_PR_TH_LEMMA_ADD")]
+    PrThLemmaAdd = 1323,
     /// Insert a record into a relation.
     /// The function takes `n`+1 arguments, where the first argument is the relation and the remaining `n` elements
     /// correspond to the `n` columns of the relation.
