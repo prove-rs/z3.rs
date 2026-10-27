@@ -25,11 +25,17 @@ impl Artifacts {
     /// Emit `cargo:rustc-link-*` directives. Call this from your `build.rs`.
     pub fn print_cargo_metadata(&self) {
         println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
-        // MSVC produces `libz3.lib`. MinGW (including the `gnullvm` Rust
+        // MSVC produces `libz3-static.lib` (Z3 >= 5.3.2, so it doesn't collide
+        // with the shared build's import library) or `libz3.lib` (older Z3,
+        // e.g. via `Z3_SRC_SOURCE_DIR`). MinGW (including the `gnullvm` Rust
         // target) follows the Unix archive naming convention and produces
         // `libz3.a`, which must be requested as `z3` rather than `libz3`.
         if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
-            println!("cargo:rustc-link-lib=static=libz3");
+            if self.lib_dir.join("libz3-static.lib").exists() {
+                println!("cargo:rustc-link-lib=static=libz3-static");
+            } else {
+                println!("cargo:rustc-link-lib=static=libz3");
+            }
         } else {
             println!("cargo:rustc-link-lib=static=z3");
         }
