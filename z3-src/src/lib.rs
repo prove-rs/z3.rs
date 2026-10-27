@@ -25,9 +25,17 @@ impl Artifacts {
     /// Emit `cargo:rustc-link-*` directives. Call this from your `build.rs`.
     pub fn print_cargo_metadata(&self) {
         println!("cargo:rustc-link-search=native={}", self.lib_dir.display());
-        // Windows uses "libz3", Unix uses "z3"
-        if cfg!(target_os = "windows") {
-            println!("cargo:rustc-link-lib=static=libz3");
+        // MSVC produces `libz3-static.lib` (Z3 >= 5.3.2, so it doesn't collide
+        // with the shared build's import library) or `libz3.lib` (older Z3,
+        // e.g. via `Z3_SRC_SOURCE_DIR`). MinGW (including the `gnullvm` Rust
+        // target) follows the Unix archive naming convention and produces
+        // `libz3.a`, which must be requested as `z3` rather than `libz3`.
+        if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
+            if self.lib_dir.join("libz3-static.lib").exists() {
+                println!("cargo:rustc-link-lib=static=libz3-static");
+            } else {
+                println!("cargo:rustc-link-lib=static=libz3");
+            }
         } else {
             println!("cargo:rustc-link-lib=static=z3");
         }
@@ -102,23 +110,29 @@ fn build_cmake(src_dir: &Path) -> PathBuf {
         }
     }
 
-    if cfg!(target_os = "windows") {
-        // -MP enables parallel MSVC compilation, but conflicts with compiler launchers
-        // like sccache which handle parallelism per-invocation and cannot cache -MP mode.
-        if env::var("CMAKE_CXX_COMPILER_LAUNCHER").is_err() {
-            cfg.cxxflag("-MP");
-            cfg.build_arg("-m");
-        }
+    if env::var("CARGO_CFG_TARGET_OS").as_deref() == Ok("windows") {
         cfg.cxxflag("-DWIN32");
         cfg.cxxflag("-D_WINDOWS");
 
-        let target_features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
-        let runtime = if target_features.split(',').any(|f| f.trim() == "crt-static") {
-            "MultiThreaded"
-        } else {
-            "MultiThreadedDLL"
-        };
-        cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", runtime);
+        // These options are specific to Microsoft's compiler and runtime.
+        // Windows GNU targets are compiled by GCC-compatible clang when using
+        // cargo-zigbuild.
+        if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
+            // -MP enables parallel MSVC compilation, but conflicts with compiler launchers
+            // like sccache which handle parallelism per-invocation and cannot cache -MP mode.
+            if env::var("CMAKE_CXX_COMPILER_LAUNCHER").is_err() {
+                cfg.cxxflag("-MP");
+                cfg.build_arg("-m");
+            }
+
+            let target_features = env::var("CARGO_CFG_TARGET_FEATURE").unwrap_or_default();
+            let runtime = if target_features.split(',').any(|f| f.trim() == "crt-static") {
+                "MultiThreaded"
+            } else {
+                "MultiThreadedDLL"
+            };
+            cfg.define("CMAKE_MSVC_RUNTIME_LIBRARY", runtime);
+        }
     } else if env::var("TARGET").unwrap().starts_with("wasm") {
         // Z3 uses exceptions, which must be explicitly enabled for WASM.
         cfg.no_default_flags(true).cxxflag("-fexceptions");

@@ -163,8 +163,8 @@ fn prepare_z3_src(z3_tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     let current_series = read_z3src_dep_series(&z3_sys_toml)?;
     set_toml_field(
         &z3_sys_toml,
-        &format!("z3-src = {{ version = \"{current_series}\", optional = true }}"),
-        &format!("z3-src = {{ version = \"{series}\", optional = true }}"),
+        &format!("z3-src = {{ version = \"{current_series}\""),
+        &format!("z3-src = {{ version = \"{series}\""),
     )?;
 
     // 5. Post-action guidance.

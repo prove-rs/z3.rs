@@ -1431,8 +1431,8 @@ fn test_tactic_conditions() {
 fn test_probe_debug() {
     let _v: Vec<String> = Probe::list_all().into_iter().map(|x| x.unwrap()).collect();
     assert_eq!(
-        "A probe to give an upper bound of Ackermann congruence lemmas that a formula might generate.",
-        Probe::describe("ackr-bound-probe").unwrap(),
+        "true if the goal is in QF_BV.",
+        Probe::describe("is-qfbv").unwrap(),
     );
 }
 
@@ -1969,6 +1969,42 @@ fn test_model_iter() {
         consume_model(model),
         vec![ast::Dynamic::new_const("a", &Sort::int())]
     );
+}
+
+#[test]
+fn test_int_i128_u128() {
+    let cases_i128: [i128; 5] = [0, 42, -1234567890123456789, i128::MAX, i128::MIN];
+    let cases_u128: [u128; 3] = [0, 42, u128::MAX];
+
+    // Check i128
+    for &val in &cases_i128 {
+        let int_ast = Int::from_i128(val);
+        let back = int_ast.as_i128().unwrap();
+        assert_eq!(back, val, "i128 failed for {val}");
+    }
+
+    // Check u128
+    for &val in &cases_u128 {
+        let int_ast = Int::from_u128(val);
+        let back = int_ast.as_u128().unwrap();
+        assert_eq!(back, val, "u128 failed for {val}");
+    }
+
+    // Values outside the target range
+    assert_eq!(Int::from_i128(-1).as_u128(), None);
+    assert_eq!(Int::from_u128(u128::MAX).as_i128(), None);
+    let too_big = Int::add(&[Int::from_u128(u128::MAX), Int::from_u64(1)]);
+    assert_eq!(too_big.simplify().as_u128(), None);
+    let too_small = Int::sub(&[Int::from_i128(i128::MIN), Int::from_u64(1)]);
+    assert_eq!(too_small.simplify().as_i128(), None);
+
+    // Non-numerals
+    assert_eq!(Int::new_const("x").as_i128(), None);
+    assert_eq!(Int::new_const("x").as_u128(), None);
+
+    // From impls
+    assert_eq!(Int::from(i128::MIN).as_i128(), Some(i128::MIN));
+    assert_eq!(Int::from(u128::MAX).as_u128(), Some(u128::MAX));
 }
 
 #[test]

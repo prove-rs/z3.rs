@@ -7,28 +7,36 @@ mod enum_compat;
 mod version;
 
 #[cfg(feature = "gh-release")]
-const GH_RELEASE_VERSION: &str = "5.1.0";
+const GH_RELEASE_VERSION: &str = "5.3.2";
 
-macro_rules! assert_one_of_features {
+/// Returns the single active feature from a mutually exclusive set, or `None` if zero or
+/// more than one is enabled. When more than one is enabled (e.g. a tool like
+/// cargo-semver-checks builds with every feature turned on), we warn and fall back to system
+/// detection via pkg-config rather than silently picking one of the (potentially expensive,
+/// e.g. `vendored`) backends.
+macro_rules! pick_one_of_features {
     ($($feature:literal),*) => {{
-        let mut active_count = 0;
-        let mut active_feature = None;
-        $(
-            if cfg!(feature = $feature) {
-                active_count += 1;
-                active_feature = Some($feature);
+        let active: Vec<&str> = [$((cfg!(feature = $feature), $feature)),*]
+            .into_iter()
+            .filter_map(|(enabled, f)| enabled.then_some(f))
+            .collect();
+        match active.as_slice() {
+            [only] => Some(*only),
+            [] => None,
+            _ => {
+                println!(
+                    "cargo:warning=Multiple mutually exclusive features enabled ({}); \
+                     falling back to system detection via pkg-config",
+                    active.join(", "),
+                );
+                None
             }
-        )*
-        if active_count > 1 {
-            panic!("Only one of the features [{}] can be active at a time", stringify!($($feature),*));
         }
-        active_feature
     }};
 }
 
 fn main() {
-    // Check that only one of the mutually exclusive features is active
-    let active_feature = assert_one_of_features!("vendored", "vcpkg", "gh-release");
+    let active_feature = pick_one_of_features!("vendored", "gh-release", "vcpkg");
 
     println!("cargo:rerun-if-changed=build.rs");
     println!("cargo:rerun-if-env-changed=Z3_SYS_Z3_VERSION");
@@ -189,7 +197,7 @@ mod gh_release {
             "cargo:rustc-link-search=native={}",
             lib.parent().unwrap().display()
         );
-        if cfg!(target_os = "windows") {
+        if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
             println!("cargo:rustc-link-lib=static=libz3");
         } else {
             println!("cargo:rustc-link-lib=static=z3");
@@ -235,7 +243,7 @@ mod gh_release {
             println!("Found cached z3 at {}", z3_dir.display());
         }
 
-        let lib = if cfg!(target_os = "windows") {
+        let lib = if target_os == "windows" {
             z3_dir.join("bin/libz3.lib")
         } else {
             z3_dir.join("bin/libz3.a")
