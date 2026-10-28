@@ -56,6 +56,15 @@ impl Sort {
         }
     }
 
+    /// Create the Complex sort. Complex numbers are pairs of Reals.
+    #[cfg(z3_5_3_1)]
+    pub fn complex() -> Sort {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Self::wrap(ctx, Z3_mk_complex_sort(ctx.z3_ctx.as_ptr()).unwrap())
+        }
+    }
+
     pub fn float(ebits: u32, sbits: u32) -> Sort {
         unsafe {
             let ctx = &Context::thread_local();
