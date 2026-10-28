@@ -11,7 +11,7 @@ use z3_sys::*;
 /// Division by zero is totalized: at a zero denominator both components take
 /// the same (unspecified) Real `0/0` value.
 ///
-/// Requires Z3 5.3.1 or newer.
+/// Requires Z3 5.3.2 or newer.
 pub struct Complex {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,

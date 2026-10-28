@@ -57,7 +57,7 @@ impl Sort {
     }
 
     /// Create the Complex sort. Complex numbers are pairs of Reals.
-    #[cfg(z3_5_3_1)]
+    #[cfg(z3_5_3_2)]
     pub fn complex() -> Sort {
         unsafe {
             let ctx = &Context::thread_local();

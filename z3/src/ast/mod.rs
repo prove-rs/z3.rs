@@ -16,7 +16,7 @@ mod array;
 mod bool;
 mod bv;
 mod char;
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 mod complex;
 mod datatype;
 mod dynamic;
@@ -40,7 +40,7 @@ pub use array::Array;
 pub use bool::Bool;
 pub use bv::BV;
 pub use char::Char;
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 pub use complex::Complex;
 pub use datatype::Datatype;
 pub use dynamic::Dynamic;
@@ -613,9 +613,9 @@ impl_ast!(Int);
 impl_from_try_into_dynamic!(Int, as_int);
 impl_ast!(Real);
 impl_from_try_into_dynamic!(Real, as_real);
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 impl_ast!(Complex);
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 impl_from_try_into_dynamic!(Complex, as_complex);
 impl_ast!(Float);
 impl_from_try_into_dynamic!(Float, as_float);

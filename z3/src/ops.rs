@@ -6,7 +6,7 @@ use std::ops::{
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
 };
 
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 use crate::ast::Complex;
 use crate::ast::{BV, Int, Real};
 
@@ -132,7 +132,7 @@ impl_bin_assign_trait!(Real::sub = SubAssign::sub_assign);
 impl_bin_assign_trait!(Real::mul = MulAssign::mul_assign);
 impl_bin_assign_trait!(Real::div = DivAssign::div_assign);
 
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 mod complex_ops {
     use super::*;
 
@@ -237,7 +237,7 @@ macro_rules! integer_sum_product {
 
 integer_sum_product!(Int::from_u64(0), Int::from_u64(1), Int);
 integer_sum_product!(Real::from_rational(0, 1), Real::from_rational(1, 1), Real);
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 integer_sum_product!(
     Complex::from_rationals(0, 1, 0, 1),
     Complex::from_rationals(1, 1, 0, 1),

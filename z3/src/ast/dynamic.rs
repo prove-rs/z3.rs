@@ -1,4 +1,4 @@
-#[cfg(z3_5_3_1)]
+#[cfg(z3_5_3_2)]
 use crate::ast::Complex;
 use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set};
 use crate::{Context, Sort, Symbol, ast};
@@ -76,7 +76,7 @@ impl Dynamic {
     }
 
     /// Returns `None` if the `Dynamic` is not actually a `Complex`
-    #[cfg(z3_5_3_1)]
+    #[cfg(z3_5_3_2)]
     pub fn as_complex(&self) -> Option<Complex> {
         match self.sort_kind() {
             SortKind::Complex => Some(unsafe { Complex::wrap(&self.ctx, self.z3_ast) }),

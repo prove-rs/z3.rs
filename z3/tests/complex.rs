@@ -1,4 +1,4 @@
-#![cfg(z3_5_3_1)]
+#![cfg(z3_5_3_2)]
 
 use z3::ast::{Ast, Complex, Dynamic, Int, Real};
 use z3::{SatResult, Solver, SortKind};
