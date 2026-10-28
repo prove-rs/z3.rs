@@ -9,6 +9,7 @@ use std::env;
 /// must be exact `(major, minor, patch)` triples, not just `(major, minor)`.
 const KNOWN_THRESHOLDS: &[(u32, u32, u32)] = &[
     (4, 16, 0), // Optimize::solutions(), Translate/Clone for Optimize (see src/optimize.rs)
+    (5, 3, 1),  // ast::Complex (see src/ast/complex.rs)
 ];
 
 fn main() {

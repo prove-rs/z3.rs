@@ -1,3 +1,5 @@
+#[cfg(z3_5_3_1)]
+use crate::ast::Complex;
 use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set};
 use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
@@ -69,6 +71,15 @@ impl Dynamic {
     pub fn as_real(&self) -> Option<Real> {
         match self.sort_kind() {
             SortKind::Real => Some(unsafe { Real::wrap(&self.ctx, self.z3_ast) }),
+            _ => None,
+        }
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `Complex`
+    #[cfg(z3_5_3_1)]
+    pub fn as_complex(&self) -> Option<Complex> {
+        match self.sort_kind() {
+            SortKind::Complex => Some(unsafe { Complex::wrap(&self.ctx, self.z3_ast) }),
             _ => None,
         }
     }
