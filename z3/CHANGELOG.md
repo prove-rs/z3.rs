@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.22.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.1...z3-v0.22.0) - 2026-10-28
+
+### Added
+
+- add FiniteSet sort and operations (Z3 5.0) ([#586](https://github.com/prove-rs/z3.rs/pull/586)) (by @toolCHAINZ) - #586
+- add Complex sort and ast::Complex (Z3 >= 5.3.1) ([#610](https://github.com/prove-rs/z3.rs/pull/610)) (by @toolCHAINZ) - #610
+- [**breaking**] model construction APIs and Interp for constant interpretations ([#590](https://github.com/prove-rs/z3.rs/pull/590)) (by @toolCHAINZ) - #590
+
+### Fixed
+
+- gate ast::Complex on Z3 5.3.2, not 5.3.1 (by @toolCHAINZ)
+
+### Other
+
+- *(CI)* do not run test_finite_set_map on vcpkg (by @toolCHAINZ)
+- *(z3-sys)* upgrade zip to 9 for security fixes ([#602](https://github.com/prove-rs/z3.rs/pull/602)) (by @SDAChess)
+- remove func interp code ([#607](https://github.com/prove-rs/z3.rs/pull/607)) (by @toolCHAINZ) - #607
+- Add i128 and u128 Support for Integer ASTs ([#387](https://github.com/prove-rs/z3.rs/pull/387)) (by @mehrad31415) - #387
+- [**breaking**] update z3-src for 5.3.0 and bump z3-sys bindings to 5.3.0 ([#598](https://github.com/prove-rs/z3.rs/pull/598)) (by @toolCHAINZ) - #598
+
+### Contributors
+
+* @toolCHAINZ
+* @SDAChess
+* @mehrad31415
+
 ## [0.21.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.0...z3-v0.21.1) - 2026-09-23
 
 ### Added
