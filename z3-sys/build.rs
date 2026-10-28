@@ -49,9 +49,18 @@ fn main() {
         Some("gh-release") => install_from_gh_release(),
         Some("vcpkg") => find_library_by_vcpkg(),
         _ => {
-            let detected = pkg_config::Config::new()
-                .probe("z3")
-                .ok()
+            let pkg_config_lib = pkg_config::Config::new().probe("z3").ok();
+            // pkg-config emits its own link directives; otherwise link the
+            // system Z3 by name. MSVC doesn't prepend `lib`, so a Windows Z3
+            // install (`libz3.lib`) must be requested as `libz3`.
+            if pkg_config_lib.is_none() {
+                if env::var("CARGO_CFG_TARGET_ENV").as_deref() == Ok("msvc") {
+                    println!("cargo:rustc-link-lib=libz3");
+                } else {
+                    println!("cargo:rustc-link-lib=z3");
+                }
+            }
+            let detected = pkg_config_lib
                 .and_then(|lib| detect_pkg_config_version(&lib))
                 .or_else(detect_cli_version);
             println!("cargo:rerun-if-env-changed=Z3_LIBRARY_PATH_OVERRIDE");
