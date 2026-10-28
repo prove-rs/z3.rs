@@ -16,6 +16,8 @@ mod array;
 mod bool;
 mod bv;
 mod char;
+#[cfg(z3_5_3_1)]
+mod complex;
 mod datatype;
 mod dynamic;
 // Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
@@ -38,6 +40,8 @@ pub use array::Array;
 pub use bool::Bool;
 pub use bv::BV;
 pub use char::Char;
+#[cfg(z3_5_3_1)]
+pub use complex::Complex;
 pub use datatype::Datatype;
 pub use dynamic::Dynamic;
 #[cfg(z3_5_0_0)]
@@ -609,6 +613,10 @@ impl_ast!(Int);
 impl_from_try_into_dynamic!(Int, as_int);
 impl_ast!(Real);
 impl_from_try_into_dynamic!(Real, as_real);
+#[cfg(z3_5_3_1)]
+impl_ast!(Complex);
+#[cfg(z3_5_3_1)]
+impl_from_try_into_dynamic!(Complex, as_complex);
 impl_ast!(Float);
 impl_from_try_into_dynamic!(Float, as_float);
 impl_ast!(String);
