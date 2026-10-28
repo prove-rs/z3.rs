@@ -138,6 +138,24 @@ impl Sort {
         }
     }
 
+    /// Create a finite set sort with the given element sort.
+    ///
+    /// Z3 has no dedicated [`SortKind`] for finite sets, so [`Sort::kind`]
+    /// returns [`SortKind::Unknown`] for the resulting sort. Use
+    /// [`Sort::is_finite_set`] to recognize it.
+    // Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+    #[cfg(z3_5_0_0)]
+    pub fn finite_set(elt: &Sort) -> Sort {
+        let ctx = &Context::thread_local();
+
+        unsafe {
+            Self::wrap(
+                ctx,
+                Z3_mk_finite_set_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap(),
+            )
+        }
+    }
+
     /// Create an enumeration sort.
     ///
     /// Creates a Z3 enumeration sort with the given `name`.
@@ -316,6 +334,48 @@ impl Sort {
             unsafe {
                 let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.as_ptr(), self.z3_sort)?;
                 Some(Self::wrap(&self.ctx, range_sort))
+            }
+        } else {
+            None
+        }
+    }
+
+    /// Return `true` if this `Sort` is a `FiniteSet`.
+    ///
+    /// Note that [`Sort::kind`] returns [`SortKind::Unknown`] for finite set
+    /// sorts, so this is the way to identify them.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// let int_sort = Sort::int();
+    /// let finite_set_sort = Sort::finite_set(&int_sort);
+    /// assert!(finite_set_sort.is_finite_set());
+    /// assert!(!int_sort.is_finite_set());
+    /// ```
+    #[cfg(z3_5_0_0)]
+    pub fn is_finite_set(&self) -> bool {
+        unsafe { Z3_is_finite_set_sort(self.ctx.z3_ctx.as_ptr(), self.z3_sort) }
+    }
+
+    /// Return the element `Sort` of this `FiniteSet` `Sort`.
+    ///
+    /// Returns `None` if this `Sort` is not a `FiniteSet`.
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// let int_sort = Sort::int();
+    /// let finite_set_sort = Sort::finite_set(&int_sort);
+    /// assert_eq!(finite_set_sort.finite_set_basis().unwrap(), int_sort);
+    /// assert!(int_sort.finite_set_basis().is_none());
+    /// ```
+    #[cfg(z3_5_0_0)]
+    pub fn finite_set_basis(&self) -> Option<Sort> {
+        if self.is_finite_set() {
+            unsafe {
+                let basis_sort =
+                    Z3_get_finite_set_sort_basis(self.ctx.z3_ctx.as_ptr(), self.z3_sort)?;
+                Some(Self::wrap(&self.ctx, basis_sort))
             }
         } else {
             None
