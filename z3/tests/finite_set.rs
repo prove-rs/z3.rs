@@ -90,6 +90,14 @@ fn test_finite_set_size_and_range() {
     prove(&ast::FiniteSet::range(&int(2), &int(0)).eq(ast::FiniteSet::empty(&Sort::int())));
 }
 
+/// Skipped under the `vcpkg` feature: the Z3 that vcpkg currently ships (port
+/// version 5.1.0) leaks/hangs on these `set.map` queries, which ran the
+/// `build_with_vcpkg_installed_z3` CI job into its 6h timeout. Passes on Z3
+/// 5.3.1 and on the vendored/GitHub-release builds.
+///
+/// TODO: remove the `not(feature = "vcpkg")` gate once vcpkg's z3 port is
+/// updated past the broken release.
+#[cfg(not(feature = "vcpkg"))]
 #[test]
 fn test_finite_set_map() {
     let _ = env_logger::try_init();
