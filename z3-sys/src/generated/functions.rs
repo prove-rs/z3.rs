@@ -117,6 +117,7 @@ unsafe extern "C" {
     /// # See also
     ///
     /// - [`Z3_del_context`]
+    /// - [`Z3_set_error_handler`]
     pub fn Z3_mk_context(c: Z3_config) -> Option<Z3_context>;
     /// Create a context using the given configuration.
     /// This function is similar to [`Z3_mk_context`]. However,
@@ -136,6 +137,11 @@ unsafe extern "C" {
     /// - All main interaction with Z3 happens in the context of a `Z3_context`.
     /// - Z3 uses hash-consing, i.e., when the same `Z3_ast` is created twice,
     /// Z3 will return the same pointer twice.
+    ///
+    /// # See also
+    ///
+    /// - [`Z3_del_context`]
+    /// - [`Z3_set_error_handler`]
     pub fn Z3_mk_context_rc(c: Z3_config) -> Option<Z3_context>;
     /// Delete the given logical context.
     ///
@@ -143,6 +149,32 @@ unsafe extern "C" {
     ///
     /// - [`Z3_mk_context`]
     pub fn Z3_del_context(c: Z3_context);
+    /// Register a client proof checker for `c`.
+    ///
+    /// Replaces the previous callback and user data. Passing a null callback
+    /// unregisters it. The client owns the callback and user data and must keep
+    /// them alive until replacement, unregistration, or context destruction.
+    ///
+    /// SMT-LIB evaluation through [`Z3_eval_smtlib2_string`] invokes the callback
+    /// after an unsatisfiable check-sat,
+    /// check-sat-assuming, or check-sat-using command. Automatic reports go to the
+    /// command context's diagnostic stream, included in the returned evaluation
+    /// text. Ordinary [`Z3_solver_check`] calls do not invoke it automatically.
+    ///
+    /// Automatic checking requires proof production to be enabled before
+    /// assertions are added. An unavailable proof is reported as a command error.
+    /// The automatic assertion vector contains the active input assertions and
+    /// current check assumptions. Named assertions tracked for unsat cores are
+    /// represented by their guarded assertions and tracking literals, matching
+    /// the proof premises.
+    ///
+    /// Registration survives SMT-LIB reset commands. The report is opaque:
+    /// Z3 does not interpret it or change the solver's satisfiability result.
+    pub fn Z3_set_proof_check_callback(
+        c: Z3_context,
+        user_context: *mut ::core::ffi::c_void,
+        callback: Z3_proof_check_eh,
+    );
     /// Increment the reference counter of the given AST.
     /// The context `c` should have been created using [`Z3_mk_context_rc`].
     /// This function is a NOOP if `c` was created using [`Z3_mk_context`].
@@ -284,6 +316,20 @@ unsafe extern "C" {
     ///
     /// Note that this type is not a floating point number.
     pub fn Z3_mk_real_sort(c: Z3_context) -> Option<Z3_sort>;
+    /// Create the Complex sort. Complex numbers are pairs of Reals.
+    ///
+    /// Use `Z3_mk_complex` to construct values and `Z3_mk_real_part` and
+    /// `Z3_mk_imag_part` to access their components. The arithmetic APIs
+    /// for addition, subtraction, multiplication, negation, and division
+    /// accept Complex expressions. Ordering and exponentiation do not.
+    pub fn Z3_mk_complex_sort(c: Z3_context) -> Option<Z3_sort>;
+    /// Create a complex number with the given real and imaginary components.
+    /// Integer components are coerced to Real.
+    pub fn Z3_mk_complex(c: Z3_context, re: Z3_ast, im: Z3_ast) -> Option<Z3_ast>;
+    /// Return the real component of a Complex expression.
+    pub fn Z3_mk_real_part(c: Z3_context, z: Z3_ast) -> Option<Z3_ast>;
+    /// Return the imaginary component of a Complex expression.
+    pub fn Z3_mk_imag_part(c: Z3_context, z: Z3_ast) -> Option<Z3_ast>;
     /// Create a bit-vector type of the given size.
     ///
     /// This type can also be seen as a machine integer.
@@ -306,6 +352,30 @@ unsafe extern "C" {
         name: Z3_symbol,
         size: u64,
     ) -> Option<Z3_sort>;
+    /// Create a prime-field sort. Large moduli undergo probable-prime screening.
+    pub fn Z3_mk_finite_field_sort(c: Z3_context, prime: Z3_string) -> Option<Z3_sort>;
+    /// Return the decimal modulus of a finite-field sort.
+    pub fn Z3_get_finite_field_sort_size(c: Z3_context, s: Z3_sort) -> Z3_string;
+    /// Sum at least two elements of the same prime field.
+    pub fn Z3_mk_ff_add(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Multiply at least two elements of the same prime field.
+    pub fn Z3_mk_ff_mul(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
+    /// Additive inverse in a prime field.
+    pub fn Z3_mk_ff_neg(c: Z3_context, a: Z3_ast) -> Option<Z3_ast>;
+    /// Weighted sum a0 + 2*a1 + 4*a2 + ... (does not constrain arguments to bits).
+    pub fn Z3_mk_ff_bitsum(
+        c: Z3_context,
+        n: ::core::ffi::c_uint,
+        args: *const Z3_ast,
+    ) -> Option<Z3_ast>;
     /// Create an array type.
     ///
     /// We usually represent the array type as: `[domain -> range]`.
@@ -752,7 +822,7 @@ unsafe extern "C" {
     /// Create an AST node representing `args[0] + ... + args[num_args-1]`.
     ///
     /// The array `args` must have `num_args` elements.
-    /// All arguments must have int or real sort.
+    /// All arguments must have Int, Real, or Complex sort.
     ///
     /// **Remark:** The number of arguments must be greater than zero.
     pub fn Z3_mk_add(
@@ -763,7 +833,7 @@ unsafe extern "C" {
     /// Create an AST node representing `args[0] * ... * args[num_args-1]`.
     ///
     /// The array `args` must have `num_args` elements.
-    /// All arguments must have int or real sort.
+    /// All arguments must have Int, Real, or Complex sort.
     ///
     /// **Remark:** Z3 has limited support for non-linear arithmetic.
     /// **Remark:** The number of arguments must be greater than zero.
@@ -775,7 +845,7 @@ unsafe extern "C" {
     /// Create an AST node representing `args[0] - ... - args[num_args - 1]`.
     ///
     /// The array `args` must have `num_args` elements.
-    /// All arguments must have int or real sort.
+    /// All arguments must have Int, Real, or Complex sort.
     ///
     /// **Remark:** The number of arguments must be greater than zero.
     pub fn Z3_mk_sub(
@@ -785,13 +855,15 @@ unsafe extern "C" {
     ) -> Option<Z3_ast>;
     /// Create an AST node representing `- arg`.
     ///
-    /// The arguments must have int or real type.
+    /// The argument must have Int, Real, or Complex sort.
     pub fn Z3_mk_unary_minus(c: Z3_context, arg: Z3_ast) -> Option<Z3_ast>;
     /// Create an AST node representing `arg1 div arg2`.
     ///
-    /// The arguments must either both have int type or both have real type.
-    /// If the arguments have int type, then the result type is an int type, otherwise the
-    /// the result type is real.
+    /// The arguments must have Int, Real, or Complex sort. Int arguments use
+    /// integer division. Real and Complex arguments use their respective division
+    /// operations, with Int embedded in Real and Int/Real embedded in Complex.
+    /// Complex division is lowered to Real component division; at a zero Complex
+    /// denominator, both components are the same totalized Real `0`/0 value.
     pub fn Z3_mk_div(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
     /// Create an AST node representing `arg1 mod arg2`.
     ///
@@ -1688,6 +1760,9 @@ unsafe extern "C" {
     /// Retrieve from `s` the element positioned at position `index`.
     /// The function is under-specified if the index is out of bounds.
     pub fn Z3_mk_seq_nth(c: Z3_context, s: Z3_ast, index: Z3_ast) -> Option<Z3_ast>;
+    /// Create the sequence `s` concatenated `n` times with itself.
+    /// The result is the empty sequence when `n` is not positive.
+    pub fn Z3_mk_seq_power(c: Z3_context, s: Z3_ast, n: Z3_ast) -> Option<Z3_ast>;
     /// Return the length of the sequence `s`.
     pub fn Z3_mk_seq_length(c: Z3_context, s: Z3_ast) -> Option<Z3_ast>;
     /// Return index of the first occurrence of `substr` in `s` starting from offset `offset`.
@@ -3492,11 +3567,24 @@ unsafe extern "C" {
     /// and will be called in this case.  To disable the use of the
     /// error handler, simply register with `h`=NULL.
     ///
+    /// By default, newly created contexts install an internal default error
+    /// handler that prints the error message and terminates the process via
+    /// `exit`(1). While suitable for standalone CLI programs, calling
+    /// raw `exit`() is unsafe when Z3 is invoked from within a managed
+    /// runtime environment (such as Java/JNI under Android ART or the JVM,
+    /// or .NET/CLR) or multi-threaded embedders: process termination can race
+    /// with background runtime threads (e.g., JIT compilation or GC threads),
+    /// producing crashes (SIGSEGV) in unrelated runtime threads. Embedders
+    /// in managed runtimes should always register their own error handler or
+    /// disable it by passing `h`=NULL and inspecting [`Z3_get_error_code`].
+    ///
     /// \warning Log files, created using [`Z3_open_log`], may be potentially incomplete/incorrect if error handlers are used.
     ///
     /// # See also
     ///
     /// - [`Z3_get_error_code`]
+    /// - [`Z3_mk_context`]
+    /// - [`Z3_mk_context_rc`]
     pub fn Z3_set_error_handler(c: Z3_context, h: Z3_error_handler);
     /// Set an error.
     pub fn Z3_set_error(c: Z3_context, e: Z3_error_code);
@@ -5367,6 +5455,17 @@ unsafe extern "C" {
     ) -> Option<Z3_param_descrs>;
     /// Retrieve lower bound value or approximation for the i'th optimization objective.
     ///
+    /// An attained, certified irrational algebraic optimum is returned as an
+    /// exact algebraic numeral by both [`Z3_optimize_get_lower`] and
+    /// [`Z3_optimize_get_upper`]. Use [`Z3_get_algebraic_number_lower`] and
+    /// [`Z3_get_algebraic_number_upper`] to obtain rational approximations.
+    ///
+    /// A certified finite limit that is not attained includes an infinitesimal
+    /// term: for example, `sqrt(2) - epsilon` for a supremum. The finite
+    /// part can be algebraic even though the whole expression is not an
+    /// algebraic numeral. Use [`Z3_optimize_get_lower_as_vector`] to inspect
+    /// the finite part and the infinitesimal coefficient separately.
+    ///
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `idx`: - index of optimization objective
@@ -5383,6 +5482,9 @@ unsafe extern "C" {
     ) -> Option<Z3_ast>;
     /// Retrieve upper bound value or approximation for the i'th optimization objective.
     ///
+    /// Certified algebraic optima and finite open limits are returned
+    /// as described for [`Z3_optimize_get_lower`].
+    ///
     /// - `c`: - context
     /// - `o`: - optimization context
     /// - `idx`: - index of optimization objective
@@ -5398,9 +5500,15 @@ unsafe extern "C" {
         idx: ::core::ffi::c_uint,
     ) -> Option<Z3_ast>;
     /// Retrieve lower bound value or approximation for the i'th optimization objective.
-    /// The returned vector is of length 3. It always contains numerals.
-    /// The three numerals are coefficients `a`, `b`, `c` and encode the result of
+    /// The returned vector is of length 3.
+    /// Its entries are coefficients `a`, `b`, `c` and encode the result of
     /// [`Z3_optimize_get_lower`] `a * infinity + b + c * epsilon`.
+    /// The coefficients `a` and `c` are rational numerals. The finite
+    /// part `b` is a rational numeral or an exact irrational algebraic
+    /// numeral when such a bound has been certified.
+    /// For a finite attained optimum, `a` and `c` are zero. A finite
+    /// open limit has `a` equal to zero and a nonzero infinitesimal
+    /// coefficient `c`, even when `b` is algebraic.
     ///
     /// - `c`: - context
     /// - `o`: - optimization context
@@ -5417,6 +5525,10 @@ unsafe extern "C" {
         idx: ::core::ffi::c_uint,
     ) -> Option<Z3_ast_vector>;
     /// Retrieve upper bound value or approximation for the i'th optimization objective.
+    ///
+    /// The returned vector has the same coefficient and algebraic-value
+    /// semantics as [`Z3_optimize_get_lower_as_vector`], and encodes the result
+    /// of [`Z3_optimize_get_upper`].
     ///
     /// - `c`: - context
     /// - `o`: - optimization context

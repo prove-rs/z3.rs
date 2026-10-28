@@ -168,6 +168,20 @@ impl FuncDeclReturn for Array {
     }
 }
 
+#[cfg(z3_5_3_1)]
+impl FuncDeclReturn for ast::Complex {
+    fn process(d: Dynamic) -> Self {
+        d.as_complex().unwrap()
+    }
+}
+
+#[cfg(z3_5_0_0)]
+impl FuncDeclReturn for ast::FiniteSet {
+    fn process(d: Dynamic) -> Self {
+        d.as_finite_set().unwrap()
+    }
+}
+
 impl FuncDeclReturn for Datatype {
     fn process(d: Dynamic) -> Self {
         d.as_datatype().unwrap()
@@ -310,6 +324,36 @@ impl<A: FuncDeclDomain, R: FuncDeclReturn> FuncDecl<A, R> {
             Z3_get_sort_kind(
                 z3_ctx,
                 Z3_get_range(z3_ctx, self.z3_func_decl).expect("cannot get range of FuncDecl"),
+            )
+        }
+    }
+
+    /// Create an [`ast::Array`] with the same interpretation as this (unary) function
+    /// declaration, i.e. `self.as_array().select(x) == self.apply(x)` for every `x`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{ast::{Dynamic, Int}, FuncDecl, SatResult, Solver, Sort};
+    /// # use z3::ast::Ast;
+    /// let f = FuncDecl::new("f", Sort::int(), Sort::int());
+    /// let arr = f.as_array();
+    /// let x = Int::new_const("x");
+    ///
+    /// let solver = Solver::new();
+    /// solver.assert(
+    ///     arr.select(&Dynamic::from_ast(&x))
+    ///         .as_int()
+    ///         .unwrap()
+    ///         .eq(f.apply(x.clone()))
+    ///         .not(),
+    /// );
+    /// assert_eq!(solver.check(), SatResult::Unsat);
+    /// ```
+    pub fn as_array(&self) -> ast::Array {
+        unsafe {
+            ast::Array::wrap(
+                &self.ctx,
+                Z3_mk_as_array(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap(),
             )
         }
     }

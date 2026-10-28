@@ -261,6 +261,26 @@ pub struct FuncInterp<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R: FuncDeclReturn 
     phantom_r: PhantomData<R>,
 }
 
+/// The interpretation of a [`FuncDecl`] in a [`Model`].
+///
+/// A `FuncDecl` with arity 0 (a constant) is always interpreted as an [`ast::Dynamic`], and a
+/// `FuncDecl` with arity greater than 0 is always interpreted as a [`FuncInterp`].
+///
+/// An array-sorted constant may be interpreted as an "as-array" value, e.g.
+/// `(_ as-array k!0)`, which refers to the [`FuncInterp`] of another `FuncDecl`. It is still
+/// returned as [`Interp::Const`]; use [`Model::get_func_interp`] to resolve it to that
+/// [`FuncInterp`].
+///
+/// # See also:
+///
+/// - [`Model::get_interp`]
+pub enum Interp {
+    /// The interpretation of a constant (arity-0 `FuncDecl`).
+    Const(ast::Dynamic),
+    /// The interpretation of a function (arity > 0 `FuncDecl`).
+    Func(FuncInterp),
+}
+
 /// Store the value of the interpretation of a function in a particular point.
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 pub struct FuncEntry<A: FuncDeclDomain = Vec<Sort<Dynamic>>, R: FuncDeclReturn = Dynamic> {

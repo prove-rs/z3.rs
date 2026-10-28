@@ -3,6 +3,8 @@ use std::fmt;
 use std::iter::FusedIterator;
 
 use crate::Context;
+#[cfg(z3_5_0_0)]
+use crate::ast::FiniteSet;
 use crate::ast::{Array, Ast, BV, Bool, Dynamic, Float, Int, Real, Seq, Set};
 use crate::ast::{Datatype, String as AstString};
 use z3_sys::*;
@@ -334,6 +336,9 @@ impl_try_from_ast_vector!(Float);
 impl_try_from_ast_vector!(BV);
 impl_try_from_ast_vector!(Array);
 impl_try_from_ast_vector!(Set);
+// Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_5_0_0)]
+impl_try_from_ast_vector!(FiniteSet);
 impl_try_from_ast_vector!(Seq);
 impl_try_from_ast_vector!(Datatype);
 impl_try_from_ast_vector!(AstString);

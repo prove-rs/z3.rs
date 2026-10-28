@@ -16,8 +16,13 @@ mod array;
 mod bool;
 mod bv;
 mod char;
+#[cfg(z3_5_3_1)]
+mod complex;
 mod datatype;
 mod dynamic;
+// Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_5_0_0)]
+mod finite_set;
 mod float;
 mod int;
 mod real;
@@ -35,8 +40,12 @@ pub use array::Array;
 pub use bool::Bool;
 pub use bv::BV;
 pub use char::Char;
+#[cfg(z3_5_3_1)]
+pub use complex::Complex;
 pub use datatype::Datatype;
 pub use dynamic::Dynamic;
+#[cfg(z3_5_0_0)]
+pub use finite_set::FiniteSet;
 pub use float::Float;
 pub use int::Int;
 pub use real::Real;
@@ -873,6 +882,11 @@ impl_sort_marker_by_kind! {
     RoundingMode => SortKind::RoundingMode,
 }
 
+#[cfg(z3_5_3_1)]
+impl_sort_marker_by_kind! {
+    Complex => SortKind::Complex,
+}
+
 impl SortMarker for Char {
     fn sort_matches(sort: &Sort) -> bool {
         unsafe { Z3_is_char_sort(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
@@ -919,6 +933,23 @@ impl<Elt: SortMarker> SortMarker for Set<Elt> {
     }
 }
 
+// Finite set sorts report `SortKind::Unknown`, so they're recognized via
+// `Z3_is_finite_set_sort` rather than by kind.
+#[cfg(z3_5_0_0)]
+impl<Elt: SortMarker> SortMarker for FiniteSet<Elt> {
+    fn sort_matches(sort: &Sort) -> bool {
+        if !unsafe { Z3_is_finite_set_sort(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) } {
+            return false;
+        }
+        let Some(basis) =
+            (unsafe { Z3_get_finite_set_sort_basis(sort.ctx.z3_ctx.as_ptr(), sort.z3_sort) })
+        else {
+            return false;
+        };
+        Elt::sort_matches(&unsafe { Sort::wrap(&sort.ctx, basis) })
+    }
+}
+
 impl<Elt: SortMarker> SortMarker for Seq<Elt> {
     fn sort_matches(sort: &Sort) -> bool {
         if sort.kind() != SortKind::Seq {
@@ -939,6 +970,10 @@ impl_ast!(Int);
 impl_from_try_into_dynamic!(Int, as_int);
 impl_ast!(Real);
 impl_from_try_into_dynamic!(Real, as_real);
+#[cfg(z3_5_3_1)]
+impl_ast!(Complex);
+#[cfg(z3_5_3_1)]
+impl_from_try_into_dynamic!(Complex, as_complex);
 impl_ast!(Float);
 impl_from_try_into_dynamic!(Float, as_float);
 impl_ast!(String);
@@ -964,6 +999,20 @@ impl TryFrom<Dynamic> for Set {
     type Error = std::string::String;
     fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
         ast.as_set()
+            .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
+    }
+}
+
+// Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_5_0_0)]
+impl_ast_generic!(FiniteSet<Elt>);
+#[cfg(z3_5_0_0)]
+impl_into_dynamic_generic!(FiniteSet<Elt>);
+#[cfg(z3_5_0_0)]
+impl TryFrom<Dynamic> for FiniteSet {
+    type Error = std::string::String;
+    fn try_from(ast: Dynamic) -> Result<Self, std::string::String> {
+        ast.as_finite_set()
             .ok_or_else(|| format!("Dynamic is not of requested type: {:?}", ast))
     }
 }

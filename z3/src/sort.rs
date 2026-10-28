@@ -5,6 +5,10 @@ use std::marker::PhantomData;
 use std::ptr::NonNull;
 use z3_sys::*;
 
+#[cfg(z3_5_3_1)]
+use crate::ast::Complex;
+#[cfg(z3_5_0_0)]
+use crate::ast::FiniteSet;
 use crate::ast::{Array, Ast, BV, Bool, Char, Dynamic, Float, Int, Real, Seq, Set, SortMarker};
 use crate::{Context, FuncDecl, Sort, SortDiffers, Symbol};
 
@@ -112,6 +116,26 @@ impl<Elt: Ast> Sort<Set<Elt>> {
     }
 }
 
+#[cfg(z3_5_0_0)]
+impl<Elt: Ast> Sort<FiniteSet<Elt>> {
+    /// Return the `Sort` of the elements of `FiniteSet`s of this `Sort`.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::Sort;
+    /// let finite_set_sort = Sort::finite_set(&Sort::int());
+    /// assert_eq!(finite_set_sort.basis(), Sort::int());
+    /// ```
+    pub fn basis(&self) -> Sort<Elt> {
+        unsafe {
+            Sort::wrap(
+                &self.ctx,
+                Z3_get_finite_set_sort_basis(self.ctx.z3_ctx.as_ptr(), self.z3_sort).unwrap(),
+            )
+        }
+    }
+}
+
 impl Sort<Float> {
     /// Return the number of exponent bits of this `FloatingPoint` `Sort`.
     ///
@@ -166,6 +190,15 @@ impl Sort<Dynamic> {
         unsafe {
             let ctx = &Context::thread_local();
             Sort::wrap(ctx, Z3_mk_real_sort(ctx.z3_ctx.as_ptr()).unwrap())
+        }
+    }
+
+    /// Create the Complex sort. Complex numbers are pairs of Reals.
+    #[cfg(z3_5_3_1)]
+    pub fn complex() -> Sort<Complex> {
+        unsafe {
+            let ctx = &Context::thread_local();
+            Sort::wrap(ctx, Z3_mk_complex_sort(ctx.z3_ctx.as_ptr()).unwrap())
         }
     }
 
@@ -247,6 +280,24 @@ impl Sort<Dynamic> {
             Sort::wrap(
                 ctx,
                 Z3_mk_seq_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap(),
+            )
+        }
+    }
+
+    /// Create a finite set sort with the given element sort.
+    ///
+    /// Z3 has no dedicated [`SortKind`] for finite sets, so [`Sort::kind`]
+    /// returns [`SortKind::Unknown`] for the resulting sort. Use
+    /// [`Sort::narrow`] to recognize it.
+    // Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+    #[cfg(z3_5_0_0)]
+    pub fn finite_set<Elt>(elt: &Sort<Elt>) -> Sort<FiniteSet<Elt>> {
+        let ctx = &Context::thread_local();
+
+        unsafe {
+            Sort::wrap(
+                ctx,
+                Z3_mk_finite_set_sort(ctx.z3_ctx.as_ptr(), elt.z3_sort).unwrap(),
             )
         }
     }

@@ -1,5 +1,5 @@
 use crate::ast::{Ast, Dynamic};
-use crate::{Context, Sort, Symbol};
+use crate::{Context, FuncDecl, Sort, Symbol};
 use std::ffi::CString;
 use std::marker::PhantomData;
 use z3_sys::*;
@@ -114,5 +114,41 @@ impl<D: Ast, R: Ast> Array<D, R> {
         // is_app_of(a, Z3_OP_CONST_ARRAY)
         // >> is_app(a) and a.decl().kind() == Z3_OP_CONST_ARRAY
         self.is_app() && matches!(self.decl().kind(), DeclKind::ConstArray)
+    }
+
+    /// Returns true if the array is an "as-array" value, i.e. `(_ as-array f)` for some
+    /// function declaration `f`. Z3 uses these in models to represent an array by the
+    /// interpretation of a function.
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{FuncDecl, Sort, ast::Array};
+    /// let f = FuncDecl::new("f", Sort::int(), Sort::int());
+    /// assert!(f.as_array().is_as_array());
+    /// let arr = Array::fresh_const("a", &Sort::int(), &Sort::int());
+    /// assert!(!arr.is_as_array());
+    /// ```
+    pub fn is_as_array(&self) -> bool {
+        unsafe { Z3_is_as_array(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
+    }
+
+    /// If the array is an "as-array" value `(_ as-array f)`, returns `f`; otherwise `None`.
+    ///
+    /// This is the inverse of [`FuncDecl::as_array`].
+    ///
+    /// # Examples
+    /// ```
+    /// # use z3::{FuncDecl, Sort, ast::Array};
+    /// let f = FuncDecl::new("f", Sort::int(), Sort::int());
+    /// assert_eq!(f.as_array().as_array_func_decl().unwrap().name(), "f");
+    /// let arr = Array::fresh_const("a", &Sort::int(), &Sort::int());
+    /// assert!(arr.as_array_func_decl().is_none());
+    /// ```
+    pub fn as_array_func_decl(&self) -> Option<FuncDecl> {
+        if !self.is_as_array() {
+            return None;
+        }
+        let fd = unsafe { Z3_get_as_array_func_decl(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }?;
+        Some(unsafe { FuncDecl::wrap(&self.ctx, fd) })
     }
 }

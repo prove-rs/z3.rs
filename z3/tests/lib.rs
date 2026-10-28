@@ -1538,8 +1538,8 @@ fn test_tactic_conditions() {
 fn test_probe_debug() {
     let _v: Vec<String> = Probe::list_all().into_iter().map(|x| x.unwrap()).collect();
     assert_eq!(
-        "A probe to give an upper bound of Ackermann congruence lemmas that a formula might generate.",
-        Probe::describe("ackr-bound-probe").unwrap(),
+        "true if the goal is in QF_BV.",
+        Probe::describe("is-qfbv").unwrap(),
     );
 }
 
@@ -1764,6 +1764,131 @@ fn test_array_example1() {
 }
 
 #[test]
+/// <https://github.com/prove-rs/z3.rs/issues/461>
+fn get_interp_of_arity_0_non_array_func_decl() {
+    let solver = Solver::new();
+    let f = FuncDecl::new("hi", vec![], Sort::int().as_dyn());
+    solver.assert(f.apply(vec![]).as_int().unwrap().eq(Int::from_u64(5)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_func_interp(&f).is_none());
+
+    let interp = model.get_interp(&f).unwrap();
+    let const_interp = interp.as_const().unwrap();
+    assert!(const_interp.to_string() == "5");
+}
+
+#[test]
+/// <https://github.com/prove-rs/z3.rs/issues/460>
+///
+/// See `tests/model_partial.rs` for the case where the else value is missing.
+fn func_interp_get_else_on_total_interp() {
+    let f = FuncDecl::new("f", vec![Sort::int().as_dyn()], Sort::int().as_dyn());
+    let solver = Solver::new();
+    solver.assert(
+        f.apply(vec![ast::Dynamic::from_ast(&Int::from_u64(0))])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let f_i = model.get_func_interp(&f).unwrap();
+
+    // By default (`model.partial=false`) Z3 assigns an else value to every interpretation.
+    assert!(f_i.get_else().is_some());
+}
+
+#[test]
+fn get_interp_returns_none_for_arity_0_without_interp() {
+    let f = FuncDecl::new("unconstrained_const", vec![], Sort::int().as_dyn());
+    let solver = Solver::new();
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_interp(&f).is_none());
+    assert!(model.get_func_interp(&f).is_none());
+}
+
+#[test]
+fn get_interp_returns_none_for_arity_gt_0_without_interp() {
+    let f = FuncDecl::new(
+        "unconstrained_fn",
+        vec![Sort::int().as_dyn()],
+        Sort::int().as_dyn(),
+    );
+    let solver = Solver::new();
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    assert!(model.get_interp(&f).is_none());
+    assert!(model.get_func_interp(&f).is_none());
+}
+
+#[test]
+fn get_interp_of_arity_gt_0_returns_func_variant() {
+    let f = FuncDecl::new("f", vec![Sort::int().as_dyn()], Sort::int().as_dyn());
+    let solver = Solver::new();
+    solver.assert(
+        f.apply(vec![ast::Dynamic::from_ast(&Int::from_u64(0))])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    let interp = model.get_interp(&f).unwrap();
+    assert!(interp.as_const().is_none());
+    let func_interp = interp.as_func().unwrap();
+    assert!(func_interp.to_string() == model.get_func_interp(&f).unwrap().to_string());
+}
+
+#[test]
+fn get_interp_of_array_const_returns_const_variant() {
+    let aex = Array::new_const("MyArray", &Sort::int(), &Sort::bitvector(32));
+    let sel = aex.select(&Int::from_u64(0));
+    let solver = Solver::new();
+    solver.assert(sel.eq(BV::from_u64(42, 32)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+
+    let fd = aex.decl();
+    let interp = model.get_interp(&fd).unwrap();
+    assert!(interp.as_func().is_none());
+    let const_interp = interp.as_const().unwrap();
+    assert!(const_interp.to_string() == "((as const (Array Int (_ BitVec 32))) #x0000002a)");
+    assert!(model.get_func_interp(&fd).is_none());
+}
+
+#[test]
+fn interp_display_and_debug_match_underlying_variant() {
+    let f = FuncDecl::new("hi", vec![], Sort::int().as_dyn());
+    let solver = Solver::new();
+    solver.assert(f.apply(vec![]).as_int().unwrap().eq(Int::from_u64(5)));
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let const_interp = model.get_interp(&f).unwrap();
+    assert!(const_interp.to_string() == "5");
+    assert!(format!("{const_interp:?}") == "5");
+
+    let g = FuncDecl::new("g", vec![Sort::int().as_dyn()], Sort::int().as_dyn());
+    let solver = Solver::new();
+    solver.assert(
+        g.apply(vec![ast::Dynamic::from_ast(&Int::from_u64(0))])
+            .as_int()
+            .unwrap()
+            .eq(Int::from_u64(1)),
+    );
+    assert!(solver.check() == SatResult::Sat);
+    let model = solver.get_model().unwrap();
+    let func_interp = model.get_interp(&g).unwrap();
+    assert!(func_interp.to_string() == func_interp.as_func().unwrap().to_string());
+    assert!(format!("{func_interp:?}") == func_interp.to_string());
+}
+
+#[test]
 /// <https://z3prover.github.io/api/html/classz3py_1_1_func_entry.html>
 fn return_number_args_in_given_entry() {
     let f = FuncDecl::new(
@@ -1968,6 +2093,42 @@ fn test_model_iter() {
         consume_model(model),
         vec![ast::Dynamic::new_const("a", &Sort::int().as_dyn())]
     );
+}
+
+#[test]
+fn test_int_i128_u128() {
+    let cases_i128: [i128; 5] = [0, 42, -1234567890123456789, i128::MAX, i128::MIN];
+    let cases_u128: [u128; 3] = [0, 42, u128::MAX];
+
+    // Check i128
+    for &val in &cases_i128 {
+        let int_ast = Int::from_i128(val);
+        let back = int_ast.as_i128().unwrap();
+        assert_eq!(back, val, "i128 failed for {val}");
+    }
+
+    // Check u128
+    for &val in &cases_u128 {
+        let int_ast = Int::from_u128(val);
+        let back = int_ast.as_u128().unwrap();
+        assert_eq!(back, val, "u128 failed for {val}");
+    }
+
+    // Values outside the target range
+    assert_eq!(Int::from_i128(-1).as_u128(), None);
+    assert_eq!(Int::from_u128(u128::MAX).as_i128(), None);
+    let too_big = Int::add(&[Int::from_u128(u128::MAX), Int::from_u64(1)]);
+    assert_eq!(too_big.simplify().as_u128(), None);
+    let too_small = Int::sub(&[Int::from_i128(i128::MIN), Int::from_u64(1)]);
+    assert_eq!(too_small.simplify().as_i128(), None);
+
+    // Non-numerals
+    assert_eq!(Int::new_const("x").as_i128(), None);
+    assert_eq!(Int::new_const("x").as_u128(), None);
+
+    // From impls
+    assert_eq!(Int::from(i128::MIN).as_i128(), Some(i128::MIN));
+    assert_eq!(Int::from(u128::MAX).as_u128(), Some(u128::MAX));
 }
 
 #[test]

@@ -1,3 +1,5 @@
+#[cfg(z3_5_3_1)]
+use crate::ast::Complex;
 use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set, SortMarker};
 use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
@@ -83,6 +85,12 @@ impl Dynamic {
 
     /// Returns `None` if the `Dynamic` is not actually a `Real`
     pub fn as_real(&self) -> Option<Real> {
+        self.narrow()
+    }
+
+    /// Returns `None` if the `Dynamic` is not actually a `Complex`
+    #[cfg(z3_5_3_1)]
+    pub fn as_complex(&self) -> Option<Complex> {
         self.narrow()
     }
 

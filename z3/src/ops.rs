@@ -6,6 +6,8 @@ use std::ops::{
     Mul, MulAssign, Neg, Not, Rem, RemAssign, Shl, ShlAssign, Sub, SubAssign,
 };
 
+#[cfg(z3_5_3_1)]
+use crate::ast::Complex;
 use crate::ast::{BV, Int, Real};
 
 macro_rules! impl_unary_op_raw {
@@ -130,6 +132,22 @@ impl_bin_assign_trait!(Real::sub = SubAssign::sub_assign);
 impl_bin_assign_trait!(Real::mul = MulAssign::mul_assign);
 impl_bin_assign_trait!(Real::div = DivAssign::div_assign);
 
+#[cfg(z3_5_3_1)]
+mod complex_ops {
+    use super::*;
+
+    impl_var_trait!(Complex::add = Add::add);
+    impl_var_trait!(Complex::sub = Sub::sub);
+    impl_var_trait!(Complex::mul = Mul::mul);
+    impl_bin_trait!(Complex::div = Div::div);
+    impl_unary_op!(Complex::unary_minus = Neg::neg);
+
+    impl_bin_assign_trait!(Complex::add = AddAssign::add_assign);
+    impl_bin_assign_trait!(Complex::sub = SubAssign::sub_assign);
+    impl_bin_assign_trait!(Complex::mul = MulAssign::mul_assign);
+    impl_bin_assign_trait!(Complex::div = DivAssign::div_assign);
+}
+
 // implementations for Real
 //
 // // // implementations for Float
@@ -219,3 +237,9 @@ macro_rules! integer_sum_product {
 
 integer_sum_product!(Int::from_u64(0), Int::from_u64(1), Int);
 integer_sum_product!(Real::from_rational(0, 1), Real::from_rational(1, 1), Real);
+#[cfg(z3_5_3_1)]
+integer_sum_product!(
+    Complex::from_rationals(0, 1, 0, 1),
+    Complex::from_rationals(1, 1, 0, 1),
+    Complex
+);

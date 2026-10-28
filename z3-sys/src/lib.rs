@@ -112,11 +112,3 @@ include!(concat!(env!("OUT_DIR"), "/functions.rs"));
 include!(concat!(env!("OUT_DIR"), "/enums.rs"));
 
 include!("functions_patched.rs");
-
-#[cfg(not(windows))]
-#[link(name = "z3")]
-unsafe extern "C" {}
-
-#[cfg(windows)]
-#[link(name = "libz3")]
-unsafe extern "C" {}
