@@ -20,6 +20,9 @@ mod char;
 mod complex;
 mod datatype;
 mod dynamic;
+// Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_5_0_0)]
+mod finite_set;
 mod float;
 mod int;
 mod real;
@@ -41,6 +44,8 @@ pub use char::Char;
 pub use complex::Complex;
 pub use datatype::Datatype;
 pub use dynamic::Dynamic;
+#[cfg(z3_5_0_0)]
+pub use finite_set::FiniteSet;
 pub use float::Float;
 pub use int::Int;
 pub use real::Real;
@@ -624,6 +629,11 @@ impl_ast!(Array);
 impl_from_try_into_dynamic!(Array, as_array);
 impl_ast!(Set);
 impl_from_try_into_dynamic!(Set, as_set);
+// Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
+#[cfg(z3_5_0_0)]
+impl_ast!(FiniteSet);
+#[cfg(z3_5_0_0)]
+impl_from_try_into_dynamic!(FiniteSet, as_finite_set);
 impl_ast!(Seq);
 impl_from_try_into_dynamic!(Seq, as_seq);
 impl_ast!(Regexp);
