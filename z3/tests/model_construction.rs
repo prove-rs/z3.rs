@@ -1,13 +1,15 @@
 //! Tests for building models by hand with `Model::new` and `Model::add_const_interp`, and
 //! for querying them with `Model::has_interp`.
 
-use z3::ast::{Array, Ast, Bool, Int};
+use z3::ast::{self, Array, Ast, Bool, Int};
 use z3::*;
 
 fn int_fn(name: &str, arity: usize) -> FuncDecl {
-    let int = Sort::int();
-    let domain = vec![&int; arity];
-    FuncDecl::new(name, &domain, &int)
+    FuncDecl::new(
+        name,
+        vec![Sort::int().as_dyn(); arity],
+        Sort::int().as_dyn(),
+    )
 }
 
 #[test]
@@ -54,7 +56,12 @@ fn has_interp_on_solver_model() {
     let g = int_fn("g", 1);
     let solver = Solver::new();
     solver.assert(x.eq(1));
-    solver.assert(f.apply(&[&x]).as_int().unwrap().eq(2));
+    solver.assert(
+        f.apply(vec![ast::Dynamic::from_ast(&x)])
+            .as_int()
+            .unwrap()
+            .eq(2),
+    );
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
 

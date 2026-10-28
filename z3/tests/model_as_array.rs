@@ -15,7 +15,7 @@ fn as_array_const_is_const_interp_and_resolves_to_func_interp() {
     let b = Array::new_const("b", &Sort::int(), &Sort::int());
     let solver = Solver::new();
     for k in 0..3 {
-        solver.assert(a.select(&Int::from_i64(k)).as_int().unwrap().eq(k * 10 + 1));
+        solver.assert(a.select(&Int::from_i64(k)).eq(k * 10 + 1));
     }
     solver.assert(a.eq(&b).not());
     assert_eq!(solver.check(), SatResult::Sat);
@@ -34,11 +34,11 @@ fn as_array_const_is_const_interp_and_resolves_to_func_interp() {
     assert!(a_fi.get_else().is_some());
 
     // The const value is still usable as an array value.
-    let a_value = a_value.as_array().unwrap();
+    let a_value = a_value.narrow::<Array<Int, Int>>().unwrap();
     for k in 0..3 {
         let v = model
             .eval(&a_value.select(&Int::from_i64(k)), true)
             .unwrap();
-        assert_eq!(v.as_int().unwrap().as_i64(), Some(k * 10 + 1));
+        assert_eq!(v.as_i64(), Some(k * 10 + 1));
     }
 }

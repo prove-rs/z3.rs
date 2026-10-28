@@ -1,15 +1,20 @@
 // Requires Z3 >= 5.0.0 (auto-detected; see z3/build.rs).
 #![cfg(z3_5_0_0)]
 
-use z3::ast::{self, Ast};
+use z3::ast::{self, Ast, SortMarker};
 use z3::{AstVector, SatResult, Solver, Sort};
 
 fn int(n: i64) -> ast::Int {
     ast::Int::from_i64(n)
 }
 
+/// Narrow an untyped value (e.g. the `Array` built by `lambda_const`) to the statically-typed `T`.
+fn typed<T: SortMarker>(a: &impl Ast) -> T {
+    ast::Dynamic::from_ast(a).narrow().unwrap()
+}
+
 /// Build the finite set `{elems...}` out of singletons and unions.
-fn set_of(elems: &[i64]) -> ast::FiniteSet {
+fn set_of(elems: &[i64]) -> ast::FiniteSet<ast::Int> {
     elems
         .iter()
         .fold(ast::FiniteSet::empty(&Sort::int()), |acc, &e| {
@@ -101,7 +106,10 @@ fn test_finite_set_map() {
     let one_two = set_of(&[1, 2]);
 
     let x = ast::Int::new_const("x");
-    let plus_ten = ast::lambda_const(&[&x], &ast::Dynamic::from_ast(&(&x + int(10))));
+    let plus_ten: ast::Array<ast::Int, ast::Int> = typed(&ast::lambda_const(
+        &[&x],
+        &ast::Dynamic::from_ast(&(&x + int(10))),
+    ));
     let mapped = one_two.map(&plus_ten);
     prove(&mapped.eq(set_of(&[11, 12])));
     prove(&mapped.member(&int(1)).not());
@@ -111,7 +119,10 @@ fn test_finite_set_map() {
     prove(&one_two.map(&const_42).eq(set_of(&[42])));
 
     // The result element sort is the function's range, not `eltype`.
-    let gt_one = ast::lambda_const(&[&x], &ast::Dynamic::from_ast(&x.gt(int(1))));
+    let gt_one: ast::Array<ast::Int, ast::Bool> = typed(&ast::lambda_const(
+        &[&x],
+        &ast::Dynamic::from_ast(&x.gt(int(1))),
+    ));
     let bools = one_two.map(&gt_one);
     assert_eq!(bools.get_sort(), Sort::finite_set(&Sort::bool()));
     let expected = ast::FiniteSet::singleton(&ast::Bool::from_bool(false))
@@ -126,7 +137,10 @@ fn test_finite_set_filter() {
     let range = ast::FiniteSet::range(&int(1), &int(3));
 
     let x = ast::Int::new_const("x");
-    let gt_one = ast::lambda_const(&[&x], &ast::Dynamic::from_ast(&x.gt(int(1))));
+    let gt_one: ast::Array<ast::Int, ast::Bool> = typed(&ast::lambda_const(
+        &[&x],
+        &ast::Dynamic::from_ast(&x.gt(int(1))),
+    ));
     let filtered = range.filter(&gt_one);
     prove(&filtered.eq(ast::FiniteSet::range(&int(2), &int(3))));
     prove(&filtered.member(&int(1)).not());
@@ -186,10 +200,16 @@ fn test_dynamic_as_finite_set() {
         &Sort::int(),
         &Sort::array(&Sort::int(), &Sort::bool()),
     );
-    let elem = array_of_finite_sets.select(&int(0));
+    let elem = ast::Dynamic::from_ast(&array_of_finite_sets.select(&int(0)));
     let as_set = elem.as_finite_set().unwrap();
     assert_eq!(ast::Dynamic::from_ast(&as_set), elem);
-    assert!(array_of_sets.select(&int(0)).as_finite_set().is_none());
+    assert!(elem.narrow::<ast::FiniteSet<ast::Int>>().is_some());
+    assert!(elem.narrow::<ast::FiniteSet<ast::Bool>>().is_none());
+    assert!(
+        ast::Dynamic::from_ast(&array_of_sets.select(&int(0)))
+            .as_finite_set()
+            .is_none()
+    );
     assert!(ast::Dynamic::from_ast(&int(0)).as_finite_set().is_none());
 }
 
@@ -197,16 +217,22 @@ fn test_dynamic_as_finite_set() {
 fn test_sort_finite_set() {
     let int_sort = Sort::int();
     let finite_set_sort = Sort::finite_set(&int_sort);
-    assert!(finite_set_sort.is_finite_set());
-    assert!(!int_sort.is_finite_set());
+    assert!(finite_set_sort.narrow::<ast::FiniteSet>().is_some());
+    assert!(int_sort.narrow::<ast::FiniteSet>().is_none());
     // Array-backed sets are not finite sets.
-    assert!(!Sort::set(&int_sort).is_finite_set());
-    assert_eq!(finite_set_sort.finite_set_basis().unwrap(), int_sort);
-    assert!(int_sort.finite_set_basis().is_none());
-    assert_eq!(
-        Sort::finite_set(&Sort::bool()).finite_set_basis().unwrap(),
-        Sort::bool()
+    assert!(Sort::set(&int_sort).narrow::<ast::FiniteSet>().is_none());
+    assert!(
+        finite_set_sort
+            .narrow::<ast::FiniteSet<ast::Int>>()
+            .is_some()
     );
+    assert!(
+        finite_set_sort
+            .narrow::<ast::FiniteSet<ast::Bool>>()
+            .is_none()
+    );
+    assert_eq!(finite_set_sort.basis(), int_sort);
+    assert_eq!(Sort::finite_set(&Sort::bool()).basis(), Sort::bool());
 }
 
 #[test]
@@ -214,7 +240,11 @@ fn test_finite_set_try_from_ast_vector() {
     let a = ast::FiniteSet::new_const("a", &Sort::int());
     let b = ast::FiniteSet::new_const("b", &Sort::int());
     let v: AstVector = [a.clone(), b.clone()].into_iter().collect();
-    let sets = Vec::<ast::FiniteSet>::try_from(v).unwrap();
+    let sets: Vec<ast::FiniteSet<ast::Int>> = Vec::<ast::FiniteSet>::try_from(v)
+        .unwrap()
+        .iter()
+        .map(typed)
+        .collect();
     assert_eq!(sets, vec![a, b]);
 
     let mixed: AstVector = [ast::Dynamic::from_ast(&int(1))].into_iter().collect();

@@ -12,7 +12,7 @@
 //! ```rust
 //! use z3::{Sort, DatatypeAccessor, DatatypeBuilder, Symbol};
 //! let dt = DatatypeBuilder::new("my_datatype")
-//!     .variant("case1", vec![("field1", DatatypeAccessor::sort(Sort::int()))])
+//!     .variant("case1", vec![("field1", DatatypeAccessor::sort(Sort::int().as_dyn()))])
 //!     .variant("case2", vec![("field2", DatatypeAccessor::datatype("my_datatype"))])
 //!     .finish();
 //! ```

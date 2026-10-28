@@ -1,9 +1,10 @@
 use crate::ast::{Array, Ast, Bool, Dynamic, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
+use std::marker::PhantomData;
 use z3_sys::*;
 
-/// [`Ast`] node representing a finite set value.
+/// [`Ast`] node representing a finite set value, whose elements are all of sort `Elt`.
 ///
 /// Unlike [`Set`](crate::ast::Set), `FiniteSet` is not backed by an array and
 /// cannot be built up element-by-element (there is no `add`/`del`). Sets are
@@ -12,15 +13,16 @@ use z3_sys::*;
 ///
 /// Z3 has no dedicated [`SortKind`](crate::SortKind) for finite sets: the
 /// sort of a `FiniteSet` reports [`SortKind::Unknown`](crate::SortKind::Unknown)
-/// from [`Sort::kind`] and [`Dynamic::sort_kind`]. Use [`Sort::is_finite_set`]
+/// from [`Sort::kind`] and [`Dynamic::sort_kind`]. Use [`Sort::narrow`]
 /// or [`Dynamic::as_finite_set`] to recognize finite sets.
-pub struct FiniteSet {
+pub struct FiniteSet<Elt = Dynamic> {
     pub(crate) ctx: Context,
     pub(crate) z3_ast: Z3_ast,
+    pub(crate) phantom: PhantomData<Elt>,
 }
 
-impl FiniteSet {
-    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort) -> FiniteSet {
+impl<Elt: Ast> FiniteSet<Elt> {
+    pub fn new_const<S: Into<Symbol>>(name: S, eltype: &Sort<Elt>) -> FiniteSet<Elt> {
         let ctx = &Context::thread_local();
         let sort = Sort::finite_set(eltype);
         unsafe {
@@ -35,7 +37,7 @@ impl FiniteSet {
         }
     }
 
-    pub fn fresh_const(prefix: &str, eltype: &Sort) -> FiniteSet {
+    pub fn fresh_const(prefix: &str, eltype: &Sort<Elt>) -> FiniteSet<Elt> {
         let ctx = &Context::thread_local();
         let sort = Sort::finite_set(eltype);
         unsafe {
@@ -48,7 +50,7 @@ impl FiniteSet {
     }
 
     /// Creates the empty finite set with the given element sort.
-    pub fn empty(eltype: &Sort) -> FiniteSet {
+    pub fn empty(eltype: &Sort<Elt>) -> FiniteSet<Elt> {
         let ctx = &Context::thread_local();
         let sort = Sort::finite_set(eltype);
         unsafe {
@@ -60,7 +62,7 @@ impl FiniteSet {
     }
 
     /// Creates a finite set containing a single element.
-    pub fn singleton<A: Ast>(elem: &A) -> FiniteSet {
+    pub fn singleton(elem: &Elt) -> FiniteSet<Elt> {
         let ctx = elem.get_ctx();
         unsafe {
             Self::wrap(ctx, {
@@ -69,23 +71,10 @@ impl FiniteSet {
         }
     }
 
-    /// Creates a finite set of integers in the range `[low, high]`.
-    pub fn range(low: &Int, high: &Int) -> FiniteSet {
-        let ctx = low.get_ctx();
-        unsafe {
-            Self::wrap(ctx, {
-                Z3_mk_finite_set_range(ctx.z3_ctx.as_ptr(), low.get_z3_ast(), high.get_z3_ast())
-                    .unwrap()
-            })
-        }
-    }
-
     /// Check if an item is a member of the set.
-    ///
-    /// Note that the `element` _must be_ of the `FiniteSet`'s `eltype` sort.
     //
     // We avoid the binop! macro because the argument has a non-Self type
-    pub fn member<A: Ast>(&self, element: &A) -> Bool {
+    pub fn member(&self, element: &Elt) -> Bool {
         unsafe {
             Bool::wrap(&self.ctx, {
                 Z3_mk_finite_set_member(self.ctx.z3_ctx.as_ptr(), element.get_z3_ast(), self.z3_ast)
@@ -96,15 +85,15 @@ impl FiniteSet {
 
     /// Apply `f` to every element of the set, producing a new finite set.
     ///
-    /// `f` must be an [`Array`] of sort `eltype -> range` (Z3 represents
+    /// `f` is an [`Array`] of sort `Elt -> R` (Z3 represents
     /// function values structurally as arrays); build one with
     /// [`Array::const_array`], [`ast::lambda_const`](crate::ast::lambda_const),
     /// or an `(as-array f)` wrapper around a [`FuncDecl`](crate::FuncDecl).
     //
     // We avoid the binop! macro because the result element sort differs from `self`'s.
-    pub fn map(&self, f: &Array) -> FiniteSet {
+    pub fn map<R: Ast>(&self, f: &Array<Elt, R>) -> FiniteSet<R> {
         unsafe {
-            Self::wrap(&self.ctx, {
+            FiniteSet::wrap(&self.ctx, {
                 Z3_mk_finite_set_map(self.ctx.z3_ctx.as_ptr(), f.get_z3_ast(), self.z3_ast).unwrap()
             })
         }
@@ -112,11 +101,11 @@ impl FiniteSet {
 
     /// Filter the set's elements using the predicate `f`, producing a new finite set.
     ///
-    /// `f` must be an [`Array`] of sort `eltype -> Bool` (Z3 represents
+    /// `f` is an [`Array`] of sort `Elt -> Bool` (Z3 represents
     /// function values structurally as arrays); build one with
     /// [`Array::const_array`], [`ast::lambda_const`](crate::ast::lambda_const),
     /// or an `(as-array f)` wrapper around a [`FuncDecl`](crate::FuncDecl).
-    pub fn filter(&self, f: &Array) -> FiniteSet {
+    pub fn filter(&self, f: &Array<Elt, Bool>) -> FiniteSet<Elt> {
         unsafe {
             Self::wrap(&self.ctx, {
                 Z3_mk_finite_set_filter(self.ctx.z3_ctx.as_ptr(), f.get_z3_ast(), self.z3_ast)
@@ -141,6 +130,19 @@ impl FiniteSet {
     }
 }
 
+impl FiniteSet<Int> {
+    /// Creates a finite set of integers in the range `[low, high]`.
+    pub fn range(low: &Int, high: &Int) -> FiniteSet<Int> {
+        let ctx = low.get_ctx();
+        unsafe {
+            Self::wrap(ctx, {
+                Z3_mk_finite_set_range(ctx.z3_ctx.as_ptr(), low.get_z3_ast(), high.get_z3_ast())
+                    .unwrap()
+            })
+        }
+    }
+}
+
 impl Dynamic {
     /// Returns `None` if the `Dynamic` is not actually a `FiniteSet`.
     ///
@@ -148,8 +150,6 @@ impl Dynamic {
     /// [`Dynamic::sort_kind`], which is [`SortKind::Unknown`](crate::SortKind::Unknown)
     /// for finite sets.
     pub fn as_finite_set(&self) -> Option<FiniteSet> {
-        self.get_sort()
-            .is_finite_set()
-            .then(|| unsafe { FiniteSet::wrap(&self.ctx, self.z3_ast) })
+        self.narrow()
     }
 }
