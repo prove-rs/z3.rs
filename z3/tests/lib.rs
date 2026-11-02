@@ -2,7 +2,7 @@ use log::info;
 use std::convert::TryInto;
 use std::ops::Add;
 use std::time::Duration;
-use z3::ast::{Array, Ast, BV, Bool, Int, atleast, atmost};
+use z3::ast::{Array, Ast, BV, Bool, Dynamic, Int, atleast, atmost};
 use z3::*;
 
 #[cfg(feature = "num")]
@@ -2053,4 +2053,122 @@ fn test_compare_trait_resolution() {
     assert!(!test_bool.eq(a.ne(&b)).is_const());
     assert!(!test_bool.ne(a.eq(&b)).is_const());
     assert!(!test_bool.ne(a.ne(&b)).is_const());
+}
+
+#[test]
+#[should_panic(expected = "`/*models=*/true`")]
+fn test_goal_solve_without_model_generation() {
+    let a = ast::Int::new_const("a");
+    let goal = Goal::new(false, false, false);
+    let _ = goal.into_solutions(Tactic::new("smt").solver(), &[a], false);
+}
+
+#[test]
+#[should_panic(expected = "`/*models=*/true`")]
+fn test_goal_apply_tactic_and_solve_without_model_generation() {
+    let a = ast::Int::new_const("a");
+    let goal = Tactic::create_skip()
+        .apply(&Goal::new(false, false, false), None)
+        .unwrap();
+    let _ = goal
+        .into_solutions(Tactic::new("smt").solver(), &[a], false)
+        .collect::<Vec<_>>();
+}
+
+#[test]
+fn test_goal_apply_tactic_and_solve() {
+    let a = ast::Int::new_const("a");
+    let b = ast::Int::new_const("b");
+    let c = ast::Int::new_const("c");
+    let clause = Bool::and(&[
+        Bool::or(&[a.eq(0), a.eq(1), a.eq(2), a.eq(3)]),
+        a.eq(&b),
+        c.ge(0),
+        c.le(3),
+    ]);
+    let true_solns = {
+        let solver = Tactic::new("smt").solver();
+        solver.assert(&clause);
+        let mut solns = solver
+            .into_solutions([a.clone(), b.clone(), c.clone()], true)
+            .map(|d| d.iter().map(|e| e.as_i64().unwrap()).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        solns.sort();
+        solns
+    };
+    assert_eq!(true_solns.len(), 16);
+    let solns_of_subgoals = {
+        let goal = Goal::new(true, false, false);
+        goal.assert(&clause);
+        let t = Tactic::new("split-clause").and_then(&Tactic::new("solve-eqs"));
+        let subgoals = t.apply(&goal, None).unwrap();
+        assert_eq!(subgoals.num_subgoals(), 4);
+        // Ensure that `a` and  `b` are completely missing in subgoal formulas.
+        for subgoals in subgoals.clone().list_subgoals() {
+            for children in subgoals
+                .iter_formulas::<Dynamic>()
+                .flat_map(|f| f.children())
+            {
+                assert_ne!(children, a);
+                assert_ne!(children, b);
+            }
+        }
+        let solver = Tactic::new("smt").solver();
+        let mut solns = subgoals
+            .into_solutions(solver, [a.clone(), b.clone(), c.clone()], false)
+            .map(|d| d.iter().map(|e| e.as_i64().unwrap()).collect::<Vec<_>>())
+            .collect::<Vec<_>>();
+        solns.sort();
+        solns
+    };
+    assert_eq!(solns_of_subgoals, true_solns);
+}
+
+#[test]
+fn test_goal_apply_tactic_and_solve_retain_counterexamples_across_subgoals() {
+    let a = ast::Int::new_const("a");
+    let b = ast::Int::new_const("b");
+    let c = ast::Int::new_const("c");
+    let clause = Bool::and(&[
+        Bool::or(&[a.eq(0), a.eq(1), a.eq(2), a.eq(3)]),
+        a.eq(&b),
+        c.ge(0),
+        c.le(3),
+    ]);
+    let true_solns = {
+        let solver = Tactic::new("smt").solver();
+        solver.assert(&clause);
+        let mut solns = solver
+            .into_solutions(c.clone(), true)
+            .map(|c| c.as_i64().unwrap())
+            .collect::<Vec<_>>();
+        solns.sort();
+        solns
+    };
+    assert_eq!(true_solns.len(), 4);
+    let solns_of_subgoals = {
+        let goal = Goal::new(true, false, false);
+        goal.assert(&clause);
+        let t = Tactic::new("split-clause").and_then(&Tactic::new("solve-eqs"));
+        let subgoals = t.apply(&goal, None).unwrap();
+        assert_eq!(subgoals.num_subgoals(), 4);
+        // Ensure that `a` and  `b` are completely missing in subgoal formulas.
+        for subgoals in subgoals.clone().list_subgoals() {
+            for children in subgoals
+                .iter_formulas::<Dynamic>()
+                .flat_map(|f| f.children())
+            {
+                assert_ne!(children, a);
+                assert_ne!(children, b);
+            }
+        }
+        let solver = Tactic::new("smt").solver();
+        let mut solns = subgoals
+            .into_solutions(solver, c.clone(), true)
+            .map(|c| c.as_i64().unwrap())
+            .collect::<Vec<_>>();
+        solns.sort();
+        solns
+    };
+    assert_eq!(solns_of_subgoals, true_solns);
 }
