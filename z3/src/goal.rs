@@ -1,27 +1,39 @@
+use core::iter::FusedIterator;
 use std::ffi::CStr;
 use std::fmt;
 use z3_sys::*;
 
-use crate::ast::Bool;
-use crate::{Context, Goal, Translate, ast, ast::Ast};
+use crate::{
+    Context, Goal, Model, SatResult, Solvable, Solver, Translate,
+    ast::{self, Ast, Bool},
+};
 
 impl Clone for Goal {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, self.z3_goal) }
+        unsafe { Self::wrap(&self.ctx, self.z3_goal, self.models) }
     }
 }
 
 impl Goal {
-    pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal) -> Goal {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal, models: bool) -> Goal {
         unsafe {
             Z3_goal_inc_ref(ctx.z3_ctx.as_ptr(), z3_goal);
         }
         Goal {
             ctx: ctx.clone(),
             z3_goal,
+            models,
         }
     }
 
+    /// Create empty `Goal`.
+    ///
+    /// NOTE: if you intend to iterate over the solutions
+    /// ([`Goal::into_solutions`]) of this [`Goal`],
+    /// or apply a [`crate::Tactic`] to this [`Goal`]
+    /// and then iterate over solutions
+    /// ([`crate::Tactic::apply`]+[`crate::ApplyResult::into_solutions`]),
+    /// you need to pass `/*models=*/true` here.
     pub fn new(models: bool, unsat_cores: bool, proofs: bool) -> Goal {
         let ctx = &Context::thread_local();
         // NOTE: The Z3 context ctx must have been created with proof generation support.
@@ -29,6 +41,7 @@ impl Goal {
             Self::wrap(
                 ctx,
                 Z3_mk_goal(ctx.z3_ctx.as_ptr(), models, unsat_cores, proofs).unwrap(),
+                models,
             )
         }
     }
@@ -106,6 +119,104 @@ impl Goal {
         }
         formulas
     }
+
+    /// Convert a model of the formulas of a goal to a model of an original goal.
+    /// The model may be null, in which case the returned model is valid
+    /// if the goal was established satisfiable.
+    ///
+    /// # NOTE:
+    /// Only the `Goal`s constructed with model generation enabled
+    /// can perform model conversion.
+    /// (pass `/*models=*/true` into the initial [`Goal::new`] call.)
+    ///
+    /// When using this feature it is advisable to set the parameter `model`.compact to `false`.
+    /// It is by default true, which erases variables created by the solver from models.
+    /// Without access to model values for intermediary variables, values of other variables
+    /// may end up having the wrong values.
+    pub fn convert_model(&self, model: Model) -> Model {
+        assert!(
+            self.models,
+            "Model conversion is only available for the `Goal`s that were constructed with model generation enabled.\nTIP: pass `/*models=*/true` into the initial `Goal::new()`."
+        );
+        unsafe {
+            Model::wrap(
+                &self.ctx,
+                Z3_goal_convert_model(self.ctx.z3_ctx.as_ptr(), self.z3_goal, model.z3_mdl)
+                    .unwrap(),
+            )
+        }
+    }
+
+    /// Consume this [`Goal`] and [`Solver`] and iterate over solutions to the given [`Solvable`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::{Goal, Solver, Tactic};
+    /// # use z3::ast::*;
+    ///  let g = Goal::new(/*models=*/true, false, false);
+    ///  let a = Int::new_const("a");
+    ///  let b = Int::new_const("b");
+    ///  g.assert(&Bool::and(&[
+    ///      Bool::or(&[a.eq(0), a.eq(1)]),
+    ///      b.ge(0),
+    ///      b.le(1),
+    ///  ]));
+    ///  let subgoals = Tactic::new("split-clause")
+    ///      .and_then(&Tactic::new("solve-eqs"))
+    ///      .apply(&g, None).unwrap();
+    ///  assert_eq!(subgoals.num_subgoals(), 2);
+    ///  let c = Int::new_const("c");
+    ///  let s = Tactic::new("smt").solver();
+    ///  s.assert(&c.ge(0x0));
+    ///  s.assert(&c.le(0x1));
+    ///  let mut solutions = subgoals
+    ///      .into_solutions(s, [a, b, c], false)
+    ///      .map(|r| r.iter().map(|e| e.as_i64().unwrap()).collect::<Vec<_>>())
+    ///      .collect::<Vec<_>>();
+    ///  assert_eq!(solutions.len(), 8);
+    ///  solutions.sort();
+    ///  assert_eq!(solutions,
+    ///      [[0, 0, 0], [0, 0, 1], [0, 1, 0], [0, 1, 1],
+    ///      [1, 0, 0], [1, 0, 1], [1, 1, 0], [1, 1, 1]]);
+    /// ```
+    ///
+    /// See also:
+    /// - [`Solver::into_solutions`]
+    /// - [`crate::ApplyResult::into_solutions`]
+    pub fn into_solutions<T: Solvable>(
+        self,
+        solver: Solver,
+        ast: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        self.into_solutions_(None, solver, ast, model_completion)
+    }
+
+    pub(crate) fn into_solutions_<T: Solvable>(
+        self,
+        counterexamples: Option<std::rc::Rc<std::cell::RefCell<Vec<ast::Bool>>>>,
+        solver: Solver,
+        ast: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        let interpretation = self.convert_model(Model::new_empty(&self.ctx));
+        self.iter_formulas().for_each(|f: Bool| solver.assert(f));
+        if let Some(counterexamples) = &counterexamples {
+            let counterexamples = ast::Bool::and(&counterexamples.borrow());
+            let counterexamples = interpretation.eval(&counterexamples, false).unwrap();
+            solver.assert(counterexamples);
+        }
+        GoalSolverIterator {
+            counterexamples,
+            interpretation,
+            goal: self,
+            subgoal_solver: solver,
+            ast,
+            model_completion,
+        }
+        .fuse()
+    }
 }
 
 impl fmt::Display for Goal {
@@ -142,7 +253,45 @@ unsafe impl Translate for Goal {
                 ctx,
                 Z3_goal_translate(self.ctx.z3_ctx.as_ptr(), self.z3_goal, ctx.z3_ctx.as_ptr())
                     .unwrap(),
+                self.models,
             )
+        }
+    }
+}
+
+struct GoalSolverIterator<T: Solvable> {
+    counterexamples: Option<std::rc::Rc<std::cell::RefCell<Vec<ast::Bool>>>>,
+    goal: Goal,
+    interpretation: Model,
+    subgoal_solver: Solver,
+    ast: T,
+    model_completion: bool,
+}
+
+impl<T: Solvable> Iterator for GoalSolverIterator<T> {
+    type Item = T::ModelInstance;
+
+    fn next(&mut self) -> Option<Self::Item> {
+        match self.subgoal_solver.check() {
+            SatResult::Sat => {
+                let model = {
+                    let subgoal_model = self.subgoal_solver.get_model()?;
+                    self.goal.convert_model(subgoal_model)
+                };
+                let instance = self.ast.read_from_model(&model, self.model_completion)?;
+                let subgoal_counterexample = {
+                    let counterexample = self.ast.generate_constraint(&instance);
+                    let subgoal_counterexample =
+                        self.interpretation.eval(&counterexample, false).unwrap();
+                    if let Some(counterexamples) = &mut self.counterexamples {
+                        counterexamples.borrow_mut().push(counterexample);
+                    }
+                    subgoal_counterexample
+                };
+                self.subgoal_solver.assert(subgoal_counterexample);
+                Some(instance)
+            }
+            _ => None,
         }
     }
 }
