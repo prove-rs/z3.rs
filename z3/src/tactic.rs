@@ -1,3 +1,4 @@
+use core::iter::FusedIterator;
 use std::convert::TryFrom;
 use std::ffi::{CStr, CString};
 use std::fmt;
@@ -7,36 +8,89 @@ use std::str::Utf8Error;
 use std::time::Duration;
 use z3_sys::*;
 
-use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
+use crate::{ApplyResult, Context, Goal, Params, Probe, Solvable, Solver, Tactic};
 
 impl ApplyResult {
-    unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
+    unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result, models: bool) -> ApplyResult {
         unsafe {
             Z3_apply_result_inc_ref(ctx.z3_ctx.as_ptr(), z3_apply_result);
         }
         ApplyResult {
             ctx: ctx.clone(),
             z3_apply_result,
+            models,
         }
     }
 
+    pub fn num_subgoals(&self) -> u32 {
+        unsafe { Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result) }
+    }
+
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal> {
-        let num_subgoals = unsafe {
-            Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result)
-        };
+        let num_subgoals = self.num_subgoals();
         (0..num_subgoals).map(move |i| unsafe {
             Goal::wrap(
                 &self.ctx,
                 Z3_apply_result_get_subgoal(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result, i)
                     .unwrap(),
+                self.models,
             )
         })
+    }
+
+    /// Consume this [`ApplyResult`] and [`Solver`] and iterate over solutions to the given [`Solvable`].
+    ///
+    /// # Example
+    ///
+    /// ```
+    /// # use z3::{Goal, Solver};
+    /// # use z3::ast::*;
+    ///  let g = Goal::new(/*models=*/true, false, false);
+    ///  let a = BV::new_const("a", 8);
+    ///  let b = BV::new_const("b", 8);
+    ///  let c = BV::new_const("c", 8);
+    ///  g.assert(&a.bvxor(0xff).eq(&b));
+    ///  g.assert(&b.eq(0x25));
+    ///  let s = Solver::new_for_logic("QF_BV").unwrap();
+    ///  s.assert(&c.eq(0x15));
+    ///  let solutions: Vec<_> = g.into_solutions(s, [a,b,c], true).collect();
+    ///  assert_eq!(solutions.len(), 1);
+    ///  let solution = &solutions[0];
+    ///  assert_eq!(solution[0], 0xda);
+    ///  assert_eq!(solution[1], 0x25);
+    ///  assert_eq!(solution[2], 0x15);
+    ///```
+    ///
+    /// See also:
+    /// - [`Solver::into_solutions`]
+    /// - [`crate::Goal::into_solutions`]
+    pub fn into_solutions<T: Solvable>(
+        self,
+        solver: Solver,
+        ast: T,
+        model_completion: bool,
+    ) -> impl FusedIterator<Item = T::ModelInstance> {
+        let counterexamples = std::rc::Rc::new(std::cell::RefCell::new(vec![]));
+        solver.push();
+        self.list_subgoals()
+            .flat_map(move |subgoal| {
+                solver.pop(1);
+                solver.push();
+                let subgoal_solver = unsafe { Solver::wrap(&solver.ctx, solver.z3_slv) };
+                subgoal.into_solutions_(
+                    Some(counterexamples.clone()),
+                    subgoal_solver,
+                    ast.clone(),
+                    model_completion,
+                )
+            })
+            .fuse()
     }
 }
 
 impl Clone for ApplyResult {
     fn clone(&self) -> Self {
-        unsafe { Self::wrap(&self.ctx, self.z3_apply_result) }
+        unsafe { Self::wrap(&self.ctx, self.z3_apply_result, self.models) }
     }
 }
 
@@ -253,7 +307,7 @@ impl Tactic {
                 ),
             };
             if let Some(z3_apply_result) = z3_apply_result {
-                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result))
+                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result, goal.models))
             } else {
                 let code = Z3_get_error_code(self.ctx.z3_ctx.as_ptr());
                 let msg = Z3_get_error_msg(self.ctx.z3_ctx.as_ptr(), code);
@@ -265,6 +319,16 @@ impl Tactic {
     }
 
     /// Create a new solver that is implemented using the given tactic.
+    ///
+    /// NOTE: the tactic will be re-run on each [`Solver::check`], i.e. for each
+    /// solution (each time [`Solver::into_solutions`]/[`Solver::solutions`]
+    /// iterator is advanced)!
+    ///
+    /// If you want to optimize the your model before running the actual solver,
+    /// you want to create a [`Goal`] (*with* `/*models=*/true`!),
+    /// add clauses ([`Goal::assert`]) to it, then run your optimization tactic
+    /// on that [`Goal`] via [`Tactic::apply`], and then iterate over solutions
+    /// via [`ApplyResult::into_solutions`].
     ///
     /// # Example
     ///
