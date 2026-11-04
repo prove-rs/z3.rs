@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.14.1](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.14.0...z3-sys-v0.14.1) - 2026-11-04
+
+### Other
+
+- regnerate bindings for Z3 5.3.3 ([#621](https://github.com/prove-rs/z3.rs/pull/621)) (by @toolCHAINZ) - #621
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.14.0](https://github.com/prove-rs/z3.rs/compare/z3-sys-v0.13.1...z3-sys-v0.14.0) - 2026-10-28
 
 ### Fixed
