@@ -4390,22 +4390,21 @@ unsafe extern "C" {
     );
     /// propagate a consequence based on fixed values and equalities.
     /// A client may invoke it during the `propagate_fixed`, `propagate_eq`, `propagate_diseq`, and `propagate_final` callbacks.
-    /// The callback adds a propagation consequence based on the fixed values passed `ids` and equalities `eqs` based on parameters `lhs`, `rhs`.
+    /// The callback adds a propagation consequence based on the fixed values passed in `fixed` and equalities between `eq_lhs` and `eq_rhs`.
     ///
     /// The solver might discard the propagation in case it is true in the current state.
     /// The function returns false in this case; otw. the function returns true.
     /// At least one propagation in the final callback has to return true in order to
     /// prevent the solver from finishing.
     ///
-    /// Assume the callback has the signature: `propagate_consequence_eh`(context, solver_cb, num_ids, ids, num_eqs, lhs, rhs, consequence).
     /// - `c`: - context
-    /// - `solver_cb`: - solver callback
-    /// - `num_ids`: - number of fixed terms used as premise to propagation
-    /// - `ids`: - array of length `num_ids` containing terms that are fixed in the current scope
+    /// - `cb`: - solver callback
+    /// - `num_fixed`: - number of fixed terms used as premise to propagation
+    /// - `fixed`: - array of length `num_fixed` containing terms that are fixed in the current scope
     /// - `num_eqs`: - number of equalities used as premise to propagation
-    /// - `lhs`: - left side of equalities
-    /// - `rhs`: - right side of equalities
-    /// - `consequence`: - consequence to propagate. It is typically an atomic formula, but it can be an arbitrary formula.
+    /// - `eq_lhs`: - left side of equalities
+    /// - `eq_rhs`: - right side of equalities
+    /// - `conseq`: - consequence to propagate. It is typically an atomic formula, but it can be an arbitrary formula.
     pub fn Z3_solver_propagate_consequence(
         c: Z3_context,
         cb: Z3_solver_callback,
