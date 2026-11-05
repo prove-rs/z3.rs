@@ -12,7 +12,7 @@ use crate::Translate;
 use crate::callbacks::FfiState;
 use crate::solver::Solvable;
 use crate::{
-    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol,
+    AstVector, Context, Model, Optimize, Params, SatResult, Statistics, Symbol, Z3Error,
     ast::{Ast, Bool, Dynamic},
 };
 
@@ -72,15 +72,17 @@ impl Optimize {
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
     /// Add the parsed constraints and objectives to the optimizer.
-    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
-        let source_cstring = CString::new(source_string).unwrap();
-        unsafe {
+    ///
+    /// Returns an error if the input does not parse, in which case none of it is added.
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Z3Error> {
+        let source_cstring = CString::new(source_string)?;
+        self.ctx.checked(|| unsafe {
             Z3_optimize_from_string(
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_opt,
                 source_cstring.as_ptr(),
-            );
-        }
+            )
+        })
     }
 
     /// Get this optimizers 's context.
@@ -293,8 +295,13 @@ impl Optimize {
     }
 
     /// Configure the parameters for this Optimize.
-    pub fn set_params(&self, params: &Params) {
-        unsafe { Z3_optimize_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_opt, params.z3_params) };
+    ///
+    /// Returns an error, leaving the optimizer unchanged, if a parameter is unknown or has the
+    /// wrong type.
+    pub fn set_params(&self, params: &Params) -> Result<(), Z3Error> {
+        self.ctx.checked(|| unsafe {
+            Z3_optimize_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_opt, params.z3_params)
+        })
     }
 
     /// Retrieve the statistics for the last [`Optimize::check()`].

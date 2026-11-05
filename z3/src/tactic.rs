@@ -7,7 +7,7 @@ use std::str::Utf8Error;
 use std::time::Duration;
 use z3_sys::*;
 
-use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
+use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic, Z3Error};
 
 impl ApplyResult {
     unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
@@ -228,14 +228,16 @@ impl Tactic {
     }
 
     /// Return a tactic that applies the current tactic using the given set of parameters.
-    pub fn with(&self, params: &Params) -> Tactic {
-        unsafe {
-            Self::wrap(
-                &self.ctx,
+    ///
+    /// Returns an error if a parameter is unknown to this tactic or has the wrong type.
+    pub fn with(&self, params: &Params) -> Result<Tactic, Z3Error> {
+        let t = self
+            .ctx
+            .checked(|| unsafe {
                 Z3_tactic_using_params(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, params.z3_params)
-                    .unwrap(),
-            )
-        }
+            })?
+            .expect("Z3_tactic_using_params succeeded without a tactic");
+        Ok(unsafe { Self::wrap(&self.ctx, t) })
     }
 
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns

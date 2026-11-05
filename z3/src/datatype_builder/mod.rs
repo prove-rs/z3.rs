@@ -14,7 +14,8 @@
 //! let dt = DatatypeBuilder::new("my_datatype")
 //!     .variant("case1", vec![("field1", DatatypeAccessor::sort(Sort::int()))])
 //!     .variant("case2", vec![("field2", DatatypeAccessor::datatype("my_datatype"))])
-//!     .finish();
+//!     .finish()
+//!     .unwrap();
 //! ```
 //!
 //! For mutually recursive types, you must use [`create_datatypes`]
@@ -29,7 +30,7 @@
 //!     .variant("nil", vec![])
 //!     .variant("cons", vec![("hd", DatatypeAccessor::datatype("my_tree")), ("tl", DatatypeAccessor::datatype("my_list"))]);
 //!
-//! let dts = create_datatypes(vec![my_tree, my_list]);
+//! let dts = create_datatypes(vec![my_tree, my_list]).unwrap();
 //! ```
 //!
 mod constructor;
@@ -38,7 +39,9 @@ use std::convert::TryInto;
 use z3_sys::*;
 
 use crate::datatype_builder::constructor::{Constructor, ConstructorList};
-use crate::{Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
+use crate::{
+    Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol, Z3Error,
+};
 
 impl DatatypeBuilder {
     pub fn new<S: Into<Symbol>>(name: S) -> Self {
@@ -61,9 +64,12 @@ impl DatatypeBuilder {
         self
     }
 
-    pub fn finish(self) -> DatatypeSort {
-        let mut dtypes = create_datatypes(vec![self]);
-        dtypes.remove(0)
+    /// Create the datatype sort.
+    ///
+    /// Returns an error if Z3 rejects the datatype, e.g. because it is not well-founded.
+    pub fn finish(self) -> Result<DatatypeSort, Z3Error> {
+        let mut dtypes = create_datatypes(vec![self])?;
+        Ok(dtypes.remove(0))
     }
 }
 
@@ -125,7 +131,12 @@ fn build_datatype_sort(
     DatatypeSort { sort, variants }
 }
 
-pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<DatatypeSort> {
+/// Create a set of (possibly mutually recursive) datatype sorts.
+///
+/// Returns an error if Z3 rejects the datatypes, e.g. because they are not well-founded.
+pub fn create_datatypes(
+    datatype_builders: Vec<DatatypeBuilder>,
+) -> Result<Vec<DatatypeSort>, Z3Error> {
     let num = datatype_builders.len();
     assert!(num > 0, "At least one DatatypeBuilder must be specified");
 
@@ -134,8 +145,9 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     assert!(datatype_builders.iter().all(|d| d.ctx == ctx));
     let mut names: Vec<Z3_symbol> = Vec::with_capacity(num);
 
-    // Raw Z3 sorts to be filled by Z3_mk_datatypes
-    let mut raw_sorts: Vec<Z3_sort> = Vec::with_capacity(num);
+    // Raw Z3 sorts to be filled by Z3_mk_datatypes. Z3 leaves them unwritten on error, so
+    // they start out as `None` rather than uninitialized.
+    let mut raw_sorts: Vec<Option<Z3_sort>> = vec![None; num];
 
     // Use wrappers for constructors and constructor-lists so we don't have to
     // manually call Z3_del_constructor / Z3_del_constructor_list.
@@ -189,19 +201,18 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
         .map(|c| c.z3_constructor_list())
         .collect();
 
-    unsafe {
+    ctx.checked(|| unsafe {
         Z3_mk_datatypes(
             ctx.z3_ctx.as_ptr(),
             num.try_into().unwrap(),
             names.as_ptr(),
-            raw_sorts.as_mut_ptr(),
+            raw_sorts.as_mut_ptr().cast(),
             clist_handles.as_mut_ptr(),
-        );
-        raw_sorts.set_len(num);
-    };
+        )
+    })?;
     let sorts = raw_sorts
         .into_iter()
-        .map(|s| unsafe { Sort::wrap(&ctx, s) })
+        .map(|s| unsafe { Sort::wrap(&ctx, s.expect("Z3_mk_datatypes succeeded without a sort")) })
         .collect::<Vec<_>>();
 
     let mut datatype_sorts: Vec<DatatypeSort> = Vec::with_capacity(sorts.len());
@@ -212,7 +223,7 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
     // ctor_wrapped and clist_wrapped will be dropped here, calling the
     // appropriate Z3 deletion routines in their Drop impls. No manual calls
     // to Z3_del_constructor / Z3_del_constructor_list are required.
-    datatype_sorts
+    Ok(datatype_sorts)
 }
 
 /// Wrapper which can point to a sort (by value) or to a custom datatype (by name).

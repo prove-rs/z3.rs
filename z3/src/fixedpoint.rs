@@ -1,5 +1,5 @@
 use crate::ast::{Ast, Bool};
-use crate::{Context, Fixedpoint, FuncDecl, Params, SatResult, Statistics};
+use crate::{Context, Fixedpoint, FuncDecl, Params, SatResult, Statistics, Z3Error};
 use std::ffi::CString;
 use std::fmt;
 use z3_sys::*;
@@ -193,10 +193,13 @@ impl Fixedpoint {
     }
 
     /// Set parameters for the fixedpoint context.
-    pub fn set_params(&self, params: &Params) {
-        unsafe {
-            Z3_fixedpoint_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_fp, params.z3_params);
-        }
+    ///
+    /// Returns an error, leaving the context unchanged, if a parameter is unknown or has the
+    /// wrong type.
+    pub fn set_params(&self, params: &Params) -> Result<(), Z3Error> {
+        self.ctx.checked(|| unsafe {
+            Z3_fixedpoint_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_fp, params.z3_params)
+        })
     }
 
     /// Get the help string for fixedpoint parameters.
