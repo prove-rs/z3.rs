@@ -76,12 +76,8 @@ impl Optimize {
     /// Returns an error if the input does not parse, in which case none of it is added.
     pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Z3Error> {
         let source_cstring = CString::new(source_string)?;
-        self.ctx.checked(|| unsafe {
-            Z3_optimize_from_string(
-                self.ctx.z3_ctx.as_ptr(),
-                self.z3_opt,
-                source_cstring.as_ptr(),
-            )
+        self.ctx.checked(|c| unsafe {
+            Z3_optimize_from_string(c, self.z3_opt, source_cstring.as_ptr())
         })
     }
 
@@ -299,9 +295,8 @@ impl Optimize {
     /// Returns an error, leaving the optimizer unchanged, if a parameter is unknown or has the
     /// wrong type.
     pub fn set_params(&self, params: &Params) -> Result<(), Z3Error> {
-        self.ctx.checked(|| unsafe {
-            Z3_optimize_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_opt, params.z3_params)
-        })
+        self.ctx
+            .checked(|c| unsafe { Z3_optimize_set_params(c, self.z3_opt, params.z3_params) })
     }
 
     /// Retrieve the statistics for the last [`Optimize::check()`].

@@ -197,9 +197,8 @@ impl Fixedpoint {
     /// Returns an error, leaving the context unchanged, if a parameter is unknown or has the
     /// wrong type.
     pub fn set_params(&self, params: &Params) -> Result<(), Z3Error> {
-        self.ctx.checked(|| unsafe {
-            Z3_fixedpoint_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_fp, params.z3_params)
-        })
+        self.ctx
+            .checked(|c| unsafe { Z3_fixedpoint_set_params(c, self.z3_fp, params.z3_params) })
     }
 
     /// Get the help string for fixedpoint parameters.
@@ -213,28 +212,19 @@ impl Fixedpoint {
     }
 
     /// Parse a fixedpoint problem from a string in SMT-LIB format.
-    pub fn from_string(&self, s: &str) -> Result<(), String> {
-        let cs = CString::new(s).map_err(|_| "String contains null byte")?;
-        unsafe {
-            let result =
-                Z3_fixedpoint_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr());
-            match result {
-                Some(_) => Ok(()),
-                None => Err("Failed to parse fixedpoint from string".to_string()),
-            }
-        }
+    pub fn from_string(&self, s: &str) -> Result<(), Z3Error> {
+        let cs = CString::new(s)?;
+        self.ctx
+            .checked(|c| unsafe { Z3_fixedpoint_from_string(c, self.z3_fp, cs.as_ptr()) })?;
+        Ok(())
     }
 
     /// Parse a file containing a fixedpoint problem.
-    pub fn from_file(&self, filename: &str) -> Result<(), String> {
-        let cs = CString::new(filename).map_err(|_| "Filename contains null byte")?;
-        unsafe {
-            let result = Z3_fixedpoint_from_file(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr());
-            match result {
-                Some(_) => Ok(()),
-                None => Err("Failed to parse fixedpoint from file".to_string()),
-            }
-        }
+    pub fn from_file(&self, filename: &str) -> Result<(), Z3Error> {
+        let cs = CString::new(filename)?;
+        self.ctx
+            .checked(|c| unsafe { Z3_fixedpoint_from_file(c, self.z3_fp, cs.as_ptr()) })?;
+        Ok(())
     }
 }
 

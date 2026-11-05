@@ -1,7 +1,7 @@
 //! Helpers for building custom [datatype sorts](DatatypeSort).
 //! The main entry point is [`create_datatypes`] which returns a
-//! list of sorts(more than one for the case that you are defining a set of
-//! mutually recursive data types)
+//! list of sorts (more than one for the case that you are defining a set of
+//! mutually recursive data types), or an error if Z3 rejects them.
 //!
 //!
 //! # Example
@@ -201,9 +201,9 @@ pub fn create_datatypes(
         .map(|c| c.z3_constructor_list())
         .collect();
 
-    ctx.checked(|| unsafe {
+    ctx.checked(|c| unsafe {
         Z3_mk_datatypes(
-            ctx.z3_ctx.as_ptr(),
+            c,
             num.try_into().unwrap(),
             names.as_ptr(),
             raw_sorts.as_mut_ptr().cast(),
@@ -212,7 +212,10 @@ pub fn create_datatypes(
     })?;
     let sorts = raw_sorts
         .into_iter()
-        .map(|s| unsafe { Sort::wrap(&ctx, s.expect("Z3_mk_datatypes succeeded without a sort")) })
+        .collect::<Option<Vec<_>>>()
+        .expect("Z3_mk_datatypes succeeded without writing every sort")
+        .into_iter()
+        .map(|s| unsafe { Sort::wrap(&ctx, s) })
         .collect::<Vec<_>>();
 
     let mut datatype_sorts: Vec<DatatypeSort> = Vec::with_capacity(sorts.len());

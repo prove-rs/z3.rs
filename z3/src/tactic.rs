@@ -231,39 +231,25 @@ impl Tactic {
     ///
     /// Returns an error if a parameter is unknown to this tactic or has the wrong type.
     pub fn with(&self, params: &Params) -> Result<Tactic, Z3Error> {
-        let t = self
-            .ctx
-            .checked(|| unsafe {
-                Z3_tactic_using_params(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, params.z3_params)
-            })?
-            .expect("Z3_tactic_using_params succeeded without a tactic");
+        let t = self.ctx.checked_some(|c| unsafe {
+            Z3_tactic_using_params(c, self.z3_tactic, params.z3_params)
+        })?;
         Ok(unsafe { Self::wrap(&self.ctx, t) })
     }
 
     /// Attempts to apply the tactic to `goal`. If the tactic succeeds, returns
     /// `Ok(_)` with a `ApplyResult`. If the tactic fails, returns `Err(_)` with
-    /// an error message describing why.
-    pub fn apply(&self, goal: &Goal, params: Option<&Params>) -> Result<ApplyResult, String> {
-        unsafe {
-            let z3_apply_result = match params {
-                None => Z3_tactic_apply(self.ctx.z3_ctx.as_ptr(), self.z3_tactic, goal.z3_goal),
-                Some(params) => Z3_tactic_apply_ex(
-                    self.ctx.z3_ctx.as_ptr(),
-                    self.z3_tactic,
-                    goal.z3_goal,
-                    params.z3_params,
-                ),
-            };
-            if let Some(z3_apply_result) = z3_apply_result {
-                Ok(ApplyResult::wrap(&self.ctx, z3_apply_result))
-            } else {
-                let code = Z3_get_error_code(self.ctx.z3_ctx.as_ptr());
-                let msg = Z3_get_error_msg(self.ctx.z3_ctx.as_ptr(), code);
-                Err(String::from(CStr::from_ptr(msg).to_str().unwrap_or(
-                    "Couldn't retrieve error message from z3: got invalid UTF-8",
-                )))
+    /// the error describing why.
+    pub fn apply(&self, goal: &Goal, params: Option<&Params>) -> Result<ApplyResult, Z3Error> {
+        let result = self.ctx.checked_some(|c| unsafe {
+            match params {
+                None => Z3_tactic_apply(c, self.z3_tactic, goal.z3_goal),
+                Some(params) => {
+                    Z3_tactic_apply_ex(c, self.z3_tactic, goal.z3_goal, params.z3_params)
+                }
             }
-        }
+        })?;
+        Ok(unsafe { ApplyResult::wrap(&self.ctx, result) })
     }
 
     /// Create a new solver that is implemented using the given tactic.

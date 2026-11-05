@@ -5,7 +5,8 @@ use std::process::Command;
 use z3::ast::Int;
 use z3::datatype_builder::create_datatypes;
 use z3::{
-    DatatypeAccessor, DatatypeBuilder, Fixedpoint, Optimize, Params, SatResult, Solver, Tactic,
+    DatatypeAccessor, DatatypeBuilder, ErrorCode, Fixedpoint, Optimize, Params, SatResult, Solver,
+    Tactic, Z3Error,
 };
 
 const BAD_SMTLIB: &str = "(declare-const x Int) (assert (= x 5)) (assert (= x 6)) (assert (bogus))";
@@ -49,9 +50,9 @@ fn non_well_founded_builders(n: usize) -> Vec<DatatypeBuilder> {
 }
 
 #[test]
-fn non_well_founded_datatypes_do_not_read_uninitialized_sorts() {
+fn test_non_well_founded_datatypes_do_not_read_uninitialized_sorts() {
     run_isolated(
-        "non_well_founded_datatypes_do_not_read_uninitialized_sorts",
+        "test_non_well_founded_datatypes_do_not_read_uninitialized_sorts",
         || {
             const N: usize = 6;
             let builders = non_well_founded_builders(N);
@@ -68,16 +69,17 @@ fn non_well_founded_datatypes_do_not_read_uninitialized_sorts() {
 }
 
 #[test]
-fn non_well_founded_datatype_finish_is_error() {
-    let err = DatatypeBuilder::new("T")
-        .variant("c", vec![("f", DatatypeAccessor::datatype("T"))])
+fn test_non_well_founded_datatype_finish_is_error() {
+    let err = non_well_founded_builders(1)
+        .pop()
+        .unwrap()
         .finish()
         .unwrap_err();
-    assert!(!err.message.is_empty());
+    assert!(matches!(err, Z3Error::Z3 { .. }));
 }
 
 #[test]
-fn solver_invalid_params_are_rejected_without_dropping_assertions() {
+fn test_solver_invalid_params_are_rejected_without_dropping_assertions() {
     let s = Solver::new();
     assert!(s.set_params(&invalid_params()).is_err());
     let x = Int::new_const("x");
@@ -87,7 +89,7 @@ fn solver_invalid_params_are_rejected_without_dropping_assertions() {
 }
 
 #[test]
-fn solver_valid_params_are_accepted() {
+fn test_solver_valid_params_are_accepted() {
     let s = Solver::new();
     let mut p = Params::new();
     p.set_u32("timeout", 10_000);
@@ -97,17 +99,26 @@ fn solver_valid_params_are_accepted() {
 }
 
 #[test]
-fn solver_from_string_parse_error_is_reported() {
+fn test_solver_from_string_parse_error_is_reported() {
     let s = Solver::new();
-    assert!(s.from_string(BAD_SMTLIB).is_err());
-    assert!(s.from_string("(assert true)\0").is_err());
+    assert!(matches!(
+        s.from_string(BAD_SMTLIB),
+        Err(Z3Error::Z3 {
+            code: ErrorCode::ParserError,
+            ..
+        })
+    ));
+    assert!(matches!(
+        s.from_string("(assert true)\0"),
+        Err(Z3Error::InteriorNul(_))
+    ));
     s.from_string("(declare-const x Int) (assert (= x 5))")
         .unwrap();
     assert_eq!(s.get_assertions().len(), 1);
 }
 
 #[test]
-fn solver_pop_beyond_scopes_is_error() {
+fn test_solver_pop_beyond_scopes_is_error() {
     let s = Solver::new();
     s.push();
     assert!(s.pop(2).is_err());
@@ -115,7 +126,7 @@ fn solver_pop_beyond_scopes_is_error() {
 }
 
 #[test]
-fn optimize_from_string_parse_error_is_reported() {
+fn test_optimize_from_string_parse_error_is_reported() {
     let o = Optimize::new();
     assert!(o.from_string(BAD_SMTLIB).is_err());
     o.from_string("(declare-const x Int) (assert (= x 5))")
@@ -124,17 +135,24 @@ fn optimize_from_string_parse_error_is_reported() {
 }
 
 #[test]
-fn optimize_invalid_params_are_rejected() {
+fn test_optimize_invalid_params_are_rejected() {
     assert!(Optimize::new().set_params(&invalid_params()).is_err());
 }
 
 #[test]
-fn fixedpoint_invalid_params_are_rejected() {
+fn test_fixedpoint_invalid_params_are_rejected() {
     assert!(Fixedpoint::new().set_params(&invalid_params()).is_err());
 }
 
 #[test]
-fn tactic_with_invalid_param_is_error() {
+fn test_fixedpoint_from_string_parse_error_is_reported() {
+    let fp = Fixedpoint::new();
+    assert!(fp.from_string("(declare-rel p ()) (rule (bogus))").is_err());
+    fp.from_string("(declare-rel p ()) (rule p)").unwrap();
+}
+
+#[test]
+fn test_tactic_with_invalid_param_is_error() {
     assert!(Tactic::new("simplify").with(&invalid_params()).is_err());
     let mut p = Params::new();
     p.set_bool("elim_and", true);
