@@ -52,7 +52,7 @@ fn test_create_datatypes_with_explicit_accessors_and_constructors() {
             ],
         );
 
-    let sorts = z3::datatype_builder::create_datatypes(vec![tree_builder, list_builder]);
+    let sorts = z3::datatype_builder::create_datatypes(vec![tree_builder, list_builder]).unwrap();
     // Two sorts should be created.
     assert_eq!(sorts.len(), 2);
 

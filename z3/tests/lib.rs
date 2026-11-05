@@ -274,7 +274,7 @@ fn test_solver_new_from_smtlib2() {
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
     let solver = Solver::new();
-    solver.from_string(problem);
+    solver.from_string(problem).unwrap();
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -286,7 +286,7 @@ fn test_solver_to_smtlib2() {
     solver1.assert(t1.eq(&t2));
     let s1_smt2 = solver1.to_smt2();
     let solver2 = Solver::new();
-    solver2.from_string(s1_smt2);
+    solver2.from_string(s1_smt2).unwrap();
     assert_eq!(solver2.check(), solver1.check());
 }
 
@@ -348,7 +348,7 @@ fn test_pb_ops_model() {
     info!("y: {yv}");
     assert!((xv && !yv) || (!xv && yv));
 
-    solver.pop(1);
+    solver.pop(1).unwrap();
     solver.push();
     solver.assert(ast::Bool::pb_ge(&[(&x, 1), (&y, 1)], 2));
     assert_eq!(solver.check(), SatResult::Sat);
@@ -359,7 +359,7 @@ fn test_pb_ops_model() {
     info!("y: {yv}");
     assert!(xv && yv);
 
-    solver.pop(1);
+    solver.pop(1).unwrap();
     solver.assert(ast::Bool::pb_le(&[(&x, 1), (&y, 1)], 0));
     assert_eq!(solver.check(), SatResult::Sat);
     let model = solver.get_model().unwrap();
@@ -395,7 +395,7 @@ fn test_params() {
     params.set_u32("smt.qi.max_instances", 999);
 
     let solver = Solver::new();
-    solver.set_params(&params);
+    solver.set_params(&params).unwrap();
     solver.assert(x.gt(&y));
     assert_eq!(solver.check(), SatResult::Sat);
 }
@@ -719,7 +719,7 @@ fn test_optimize_new_from_smtlib2() {
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
     let optimize = Optimize::new();
-    optimize.from_string(problem);
+    optimize.from_string(problem).unwrap();
     assert_eq!(optimize.check(&[]), SatResult::Sat);
 }
 
@@ -810,7 +810,8 @@ fn test_datatype_builder() {
     let maybe_int = DatatypeBuilder::new("MaybeInt")
         .variant("Nothing", vec![])
         .variant("Just", vec![("int", DatatypeAccessor::Sort(Sort::int()))])
-        .finish();
+        .finish()
+        .unwrap();
 
     let nothing = maybe_int.variants[0].constructor.apply(&[]);
     let five = ast::Int::from_i64(5);
@@ -879,7 +880,8 @@ fn test_recursive_datatype() {
                 ("cdr", DatatypeAccessor::Datatype("List".into())),
             ],
         )
-        .finish();
+        .finish()
+        .unwrap();
 
     assert_eq!(list_sort.variants.len(), 2);
     let nil = list_sort.variants[0].constructor.apply(&[]);
@@ -952,7 +954,8 @@ fn test_mutually_recursive_datatype() {
             ],
         );
 
-    let sorts = z3::datatype_builder::create_datatypes(vec![tree_builder, tree_list_builder]);
+    let sorts =
+        z3::datatype_builder::create_datatypes(vec![tree_builder, tree_list_builder]).unwrap();
     assert_eq!(sorts.len(), 2);
     let tree_sort = &sorts[0];
     assert_eq!(tree_sort.variants.len(), 2);
@@ -1142,7 +1145,7 @@ fn test_set_membership() {
     solver.assert(set.member(&one));
     // An empty set will never contain 1
     assert_eq!(solver.check(), SatResult::Unsat);
-    solver.pop(1);
+    solver.pop(1).unwrap();
 
     solver.push();
     let set_with_one = set.add(&one);
@@ -1153,7 +1156,7 @@ fn test_set_membership() {
     // Removing 1 from the set means it no longer contains 1
     solver.assert(set_without_one.member(&one));
     assert_eq!(solver.check(), SatResult::Unsat);
-    solver.pop(1);
+    solver.pop(1).unwrap();
 
     solver.push();
     let x = ast::Int::new_const("x");
@@ -1161,16 +1164,16 @@ fn test_set_membership() {
     let forall: ast::Bool = ast::forall_const(&[&x], &[], &set.member(&x).not());
     solver.assert(&forall);
     assert_eq!(solver.check(), SatResult::Sat);
-    solver.pop(1);
+    solver.pop(1).unwrap();
 
-    solver.pop(1);
+    solver.pop(1).unwrap();
 
     solver.push();
     // A singleton set of 1 will contain 1
     solver.assert(set.eq(ast::Set::empty(&Sort::int()).add(&one)));
     solver.assert(set.member(&one));
     assert_eq!(solver.check(), SatResult::Sat);
-    solver.pop(1);
+    solver.pop(1).unwrap();
 }
 
 #[test]
@@ -1331,7 +1334,7 @@ fn test_tactic_with() {
     let goal = Goal::new(false, false, false);
     goal.assert(&x.eq(&x));
 
-    let tactic = Tactic::new("add-bounds").with(&params);
+    let tactic = Tactic::new("add-bounds").with(&params).unwrap();
 
     // Test that `with` succesfully applied the parameter set
     let apply_results = tactic.apply(&goal, Some(&Params::new()));
@@ -1911,14 +1914,14 @@ fn test_atmost() {
     let am = atmost([&a, &b, &c, &d], 2);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Sat));
-    solver.pop(1);
+    solver.pop(1).unwrap();
 
     solver.push();
     solver.assert(&a);
     let am = atmost([&a, &b, &c, &d], 0);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Unsat));
-    solver.pop(1);
+    solver.pop(1).unwrap();
 }
 
 #[test]
@@ -1935,14 +1938,14 @@ fn test_atleast() {
     let am = atleast([&a, &b, &c, &d], 4);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Sat));
-    solver.pop(1);
+    solver.pop(1).unwrap();
 
     solver.push();
     solver.assert(a.not());
     let am = atleast([&a, &b, &c, &d], 4);
     solver.assert(&am);
     assert!(matches!(solver.check(), SatResult::Unsat));
-    solver.pop(1);
+    solver.pop(1).unwrap();
 }
 
 #[test]
