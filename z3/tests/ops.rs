@@ -75,10 +75,13 @@ fn test_int_ops() {
 }
 
 #[test]
-fn test_pow_ret_real() {
+fn test_pow_sort() {
     let x = Int::new_const("x");
     let y = x.power(&x);
+    #[cfg(not(z3_5_4_0))]
     assert!(y.get_sort() == Sort::real());
+    #[cfg(z3_5_4_0)]
+    assert!(y.get_sort() == Sort::int());
 }
 
 #[test]
