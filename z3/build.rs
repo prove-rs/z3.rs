@@ -11,6 +11,7 @@ const KNOWN_THRESHOLDS: &[(u32, u32, u32)] = &[
     (4, 16, 0), // Optimize::solutions(), Translate/Clone for Optimize (see src/optimize.rs)
     (5, 0, 0),  // ast::FiniteSet and Sort::finite_set* (see src/ast/finite_set.rs)
     (5, 3, 2),  // ast::Complex (see src/ast/complex.rs)
+    (5, 4, 0),  // Int::power() returns Int instead of Real (see src/ast/int.rs)
 ];
 
 fn main() {
