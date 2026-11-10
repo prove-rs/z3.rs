@@ -30,21 +30,25 @@ jobs:
         run: git checkout -b release/z3-src-${{ inputs.z3_tag }}
 
       - name: Prepare z3-src
-        run: cargo xtask prepare-z3-src "${{ inputs.z3_tag }}"
+        id: prepare
+        run: |
+          cargo xtask prepare-z3-src "${{ inputs.z3_tag }}"
+          version=$(grep -m1 '^version = "' z3-src/Cargo.toml | cut -d'"' -f2)
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
 
       - name: Commit version bump
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add z3-src/Cargo.toml z3-src/z3
-          git commit -m "chore: release z3-src (Z3 ${{ inputs.z3_tag }})"
+          git commit -m "chore(z3-src): Release ${{ steps.prepare.outputs.version }}"
           git push origin release/z3-src-${{ inputs.z3_tag }}
 
       - name: Open PR
         run: |
           gh pr create \
-            --title "chore: release z3-src (Z3 ${{ inputs.z3_tag }})" \
-            --body "Automated release PR. Review the submodule pointer and Cargo.toml version, then merge to publish." \
+            --title "chore(z3-src): Release ${{ steps.prepare.outputs.version }}" \
+            --body "Automated release PR for Z3 ${{ inputs.z3_tag }}. Review the submodule pointer and Cargo.toml version, then merge to publish." \
             --base master \
             --head release/z3-src-${{ inputs.z3_tag }}
         env:
