@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.22.0...z3-v0.23.0) - 2026-11-11
+
+### Fixed
+
+- [**breaking**] return Int from Int::power() on Z3 >= 5.4.0 ([#628](https://github.com/prove-rs/z3.rs/pull/628)) (by @toolCHAINZ) - #628
+
+### Other
+
+- retarget to minor versions to avoid pointless bumps ([#629](https://github.com/prove-rs/z3.rs/pull/629)) (by @toolCHAINZ) - #629
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.22.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.21.1...z3-v0.22.0) - 2026-10-28
 
 ### Added
