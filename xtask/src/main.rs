@@ -22,7 +22,7 @@ enum CliCommand {
     },
     /// Point z3-sys at the Z3 version committed in the z3-src submodule
     /// (gh-release version, z3-src dependency) and regenerate bindings.
-    PrepareZ3Sys,
+    UpdateZ3Sys,
     /// Print the Z3 version (major.minor.patch) of the z3-src submodule.
     Z3Version,
 }
@@ -32,7 +32,7 @@ fn main() -> Result<(), Box<dyn std::error::Error>> {
     match cli.command {
         CliCommand::GenBindings => gen_bindings()?,
         CliCommand::PrepareZ3Src { z3_tag } => prepare_z3_src(&z3_tag)?,
-        CliCommand::PrepareZ3Sys => prepare_z3_sys()?,
+        CliCommand::UpdateZ3Sys => update_z3_sys()?,
         CliCommand::Z3Version => {
             ensure_submodule_matches_index(&workspace_root())?;
             println!("{}", read_z3_version(&workspace_root().join("z3-src/z3"))?);
@@ -174,12 +174,12 @@ fn prepare_z3_src(z3_tag: &str) -> Result<(), Box<dyn std::error::Error>> {
     println!("  git -C z3-src/z3 log --oneline -3");
     println!();
     println!("Commit (including the z3-src/z3 submodule) and open a PR.");
-    println!("release-plz will publish on merge; then run `cargo xtask prepare-z3-sys`.");
+    println!("release-plz will publish on merge; then run `cargo xtask update-z3-sys`.");
 
     Ok(())
 }
 
-fn prepare_z3_sys() -> Result<(), Box<dyn std::error::Error>> {
+fn update_z3_sys() -> Result<(), Box<dyn std::error::Error>> {
     let root = workspace_root();
     ensure_submodule_matches_index(&root)?;
     let z3_ver = read_z3_version(&root.join("z3-src/z3"))?;
@@ -208,7 +208,7 @@ fn prepare_z3_sys() -> Result<(), Box<dyn std::error::Error>> {
 
     gen_bindings()?;
 
-    println!("Prepared z3-sys for Z3 {gh_release_version}");
+    println!("Updated z3-sys for Z3 {gh_release_version}");
     println!("Review changes:      git diff z3-sys/");
 
     Ok(())

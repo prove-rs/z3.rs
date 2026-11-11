@@ -1,6 +1,6 @@
 name: Release z3-src (prepare)
 
-# Opens a z3-src release PR. Once it merges, run release-z3-sys.yml for the
+# Opens a z3-src release PR. Once it merges, run update-z3-sys.yml for the
 # matching z3-sys update.
 
 on:
@@ -52,6 +52,6 @@ jobs:
           git push origin "$branch"
           gh pr create \
             --title "$title" \
-            --body "Automated release PR. Review the submodule pointer and Cargo.toml version, then merge to publish. After merging, run the \"Release z3-sys (prepare)\" workflow for the follow-up z3-sys update." \
+            --body "Automated release PR. Review the submodule pointer and Cargo.toml version, then merge to publish. After merging, run the \"Update z3-sys for z3-src\" workflow for the follow-up z3-sys update." \
             --base master \
             --head "$branch"
