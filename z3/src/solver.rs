@@ -523,6 +523,8 @@ impl Solver {
     /// # See also:
     ///
     /// - [`Solver::solutions`]
+    /// - [`crate::Goal::into_solutions`]
+    /// - [`crate::ApplyResult::into_solutions`]
     pub fn into_solutions<T: Solvable>(
         self,
         t: T,

@@ -38,7 +38,7 @@ impl Model {
         Self::new_empty(&Context::thread_local())
     }
 
-    unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
         unsafe {
             Z3_model_inc_ref(ctx.z3_ctx.as_ptr(), z3_mdl);
         }

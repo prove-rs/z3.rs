@@ -371,6 +371,7 @@ pub struct Pattern {
 pub struct ApplyResult {
     ctx: Context,
     z3_apply_result: Z3_apply_result,
+    models: bool,
 }
 
 /// Basic building block for creating custom solvers for specific problem domains.
@@ -400,6 +401,7 @@ pub struct Tactic {
 pub struct Goal {
     ctx: Context,
     z3_goal: Z3_goal,
+    models: bool,
 }
 
 /// Function/predicate used to inspect a goal and collect information
