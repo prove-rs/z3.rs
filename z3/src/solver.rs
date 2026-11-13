@@ -7,8 +7,8 @@ use z3_sys::*;
 
 use crate::ast::Bool;
 use crate::{
-    AstVector, Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, ast,
-    ast::Ast,
+    AstVector, Context, Model, Params, SatResult, Solver, Statistics, Symbol, Translate, Z3Error,
+    ast, ast::Ast,
 };
 use std::ops::AddAssign;
 
@@ -52,15 +52,13 @@ impl Solver {
 
     /// Parse an SMT-LIB2 string with assertions, soft constraints and optimization objectives.
     /// Add the parsed constraints and objectives to the solver.
-    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) {
-        let source_cstring = CString::new(source_string).unwrap();
-        unsafe {
-            Z3_solver_from_string(
-                self.ctx.z3_ctx.as_ptr(),
-                self.z3_slv,
-                source_cstring.as_ptr(),
-            );
-        }
+    ///
+    /// Returns an error if the input does not parse, in which case none of it is added and
+    /// declarations from earlier calls are forgotten.
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Z3Error> {
+        let source_cstring = CString::new(source_string)?;
+        self.ctx
+            .checked(|c| unsafe { Z3_solver_from_string(c, self.z3_slv, source_cstring.as_ptr()) })
     }
 
     /// Create a new solver customized for the given logic.
@@ -266,11 +264,14 @@ impl Solver {
 
     /// Backtrack `n` backtracking points.
     ///
+    /// Returns an error, without backtracking, if `n` exceeds the number of backtracking points.
+    ///
     /// # See also:
     ///
     /// - [`Solver::push()`]
-    pub fn pop(&self, n: u32) {
-        unsafe { Z3_solver_pop(self.ctx.z3_ctx.as_ptr(), self.z3_slv, n) };
+    pub fn pop(&self, n: u32) -> Result<(), Z3Error> {
+        self.ctx
+            .checked(|c| unsafe { Z3_solver_pop(c, self.z3_slv, n) })
     }
 
     /// Retrieve the model for the last [`Solver::check()`]
@@ -326,8 +327,20 @@ impl Solver {
     }
 
     /// Set the current solver using the given parameters.
-    pub fn set_params(&self, params: &Params) {
-        unsafe { Z3_solver_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_slv, params.z3_params) };
+    ///
+    /// Returns an error, leaving the solver unchanged, if a parameter is unknown to this solver
+    /// or has the wrong type.
+    pub fn set_params(&self, params: &Params) -> Result<(), Z3Error> {
+        // On a solver that has not been used yet, Z3_solver_set_params stores the parameters
+        // without checking them; the error then surfaces in the next call (e.g. an assert),
+        // which is silently skipped. Validate up front so the error is reported here instead.
+        let ctx = &self.ctx;
+        let descrs = ctx.checked_some(|c| unsafe { Z3_solver_get_param_descrs(c, self.z3_slv) })?;
+        unsafe { Z3_param_descrs_inc_ref(ctx.z3_ctx.as_ptr(), descrs) };
+        let validated = ctx.checked(|c| unsafe { Z3_params_validate(c, params.z3_params, descrs) });
+        unsafe { Z3_param_descrs_dec_ref(ctx.z3_ctx.as_ptr(), descrs) };
+        validated?;
+        ctx.checked(|c| unsafe { Z3_solver_set_params(c, self.z3_slv, params.z3_params) })
     }
 
     /// Retrieve the statistics for the last [`Solver::check()`].
