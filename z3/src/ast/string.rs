@@ -52,7 +52,7 @@ impl String {
     pub fn as_string(&self) -> Option<std::string::String> {
         let z3_ctx = self.get_ctx().z3_ctx.as_ptr();
         unsafe {
-            let bytes = Z3_get_string(z3_ctx, self.get_z3_ast());
+            let bytes = Z3_get_string(z3_ctx, self.get_z3_ast()).unwrap();
             if bytes.is_null() {
                 None
             } else {

@@ -12,7 +12,7 @@ use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 impl ApplyResult {
     unsafe fn wrap(ctx: &Context, z3_apply_result: Z3_apply_result) -> ApplyResult {
         unsafe {
-            Z3_apply_result_inc_ref(ctx.z3_ctx.as_ptr(), z3_apply_result);
+            Z3_apply_result_inc_ref(ctx.z3_ctx.as_ptr(), z3_apply_result).unwrap();
         }
         ApplyResult {
             ctx: ctx.clone(),
@@ -23,6 +23,7 @@ impl ApplyResult {
     pub fn list_subgoals(self) -> impl Iterator<Item = Goal> {
         let num_subgoals = unsafe {
             Z3_apply_result_get_num_subgoals(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result)
+                .unwrap()
         };
         (0..num_subgoals).map(move |i| unsafe {
             Goal::wrap(
@@ -43,7 +44,7 @@ impl Clone for ApplyResult {
 impl Drop for ApplyResult {
     fn drop(&mut self) {
         unsafe {
-            Z3_apply_result_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result);
+            Z3_apply_result_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_apply_result).unwrap();
         }
     }
 }
@@ -60,10 +61,10 @@ impl Tactic {
     /// ```
     pub fn list_all() -> Vec<Result<String, Utf8Error>> {
         let ctx = &Context::thread_local();
-        let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.as_ptr()) };
+        let p = unsafe { Z3_get_num_tactics(ctx.z3_ctx.as_ptr()).unwrap() };
         (0..p)
             .map(move |n| {
-                let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.as_ptr(), n) };
+                let t = unsafe { Z3_get_tactic_name(ctx.z3_ctx.as_ptr(), n).unwrap() };
                 unsafe { CStr::from_ptr(t) }.to_str().map(String::from)
             })
             .collect()
@@ -71,7 +72,7 @@ impl Tactic {
 
     unsafe fn wrap(ctx: &Context, z3_tactic: Z3_tactic) -> Tactic {
         unsafe {
-            Z3_tactic_inc_ref(ctx.z3_ctx.as_ptr(), z3_tactic);
+            Z3_tactic_inc_ref(ctx.z3_ctx.as_ptr(), z3_tactic).unwrap();
         }
         Tactic {
             ctx: ctx.clone(),
@@ -97,7 +98,7 @@ impl Tactic {
 
         unsafe {
             let tactic = Z3_mk_tactic(ctx.z3_ctx.as_ptr(), tactic_name.as_ptr())
-                .unwrap_or_else(|| panic!("{name} is an invalid tactic"));
+                .unwrap_or_else(|err| panic!("{name} is an invalid tactic: {err}"));
             Self::wrap(ctx, tactic)
         }
     }
@@ -252,7 +253,7 @@ impl Tactic {
                     params.z3_params,
                 ),
             };
-            if let Some(z3_apply_result) = z3_apply_result {
+            if let Ok(z3_apply_result) = z3_apply_result {
                 Ok(ApplyResult::wrap(&self.ctx, z3_apply_result))
             } else {
                 let code = Z3_get_error_code(self.ctx.z3_ctx.as_ptr());
@@ -294,9 +295,9 @@ impl Tactic {
 impl fmt::Display for Tactic {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_tactic_get_help(self.ctx.z3_ctx.as_ptr(), self.z3_tactic) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -313,7 +314,7 @@ impl fmt::Debug for Tactic {
 impl Drop for Tactic {
     fn drop(&mut self) {
         unsafe {
-            Z3_tactic_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_tactic);
+            Z3_tactic_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_tactic).unwrap();
         }
     }
 }

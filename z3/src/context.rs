@@ -20,7 +20,7 @@ impl ContextInternal {
 
 impl Drop for ContextInternal {
     fn drop(&mut self) {
-        unsafe { Z3_del_context(self.0) };
+        unsafe { Z3_del_context(self.0).unwrap() };
     }
 }
 
@@ -90,7 +90,7 @@ impl Context {
             z3_ctx: unsafe {
                 let p = Z3_mk_context_rc(cfg.z3_cfg).unwrap();
                 debug!("new context {p:p}");
-                Z3_set_error_handler(p, None);
+                Z3_set_error_handler(p, None).unwrap();
                 Rc::new(ContextInternal(p))
             },
         }
@@ -154,7 +154,7 @@ impl Context {
     pub fn update_param_value(&mut self, k: &str, v: &str) {
         let ks = CString::new(k).unwrap();
         let vs = CString::new(v).unwrap();
-        unsafe { Z3_update_param_value(self.z3_ctx.as_ptr(), ks.as_ptr(), vs.as_ptr()) };
+        unsafe { Z3_update_param_value(self.z3_ctx.as_ptr(), ks.as_ptr(), vs.as_ptr()).unwrap() };
     }
 
     /// Update a global parameter.
@@ -173,7 +173,7 @@ impl ContextHandle<'_> {
     /// Interrupt a solver performing a satisfiability test, a tactic processing a goal, or simplify functions.
     pub fn interrupt(&self) {
         unsafe {
-            Z3_interrupt(self.ctx.z3_ctx.as_ptr());
+            Z3_interrupt(self.ctx.z3_ctx.as_ptr()).unwrap();
         }
     }
 }

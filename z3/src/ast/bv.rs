@@ -35,7 +35,7 @@ impl BV {
         let sort = Sort::bitvector(sz);
         let ast = unsafe {
             let bv_cstring = CString::new(value).unwrap();
-            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), bv_cstring.as_ptr(), sort.z3_sort)?
+            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), bv_cstring.as_ptr(), sort.z3_sort).ok()?
         };
         Some(unsafe { Self::wrap(ctx, ast) })
     }
@@ -53,8 +53,9 @@ impl BV {
     /// ```
     pub fn from_bits(bits: &[bool]) -> Option<BV> {
         let ctx = &Context::thread_local();
-        let ast =
-            unsafe { Z3_mk_bv_numeral(ctx.z3_ctx.as_ptr(), bits.len() as u32, bits.as_ptr())? };
+        let ast = unsafe {
+            Z3_mk_bv_numeral(ctx.z3_ctx.as_ptr(), bits.len() as u32, bits.as_ptr()).ok()?
+        };
         Some(unsafe { Self::wrap(ctx, ast) })
     }
 
@@ -110,7 +111,7 @@ impl BV {
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_get_numeral_int64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp).unwrap() {
                 Some(tmp)
             } else {
                 None
@@ -121,7 +122,7 @@ impl BV {
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_get_numeral_uint64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp).unwrap() {
                 Some(tmp)
             } else {
                 None
@@ -168,7 +169,7 @@ impl BV {
     /// Get the size of the bitvector (in bits)
     pub fn get_size(&self) -> u32 {
         let sort = self.get_sort();
-        unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx.as_ptr(), sort.z3_sort) }
+        unsafe { Z3_get_bv_sort_size(self.ctx.z3_ctx.as_ptr(), sort.z3_sort).unwrap() }
     }
 
     // Bitwise ops

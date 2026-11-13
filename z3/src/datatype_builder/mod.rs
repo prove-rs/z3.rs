@@ -196,7 +196,8 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             names.as_ptr(),
             raw_sorts.as_mut_ptr(),
             clist_handles.as_mut_ptr(),
-        );
+        )
+        .unwrap();
         raw_sorts.set_len(num);
     };
     let sorts = raw_sorts

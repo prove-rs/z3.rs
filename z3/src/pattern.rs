@@ -43,7 +43,8 @@ impl Pattern {
                 Z3_inc_ref(
                     ctx.z3_ctx.as_ptr(),
                     Z3_pattern_to_ast(ctx.z3_ctx.as_ptr(), p).unwrap(),
-                );
+                )
+                .unwrap();
                 p
             },
         }
@@ -53,9 +54,9 @@ impl Pattern {
 impl fmt::Debug for Pattern {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_pattern_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_pattern) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -73,7 +74,7 @@ impl Drop for Pattern {
     fn drop(&mut self) {
         let ast = unsafe { Z3_pattern_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_pattern) }.unwrap();
         unsafe {
-            Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), ast);
+            Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), ast).unwrap();
         }
     }
 }

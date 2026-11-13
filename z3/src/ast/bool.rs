@@ -54,7 +54,7 @@ impl Bool {
     /// If `self` is the Boolean value `true` or `false`, return its value. Otherwise, return [None].
     pub fn as_bool(&self) -> Option<bool> {
         unsafe {
-            match Z3_get_bool_value(self.ctx.z3_ctx.as_ptr(), self.z3_ast) {
+            match Z3_get_bool_value(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap() {
                 Z3_L_TRUE => Some(true),
                 Z3_L_FALSE => Some(false),
                 _ => None,
