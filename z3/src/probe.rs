@@ -8,7 +8,7 @@ use crate::{Context, Goal, Probe};
 impl Probe {
     unsafe fn wrap(ctx: &Context, z3_probe: Z3_probe) -> Probe {
         unsafe {
-            Z3_probe_inc_ref(ctx.z3_ctx.as_ptr(), z3_probe);
+            Z3_probe_inc_ref(ctx.z3_ctx.as_ptr(), z3_probe).unwrap();
         }
         Probe {
             ctx: ctx.clone(),
@@ -27,10 +27,10 @@ impl Probe {
     /// ```
     pub fn list_all() -> Vec<Result<String, Utf8Error>> {
         let ctx = &Context::thread_local();
-        let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.as_ptr()) };
+        let p = unsafe { Z3_get_num_probes(ctx.z3_ctx.as_ptr()).unwrap() };
         (0..p)
             .map(move |n| {
-                let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.as_ptr(), n) };
+                let t = unsafe { Z3_get_probe_name(ctx.z3_ctx.as_ptr(), n).unwrap() };
                 unsafe { CStr::from_ptr(t).to_str().map(String::from) }
             })
             .collect()
@@ -42,7 +42,7 @@ impl Probe {
         let ctx = &Context::thread_local();
         let probe_name = CString::new(name).unwrap();
         unsafe {
-            CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.as_ptr(), probe_name.as_ptr()))
+            CStr::from_ptr(Z3_probe_get_descr(ctx.z3_ctx.as_ptr(), probe_name.as_ptr()).unwrap())
                 .to_str()
                 .map(|s| s.to_string())
         }
@@ -73,7 +73,7 @@ impl Probe {
     /// The probe always produce a double value. "Boolean" probes return
     /// `0.0` for `false`, and a value different from `0.0` for `true`.
     pub fn apply(&self, goal: &Goal) -> f64 {
-        unsafe { Z3_probe_apply(self.ctx.z3_ctx.as_ptr(), self.z3_probe, goal.z3_goal) }
+        unsafe { Z3_probe_apply(self.ctx.z3_ctx.as_ptr(), self.z3_probe, goal.z3_goal).unwrap() }
     }
 
     /// Return a probe that always evaluates to val.
@@ -201,7 +201,7 @@ impl fmt::Debug for Probe {
 impl Drop for Probe {
     fn drop(&mut self) {
         unsafe {
-            Z3_probe_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_probe);
+            Z3_probe_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_probe).unwrap();
         }
     }
 }

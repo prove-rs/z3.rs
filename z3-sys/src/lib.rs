@@ -22,7 +22,7 @@
 //! | `bundled` | **Deprecated.** Alias for `vendored`; will be removed in a future release |
 //! | `gh-release` | Build against a pre-compiled Z3 static library from GitHub Releases |
 //! | `vcpkg` | Use a Z3 installed via vcpkg |
-//! | `bindgen` | Regenerate `functions.rs` from local Z3 headers at build time |
+//! | `bindgen` | Regenerate `functions_ffi.rs` from local Z3 headers at build time |
 //!
 //! ## Environment variables
 //!
@@ -63,7 +63,7 @@
 //! | Variable | Feature | Description |
 //! |----------|---------|-------------|
 //! | `Z3_SYS_Z3_HEADER` | `bindgen` | Path to `z3.h`; defaults to `z3-src/z3/src/api/z3.h` |
-//! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions.rs` and `src/generated/enums.rs` |
+//! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions_ffi.rs` and `src/generated/enums.rs` |
 //! | `Z3_LIBRARY_PATH_OVERRIDE` | default | Add an extra library search path for the linker |
 //! | `Z3_SYS_Z3_VERSION` | `gh-release` | Z3 version to download (e.g. `4.13.0`) |
 //! | `READ_ONLY_GITHUB_TOKEN` | `gh-release` | GitHub PAT to avoid API rate limits in CI |
@@ -93,22 +93,51 @@
 // Generated C API docs don't conform to Rust doc formatting conventions.
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::doc_lazy_continuation)]
-#![no_std]
+#![cfg_attr(not(feature = "bindgen"), no_std)]
+
+#[cfg(feature = "bindgen")]
+pub mod bindgen;
 
 mod types;
 
 pub use types::*;
 
-#[cfg(not(feature = "bindgen"))]
-include!("generated/functions.rs");
+#[derive(Debug)]
+#[non_exhaustive]
+pub struct Z3Error {
+    err: Z3_error_code,
+}
+
+impl core::fmt::Display for Z3Error {
+    fn fmt(&self, f: &mut core::fmt::Formatter<'_>) -> core::fmt::Result {
+        write!(f, "Z3 error ({:?}): FIXME message?!", self.err)
+    }
+}
+
+impl core::error::Error for Z3Error {}
 
 #[cfg(not(feature = "bindgen"))]
 include!("generated/enums.rs");
 
 #[cfg(feature = "bindgen")]
-include!(concat!(env!("OUT_DIR"), "/functions.rs"));
-
-#[cfg(feature = "bindgen")]
 include!(concat!(env!("OUT_DIR"), "/enums.rs"));
 
-include!("functions_patched.rs");
+pub(crate) mod ffi {
+    use crate::*;
+
+    #[cfg(not(feature = "bindgen"))]
+    include!("generated/functions_ffi.rs");
+
+    #[cfg(feature = "bindgen")]
+    include!(concat!(env!("OUT_DIR"), "/functions_ffi.rs"));
+
+    include!("functions_patched_ffi.rs");
+}
+
+#[cfg(not(feature = "bindgen"))]
+include!("generated/functions_wrappers.rs");
+
+#[cfg(feature = "bindgen")]
+include!(concat!(env!("OUT_DIR"), "/functions_wrappers.rs"));
+
+include!("functions_patched_wrappers.rs");

@@ -155,7 +155,7 @@ impl Array {
     /// assert!(!arr.is_as_array());
     /// ```
     pub fn is_as_array(&self) -> bool {
-        unsafe { Z3_is_as_array(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
+        unsafe { Z3_is_as_array(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap() }
     }
 
     /// If the array is an "as-array" value `(_ as-array f)`, returns `f`; otherwise `None`.
@@ -174,7 +174,8 @@ impl Array {
         if !self.is_as_array() {
             return None;
         }
-        let fd = unsafe { Z3_get_as_array_func_decl(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }?;
+        let fd =
+            unsafe { Z3_get_as_array_func_decl(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }.ok()?;
         Some(unsafe { FuncDecl::wrap(&self.ctx, fd) })
     }
 }

@@ -75,7 +75,7 @@ impl Int {
     pub fn as_i64(&self) -> Option<i64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_longlong = 0;
-            if Z3_get_numeral_int64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_int64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp).unwrap() {
                 Some(tmp)
             } else {
                 None
@@ -86,7 +86,7 @@ impl Int {
     pub fn as_u64(&self) -> Option<u64> {
         unsafe {
             let mut tmp: ::std::os::raw::c_ulonglong = 0;
-            if Z3_get_numeral_uint64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp) {
+            if Z3_get_numeral_uint64(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut tmp).unwrap() {
                 Some(tmp)
             } else {
                 None
@@ -122,13 +122,13 @@ impl Int {
     /// Return the decimal representation of this integer, if it is a numeral.
     fn numeral_string(&self) -> Option<String> {
         let z3_ctx = self.ctx.z3_ctx.as_ptr();
-        if !unsafe { Z3_is_numeral_ast(z3_ctx, self.z3_ast) } {
+        if !unsafe { Z3_is_numeral_ast(z3_ctx, self.z3_ast).unwrap() } {
             return None;
         }
         let p = unsafe { Z3_get_numeral_string(z3_ctx, self.z3_ast) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return None;
-        }
+        };
         unsafe { CStr::from_ptr(p) }
             .to_str()
             .ok()
@@ -307,7 +307,7 @@ impl FromStr for Int {
             let int_cstring = CString::new(value).unwrap();
             Z3_mk_numeral(ctx.z3_ctx.as_ptr(), int_cstring.as_ptr(), sort.z3_sort)
         }
-        .ok_or(())?;
+        .map_err(|_| ())?;
         Ok(unsafe { Int::wrap(ctx, ast) })
     }
 }
