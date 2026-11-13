@@ -7,6 +7,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.23.1](https://github.com/prove-rs/z3.rs/compare/z3-v0.23.0...z3-v0.23.1) - 2026-11-13
+
+### Fixed
+
+- Prevent Solver::solutions from overcapturing lifetimes ([#634](https://github.com/prove-rs/z3.rs/pull/634)) (by @yanqui-uxo) - #634
+
+### Contributors
+
+* @yanqui-uxo
+
 ## [0.23.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.22.0...z3-v0.23.0) - 2026-11-11
 
 ### Fixed
