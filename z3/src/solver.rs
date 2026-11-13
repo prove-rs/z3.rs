@@ -15,7 +15,7 @@ use std::ops::AddAssign;
 impl Solver {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_slv: Z3_solver) -> Solver {
         unsafe {
-            Z3_solver_inc_ref(ctx.z3_ctx.as_ptr(), z3_slv);
+            Z3_solver_inc_ref(ctx.z3_ctx.as_ptr(), z3_slv).unwrap();
         }
         Solver {
             ctx: ctx.clone(),
@@ -59,7 +59,8 @@ impl Solver {
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_slv,
                 source_cstring.as_ptr(),
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -68,7 +69,8 @@ impl Solver {
     pub fn new_for_logic<S: Into<Symbol>>(logic: S) -> Option<Solver> {
         let ctx = &Context::thread_local();
         unsafe {
-            let s = Z3_mk_solver_for_logic(ctx.z3_ctx.as_ptr(), logic.into().as_z3_symbol())?;
+            let s =
+                Z3_mk_solver_for_logic(ctx.z3_ctx.as_ptr(), logic.into().as_z3_symbol()).ok()?;
             Some(Self::wrap(ctx, s))
         }
     }
@@ -101,7 +103,7 @@ impl Solver {
     pub fn assert<T: Borrow<Bool>>(&self, ast: T) {
         let ast = ast.borrow();
         debug!("assert: {ast:?}");
-        unsafe { Z3_solver_assert(self.ctx.z3_ctx.as_ptr(), self.z3_slv, ast.z3_ast) };
+        unsafe { Z3_solver_assert(self.ctx.z3_ctx.as_ptr(), self.z3_slv, ast.z3_ast).unwrap() };
     }
 
     /// Assert a constraint `a` into the solver, and track it (in the
@@ -123,12 +125,13 @@ impl Solver {
         debug!("assert_and_track: {ast:?}");
         unsafe {
             Z3_solver_assert_and_track(self.ctx.z3_ctx.as_ptr(), self.z3_slv, ast.z3_ast, p.z3_ast)
+                .unwrap()
         };
     }
 
     /// Remove all assertions from the solver.
     pub fn reset(&self) {
-        unsafe { Z3_solver_reset(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
+        unsafe { Z3_solver_reset(self.ctx.z3_ctx.as_ptr(), self.z3_slv).unwrap() };
     }
 
     /// Check whether the assertions in a given solver are consistent or not.
@@ -155,7 +158,7 @@ impl Solver {
     /// [model construction is enabled]: crate::Config::set_model_generation
     /// [proof generation was enabled]: crate::Config::set_proof_generation
     pub fn check(&self) -> SatResult {
-        match unsafe { Z3_solver_check(self.ctx.z3_ctx.as_ptr(), self.z3_slv) } {
+        match unsafe { Z3_solver_check(self.ctx.z3_ctx.as_ptr(), self.z3_slv).unwrap() } {
             Z3_L_FALSE => SatResult::Unsat,
             Z3_L_UNDEF => SatResult::Unknown,
             Z3_L_TRUE => SatResult::Sat,
@@ -182,6 +185,7 @@ impl Solver {
                 a.len() as u32,
                 a.as_ptr(),
             )
+            .unwrap()
         } {
             Z3_L_FALSE => SatResult::Unsat,
             Z3_L_UNDEF => SatResult::Unknown,
@@ -223,8 +227,7 @@ impl Solver {
     /// - [`Solver::check_assumptions`]
     /// - [`Solver::assert_and_track`]
     pub fn get_unsat_core(&self) -> Vec<Bool> {
-        let Some(raw) =
-            (unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_slv) })
+        let Ok(raw) = (unsafe { Z3_solver_get_unsat_core(self.ctx.z3_ctx.as_ptr(), self.z3_slv) })
         else {
             return vec![];
         };
@@ -245,7 +248,8 @@ impl Solver {
                 assumptions_vec.z3_ast_vector,
                 variables_vec.z3_ast_vector,
                 consequences_vec.z3_ast_vector,
-            );
+            )
+            .unwrap();
         }
 
         consequences_vec
@@ -261,7 +265,7 @@ impl Solver {
     ///
     /// - [`Solver::pop()`]
     pub fn push(&self) {
-        unsafe { Z3_solver_push(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
+        unsafe { Z3_solver_push(self.ctx.z3_ctx.as_ptr(), self.z3_slv).unwrap() };
     }
 
     /// Backtrack `n` backtracking points.
@@ -270,7 +274,7 @@ impl Solver {
     ///
     /// - [`Solver::push()`]
     pub fn pop(&self, n: u32) {
-        unsafe { Z3_solver_pop(self.ctx.z3_ctx.as_ptr(), self.z3_slv, n) };
+        unsafe { Z3_solver_pop(self.ctx.z3_ctx.as_ptr(), self.z3_slv, n).unwrap() };
     }
 
     /// Retrieve the model for the last [`Solver::check()`]
@@ -307,7 +311,7 @@ impl Solver {
     // This seems to actually return an Ast with kind `SortKind::Unknown`, which we don't
     // have an Ast subtype for yet.
     pub fn get_proof(&self) -> Option<impl Ast> {
-        let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx.as_ptr(), self.z3_slv) }?;
+        let m = unsafe { Z3_solver_get_proof(self.ctx.z3_ctx.as_ptr(), self.z3_slv) }.ok()?;
         Some(unsafe { ast::Dynamic::wrap(&self.ctx, m) })
     }
 
@@ -316,9 +320,9 @@ impl Solver {
     /// and [`Solver::check_assumptions()`].
     pub fn get_reason_unknown(&self) -> Option<String> {
         let p = unsafe { Z3_solver_get_reason_unknown(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return None;
-        }
+        };
         unsafe { CStr::from_ptr(p) }
             .to_str()
             .ok()
@@ -327,7 +331,9 @@ impl Solver {
 
     /// Set the current solver using the given parameters.
     pub fn set_params(&self, params: &Params) {
-        unsafe { Z3_solver_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_slv, params.z3_params) };
+        unsafe {
+            Z3_solver_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_slv, params.z3_params).unwrap()
+        };
     }
 
     /// Retrieve the statistics for the last [`Solver::check()`].
@@ -367,9 +373,9 @@ impl Solver {
                 formula,
             )
         };
-        if p.is_null() {
+        let Ok(p) = p else {
             return String::new();
-        }
+        };
         unsafe { CStr::from_ptr(p) }
             .to_str()
             .ok()
@@ -605,9 +611,9 @@ impl<T: Solvable> Iterator for SolverIterator<T> {
 impl fmt::Display for Solver {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_solver_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -623,7 +629,7 @@ impl fmt::Debug for Solver {
 
 impl Drop for Solver {
     fn drop(&mut self) {
-        unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_slv) };
+        unsafe { Z3_solver_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_slv).unwrap() };
     }
 }
 

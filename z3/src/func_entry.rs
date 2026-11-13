@@ -9,7 +9,7 @@ use crate::{
 impl FuncEntry {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_entry: Z3_func_entry) -> Self {
         unsafe {
-            Z3_func_entry_inc_ref(ctx.z3_ctx.as_ptr(), z3_func_entry);
+            Z3_func_entry_inc_ref(ctx.z3_ctx.as_ptr(), z3_func_entry).unwrap();
         }
         Self {
             ctx: ctx.clone(),
@@ -29,7 +29,7 @@ impl FuncEntry {
 
     /// Returns the number of arguments in the function entry.
     pub fn get_num_args(&self) -> u32 {
-        unsafe { Z3_func_entry_get_num_args(self.ctx.z3_ctx.as_ptr(), self.z3_func_entry) }
+        unsafe { Z3_func_entry_get_num_args(self.ctx.z3_ctx.as_ptr(), self.z3_func_entry).unwrap() }
     }
 
     /// Returns the arguments of the function entry.
@@ -65,7 +65,7 @@ impl fmt::Debug for FuncEntry {
 impl Drop for FuncEntry {
     fn drop(&mut self) {
         unsafe {
-            Z3_func_entry_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_func_entry);
+            Z3_func_entry_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_func_entry).unwrap();
         }
     }
 }

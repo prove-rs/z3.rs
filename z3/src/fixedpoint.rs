@@ -7,7 +7,7 @@ use z3_sys::*;
 impl Drop for Fixedpoint {
     fn drop(&mut self) {
         unsafe {
-            Z3_fixedpoint_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_fp);
+            Z3_fixedpoint_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_fp).unwrap();
         }
     }
 }
@@ -18,7 +18,7 @@ impl Fixedpoint {
         let ctx = Context::thread_local();
         unsafe {
             let fp = Z3_mk_fixedpoint(ctx.z3_ctx.as_ptr()).unwrap();
-            Z3_fixedpoint_inc_ref(ctx.z3_ctx.as_ptr(), fp);
+            Z3_fixedpoint_inc_ref(ctx.z3_ctx.as_ptr(), fp).unwrap();
             Fixedpoint {
                 ctx: ctx.clone(),
                 z3_fp: fp,
@@ -64,14 +64,15 @@ impl Fixedpoint {
                 pred.z3_func_decl,
                 args.len() as u32,
                 args.as_mut_ptr(),
-            );
+            )
+            .unwrap();
         }
     }
 
     /// Assert a formula in the fixedpoint context.
     pub fn assert(&self, axiom: &impl Ast) {
         unsafe {
-            Z3_fixedpoint_assert(self.ctx.z3_ctx.as_ptr(), self.z3_fp, axiom.get_z3_ast());
+            Z3_fixedpoint_assert(self.ctx.z3_ctx.as_ptr(), self.z3_fp, axiom.get_z3_ast()).unwrap();
         }
     }
 
@@ -80,7 +81,9 @@ impl Fixedpoint {
     /// Returns the result of the query (satisfiable, unsatisfiable, or unknown).
     pub fn query(&self, query: &impl Ast) -> SatResult {
         unsafe {
-            match Z3_fixedpoint_query(self.ctx.z3_ctx.as_ptr(), self.z3_fp, query.get_z3_ast()) {
+            match Z3_fixedpoint_query(self.ctx.z3_ctx.as_ptr(), self.z3_fp, query.get_z3_ast())
+                .unwrap()
+            {
                 Z3_L_TRUE => SatResult::Sat,
                 Z3_L_FALSE => SatResult::Unsat,
                 _ => SatResult::Unknown,
@@ -97,7 +100,9 @@ impl Fixedpoint {
                 self.z3_fp,
                 decls.len() as u32,
                 decls.as_ptr(),
-            ) {
+            )
+            .unwrap()
+            {
                 Z3_L_TRUE => SatResult::Sat,
                 Z3_L_FALSE => SatResult::Unsat,
                 _ => SatResult::Unknown,
@@ -109,7 +114,7 @@ impl Fixedpoint {
     /// This provides the concrete values that make the query satisfiable.
     pub fn get_answer(&self) -> Option<Bool> {
         unsafe {
-            let answer = Z3_fixedpoint_get_answer(self.ctx.z3_ctx.as_ptr(), self.z3_fp);
+            let answer = Z3_fixedpoint_get_answer(self.ctx.z3_ctx.as_ptr(), self.z3_fp).ok();
             answer.map(|answer| Bool::wrap(&self.ctx, answer))
         }
     }
@@ -117,7 +122,8 @@ impl Fixedpoint {
     /// Get the reason (core) for unsatisfiability after an unsuccessful query.
     pub fn get_reason_unknown(&self) -> String {
         unsafe {
-            let reason = Z3_fixedpoint_get_reason_unknown(self.ctx.z3_ctx.as_ptr(), self.z3_fp);
+            let reason =
+                Z3_fixedpoint_get_reason_unknown(self.ctx.z3_ctx.as_ptr(), self.z3_fp).unwrap();
             std::ffi::CStr::from_ptr(reason)
                 .to_string_lossy()
                 .into_owned()
@@ -134,7 +140,8 @@ impl Fixedpoint {
                 self.z3_fp,
                 rule.get_z3_ast(),
                 name_sym,
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -142,6 +149,7 @@ impl Fixedpoint {
     pub fn get_num_levels(&self, pred: &FuncDecl) -> u32 {
         unsafe {
             Z3_fixedpoint_get_num_levels(self.ctx.z3_ctx.as_ptr(), self.z3_fp, pred.z3_func_decl)
+                .unwrap()
         }
     }
 
@@ -154,6 +162,7 @@ impl Fixedpoint {
                 level,
                 predicate.z3_func_decl,
             )
+            .ok()
             .map(|d| Bool::wrap(&self.ctx, d))
         }
     }
@@ -167,7 +176,8 @@ impl Fixedpoint {
                 level,
                 predicate.z3_func_decl,
                 property.get_z3_ast(),
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -188,21 +198,23 @@ impl Fixedpoint {
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_fp,
                 pred.z3_func_decl,
-            );
+            )
+            .unwrap();
         }
     }
 
     /// Set parameters for the fixedpoint context.
     pub fn set_params(&self, params: &Params) {
         unsafe {
-            Z3_fixedpoint_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_fp, params.z3_params);
+            Z3_fixedpoint_set_params(self.ctx.z3_ctx.as_ptr(), self.z3_fp, params.z3_params)
+                .unwrap();
         }
     }
 
     /// Get the help string for fixedpoint parameters.
     pub fn get_help(&self) -> String {
         unsafe {
-            let help = Z3_fixedpoint_get_help(self.ctx.z3_ctx.as_ptr(), self.z3_fp);
+            let help = Z3_fixedpoint_get_help(self.ctx.z3_ctx.as_ptr(), self.z3_fp).unwrap();
             std::ffi::CStr::from_ptr(help)
                 .to_string_lossy()
                 .into_owned()
@@ -214,7 +226,7 @@ impl Fixedpoint {
         let cs = CString::new(s).map_err(|_| "String contains null byte")?;
         unsafe {
             let result =
-                Z3_fixedpoint_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr());
+                Z3_fixedpoint_from_string(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr()).ok();
             match result {
                 Some(_) => Ok(()),
                 None => Err("Failed to parse fixedpoint from string".to_string()),
@@ -226,7 +238,8 @@ impl Fixedpoint {
     pub fn from_file(&self, filename: &str) -> Result<(), String> {
         let cs = CString::new(filename).map_err(|_| "Filename contains null byte")?;
         unsafe {
-            let result = Z3_fixedpoint_from_file(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr());
+            let result =
+                Z3_fixedpoint_from_file(self.ctx.z3_ctx.as_ptr(), self.z3_fp, cs.as_ptr()).ok();
             match result {
                 Some(_) => Ok(()),
                 None => Err("Failed to parse fixedpoint from file".to_string()),
@@ -249,7 +262,8 @@ impl fmt::Display for Fixedpoint {
                 self.z3_fp,
                 0,
                 std::ptr::null_mut(),
-            );
+            )
+            .unwrap();
             std::ffi::CStr::from_ptr(s).to_string_lossy().into_owned()
         };
         write!(f, "{s}")

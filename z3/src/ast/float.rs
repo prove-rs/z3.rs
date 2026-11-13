@@ -36,7 +36,7 @@ impl Float {
     }
 
     pub fn as_f64(&self) -> f64 {
-        unsafe { Z3_get_numeral_double(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
+        unsafe { Z3_get_numeral_double(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap() }
     }
 
     /// A NaN (Not a Number) value of the given ([`Float`]) [`Sort`].

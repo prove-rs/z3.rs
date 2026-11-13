@@ -40,7 +40,7 @@ impl Model {
 
     unsafe fn wrap(ctx: &Context, z3_mdl: Z3_model) -> Model {
         unsafe {
-            Z3_model_inc_ref(ctx.z3_ctx.as_ptr(), z3_mdl);
+            Z3_model_inc_ref(ctx.z3_ctx.as_ptr(), z3_mdl).unwrap();
         }
         Model {
             ctx: ctx.clone(),
@@ -51,14 +51,14 @@ impl Model {
     pub fn of_solver(slv: &Solver) -> Option<Model> {
         unsafe {
             let m = Z3_solver_get_model(slv.ctx.z3_ctx.as_ptr(), slv.z3_slv);
-            Some(Self::wrap(&slv.ctx, m?))
+            Some(Self::wrap(&slv.ctx, m.ok()?))
         }
     }
 
     pub fn of_optimize(opt: &Optimize) -> Option<Model> {
         unsafe {
             let m = Z3_optimize_get_model(opt.ctx.z3_ctx.as_ptr(), opt.z3_opt);
-            Some(Self::wrap(&opt.ctx, m?))
+            Some(Self::wrap(&opt.ctx, m.ok()?))
         }
     }
 
@@ -70,7 +70,7 @@ impl Model {
         let ret = unsafe {
             Z3_model_get_const_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, func.z3_func_decl)
         };
-        Some(unsafe { T::wrap(&self.ctx, ret?) })
+        Some(unsafe { T::wrap(&self.ctx, ret.ok()?) })
     }
 
     /// Returns the interpretation of the given `f` in the `Model`, regardless of whether
@@ -89,12 +89,14 @@ impl Model {
         if f.arity() == 0 {
             let ret = unsafe {
                 Z3_model_get_const_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
-            }?;
+            }
+            .ok()?;
             Some(Interp::Const(unsafe { Dynamic::wrap(&self.ctx, ret) }))
         } else {
             let ret = unsafe {
                 Z3_model_get_func_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl)
-            }?;
+            }
+            .ok()?;
             Some(Interp::Func(unsafe { FuncInterp::wrap(&self.ctx, ret) }))
         }
     }
@@ -122,7 +124,9 @@ impl Model {
     /// Returns `true` if the `Model` assigns an interpretation to `f`, regardless of its
     /// arity.
     pub fn has_interp(&self, f: &FuncDecl) -> bool {
-        unsafe { Z3_model_has_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl) }
+        unsafe {
+            Z3_model_has_interp(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, f.z3_func_decl).unwrap()
+        }
     }
 
     /// Assigns `value` as the interpretation of the constant `f` in the `Model`, replacing
@@ -148,7 +152,8 @@ impl Model {
                 self.z3_mdl,
                 f.z3_func_decl,
                 value.get_z3_ast(),
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -178,6 +183,7 @@ impl Model {
                     model_completion,
                     &mut tmp,
                 )
+                .unwrap()
             }
         };
         if res {
@@ -189,8 +195,8 @@ impl Model {
 
     fn len(&self) -> u32 {
         unsafe {
-            Z3_model_get_num_consts(self.ctx.z3_ctx.as_ptr(), self.z3_mdl)
-                + Z3_model_get_num_funcs(self.ctx.z3_ctx.as_ptr(), self.z3_mdl)
+            Z3_model_get_num_consts(self.ctx.z3_ctx.as_ptr(), self.z3_mdl).unwrap()
+                + Z3_model_get_num_funcs(self.ctx.z3_ctx.as_ptr(), self.z3_mdl).unwrap()
         }
     }
 
@@ -200,13 +206,14 @@ impl Model {
 
     /// Returns the number of uninterpreted sorts that the model assigns an interpretation to.
     pub fn num_sorts(&self) -> u32 {
-        unsafe { Z3_model_get_num_sorts(self.ctx.z3_ctx.as_ptr(), self.z3_mdl) }
+        unsafe { Z3_model_get_num_sorts(self.ctx.z3_ctx.as_ptr(), self.z3_mdl).unwrap() }
     }
 
     /// Returns the i-th uninterpreted sort that the model assigns an interpretation to,
     /// or `None` if `i >= self.num_sorts()`.
     pub fn get_sort(&self, i: u32) -> Option<Sort> {
-        let z3_sort = unsafe { Z3_model_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, i) }?;
+        let z3_sort =
+            unsafe { Z3_model_get_sort(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, i) }.ok()?;
         Some(unsafe { Sort::wrap(&self.ctx, z3_sort) })
     }
 
@@ -215,7 +222,8 @@ impl Model {
     pub fn get_sort_universe(&self, sort: &Sort) -> Option<AstVector> {
         let z3_av = unsafe {
             Z3_model_get_sort_universe(self.ctx.z3_ctx.as_ptr(), self.z3_mdl, sort.z3_sort)
-        }?;
+        }
+        .ok()?;
         Some(unsafe { AstVector::wrap(&self.ctx, z3_av) })
     }
 
@@ -246,9 +254,9 @@ impl Default for Model {
 impl fmt::Display for Model {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_model_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_mdl) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -264,7 +272,7 @@ impl fmt::Debug for Model {
 
 impl Drop for Model {
     fn drop(&mut self) {
-        unsafe { Z3_model_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_mdl) };
+        unsafe { Z3_model_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_mdl).unwrap() };
     }
 }
 
@@ -297,7 +305,7 @@ impl Iterator for ModelIter<'_> {
             None
         } else {
             let num_consts = unsafe {
-                Z3_model_get_num_consts(self.model.ctx.z3_ctx.as_ptr(), self.model.z3_mdl)
+                Z3_model_get_num_consts(self.model.ctx.z3_ctx.as_ptr(), self.model.z3_mdl).unwrap()
             };
             if self.idx < num_consts {
                 let const_decl = unsafe {

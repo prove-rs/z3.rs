@@ -12,7 +12,8 @@ impl RecFuncDecl {
             Z3_inc_ref(
                 ctx.z3_ctx.as_ptr(),
                 Z3_func_decl_to_ast(ctx.z3_ctx.as_ptr(), z3_func_decl).unwrap(),
-            );
+            )
+            .unwrap();
         }
         Self {
             ctx: ctx.clone(),
@@ -89,7 +90,8 @@ impl RecFuncDecl {
                 self.arity() as u32,
                 args.as_mut_ptr(),
                 body.get_z3_ast(),
-            );
+            )
+            .unwrap();
         }
     }
 }
@@ -97,9 +99,9 @@ impl RecFuncDecl {
 impl fmt::Display for RecFuncDecl {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -119,7 +121,8 @@ impl Drop for RecFuncDecl {
             Z3_dec_ref(
                 self.ctx.z3_ctx.as_ptr(),
                 Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap(),
-            );
+            )
+            .unwrap();
         }
     }
 }

@@ -42,7 +42,7 @@ impl fmt::Debug for Interp {
 impl FuncInterp {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_interp: Z3_func_interp) -> Self {
         unsafe {
-            Z3_func_interp_inc_ref(ctx.z3_ctx.as_ptr(), z3_func_interp);
+            Z3_func_interp_inc_ref(ctx.z3_ctx.as_ptr(), z3_func_interp).unwrap();
         }
 
         Self {
@@ -53,12 +53,17 @@ impl FuncInterp {
 
     /// Returns the number of arguments in the function interpretation.
     pub fn get_arity(&self) -> usize {
-        unsafe { Z3_func_interp_get_arity(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) as usize }
+        unsafe {
+            Z3_func_interp_get_arity(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp).unwrap()
+                as usize
+        }
     }
 
     /// Returns the number of entries in the function interpretation.
     pub fn get_num_entries(&self) -> u32 {
-        unsafe { Z3_func_interp_get_num_entries(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) }
+        unsafe {
+            Z3_func_interp_get_num_entries(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp).unwrap()
+        }
     }
 
     /// Adds an entry to the function interpretation.
@@ -74,7 +79,8 @@ impl FuncInterp {
                 self.z3_func_interp,
                 v.z3_ast_vector,
                 value.z3_ast,
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -99,8 +105,8 @@ impl FuncInterp {
     /// arguments anyway, use [`Model::eval`](crate::Model::eval) with `model_completion`
     /// set.
     pub fn get_else(&self) -> Option<Dynamic> {
-        let ast =
-            unsafe { Z3_func_interp_get_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) }?;
+        let ast = unsafe { Z3_func_interp_get_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp) }
+            .ok()?;
         Some(unsafe { Dynamic::wrap(&self.ctx, ast) })
     }
 
@@ -111,6 +117,7 @@ impl FuncInterp {
     pub fn set_else(&self, ast: &Dynamic) {
         unsafe {
             Z3_func_interp_set_else(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp, ast.z3_ast)
+                .unwrap()
         }
     }
 }
@@ -154,7 +161,7 @@ impl fmt::Debug for FuncInterp {
 impl Drop for FuncInterp {
     fn drop(&mut self) {
         unsafe {
-            Z3_func_interp_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp);
+            Z3_func_interp_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_func_interp).unwrap();
         }
     }
 }

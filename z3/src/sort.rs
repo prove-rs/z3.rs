@@ -12,7 +12,8 @@ impl Sort {
             Z3_inc_ref(
                 ctx.z3_ctx.as_ptr(),
                 Z3_sort_to_ast(ctx.z3_ctx.as_ptr(), z3_sort).unwrap(),
-            );
+            )
+            .unwrap();
         }
         Sort {
             ctx: ctx.clone(),
@@ -227,7 +228,8 @@ impl Sort {
                 Z3_inc_ref(
                     ctx.z3_ctx.as_ptr(),
                     Z3_func_decl_to_ast(ctx.z3_ctx.as_ptr(), NonNull::new(*i).unwrap()).unwrap(),
-                );
+                )
+                .unwrap();
             }
         }
         for i in &enum_testers {
@@ -235,7 +237,8 @@ impl Sort {
                 Z3_inc_ref(
                     ctx.z3_ctx.as_ptr(),
                     Z3_func_decl_to_ast(ctx.z3_ctx.as_ptr(), NonNull::new(*i).unwrap()).unwrap(),
-                );
+                )
+                .unwrap();
             }
         }
 
@@ -253,14 +256,14 @@ impl Sort {
     }
 
     pub fn kind(&self) -> SortKind {
-        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.as_ptr(), self.z3_sort) }
+        unsafe { Z3_get_sort_kind(self.ctx.z3_ctx.as_ptr(), self.z3_sort).unwrap() }
     }
 
     /// Returns `Some(e)` where `e` is the number of exponent bits if the sort
     /// is a `FloatingPoint` and `None` otherwise.
     pub fn float_exponent_size(&self) -> Option<u32> {
         if self.kind() == SortKind::FloatingPoint {
-            Some(unsafe { Z3_fpa_get_ebits(self.ctx.z3_ctx.as_ptr(), self.z3_sort) })
+            Some(unsafe { Z3_fpa_get_ebits(self.ctx.z3_ctx.as_ptr(), self.z3_sort).unwrap() })
         } else {
             None
         }
@@ -270,7 +273,7 @@ impl Sort {
     /// is a `FloatingPoint` and `None` otherwise.
     pub fn float_significand_size(&self) -> Option<u32> {
         if self.kind() == SortKind::FloatingPoint {
-            Some(unsafe { Z3_fpa_get_sbits(self.ctx.z3_ctx.as_ptr(), self.z3_sort) })
+            Some(unsafe { Z3_fpa_get_sbits(self.ctx.z3_ctx.as_ptr(), self.z3_sort).unwrap() })
         } else {
             None
         }
@@ -313,7 +316,8 @@ impl Sort {
     pub fn array_domain(&self) -> Option<Sort> {
         if self.is_array() {
             unsafe {
-                let domain_sort = Z3_get_array_sort_domain(self.ctx.z3_ctx.as_ptr(), self.z3_sort)?;
+                let domain_sort =
+                    Z3_get_array_sort_domain(self.ctx.z3_ctx.as_ptr(), self.z3_sort).ok()?;
                 Some(Self::wrap(&self.ctx, domain_sort))
             }
         } else {
@@ -341,7 +345,8 @@ impl Sort {
     pub fn array_range(&self) -> Option<Sort> {
         if self.is_array() {
             unsafe {
-                let range_sort = Z3_get_array_sort_range(self.ctx.z3_ctx.as_ptr(), self.z3_sort)?;
+                let range_sort =
+                    Z3_get_array_sort_range(self.ctx.z3_ctx.as_ptr(), self.z3_sort).ok()?;
                 Some(Self::wrap(&self.ctx, range_sort))
             }
         } else {
@@ -364,7 +369,7 @@ impl Sort {
     /// ```
     #[cfg(z3_5_0_0)]
     pub fn is_finite_set(&self) -> bool {
-        unsafe { Z3_is_finite_set_sort(self.ctx.z3_ctx.as_ptr(), self.z3_sort) }
+        unsafe { Z3_is_finite_set_sort(self.ctx.z3_ctx.as_ptr(), self.z3_sort).unwrap() }
     }
 
     /// Return the element `Sort` of this `FiniteSet` `Sort`.
@@ -383,7 +388,7 @@ impl Sort {
         if self.is_finite_set() {
             unsafe {
                 let basis_sort =
-                    Z3_get_finite_set_sort_basis(self.ctx.z3_ctx.as_ptr(), self.z3_sort)?;
+                    Z3_get_finite_set_sort_basis(self.ctx.z3_ctx.as_ptr(), self.z3_sort).ok()?;
                 Some(Self::wrap(&self.ctx, basis_sort))
             }
         } else {
@@ -401,9 +406,9 @@ impl Clone for Sort {
 impl fmt::Display for Sort {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_sort_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_sort) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -419,7 +424,7 @@ impl fmt::Debug for Sort {
 
 impl PartialEq<Sort> for Sort {
     fn eq(&self, other: &Sort) -> bool {
-        unsafe { Z3_is_eq_sort(self.ctx.z3_ctx.as_ptr(), self.z3_sort, other.z3_sort) }
+        unsafe { Z3_is_eq_sort(self.ctx.z3_ctx.as_ptr(), self.z3_sort, other.z3_sort).unwrap() }
     }
 }
 
@@ -431,7 +436,8 @@ impl Drop for Sort {
             Z3_dec_ref(
                 self.ctx.z3_ctx.as_ptr(),
                 Z3_sort_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_sort).unwrap(),
-            );
+            )
+            .unwrap();
         }
     }
 }
