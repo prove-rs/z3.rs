@@ -493,7 +493,7 @@ impl Solver {
         &self,
         t: T,
         model_completion: bool,
-    ) -> impl FusedIterator<Item = T::ModelInstance> {
+    ) -> impl FusedIterator<Item = T::ModelInstance> + use<T> {
         SolverIterator {
             solver: self.clone(),
             ast: t,
