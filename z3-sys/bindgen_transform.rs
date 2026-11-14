@@ -44,8 +44,8 @@ use std::sync::LazyLock;
 use quote::quote;
 use regex::Regex;
 use syn::{
-    Attribute, Expr, ExprLit, ForeignItem, ForeignItemFn, Item, ItemEnum, Lit, Meta, MetaNameValue,
-    ReturnType, Type, Variant,
+    Attribute, Expr, ExprLit, ForeignItem, ForeignItemFn, Item, ItemEnum, ItemFn, Lit, Meta,
+    MetaNameValue, ReturnType, Type, Variant,
 };
 
 // ---------------------------------------------------------------------------
@@ -476,17 +476,51 @@ fn doc_attrs(processed: &str) -> Vec<Attribute> {
 // Function transformation
 // ---------------------------------------------------------------------------
 
-fn transform_fn(mut func: ForeignItemFn) -> ForeignItemFn {
-    // Wrap opaque-handle return types in Option<>.
-    func.sig.output = match func.sig.output {
-        ReturnType::Default => ReturnType::Default,
-        ReturnType::Type(arrow, ty) if is_opaque_handle(&ty) => {
-            let wrapped: Type = syn::parse_quote!(Option<#ty>);
-            ReturnType::Type(arrow, Box::new(wrapped))
-        }
-        ret => ret,
-    };
+struct TransformedFn {
+    ffi_fun: ForeignItemFn,
+    wrapper_fn: ItemFn,
+}
 
+fn may_set_errorcode(f: &ForeignItemFn) -> Option<Box<syn::Pat>> {
+    // Z3 stores error codes in `Z3_context`, any function that takes
+    // such a parameter may be producing an implicit error.
+    let ctx = f
+        .sig
+        .inputs
+        .iter()
+        .filter_map(|i| match i {
+            syn::FnArg::Receiver(_) => {
+                panic!("Unexpected `self` argument.");
+            }
+            syn::FnArg::Typed(syn::PatType { pat, ty, .. }) => match &**ty {
+                Type::Path(type_path) => {
+                    if type_path.qself.is_some() {
+                        panic!("Unexpected `self` argument.");
+                    }
+                    if type_path
+                        .path
+                        .get_ident()
+                        .is_some_and(|ident| "Z3_context" == ident.to_string().as_str())
+                    {
+                        return Some(pat.clone());
+                    }
+                    None
+                }
+                _ => None,
+            },
+        })
+        .next();
+
+    if ["Z3_set_error", "Z3_get_error_code", "Z3_get_error_msg"]
+        .contains(&f.sig.ident.to_string().as_str())
+    {
+        return None;
+    }
+
+    ctx
+}
+
+fn transform_fn(mut func: ForeignItemFn) -> TransformedFn {
     // Process doc attributes.
     let mut new_attrs: Vec<Attribute> = Vec::new();
     for attr in func.attrs {
@@ -501,7 +535,99 @@ fn transform_fn(mut func: ForeignItemFn) -> ForeignItemFn {
     }
     func.attrs = new_attrs;
 
-    func
+    // Wrap opaque-handle return types in Option<>.
+    // FIXME: these should be returning `crate::ffi::` nullable types.
+    let orig_output = func.sig.output;
+    let mut has_opaque_handle = false;
+    func.sig.output = match orig_output.clone() {
+        ReturnType::Default => ReturnType::Default,
+        ReturnType::Type(arrow, ty) if is_opaque_handle(&ty) => {
+            has_opaque_handle = true;
+            let wrapped: Type = syn::parse_quote! {Option<#ty>};
+            ReturnType::Type(arrow, Box::new(wrapped))
+        }
+        ret => ret,
+    };
+
+    let mut attrs = func.attrs.clone();
+    attrs.push(syn::parse_quote! {#[inline]});
+    attrs.push(syn::parse_quote! {#[expect(non_snake_case)]});
+
+    let mut sig = func.sig.clone();
+    sig.unsafety = Some(syn::parse_quote! {unsafe});
+
+    let call: syn::Expr = {
+        let ident = sig.ident.clone();
+        let args = sig.inputs.iter().map(|i| match i {
+            syn::FnArg::Receiver(_) => {
+                panic!("Unexpected `self` argument.");
+            }
+            syn::FnArg::Typed(ty) => ty.pat.clone(),
+        });
+        syn::parse_quote! {
+            unsafe {
+                crate::ffi::#ident (
+                    #(#args),*
+                )
+            }
+        }
+    };
+
+    let block: Box<syn::Block> = if let Some(ctx) = may_set_errorcode(&func) {
+        let prologue: syn::Stmt = syn::parse_quote! {
+            unsafe {
+                Z3_set_error(#ctx, ErrorCode::Ok);
+            };
+        };
+        let epilogue: syn::Stmt = syn::parse_quote! {
+            unsafe {
+                let err = Z3_get_error_code(#ctx);
+                if err != ErrorCode::Ok {
+                    return Err(Z3Error{err});
+                }
+            };
+        };
+        let ret_pat: syn::Ident = syn::parse_quote! {ret};
+        let ret: syn::Expr = if has_opaque_handle {
+            syn::parse_quote! {#ret_pat.unwrap()}
+        } else {
+            syn::parse_quote! {#ret_pat}
+        };
+        match orig_output {
+            ReturnType::Type(_, ty) => {
+                sig.output = syn::parse_quote! {-> Result<#ty, Z3Error>};
+                syn::parse_quote! {{
+                    #prologue
+                    let #ret_pat = #call;
+                    #epilogue
+                    Ok(#ret)
+                }}
+            }
+            ReturnType::Default => {
+                sig.output = syn::parse_quote! {-> Result<(), Z3Error>};
+                syn::parse_quote! {{
+                    #prologue
+                    #call;
+                    #epilogue
+                    Ok(())
+                }}
+            }
+        }
+    } else {
+        syn::parse_quote! {{ #call }}
+    };
+
+    let wrapper_fn = syn::ItemFn {
+        attrs,
+        vis: func.vis.clone(),
+        sig,
+        block,
+    };
+
+    TransformedFn {
+        ffi_fun: func,
+        wrapper_fn,
+    }
 }
 
 // ---------------------------------------------------------------------------
@@ -760,8 +886,10 @@ fn transform_enum(mut item: ItemEnum) -> (ItemEnum, proc_macro2::TokenStream) {
 
 /// Output of [`transform`].
 pub struct TransformOutput {
-    /// Transformed `extern "C"` function declarations (content of `functions.rs`).
-    pub functions: String,
+    /// Transformed `extern "C"` FFI function declarations (content of `functions_ffi.rs`).
+    pub functions_ffi: String,
+    /// Produced thin function wrappers over the FFI functions, with explicit error handling.
+    pub functions_wrappers: String,
     /// Transformed enum definitions and type aliases (content of `enums.rs`).
     pub enums: String,
 }
@@ -783,7 +911,8 @@ pub struct TransformOutput {
 pub fn transform(input: &str) -> TransformOutput {
     let file: syn::File = syn::parse_str(input).expect("failed to parse bindgen output as Rust");
 
-    let mut functions: Vec<ForeignItemFn> = Vec::new();
+    let mut functions_ffi: Vec<ForeignItemFn> = Vec::new();
+    let mut functions_wrappers: Vec<ItemFn> = Vec::new();
     let mut enum_items: Vec<proc_macro2::TokenStream> = Vec::new();
 
     for item in file.items {
@@ -791,7 +920,12 @@ pub fn transform(input: &str) -> TransformOutput {
             Item::ForeignMod(foreign_mod) => {
                 for foreign_item in foreign_mod.items {
                     if let ForeignItem::Fn(func) = foreign_item {
-                        functions.push(transform_fn(func));
+                        let TransformedFn {
+                            ffi_fun: ffi,
+                            wrapper_fn: wrapper,
+                        } = transform_fn(func);
+                        functions_ffi.push(ffi);
+                        functions_wrappers.push(wrapper);
                     }
                 }
             }
@@ -806,15 +940,23 @@ pub fn transform(input: &str) -> TransformOutput {
         }
     }
 
-    // Format functions output.
-    let funcs_tokens = quote! {
+    // Format ffi functions output.
+    let funcs_ffi_tokens = quote! {
         unsafe extern "C" {
-            #(#functions)*
+            #(#functions_ffi)*
         }
     };
-    let funcs_file: syn::File =
-        syn::parse2(funcs_tokens).expect("failed to parse transformed functions");
-    let functions_str = prettyplease::unparse(&funcs_file);
+    let funcs_ffi_file: syn::File =
+        syn::parse2(funcs_ffi_tokens).expect("failed to parse transformed ffi functions");
+    let functions_ffi_str = prettyplease::unparse(&funcs_ffi_file);
+
+    // Format functions wrappers output.
+    let funcs_wrappers_tokens = quote! {
+        #(#functions_wrappers)*
+    };
+    let funcs_wrappers_file: syn::File =
+        syn::parse2(funcs_wrappers_tokens).expect("failed to parse transformed wrapper functions");
+    let functions_wrappers_str = prettyplease::unparse(&funcs_wrappers_file);
 
     // Format enums output.
     let enums_tokens = quote! {
@@ -825,7 +967,8 @@ pub fn transform(input: &str) -> TransformOutput {
     let enums_str = prettyplease::unparse(&enums_file);
 
     TransformOutput {
-        functions: functions_str,
+        functions_ffi: functions_ffi_str,
+        functions_wrappers: functions_wrappers_str,
         enums: enums_str,
     }
 }

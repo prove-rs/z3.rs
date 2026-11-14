@@ -14,7 +14,7 @@ impl Clone for Goal {
 impl Goal {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_goal: Z3_goal) -> Goal {
         unsafe {
-            Z3_goal_inc_ref(ctx.z3_ctx.as_ptr(), z3_goal);
+            Z3_goal_inc_ref(ctx.z3_ctx.as_ptr(), z3_goal).unwrap();
         }
         Goal {
             ctx: ctx.clone(),
@@ -35,46 +35,46 @@ impl Goal {
 
     /// Add a new formula `a` to the given goal.
     pub fn assert(&self, ast: &impl ast::Ast) {
-        unsafe { Z3_goal_assert(self.ctx.z3_ctx.as_ptr(), self.z3_goal, ast.get_z3_ast()) }
+        unsafe { Z3_goal_assert(self.ctx.z3_ctx.as_ptr(), self.z3_goal, ast.get_z3_ast()).unwrap() }
     }
 
     /// Return true if the given goal contains the formula `false`.
     pub fn is_inconsistent(&self) -> bool {
-        unsafe { Z3_goal_inconsistent(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_inconsistent(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
 
     /// Return the depth of the given goal. It tracks how many transformations were applied to it.
     pub fn get_depth(&self) -> u32 {
-        unsafe { Z3_goal_depth(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_depth(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
 
     /// Return the number of formulas in the given goal.
     pub fn get_size(&self) -> u32 {
-        unsafe { Z3_goal_size(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_size(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
 
     /// Return the number of formulas, subformulas and terms in the given goal.
     pub fn get_num_expr(&self) -> u32 {
-        unsafe { Z3_goal_num_exprs(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_num_exprs(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
 
     /// Return true if the goal is empty, and it is precise or the product of a under approximation.
     pub fn is_decided_sat(&self) -> bool {
-        unsafe { Z3_goal_is_decided_sat(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_is_decided_sat(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
     /// Return true if the goal contains false, and it is precise or the product of an over approximation.
     pub fn is_decided_unsat(&self) -> bool {
-        unsafe { Z3_goal_is_decided_unsat(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_is_decided_unsat(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
 
     /// Erase all formulas from the given goal.
     pub fn reset(&self) {
-        unsafe { Z3_goal_reset(self.ctx.z3_ctx.as_ptr(), self.z3_goal) };
+        unsafe { Z3_goal_reset(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() };
     }
 
     /// Return the "precision" of the given goal. Goals can be transformed using over and under approximations.
     pub fn get_precision(&self) -> GoalPrec {
-        unsafe { Z3_goal_precision(self.ctx.z3_ctx.as_ptr(), self.z3_goal) }
+        unsafe { Z3_goal_precision(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap() }
     }
 
     pub fn iter_formulas<'a, T>(&'a self) -> impl Iterator<Item = T> + 'a
@@ -111,9 +111,9 @@ impl Goal {
 impl fmt::Display for Goal {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_goal_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_goal) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -130,7 +130,7 @@ impl fmt::Debug for Goal {
 impl Drop for Goal {
     fn drop(&mut self) {
         unsafe {
-            Z3_goal_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_goal);
+            Z3_goal_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_goal).unwrap();
         };
     }
 }

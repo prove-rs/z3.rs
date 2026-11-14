@@ -11,7 +11,8 @@ impl FuncDecl {
             Z3_inc_ref(
                 ctx.z3_ctx.as_ptr(),
                 Z3_func_decl_to_ast(ctx.z3_ctx.as_ptr(), z3_func_decl).unwrap(),
-            );
+            )
+            .unwrap();
         }
         Self {
             ctx: ctx.clone(),
@@ -207,7 +208,7 @@ impl FuncDecl {
     /// assert_eq!(f.arity(), 2);
     /// ```
     pub fn arity(&self) -> usize {
-        unsafe { Z3_get_arity(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) as usize }
+        unsafe { Z3_get_arity(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap() as usize }
     }
 
     /// Create a constant (if `args` has length 0) or function application (otherwise).
@@ -233,7 +234,7 @@ impl FuncDecl {
 
     /// Return the `DeclKind` of this `FuncDecl`.
     pub fn kind(&self) -> DeclKind {
-        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) }
+        unsafe { Z3_get_decl_kind(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap() }
     }
 
     /// Return the name of this `FuncDecl`.
@@ -244,11 +245,11 @@ impl FuncDecl {
         unsafe {
             let z3_ctx = self.ctx.z3_ctx.as_ptr();
             let symbol = Z3_get_decl_name(z3_ctx, self.z3_func_decl).unwrap();
-            match Z3_get_symbol_kind(z3_ctx, symbol) {
-                SymbolKind::String => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol))
+            match Z3_get_symbol_kind(z3_ctx, symbol).unwrap() {
+                SymbolKind::String => CStr::from_ptr(Z3_get_symbol_string(z3_ctx, symbol).unwrap())
                     .to_string_lossy()
                     .into_owned(),
-                SymbolKind::Int => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol)),
+                SymbolKind::Int => format!("k!{}", Z3_get_symbol_int(z3_ctx, symbol).unwrap()),
             }
         }
     }
@@ -260,7 +261,7 @@ impl FuncDecl {
         let z3_ctx = self.ctx.z3_ctx.as_ptr();
         let i = c_uint::try_from(i).unwrap();
 
-        let domain_size = unsafe { Z3_get_domain_size(z3_ctx, self.z3_func_decl) };
+        let domain_size = unsafe { Z3_get_domain_size(z3_ctx, self.z3_func_decl).unwrap() };
         if i >= domain_size {
             return None;
         }
@@ -270,6 +271,7 @@ impl FuncDecl {
                 z3_ctx,
                 Z3_get_domain(z3_ctx, self.z3_func_decl, i).expect("cannot get domain of FuncDecl"),
             )
+            .unwrap()
         })
     }
 
@@ -281,6 +283,7 @@ impl FuncDecl {
                 z3_ctx,
                 Z3_get_range(z3_ctx, self.z3_func_decl).expect("cannot get range of FuncDecl"),
             )
+            .unwrap()
         }
     }
 
@@ -318,9 +321,9 @@ impl FuncDecl {
 impl fmt::Display for FuncDecl {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_func_decl_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -340,7 +343,8 @@ impl Drop for FuncDecl {
             Z3_dec_ref(
                 self.ctx.z3_ctx.as_ptr(),
                 Z3_func_decl_to_ast(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap(),
-            );
+            )
+            .unwrap();
         }
     }
 }

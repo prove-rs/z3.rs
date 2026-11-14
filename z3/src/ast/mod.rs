@@ -267,7 +267,7 @@ pub trait Ast: fmt::Debug {
         let this_ctx = self.get_ctx().z3_ctx.as_ptr();
         unsafe {
             let this_app = Z3_to_app(this_ctx, self.get_z3_ast()).unwrap();
-            Z3_get_app_num_args(this_ctx, this_app) as usize
+            Z3_get_app_num_args(this_ctx, this_app).unwrap() as usize
         }
     }
 
@@ -298,7 +298,7 @@ pub trait Ast: fmt::Debug {
     fn kind(&self) -> AstKind {
         unsafe {
             let z3_ctx = self.get_ctx().z3_ctx.as_ptr();
-            Z3_get_ast_kind(z3_ctx, self.get_z3_ast())
+            Z3_get_ast_kind(z3_ctx, self.get_z3_ast()).unwrap()
         }
     }
 
@@ -332,7 +332,7 @@ pub trait Ast: fmt::Debug {
             let ctx = self.get_ctx();
             let func_decl = unsafe {
                 let app = Z3_to_app(ctx.z3_ctx.as_ptr(), self.get_z3_ast())
-                    .ok_or(IsNotApp::new(self.kind()))?;
+                    .map_err(|_| IsNotApp::new(self.kind()))?;
                 Z3_get_app_decl(ctx.z3_ctx.as_ptr(), app)
             }
             .unwrap();
@@ -380,11 +380,11 @@ macro_rules! impl_ast {
                     z3_ast: {
                         debug!(
                             "new ast: id = {}, pointer = {:p}",
-                            unsafe { Z3_get_ast_id(ctx.z3_ctx.as_ptr(), ast) },
+                            unsafe { Z3_get_ast_id(ctx.z3_ctx.as_ptr(), ast).unwrap() },
                             ast
                         );
                         unsafe {
-                            Z3_inc_ref(ctx.z3_ctx.as_ptr(), ast);
+                            Z3_inc_ref(ctx.z3_ctx.as_ptr(), ast).unwrap();
                         }
                         ast
                     },
@@ -427,6 +427,7 @@ macro_rules! impl_ast {
                         self.get_z3_ast(),
                         other.get_z3_ast(),
                     )
+                    .unwrap()
                 }
             }
 
@@ -496,7 +497,9 @@ macro_rules! impl_ast {
         impl<T: IntoAst<$ast> + Clone> PartialEq<T> for $ast {
             fn eq(&self, other: &T) -> bool {
                 let other = other.clone().into_ast(self);
-                unsafe { Z3_is_eq_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast, other.z3_ast) }
+                unsafe {
+                    Z3_is_eq_ast(self.ctx.z3_ctx.as_ptr(), self.z3_ast, other.z3_ast).unwrap()
+                }
             }
         }
 
@@ -512,7 +515,7 @@ macro_rules! impl_ast {
             fn clone(&self) -> Self {
                 debug!(
                     "clone ast: id = {}, pointer = {:p}",
-                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx.as_ptr(), self.z3_ast) },
+                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap() },
                     self.z3_ast
                 );
                 unsafe { Self::wrap(&self.ctx, self.z3_ast) }
@@ -523,11 +526,11 @@ macro_rules! impl_ast {
             fn drop(&mut self) {
                 debug!(
                     "drop ast: id = {}, pointer = {:p}",
-                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx.as_ptr(), self.z3_ast) },
+                    unsafe { Z3_get_ast_id(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap() },
                     self.z3_ast
                 );
                 unsafe {
-                    Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_ast);
+                    Z3_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap();
                 }
             }
         }
@@ -535,7 +538,7 @@ macro_rules! impl_ast {
         impl Hash for $ast {
             fn hash<H: Hasher>(&self, state: &mut H) {
                 unsafe {
-                    let u = Z3_get_ast_hash(self.ctx.z3_ctx.as_ptr(), self.z3_ast);
+                    let u = Z3_get_ast_hash(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap();
                     u.hash(state);
                 }
             }
@@ -544,9 +547,9 @@ macro_rules! impl_ast {
         impl fmt::Debug for $ast {
             fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
                 let p = unsafe { Z3_ast_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast) };
-                if p.is_null() {
+                let Ok(p) = p else {
                     return Result::Err(fmt::Error);
-                }
+                };
                 match unsafe { CStr::from_ptr(p) }.to_str() {
                     Ok(s) => write!(f, "{}", s),
                     Err(_) => Result::Err(fmt::Error),

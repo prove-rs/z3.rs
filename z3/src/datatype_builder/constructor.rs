@@ -97,7 +97,7 @@ impl Constructor {
 impl Drop for Constructor {
     fn drop(&mut self) {
         unsafe {
-            Z3_del_constructor(self.ctx.z3_ctx.as_ptr(), self.z3_constructor);
+            Z3_del_constructor(self.ctx.z3_ctx.as_ptr(), self.z3_constructor).unwrap();
         }
     }
 }
@@ -147,7 +147,7 @@ impl ConstructorList {
 impl Drop for ConstructorList {
     fn drop(&mut self) {
         unsafe {
-            Z3_del_constructor_list(self.ctx.z3_ctx.as_ptr(), self.z3_constructor_list);
+            Z3_del_constructor_list(self.ctx.z3_ctx.as_ptr(), self.z3_constructor_list).unwrap();
         }
     }
 }

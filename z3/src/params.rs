@@ -7,7 +7,7 @@ use crate::{Context, Params, Symbol};
 impl Params {
     unsafe fn wrap(ctx: &Context, z3_params: Z3_params) -> Params {
         unsafe {
-            Z3_params_inc_ref(ctx.z3_ctx.as_ptr(), z3_params);
+            Z3_params_inc_ref(ctx.z3_ctx.as_ptr(), z3_params).unwrap();
         }
         Params {
             ctx: ctx.clone(),
@@ -27,7 +27,8 @@ impl Params {
                 self.z3_params,
                 k.into().as_z3_symbol(),
                 v.into().as_z3_symbol(),
-            );
+            )
+            .unwrap();
         };
     }
 
@@ -38,7 +39,8 @@ impl Params {
                 self.z3_params,
                 k.into().as_z3_symbol(),
                 v,
-            );
+            )
+            .unwrap();
         };
     }
 
@@ -49,7 +51,8 @@ impl Params {
                 self.z3_params,
                 k.into().as_z3_symbol(),
                 v,
-            );
+            )
+            .unwrap();
         };
     }
 
@@ -60,7 +63,8 @@ impl Params {
                 self.z3_params,
                 k.into().as_z3_symbol(),
                 v,
-            );
+            )
+            .unwrap();
         };
     }
 }
@@ -113,9 +117,9 @@ pub fn reset_all_global_params() {
 impl fmt::Display for Params {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let p = unsafe { Z3_params_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_params) };
-        if p.is_null() {
+        let Ok(p) = p else {
             return Result::Err(fmt::Error);
-        }
+        };
         match unsafe { CStr::from_ptr(p) }.to_str() {
             Ok(s) => write!(f, "{s}"),
             Err(_) => Result::Err(fmt::Error),
@@ -131,6 +135,6 @@ impl fmt::Debug for Params {
 
 impl Drop for Params {
     fn drop(&mut self) {
-        unsafe { Z3_params_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_params) };
+        unsafe { Z3_params_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_params).unwrap() };
     }
 }

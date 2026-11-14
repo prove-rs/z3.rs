@@ -86,7 +86,8 @@ fn gen_bindings() -> Result<(), Box<dyn std::error::Error>> {
         .env("Z3_SYS_UPDATE_GENERATED", "1")
         .current_dir(&root))?;
 
-    println!("Updated z3-sys/src/generated/functions.rs");
+    println!("Updated z3-sys/src/generated/functions_ffi.rs");
+    println!("Updated z3-sys/src/generated/functions_wrappers.rs");
     println!("Updated z3-sys/src/generated/enums.rs");
     println!();
     println!("Review diffs with:   git diff z3-sys/src/generated/");

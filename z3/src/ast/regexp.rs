@@ -53,13 +53,13 @@ impl Regexp {
                 let lo_cs = CString::new(lo.to_string()).unwrap();
                 let hi_cs = CString::new(hi.to_string()).unwrap();
                 let lo_z3s = Z3_mk_string(ctx.z3_ctx.as_ptr(), lo_cs.as_ptr()).unwrap();
-                Z3_inc_ref(ctx.z3_ctx.as_ptr(), lo_z3s);
+                Z3_inc_ref(ctx.z3_ctx.as_ptr(), lo_z3s).unwrap();
                 let hi_z3s = Z3_mk_string(ctx.z3_ctx.as_ptr(), hi_cs.as_ptr()).unwrap();
-                Z3_inc_ref(ctx.z3_ctx.as_ptr(), hi_z3s);
+                Z3_inc_ref(ctx.z3_ctx.as_ptr(), hi_z3s).unwrap();
 
                 let ret = Z3_mk_re_range(ctx.z3_ctx.as_ptr(), lo_z3s, hi_z3s);
-                Z3_dec_ref(ctx.z3_ctx.as_ptr(), lo_z3s);
-                Z3_dec_ref(ctx.z3_ctx.as_ptr(), hi_z3s);
+                Z3_dec_ref(ctx.z3_ctx.as_ptr(), lo_z3s).unwrap();
+                Z3_dec_ref(ctx.z3_ctx.as_ptr(), hi_z3s).unwrap();
                 ret.unwrap()
             })
         }
