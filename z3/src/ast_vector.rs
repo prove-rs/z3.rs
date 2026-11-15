@@ -28,7 +28,7 @@ pub struct AstVector {
 impl Drop for AstVector {
     fn drop(&mut self) {
         unsafe {
-            Z3_ast_vector_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector);
+            Z3_ast_vector_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector).unwrap();
         }
     }
 }
@@ -39,7 +39,7 @@ impl AstVector {
         let ctx = Context::thread_local();
         unsafe {
             let av = Z3_mk_ast_vector(ctx.z3_ctx.as_ptr()).unwrap();
-            Z3_ast_vector_inc_ref(ctx.z3_ctx.as_ptr(), av);
+            Z3_ast_vector_inc_ref(ctx.z3_ctx.as_ptr(), av).unwrap();
             AstVector {
                 ctx: ctx.clone(),
                 z3_ast_vector: av,
@@ -50,7 +50,7 @@ impl AstVector {
     /// Wrap an existing Z3 AST vector.
     pub(crate) unsafe fn wrap(ctx: &Context, z3_ast_vector: Z3_ast_vector) -> AstVector {
         unsafe {
-            Z3_ast_vector_inc_ref(ctx.z3_ctx.as_ptr(), z3_ast_vector);
+            Z3_ast_vector_inc_ref(ctx.z3_ctx.as_ptr(), z3_ast_vector).unwrap();
         }
         AstVector {
             ctx: ctx.clone(),
@@ -60,7 +60,9 @@ impl AstVector {
 
     /// Get the number of elements in the vector.
     pub fn len(&self) -> usize {
-        unsafe { Z3_ast_vector_size(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector) as usize }
+        unsafe {
+            Z3_ast_vector_size(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector).unwrap() as usize
+        }
     }
 
     /// Check if the vector is empty.
@@ -97,7 +99,8 @@ impl AstVector {
                 self.z3_ast_vector,
                 index as u32,
                 ast.get_z3_ast(),
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -108,7 +111,8 @@ impl AstVector {
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_ast_vector,
                 ast.get_z3_ast(),
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -121,7 +125,8 @@ impl AstVector {
                 self.ctx.z3_ctx.as_ptr(),
                 self.z3_ast_vector,
                 new_size as u32,
-            );
+            )
+            .unwrap();
         }
     }
 
@@ -175,7 +180,8 @@ impl Default for AstVector {
 impl fmt::Display for AstVector {
     fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
         let s = unsafe {
-            let raw = Z3_ast_vector_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector);
+            let raw =
+                Z3_ast_vector_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_ast_vector).unwrap();
             std::ffi::CStr::from_ptr(raw).to_string_lossy().into_owned()
         };
         write!(f, "{s}")
