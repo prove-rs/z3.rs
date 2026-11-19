@@ -1,6 +1,6 @@
 use std::ffi::CStr;
 use std::fmt;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::ast::Bool;
 use crate::{Context, Goal, Translate, ast, ast::Ast};

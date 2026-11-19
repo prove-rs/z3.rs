@@ -577,7 +577,7 @@ fn transform_fn(mut func: ForeignItemFn) -> TransformedFn {
         });
         syn::parse_quote! {
             unsafe {
-                crate::ffi::#ident (
+                ::z3_sys::#ident (
                     #(#args),*
                 )
             }
@@ -594,7 +594,7 @@ fn transform_fn(mut func: ForeignItemFn) -> TransformedFn {
             unsafe {
                 let err = Z3_get_error_code(#ctx);
                 if err != ErrorCode::Ok {
-                    return Err(Z3Error{err});
+                    return Err(Z3Error::new(#ctx, err));
                 }
             };
         };
@@ -902,7 +902,7 @@ fn transform_enum(mut item: ItemEnum) -> (ItemEnum, proc_macro2::TokenStream) {
 
 /// Output of [`transform`].
 pub struct TransformOutput {
-    /// Transformed `extern "C"` FFI function declarations (content of `functions_ffi.rs`).
+    /// Transformed `extern "C"` FFI function declarations (content of `functions`).
     pub functions_ffi: String,
     /// Produced thin function wrappers over the FFI functions, with explicit error handling.
     pub functions_wrappers: String,

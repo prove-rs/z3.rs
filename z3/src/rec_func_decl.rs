@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::ops::Deref;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 

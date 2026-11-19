@@ -3,7 +3,7 @@ use std::cell::RefCell;
 use std::clone::Clone;
 use std::ffi::CString;
 use std::rc::Rc;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{Config, ContextHandle};
 
@@ -108,7 +108,7 @@ impl Context {
     ///
     /// ```
     /// use z3::ast::Bool;
-    /// use z3_sys::{Z3_mk_config, Z3_del_config, Z3_mk_context_rc};
+    /// use z3_low::{Z3_mk_config, Z3_del_config, Z3_mk_context_rc};
     /// use z3::Context;
     ///
     /// // Create a raw Z3_config using the low-level API

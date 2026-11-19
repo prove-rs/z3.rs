@@ -1,5 +1,5 @@
 use std::fmt;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{
     AstVector, Context, FuncEntry, FuncInterp, Interp,

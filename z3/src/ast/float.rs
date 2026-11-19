@@ -3,7 +3,7 @@ use crate::ast::rounding_mode::RoundingMode;
 use crate::ast::{Ast, BV, Bool, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a float value.
 pub struct Float {

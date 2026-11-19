@@ -13,7 +13,7 @@ struct Cli {
 
 #[derive(Subcommand)]
 enum CliCommand {
-    /// Regenerate z3-sys/src/generated/ from vendored Z3 headers.
+    /// Regenerate z3-{sys,low}/src/generated/ from vendored Z3 headers.
     GenBindings,
     /// Check out a Z3 tag in the z3-src submodule and bump the z3-src crate version.
     PrepareZ3Src {
@@ -74,23 +74,31 @@ fn gen_bindings() -> Result<(), Box<dyn std::error::Error>> {
 
     // Force the build script to run unconditionally on the next build.
     run(Command::new("cargo")
-        .args(["clean", "-p", "z3-sys"])
+        .args(["clean", "-p", "z3-sys", "-p", "z3-low"])
         .current_dir(&root))?;
 
     // Z3_SYS_UPDATE_GENERATED=1 causes build.rs to write the generated files
-    // back to z3-sys/src/generated/ (the committed location) in addition to
+    // back to z3-{sys,low}/src/generated/ (the committed location) in addition to
     // the ephemeral Cargo output directory.
     run(Command::new("cargo")
-        .args(["build", "-p", "z3-sys", "--features", "bindgen"])
+        .args([
+            "build",
+            "-p",
+            "z3-sys",
+            "-p",
+            "z3-low",
+            "--features",
+            "bindgen",
+        ])
         .env("Z3_SYS_Z3_HEADER", &header)
         .env("Z3_SYS_UPDATE_GENERATED", "1")
         .current_dir(&root))?;
 
-    println!("Updated z3-sys/src/generated/functions_ffi.rs");
-    println!("Updated z3-sys/src/generated/functions_wrappers.rs");
+    println!("Updated z3-sys/src/generated/functions.rs");
     println!("Updated z3-sys/src/generated/enums.rs");
+    println!("Updated z3-low/src/generated/functions.rs");
     println!();
-    println!("Review diffs with:   git diff z3-sys/src/generated/");
+    println!("Review diffs with:   git diff -- z3-sys/src/generated/ z3-low/src/generated/");
 
     Ok(())
 }

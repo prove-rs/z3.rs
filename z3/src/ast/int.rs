@@ -5,7 +5,7 @@ use crate::{Context, Sort, Symbol};
 use num::BigInt;
 use std::ffi::{CStr, CString};
 use std::str::FromStr;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing an integer value.
 pub struct Int {

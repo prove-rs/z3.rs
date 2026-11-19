@@ -1,0 +1,32 @@
+[package]
+name = "z3-low"
+rust-version = "1.88.0"
+version = "0.14.2"
+authors = ["Graydon Hoare <graydon@pobox.com>", "Bruce Mitchener <bruce.mitchener@gmail.com>", "Nick Fitzgerald <fitzgen@gmail.com>", "Mark DenHoed <mark.denhoed@cs.ox.ac.uk>"]
+build = "build.rs"
+edition = "2024"
+
+description = "Low-level bindings for the Z3 SMT solver from Microsoft Research"
+license = "MIT"
+links = "z3-low"
+keywords = ["FFI", "SMT", "satisfiability", "solver"]
+categories = ["external-ffi-bindings"]
+readme = "README.md"
+documentation = "https://docs.rs/z3-low/"
+homepage = "https://github.com/prove-rs/z3.rs"
+repository = "https://github.com/prove-rs/z3.rs.git"
+
+[dependencies]
+z3-sys = { version = "=0.14.2", path = "../z3-sys" }
+
+[build-dependencies]
+z3-sys = { version = "=0.14.2", path = "../z3-sys", optional = true }
+
+[features]
+bindgen = ["z3-sys/bindgen"]
+vendored = ["z3-sys/vendored"]
+vcpkg = ["z3-sys/vcpkg"]
+gh-release = ["z3-sys/gh-release"]
+
+# Deprecated alias for `vendored`; will be removed in a future release.
+bundled = ["z3-sys/bundled"]

@@ -7,7 +7,7 @@ use crate::Context;
 use crate::ast::FiniteSet;
 use crate::ast::{Array, Ast, BV, Bool, Dynamic, Float, Int, Real, Seq, Set};
 use crate::ast::{Datatype, String as AstString};
-use z3_sys::*;
+use z3_low::*;
 
 /// Vector of Z3 AST nodes.
 ///

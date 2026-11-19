@@ -1,7 +1,7 @@
 use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{Context, Pattern, ast::Ast};
 

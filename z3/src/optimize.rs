@@ -5,7 +5,7 @@ use std::ffi::{CStr, CString, c_void};
 use std::fmt;
 use std::iter::FusedIterator;
 use std::ptr::NonNull;
-use z3_sys::*;
+use z3_low::*;
 
 #[cfg(z3_4_16_0)]
 use crate::Translate;

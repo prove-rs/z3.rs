@@ -1,7 +1,7 @@
 use crate::Context;
 use crate::ast::{Ast, Real};
 use std::convert::TryFrom;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a real algebraic number value.
 ///

@@ -1,6 +1,6 @@
 use std::ffi::{CStr, CString};
 use std::fmt;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{Context, Params, Symbol};
 

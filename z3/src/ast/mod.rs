@@ -7,8 +7,8 @@ use std::ffi::CStr;
 use std::fmt;
 use std::hash::{Hash, Hasher};
 
-pub use z3_sys::AstKind;
-use z3_sys::*;
+pub use z3_low::AstKind;
+use z3_low::*;
 
 use crate::{Context, FuncDecl, IsNotApp, Model, Pattern, Solvable, Sort, SortDiffers, Symbol};
 

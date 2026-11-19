@@ -4,7 +4,7 @@ use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::{CStr, CString, NulError};
 use std::str::FromStr;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a string value.
 pub struct String {

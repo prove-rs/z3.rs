@@ -1,7 +1,7 @@
 use crate::ast::{Ast, Dynamic};
 use crate::{Context, FuncDecl, Sort, Symbol};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing an array value.
 /// An array in Z3 is a mapping from indices to values.

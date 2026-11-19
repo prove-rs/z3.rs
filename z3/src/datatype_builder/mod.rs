@@ -35,7 +35,7 @@
 mod constructor;
 
 use std::convert::TryInto;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::datatype_builder::constructor::{Constructor, ConstructorList};
 use crate::{Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};

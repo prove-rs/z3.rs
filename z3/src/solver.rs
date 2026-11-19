@@ -3,7 +3,7 @@ use std::borrow::Borrow;
 use std::ffi::{CStr, CString};
 use std::fmt;
 use std::iter::FusedIterator;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::ast::Bool;
 use crate::{

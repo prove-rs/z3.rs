@@ -4,7 +4,7 @@ use crate::{Context, Sort, Symbol};
 #[cfg(feature = "num")]
 use num::BigRational;
 use std::ffi::{CStr, CString};
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a real value.
 pub struct Real {

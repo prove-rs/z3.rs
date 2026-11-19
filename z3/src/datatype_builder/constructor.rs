@@ -1,4 +1,4 @@
-use z3_sys::{
+use z3_low::{
     Z3_constructor, Z3_constructor_list, Z3_del_constructor, Z3_del_constructor_list,
     Z3_mk_constructor, Z3_mk_constructor_list, Z3_sort, Z3_symbol,
 };

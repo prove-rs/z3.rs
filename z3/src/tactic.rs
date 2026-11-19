@@ -5,7 +5,7 @@ use std::os::raw::c_uint;
 use std::result::Result;
 use std::str::Utf8Error;
 use std::time::Duration;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{ApplyResult, Context, Goal, Params, Probe, Solver, Tactic};
 

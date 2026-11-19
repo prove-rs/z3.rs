@@ -1,7 +1,7 @@
 use crate::Context;
 use crate::ast::Ast;
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a regular expression.
 /// ```

@@ -1,6 +1,6 @@
 use std::fmt;
 use std::{ffi::CStr, iter::FusedIterator};
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{
     AstVector, Context, FuncDecl, FuncInterp, Interp, Model, Optimize, Solver, Sort, Translate,

@@ -2,7 +2,7 @@ use crate::ast::{Ast, Bool};
 use crate::{Context, Fixedpoint, FuncDecl, Params, SatResult, Statistics};
 use std::ffi::CString;
 use std::fmt;
-use z3_sys::*;
+use z3_low::*;
 
 impl Drop for Fixedpoint {
     fn drop(&mut self) {

@@ -2,7 +2,7 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use std::result::Result;
 use std::str::Utf8Error;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{Context, Goal, Probe};
 impl Probe {

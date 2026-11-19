@@ -27,7 +27,7 @@
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_global_param_set(param_id: Z3_string, param_value: Z3_string) {
-    unsafe { crate::ffi::Z3_global_param_set(param_id, param_value) }
+    unsafe { ::z3_sys::Z3_global_param_set(param_id, param_value) }
 }
 /// Restore the value of all global (and module) parameters.
 /// This command will not affect already created objects (such as tactics and solvers).
@@ -41,7 +41,7 @@ pub unsafe fn Z3_global_param_set(param_id: Z3_string, param_value: Z3_string) {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_global_param_reset_all() {
-    unsafe { crate::ffi::Z3_global_param_reset_all() }
+    unsafe { ::z3_sys::Z3_global_param_reset_all() }
 }
 /// Get a global (or module) parameter.
 ///
@@ -63,7 +63,7 @@ pub unsafe fn Z3_global_param_get(
     param_id: Z3_string,
     param_value: Z3_string_ptr,
 ) -> bool {
-    unsafe { crate::ffi::Z3_global_param_get(param_id, param_value) }
+    unsafe { ::z3_sys::Z3_global_param_get(param_id, param_value) }
 }
 /// Create a configuration object for the Z3 context object.
 ///
@@ -99,7 +99,7 @@ pub unsafe fn Z3_global_param_get(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_mk_config() -> Option<Z3_config> {
-    unsafe { crate::ffi::Z3_mk_config() }
+    unsafe { ::z3_sys::Z3_mk_config() }
 }
 /// Delete the given configuration object.
 ///
@@ -111,7 +111,7 @@ pub unsafe fn Z3_mk_config() -> Option<Z3_config> {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_del_config(c: Z3_config) {
-    unsafe { crate::ffi::Z3_del_config(c) }
+    unsafe { ::z3_sys::Z3_del_config(c) }
 }
 /// Set a configuration parameter.
 ///
@@ -129,7 +129,7 @@ pub unsafe fn Z3_set_param_value(
     param_id: Z3_string,
     param_value: Z3_string,
 ) {
-    unsafe { crate::ffi::Z3_set_param_value(c, param_id, param_value) }
+    unsafe { ::z3_sys::Z3_set_param_value(c, param_id, param_value) }
 }
 /// Create a context using the given configuration.
 ///
@@ -165,7 +165,7 @@ pub unsafe fn Z3_set_param_value(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_mk_context(c: Z3_config) -> Option<Z3_context> {
-    unsafe { crate::ffi::Z3_mk_context(c) }
+    unsafe { ::z3_sys::Z3_mk_context(c) }
 }
 /// Create a context using the given configuration.
 /// This function is similar to [`Z3_mk_context`]. However,
@@ -195,7 +195,7 @@ pub unsafe fn Z3_mk_context(c: Z3_config) -> Option<Z3_context> {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_mk_context_rc(c: Z3_config) -> Option<Z3_context> {
-    unsafe { crate::ffi::Z3_mk_context_rc(c) }
+    unsafe { ::z3_sys::Z3_mk_context_rc(c) }
 }
 /// Delete the given logical context.
 ///
@@ -210,11 +210,11 @@ pub unsafe fn Z3_del_context(c: Z3_context) -> Result<(), Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_del_context(c) };
+    unsafe { ::z3_sys::Z3_del_context(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -252,11 +252,11 @@ pub unsafe fn Z3_set_proof_check_callback(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_set_proof_check_callback(c, user_context, callback) };
+    unsafe { ::z3_sys::Z3_set_proof_check_callback(c, user_context, callback) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -272,11 +272,11 @@ pub unsafe fn Z3_inc_ref(c: Z3_context, a: Z3_ast) -> Result<(), Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_inc_ref(c, a) };
+    unsafe { ::z3_sys::Z3_inc_ref(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -292,11 +292,11 @@ pub unsafe fn Z3_dec_ref(c: Z3_context, a: Z3_ast) -> Result<(), Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_dec_ref(c, a) };
+    unsafe { ::z3_sys::Z3_dec_ref(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -318,11 +318,11 @@ pub unsafe fn Z3_update_param_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_update_param_value(c, param_id, param_value) };
+    unsafe { ::z3_sys::Z3_update_param_value(c, param_id, param_value) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -338,11 +338,11 @@ pub unsafe fn Z3_get_global_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_global_param_descrs(c) };
+    let ret = unsafe { ::z3_sys::Z3_get_global_param_descrs(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -357,11 +357,11 @@ pub unsafe fn Z3_interrupt(c: Z3_context) -> Result<(), Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_interrupt(c) };
+    unsafe { ::z3_sys::Z3_interrupt(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -377,11 +377,11 @@ pub unsafe fn Z3_enable_concurrent_dec_ref(c: Z3_context) -> Result<(), Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_enable_concurrent_dec_ref(c) };
+    unsafe { ::z3_sys::Z3_enable_concurrent_dec_ref(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -400,11 +400,11 @@ pub unsafe fn Z3_mk_params(c: Z3_context) -> Result<Z3_params, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_params(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_params(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -418,11 +418,11 @@ pub unsafe fn Z3_params_inc_ref(c: Z3_context, p: Z3_params) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_inc_ref(c, p) };
+    unsafe { ::z3_sys::Z3_params_inc_ref(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -436,11 +436,11 @@ pub unsafe fn Z3_params_dec_ref(c: Z3_context, p: Z3_params) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_dec_ref(c, p) };
+    unsafe { ::z3_sys::Z3_params_dec_ref(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -459,11 +459,11 @@ pub unsafe fn Z3_params_set_bool(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_set_bool(c, p, k, v) };
+    unsafe { ::z3_sys::Z3_params_set_bool(c, p, k, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -482,11 +482,11 @@ pub unsafe fn Z3_params_set_uint(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_set_uint(c, p, k, v) };
+    unsafe { ::z3_sys::Z3_params_set_uint(c, p, k, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -505,11 +505,11 @@ pub unsafe fn Z3_params_set_double(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_set_double(c, p, k, v) };
+    unsafe { ::z3_sys::Z3_params_set_double(c, p, k, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -528,11 +528,11 @@ pub unsafe fn Z3_params_set_symbol(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_set_symbol(c, p, k, v) };
+    unsafe { ::z3_sys::Z3_params_set_symbol(c, p, k, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -550,11 +550,11 @@ pub unsafe fn Z3_params_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_params_to_string(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_params_to_string(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -574,11 +574,11 @@ pub unsafe fn Z3_params_validate(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_params_validate(c, p, d) };
+    unsafe { ::z3_sys::Z3_params_validate(c, p, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -595,11 +595,11 @@ pub unsafe fn Z3_param_descrs_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_param_descrs_inc_ref(c, p) };
+    unsafe { ::z3_sys::Z3_param_descrs_inc_ref(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -616,11 +616,11 @@ pub unsafe fn Z3_param_descrs_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_param_descrs_dec_ref(c, p) };
+    unsafe { ::z3_sys::Z3_param_descrs_dec_ref(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -638,11 +638,11 @@ pub unsafe fn Z3_param_descrs_get_kind(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_param_descrs_get_kind(c, p, n) };
+    let ret = unsafe { ::z3_sys::Z3_param_descrs_get_kind(c, p, n) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -659,11 +659,11 @@ pub unsafe fn Z3_param_descrs_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_param_descrs_size(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_param_descrs_size(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -685,11 +685,11 @@ pub unsafe fn Z3_param_descrs_get_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_param_descrs_get_name(c, p, i) };
+    let ret = unsafe { ::z3_sys::Z3_param_descrs_get_name(c, p, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -707,11 +707,11 @@ pub unsafe fn Z3_param_descrs_get_documentation(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_param_descrs_get_documentation(c, p, s) };
+    let ret = unsafe { ::z3_sys::Z3_param_descrs_get_documentation(c, p, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -729,11 +729,11 @@ pub unsafe fn Z3_param_descrs_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_param_descrs_to_string(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_param_descrs_to_string(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -760,11 +760,11 @@ pub unsafe fn Z3_mk_int_symbol(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int_symbol(c, i) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int_symbol(c, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -788,11 +788,11 @@ pub unsafe fn Z3_mk_string_symbol(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_string_symbol(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_string_symbol(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -811,11 +811,11 @@ pub unsafe fn Z3_mk_uninterpreted_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_uninterpreted_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_uninterpreted_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -836,11 +836,11 @@ pub unsafe fn Z3_mk_type_variable(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_type_variable(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_type_variable(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -856,11 +856,11 @@ pub unsafe fn Z3_mk_bool_sort(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bool_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bool_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -882,11 +882,11 @@ pub unsafe fn Z3_mk_int_sort(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -902,11 +902,11 @@ pub unsafe fn Z3_mk_real_sort(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_real_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_real_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -925,11 +925,11 @@ pub unsafe fn Z3_mk_complex_sort(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_complex_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_complex_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -948,11 +948,11 @@ pub unsafe fn Z3_mk_complex(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_complex(c, re, im) };
+    let ret = unsafe { ::z3_sys::Z3_mk_complex(c, re, im) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -966,11 +966,11 @@ pub unsafe fn Z3_mk_real_part(c: Z3_context, z: Z3_ast) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_real_part(c, z) };
+    let ret = unsafe { ::z3_sys::Z3_mk_real_part(c, z) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -984,11 +984,11 @@ pub unsafe fn Z3_mk_imag_part(c: Z3_context, z: Z3_ast) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_imag_part(c, z) };
+    let ret = unsafe { ::z3_sys::Z3_mk_imag_part(c, z) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1009,11 +1009,11 @@ pub unsafe fn Z3_mk_bv_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bv_sort(c, sz) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bv_sort(c, sz) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1041,11 +1041,11 @@ pub unsafe fn Z3_mk_finite_domain_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_domain_sort(c, name, size) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_domain_sort(c, name, size) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1062,11 +1062,11 @@ pub unsafe fn Z3_mk_finite_field_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_field_sort(c, prime) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_field_sort(c, prime) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1083,11 +1083,11 @@ pub unsafe fn Z3_get_finite_field_sort_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_finite_field_sort_size(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_finite_field_sort_size(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -1105,11 +1105,11 @@ pub unsafe fn Z3_mk_ff_add(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ff_add(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ff_add(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1127,11 +1127,11 @@ pub unsafe fn Z3_mk_ff_mul(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ff_mul(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ff_mul(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1145,11 +1145,11 @@ pub unsafe fn Z3_mk_ff_neg(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ff_neg(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ff_neg(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1167,11 +1167,11 @@ pub unsafe fn Z3_mk_ff_bitsum(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ff_bitsum(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ff_bitsum(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1197,11 +1197,11 @@ pub unsafe fn Z3_mk_array_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_array_sort(c, domain, range) };
+    let ret = unsafe { ::z3_sys::Z3_mk_array_sort(c, domain, range) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1225,11 +1225,11 @@ pub unsafe fn Z3_mk_array_sort_n(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_array_sort_n(c, n, domain, range) };
+    let ret = unsafe { ::z3_sys::Z3_mk_array_sort_n(c, n, domain, range) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1263,7 +1263,7 @@ pub unsafe fn Z3_mk_tuple_sort(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_tuple_sort(
+        ::z3_sys::Z3_mk_tuple_sort(
             c,
             mk_tuple_name,
             num_fields,
@@ -1276,7 +1276,7 @@ pub unsafe fn Z3_mk_tuple_sort(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1314,7 +1314,7 @@ pub unsafe fn Z3_mk_enumeration_sort(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_enumeration_sort(
+        ::z3_sys::Z3_mk_enumeration_sort(
             c,
             name,
             n,
@@ -1326,7 +1326,7 @@ pub unsafe fn Z3_mk_enumeration_sort(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1364,7 +1364,7 @@ pub unsafe fn Z3_mk_list_sort(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_list_sort(
+        ::z3_sys::Z3_mk_list_sort(
             c,
             name,
             elem_sort,
@@ -1379,7 +1379,7 @@ pub unsafe fn Z3_mk_list_sort(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1399,11 +1399,11 @@ pub unsafe fn Z3_constructor_num_fields(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_constructor_num_fields(c, constr) };
+    let ret = unsafe { ::z3_sys::Z3_constructor_num_fields(c, constr) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -1427,11 +1427,11 @@ pub unsafe fn Z3_del_constructor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_del_constructor(c, constr) };
+    unsafe { ::z3_sys::Z3_del_constructor(c, constr) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -1463,12 +1463,12 @@ pub unsafe fn Z3_mk_datatype(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_datatype(c, name, num_constructors, constructors)
+        ::z3_sys::Z3_mk_datatype(c, name, num_constructors, constructors)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1507,7 +1507,7 @@ pub unsafe fn Z3_mk_polymorphic_datatype(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_polymorphic_datatype(
+        ::z3_sys::Z3_mk_polymorphic_datatype(
             c,
             name,
             num_parameters,
@@ -1519,7 +1519,7 @@ pub unsafe fn Z3_mk_polymorphic_datatype(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1549,11 +1549,11 @@ pub unsafe fn Z3_mk_datatype_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_datatype_sort(c, name, num_params, params) };
+    let ret = unsafe { ::z3_sys::Z3_mk_datatype_sort(c, name, num_params, params) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1581,12 +1581,12 @@ pub unsafe fn Z3_mk_constructor_list(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_constructor_list(c, num_constructors, constructors)
+        ::z3_sys::Z3_mk_constructor_list(c, num_constructors, constructors)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1612,11 +1612,11 @@ pub unsafe fn Z3_del_constructor_list(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_del_constructor_list(c, clist) };
+    unsafe { ::z3_sys::Z3_del_constructor_list(c, clist) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -1649,12 +1649,12 @@ pub unsafe fn Z3_mk_datatypes(
         Z3_set_error(c, ErrorCode::Ok);
     };
     unsafe {
-        crate::ffi::Z3_mk_datatypes(c, num_sorts, sort_names, sorts, constructor_lists)
+        ::z3_sys::Z3_mk_datatypes(c, num_sorts, sort_names, sorts, constructor_lists)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -1687,7 +1687,7 @@ pub unsafe fn Z3_query_constructor(
         Z3_set_error(c, ErrorCode::Ok);
     };
     unsafe {
-        crate::ffi::Z3_query_constructor(
+        ::z3_sys::Z3_query_constructor(
             c,
             constr,
             num_fields,
@@ -1699,7 +1699,7 @@ pub unsafe fn Z3_query_constructor(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -1735,11 +1735,11 @@ pub unsafe fn Z3_mk_func_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_func_decl(c, s, domain_size, domain, range) };
+    let ret = unsafe { ::z3_sys::Z3_mk_func_decl(c, s, domain_size, domain, range) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1764,11 +1764,11 @@ pub unsafe fn Z3_mk_app(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_app(c, d, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_app(c, d, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1798,11 +1798,11 @@ pub unsafe fn Z3_mk_const(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_const(c, s, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_const(c, s, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1832,12 +1832,12 @@ pub unsafe fn Z3_mk_fresh_func_decl(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_fresh_func_decl(c, prefix, domain_size, domain, range)
+        ::z3_sys::Z3_mk_fresh_func_decl(c, prefix, domain_size, domain, range)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1867,11 +1867,11 @@ pub unsafe fn Z3_mk_fresh_const(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fresh_const(c, prefix, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fresh_const(c, prefix, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1907,13 +1907,11 @@ pub unsafe fn Z3_mk_rec_func_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe {
-        crate::ffi::Z3_mk_rec_func_decl(c, s, domain_size, domain, range)
-    };
+    let ret = unsafe { ::z3_sys::Z3_mk_rec_func_decl(c, s, domain_size, domain, range) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1946,11 +1944,11 @@ pub unsafe fn Z3_add_rec_def(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_add_rec_def(c, f, n, args, body) };
+    unsafe { ::z3_sys::Z3_add_rec_def(c, f, n, args, body) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -1964,11 +1962,11 @@ pub unsafe fn Z3_mk_true(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_true(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_true(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -1982,11 +1980,11 @@ pub unsafe fn Z3_mk_false(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_false(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_false(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2002,11 +2000,11 @@ pub unsafe fn Z3_mk_eq(c: Z3_context, l: Z3_ast, r: Z3_ast) -> Result<Z3_ast, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_eq(c, l, r) };
+    let ret = unsafe { ::z3_sys::Z3_mk_eq(c, l, r) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2031,11 +2029,11 @@ pub unsafe fn Z3_mk_distinct(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_distinct(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_distinct(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2051,11 +2049,11 @@ pub unsafe fn Z3_mk_not(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_not(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_mk_not(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2077,11 +2075,11 @@ pub unsafe fn Z3_mk_ite(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ite(c, t1, t2, t3) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ite(c, t1, t2, t3) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2101,11 +2099,11 @@ pub unsafe fn Z3_mk_iff(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_iff(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_iff(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2125,11 +2123,11 @@ pub unsafe fn Z3_mk_implies(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_implies(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_implies(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2149,11 +2147,11 @@ pub unsafe fn Z3_mk_xor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_xor(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_xor(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2176,11 +2174,11 @@ pub unsafe fn Z3_mk_and(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_and(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_and(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2203,11 +2201,11 @@ pub unsafe fn Z3_mk_or(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_or(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_or(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2230,11 +2228,11 @@ pub unsafe fn Z3_mk_add(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_add(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_add(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2258,11 +2256,11 @@ pub unsafe fn Z3_mk_mul(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_mul(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_mul(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2285,11 +2283,11 @@ pub unsafe fn Z3_mk_sub(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_sub(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_sub(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2305,11 +2303,11 @@ pub unsafe fn Z3_mk_unary_minus(c: Z3_context, arg: Z3_ast) -> Result<Z3_ast, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_unary_minus(c, arg) };
+    let ret = unsafe { ::z3_sys::Z3_mk_unary_minus(c, arg) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2333,11 +2331,11 @@ pub unsafe fn Z3_mk_div(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_div(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_div(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2357,11 +2355,11 @@ pub unsafe fn Z3_mk_mod(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_mod(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_mod(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2381,11 +2379,11 @@ pub unsafe fn Z3_mk_rem(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_rem(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_rem(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2417,11 +2415,11 @@ pub unsafe fn Z3_mk_power(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_power(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_power(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2435,11 +2433,11 @@ pub unsafe fn Z3_mk_abs(c: Z3_context, arg: Z3_ast) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_abs(c, arg) };
+    let ret = unsafe { ::z3_sys::Z3_mk_abs(c, arg) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2459,11 +2457,11 @@ pub unsafe fn Z3_mk_lt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_lt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_lt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2483,11 +2481,11 @@ pub unsafe fn Z3_mk_le(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_le(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_le(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2507,11 +2505,11 @@ pub unsafe fn Z3_mk_gt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_gt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_gt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2531,11 +2529,11 @@ pub unsafe fn Z3_mk_ge(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ge(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ge(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2557,11 +2555,11 @@ pub unsafe fn Z3_mk_divides(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_divides(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_divides(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2589,11 +2587,11 @@ pub unsafe fn Z3_mk_int2real(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int2real(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int2real(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2615,11 +2613,11 @@ pub unsafe fn Z3_mk_real2int(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_real2int(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_real2int(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2638,11 +2636,11 @@ pub unsafe fn Z3_mk_is_int(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_is_int(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_is_int(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2658,11 +2656,11 @@ pub unsafe fn Z3_mk_bvnot(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvnot(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvnot(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2678,11 +2676,11 @@ pub unsafe fn Z3_mk_bvredand(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvredand(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvredand(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2698,11 +2696,11 @@ pub unsafe fn Z3_mk_bvredor(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvredor(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvredor(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2722,11 +2720,11 @@ pub unsafe fn Z3_mk_bvand(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvand(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvand(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2746,11 +2744,11 @@ pub unsafe fn Z3_mk_bvor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvor(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvor(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2770,11 +2768,11 @@ pub unsafe fn Z3_mk_bvxor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvxor(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvxor(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2794,11 +2792,11 @@ pub unsafe fn Z3_mk_bvnand(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvnand(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvnand(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2818,11 +2816,11 @@ pub unsafe fn Z3_mk_bvnor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvnor(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvnor(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2842,11 +2840,11 @@ pub unsafe fn Z3_mk_bvxnor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvxnor(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvxnor(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2862,11 +2860,11 @@ pub unsafe fn Z3_mk_bvneg(c: Z3_context, t1: Z3_ast) -> Result<Z3_ast, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvneg(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvneg(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2886,11 +2884,11 @@ pub unsafe fn Z3_mk_bvadd(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvadd(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvadd(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2910,11 +2908,11 @@ pub unsafe fn Z3_mk_bvsub(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsub(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsub(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2934,11 +2932,11 @@ pub unsafe fn Z3_mk_bvmul(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvmul(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvmul(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2962,11 +2960,11 @@ pub unsafe fn Z3_mk_bvudiv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvudiv(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvudiv(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -2994,11 +2992,11 @@ pub unsafe fn Z3_mk_bvsdiv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsdiv(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsdiv(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3022,11 +3020,11 @@ pub unsafe fn Z3_mk_bvurem(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvurem(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvurem(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3055,11 +3053,11 @@ pub unsafe fn Z3_mk_bvsrem(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsrem(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsrem(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3085,11 +3083,11 @@ pub unsafe fn Z3_mk_bvsmod(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsmod(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsmod(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3109,11 +3107,11 @@ pub unsafe fn Z3_mk_bvult(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvult(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvult(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3141,11 +3139,11 @@ pub unsafe fn Z3_mk_bvslt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvslt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvslt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3165,11 +3163,11 @@ pub unsafe fn Z3_mk_bvule(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvule(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvule(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3189,11 +3187,11 @@ pub unsafe fn Z3_mk_bvsle(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsle(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsle(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3213,11 +3211,11 @@ pub unsafe fn Z3_mk_bvuge(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvuge(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvuge(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3237,11 +3235,11 @@ pub unsafe fn Z3_mk_bvsge(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsge(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsge(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3261,11 +3259,11 @@ pub unsafe fn Z3_mk_bvugt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvugt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvugt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3285,11 +3283,11 @@ pub unsafe fn Z3_mk_bvsgt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsgt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsgt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3312,11 +3310,11 @@ pub unsafe fn Z3_mk_concat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_concat(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_concat(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3338,11 +3336,11 @@ pub unsafe fn Z3_mk_extract(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_extract(c, high, low, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_extract(c, high, low, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3364,11 +3362,11 @@ pub unsafe fn Z3_mk_sign_ext(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_sign_ext(c, i, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_sign_ext(c, i, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3390,11 +3388,11 @@ pub unsafe fn Z3_mk_zero_ext(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_zero_ext(c, i, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_zero_ext(c, i, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3414,11 +3412,11 @@ pub unsafe fn Z3_mk_repeat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_repeat(c, i, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_repeat(c, i, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3439,11 +3437,11 @@ pub unsafe fn Z3_mk_bit2bool(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bit2bool(c, i, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bit2bool(c, i, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3470,11 +3468,11 @@ pub unsafe fn Z3_mk_bvshl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvshl(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvshl(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3501,11 +3499,11 @@ pub unsafe fn Z3_mk_bvlshr(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvlshr(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvlshr(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3533,11 +3531,11 @@ pub unsafe fn Z3_mk_bvashr(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvashr(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvashr(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3557,11 +3555,11 @@ pub unsafe fn Z3_mk_rotate_left(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_rotate_left(c, i, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_rotate_left(c, i, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3581,11 +3579,11 @@ pub unsafe fn Z3_mk_rotate_right(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_rotate_right(c, i, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_rotate_right(c, i, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3605,11 +3603,11 @@ pub unsafe fn Z3_mk_ext_rotate_left(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ext_rotate_left(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ext_rotate_left(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3629,11 +3627,11 @@ pub unsafe fn Z3_mk_ext_rotate_right(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ext_rotate_right(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ext_rotate_right(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3656,11 +3654,11 @@ pub unsafe fn Z3_mk_int2bv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int2bv(c, n, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int2bv(c, n, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3685,11 +3683,11 @@ pub unsafe fn Z3_mk_bv2int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bv2int(c, t1, is_signed) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bv2int(c, t1, is_signed) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3712,11 +3710,11 @@ pub unsafe fn Z3_mk_bvadd_no_overflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvadd_no_overflow(c, t1, t2, is_signed) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvadd_no_overflow(c, t1, t2, is_signed) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3738,11 +3736,11 @@ pub unsafe fn Z3_mk_bvadd_no_underflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvadd_no_underflow(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvadd_no_underflow(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3764,11 +3762,11 @@ pub unsafe fn Z3_mk_bvsub_no_overflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsub_no_overflow(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsub_no_overflow(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3791,11 +3789,11 @@ pub unsafe fn Z3_mk_bvsub_no_underflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsub_no_underflow(c, t1, t2, is_signed) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsub_no_underflow(c, t1, t2, is_signed) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3817,11 +3815,11 @@ pub unsafe fn Z3_mk_bvsdiv_no_overflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvsdiv_no_overflow(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvsdiv_no_overflow(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3842,11 +3840,11 @@ pub unsafe fn Z3_mk_bvneg_no_overflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvneg_no_overflow(c, t1) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvneg_no_overflow(c, t1) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3869,11 +3867,11 @@ pub unsafe fn Z3_mk_bvmul_no_overflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvmul_no_overflow(c, t1, t2, is_signed) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvmul_no_overflow(c, t1, t2, is_signed) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3895,11 +3893,11 @@ pub unsafe fn Z3_mk_bvmul_no_underflow(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bvmul_no_underflow(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bvmul_no_underflow(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3927,11 +3925,11 @@ pub unsafe fn Z3_mk_select(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_select(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_mk_select(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3951,11 +3949,11 @@ pub unsafe fn Z3_mk_select_n(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_select_n(c, a, n, idxs) };
+    let ret = unsafe { ::z3_sys::Z3_mk_select_n(c, a, n, idxs) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -3987,11 +3985,11 @@ pub unsafe fn Z3_mk_store(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_store(c, a, i, v) };
+    let ret = unsafe { ::z3_sys::Z3_mk_store(c, a, i, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4011,11 +4009,11 @@ pub unsafe fn Z3_mk_store_n(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_store_n(c, a, n, idxs, v) };
+    let ret = unsafe { ::z3_sys::Z3_mk_store_n(c, a, n, idxs, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4040,11 +4038,11 @@ pub unsafe fn Z3_mk_const_array(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_const_array(c, domain, v) };
+    let ret = unsafe { ::z3_sys::Z3_mk_const_array(c, domain, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4073,11 +4071,11 @@ pub unsafe fn Z3_mk_map(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_map(c, f, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_map(c, f, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4099,11 +4097,11 @@ pub unsafe fn Z3_mk_array_default(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_array_default(c, array) };
+    let ret = unsafe { ::z3_sys::Z3_mk_array_default(c, array) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4119,11 +4117,11 @@ pub unsafe fn Z3_mk_as_array(c: Z3_context, f: Z3_func_decl) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_as_array(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_mk_as_array(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4137,11 +4135,11 @@ pub unsafe fn Z3_mk_set_sort(c: Z3_context, ty: Z3_sort) -> Result<Z3_sort, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_sort(c, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_sort(c, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4158,11 +4156,11 @@ pub unsafe fn Z3_mk_empty_set(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_empty_set(c, domain) };
+    let ret = unsafe { ::z3_sys::Z3_mk_empty_set(c, domain) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4176,11 +4174,11 @@ pub unsafe fn Z3_mk_full_set(c: Z3_context, domain: Z3_sort) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_full_set(c, domain) };
+    let ret = unsafe { ::z3_sys::Z3_mk_full_set(c, domain) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4200,11 +4198,11 @@ pub unsafe fn Z3_mk_set_add(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_add(c, set, elem) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_add(c, set, elem) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4224,11 +4222,11 @@ pub unsafe fn Z3_mk_set_del(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_del(c, set, elem) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_del(c, set, elem) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4246,11 +4244,11 @@ pub unsafe fn Z3_mk_set_union(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_union(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_union(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4268,11 +4266,11 @@ pub unsafe fn Z3_mk_set_intersect(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_intersect(c, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_intersect(c, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4290,11 +4288,11 @@ pub unsafe fn Z3_mk_set_difference(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_difference(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_difference(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4311,11 +4309,11 @@ pub unsafe fn Z3_mk_set_complement(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_complement(c, arg) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_complement(c, arg) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4335,11 +4333,11 @@ pub unsafe fn Z3_mk_set_member(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_member(c, elem, set) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_member(c, elem, set) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4357,11 +4355,11 @@ pub unsafe fn Z3_mk_set_subset(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_set_subset(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_set_subset(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4381,11 +4379,11 @@ pub unsafe fn Z3_mk_array_ext(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_array_ext(c, arg1, arg2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_array_ext(c, arg1, arg2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4402,11 +4400,11 @@ pub unsafe fn Z3_mk_finite_set_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_sort(c, elem_sort) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_sort(c, elem_sort) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4420,11 +4418,11 @@ pub unsafe fn Z3_is_finite_set_sort(c: Z3_context, s: Z3_sort) -> Result<bool, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_finite_set_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_finite_set_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -4441,11 +4439,11 @@ pub unsafe fn Z3_get_finite_set_sort_basis(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_finite_set_sort_basis(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_finite_set_sort_basis(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4462,11 +4460,11 @@ pub unsafe fn Z3_mk_finite_set_empty(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_empty(c, set_sort) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_empty(c, set_sort) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4483,11 +4481,11 @@ pub unsafe fn Z3_mk_finite_set_singleton(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_singleton(c, elem) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_singleton(c, elem) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4505,11 +4503,11 @@ pub unsafe fn Z3_mk_finite_set_union(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_union(c, s1, s2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_union(c, s1, s2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4527,11 +4525,11 @@ pub unsafe fn Z3_mk_finite_set_intersect(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_intersect(c, s1, s2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_intersect(c, s1, s2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4549,11 +4547,11 @@ pub unsafe fn Z3_mk_finite_set_difference(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_difference(c, s1, s2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_difference(c, s1, s2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4571,11 +4569,11 @@ pub unsafe fn Z3_mk_finite_set_member(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_member(c, elem, set) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_member(c, elem, set) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4592,11 +4590,11 @@ pub unsafe fn Z3_mk_finite_set_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_size(c, set) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_size(c, set) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4614,11 +4612,11 @@ pub unsafe fn Z3_mk_finite_set_subset(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_subset(c, s1, s2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_subset(c, s1, s2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4636,11 +4634,11 @@ pub unsafe fn Z3_mk_finite_set_map(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_map(c, f, set) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_map(c, f, set) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4658,11 +4656,11 @@ pub unsafe fn Z3_mk_finite_set_filter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_filter(c, f, set) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_filter(c, f, set) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4680,11 +4678,11 @@ pub unsafe fn Z3_mk_finite_set_range(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_finite_set_range(c, low, high) };
+    let ret = unsafe { ::z3_sys::Z3_mk_finite_set_range(c, low, high) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4712,11 +4710,11 @@ pub unsafe fn Z3_mk_numeral(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_numeral(c, numeral, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_numeral(c, numeral, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4749,11 +4747,11 @@ pub unsafe fn Z3_mk_real(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_real(c, num, den) };
+    let ret = unsafe { ::z3_sys::Z3_mk_real(c, num, den) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4775,11 +4773,11 @@ pub unsafe fn Z3_mk_real_int64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_real_int64(c, num, den) };
+    let ret = unsafe { ::z3_sys::Z3_mk_real_int64(c, num, den) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4804,11 +4802,11 @@ pub unsafe fn Z3_mk_int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4833,11 +4831,11 @@ pub unsafe fn Z3_mk_unsigned_int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_unsigned_int(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_unsigned_int(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4862,11 +4860,11 @@ pub unsafe fn Z3_mk_int64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int64(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int64(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4891,11 +4889,11 @@ pub unsafe fn Z3_mk_unsigned_int64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_unsigned_int64(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_unsigned_int64(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4917,11 +4915,11 @@ pub unsafe fn Z3_mk_bv_numeral(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bv_numeral(c, sz, bits) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bv_numeral(c, sz, bits) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4935,11 +4933,11 @@ pub unsafe fn Z3_mk_seq_sort(c: Z3_context, s: Z3_sort) -> Result<Z3_sort, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4953,11 +4951,11 @@ pub unsafe fn Z3_is_seq_sort(c: Z3_context, s: Z3_sort) -> Result<bool, Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_seq_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_seq_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -4974,11 +4972,11 @@ pub unsafe fn Z3_get_seq_sort_basis(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_seq_sort_basis(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_seq_sort_basis(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -4992,11 +4990,11 @@ pub unsafe fn Z3_mk_re_sort(c: Z3_context, seq: Z3_sort) -> Result<Z3_sort, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_sort(c, seq) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_sort(c, seq) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5010,11 +5008,11 @@ pub unsafe fn Z3_is_re_sort(c: Z3_context, s: Z3_sort) -> Result<bool, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_re_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_re_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5031,11 +5029,11 @@ pub unsafe fn Z3_get_re_sort_basis(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_re_sort_basis(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_re_sort_basis(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5053,11 +5051,11 @@ pub unsafe fn Z3_mk_string_sort(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_string_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_string_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5075,11 +5073,11 @@ pub unsafe fn Z3_mk_char_sort(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5093,11 +5091,11 @@ pub unsafe fn Z3_is_string_sort(c: Z3_context, s: Z3_sort) -> Result<bool, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_string_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_string_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5111,11 +5109,11 @@ pub unsafe fn Z3_is_char_sort(c: Z3_context, s: Z3_sort) -> Result<bool, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_char_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_char_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5133,11 +5131,11 @@ pub unsafe fn Z3_mk_string(c: Z3_context, s: Z3_string) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5158,11 +5156,11 @@ pub unsafe fn Z3_mk_lstring(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_lstring(c, len, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_lstring(c, len, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5182,11 +5180,11 @@ pub unsafe fn Z3_mk_u32string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_u32string(c, len, chars) };
+    let ret = unsafe { ::z3_sys::Z3_mk_u32string(c, len, chars) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5200,11 +5198,11 @@ pub unsafe fn Z3_is_string(c: Z3_context, s: Z3_ast) -> Result<bool, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5223,11 +5221,11 @@ pub unsafe fn Z3_get_string(c: Z3_context, s: Z3_ast) -> Result<Z3_string, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5251,11 +5249,11 @@ pub unsafe fn Z3_get_lstring(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_lstring(c, s, length) };
+    let ret = unsafe { ::z3_sys::Z3_get_lstring(c, s, length) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5276,11 +5274,11 @@ pub unsafe fn Z3_get_string_length(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_string_length(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_string_length(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -5304,11 +5302,11 @@ pub unsafe fn Z3_get_string_contents(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_get_string_contents(c, s, length, contents) };
+    unsafe { ::z3_sys::Z3_get_string_contents(c, s, length, contents) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -5326,11 +5324,11 @@ pub unsafe fn Z3_mk_seq_empty(c: Z3_context, seq: Z3_sort) -> Result<Z3_ast, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_empty(c, seq) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_empty(c, seq) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5344,11 +5342,11 @@ pub unsafe fn Z3_mk_seq_unit(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_unit(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_unit(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5370,11 +5368,11 @@ pub unsafe fn Z3_mk_seq_concat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_concat(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_concat(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5396,11 +5394,11 @@ pub unsafe fn Z3_mk_seq_prefix(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_prefix(c, prefix, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_prefix(c, prefix, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5422,11 +5420,11 @@ pub unsafe fn Z3_mk_seq_suffix(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_suffix(c, suffix, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_suffix(c, suffix, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5448,11 +5446,11 @@ pub unsafe fn Z3_mk_seq_contains(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_contains(c, container, containee) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_contains(c, container, containee) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5474,11 +5472,11 @@ pub unsafe fn Z3_mk_str_lt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_str_lt(c, prefix, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_str_lt(c, prefix, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5500,11 +5498,11 @@ pub unsafe fn Z3_mk_str_le(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_str_le(c, prefix, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_str_le(c, prefix, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5523,11 +5521,11 @@ pub unsafe fn Z3_mk_seq_extract(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_extract(c, s, offset, length) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_extract(c, s, offset, length) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5546,11 +5544,11 @@ pub unsafe fn Z3_mk_seq_replace(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_replace(c, s, src, dst) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_replace(c, s, src, dst) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5569,11 +5567,11 @@ pub unsafe fn Z3_mk_seq_replace_all(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_replace_all(c, s, src, dst) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_replace_all(c, s, src, dst) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5592,11 +5590,11 @@ pub unsafe fn Z3_mk_seq_replace_re(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_replace_re(c, s, re, dst) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_replace_re(c, s, re, dst) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5615,11 +5613,11 @@ pub unsafe fn Z3_mk_seq_replace_re_all(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_replace_re_all(c, s, re, dst) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_replace_re_all(c, s, re, dst) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5638,11 +5636,11 @@ pub unsafe fn Z3_mk_seq_at(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_at(c, s, index) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_at(c, s, index) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5661,11 +5659,11 @@ pub unsafe fn Z3_mk_seq_nth(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_nth(c, s, index) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_nth(c, s, index) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5684,11 +5682,11 @@ pub unsafe fn Z3_mk_seq_power(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_power(c, s, n) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_power(c, s, n) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5702,11 +5700,11 @@ pub unsafe fn Z3_mk_seq_length(c: Z3_context, s: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_length(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_length(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5727,11 +5725,11 @@ pub unsafe fn Z3_mk_seq_index(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_index(c, s, substr, offset) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_index(c, s, substr, offset) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5750,11 +5748,11 @@ pub unsafe fn Z3_mk_seq_last_index(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_last_index(c, s, substr) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_last_index(c, s, substr) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5772,11 +5770,11 @@ pub unsafe fn Z3_mk_seq_map(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_map(c, f, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_map(c, f, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5795,11 +5793,11 @@ pub unsafe fn Z3_mk_seq_mapi(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_mapi(c, f, i, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_mapi(c, f, i, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5818,11 +5816,11 @@ pub unsafe fn Z3_mk_seq_foldl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_foldl(c, f, a, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_foldl(c, f, a, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5842,11 +5840,11 @@ pub unsafe fn Z3_mk_seq_foldli(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_foldli(c, f, i, a, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_foldli(c, f, i, a, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5860,11 +5858,11 @@ pub unsafe fn Z3_mk_str_to_int(c: Z3_context, s: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_str_to_int(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_str_to_int(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5878,11 +5876,11 @@ pub unsafe fn Z3_mk_int_to_str(c: Z3_context, s: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_int_to_str(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_int_to_str(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5896,11 +5894,11 @@ pub unsafe fn Z3_mk_string_to_code(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_string_to_code(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_mk_string_to_code(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5917,11 +5915,11 @@ pub unsafe fn Z3_mk_string_from_code(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_string_from_code(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_mk_string_from_code(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5935,11 +5933,11 @@ pub unsafe fn Z3_mk_ubv_to_str(c: Z3_context, s: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ubv_to_str(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ubv_to_str(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5953,11 +5951,11 @@ pub unsafe fn Z3_mk_sbv_to_str(c: Z3_context, s: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_sbv_to_str(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_sbv_to_str(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5971,11 +5969,11 @@ pub unsafe fn Z3_mk_seq_to_re(c: Z3_context, seq: Z3_ast) -> Result<Z3_ast, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_to_re(c, seq) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_to_re(c, seq) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -5993,11 +5991,11 @@ pub unsafe fn Z3_mk_seq_in_re(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_seq_in_re(c, seq, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_seq_in_re(c, seq, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6011,11 +6009,11 @@ pub unsafe fn Z3_mk_re_plus(c: Z3_context, re: Z3_ast) -> Result<Z3_ast, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_plus(c, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_plus(c, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6029,11 +6027,11 @@ pub unsafe fn Z3_mk_re_star(c: Z3_context, re: Z3_ast) -> Result<Z3_ast, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_star(c, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_star(c, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6047,11 +6045,11 @@ pub unsafe fn Z3_mk_re_option(c: Z3_context, re: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_option(c, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_option(c, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6073,11 +6071,11 @@ pub unsafe fn Z3_mk_re_union(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_union(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_union(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6099,11 +6097,11 @@ pub unsafe fn Z3_mk_re_concat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_concat(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_concat(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6121,11 +6119,11 @@ pub unsafe fn Z3_mk_re_range(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_range(c, lo, hi) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_range(c, lo, hi) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6142,11 +6140,11 @@ pub unsafe fn Z3_mk_re_allchar(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_allchar(c, regex_sort) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_allchar(c, regex_sort) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6168,11 +6166,11 @@ pub unsafe fn Z3_mk_re_loop(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_loop(c, r, lo, hi) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_loop(c, r, lo, hi) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6190,11 +6188,11 @@ pub unsafe fn Z3_mk_re_power(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_power(c, re, n) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_power(c, re, n) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6216,11 +6214,11 @@ pub unsafe fn Z3_mk_re_intersect(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_intersect(c, n, args) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_intersect(c, n, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6234,11 +6232,11 @@ pub unsafe fn Z3_mk_re_complement(c: Z3_context, re: Z3_ast) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_complement(c, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_complement(c, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6256,11 +6254,11 @@ pub unsafe fn Z3_mk_re_diff(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_diff(c, re1, re2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_diff(c, re1, re2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6278,11 +6276,11 @@ pub unsafe fn Z3_mk_re_empty(c: Z3_context, re: Z3_sort) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_empty(c, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_empty(c, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6300,11 +6298,11 @@ pub unsafe fn Z3_mk_re_full(c: Z3_context, re: Z3_sort) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_re_full(c, re) };
+    let ret = unsafe { ::z3_sys::Z3_mk_re_full(c, re) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6321,11 +6319,11 @@ pub unsafe fn Z3_mk_char(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char(c, ch) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char(c, ch) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6343,11 +6341,11 @@ pub unsafe fn Z3_mk_char_le(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char_le(c, ch1, ch2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char_le(c, ch1, ch2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6361,11 +6359,11 @@ pub unsafe fn Z3_mk_char_to_int(c: Z3_context, ch: Z3_ast) -> Result<Z3_ast, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char_to_int(c, ch) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char_to_int(c, ch) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6379,11 +6377,11 @@ pub unsafe fn Z3_mk_char_to_bv(c: Z3_context, ch: Z3_ast) -> Result<Z3_ast, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char_to_bv(c, ch) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char_to_bv(c, ch) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6397,11 +6395,11 @@ pub unsafe fn Z3_mk_char_from_bv(c: Z3_context, bv: Z3_ast) -> Result<Z3_ast, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char_from_bv(c, bv) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char_from_bv(c, bv) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6415,11 +6413,11 @@ pub unsafe fn Z3_mk_char_is_digit(c: Z3_context, ch: Z3_ast) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_char_is_digit(c, ch) };
+    let ret = unsafe { ::z3_sys::Z3_mk_char_is_digit(c, ch) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6438,11 +6436,11 @@ pub unsafe fn Z3_mk_linear_order(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_linear_order(c, a, id) };
+    let ret = unsafe { ::z3_sys::Z3_mk_linear_order(c, a, id) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6460,11 +6458,11 @@ pub unsafe fn Z3_mk_partial_order(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_partial_order(c, a, id) };
+    let ret = unsafe { ::z3_sys::Z3_mk_partial_order(c, a, id) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6482,11 +6480,11 @@ pub unsafe fn Z3_mk_piecewise_linear_order(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_piecewise_linear_order(c, a, id) };
+    let ret = unsafe { ::z3_sys::Z3_mk_piecewise_linear_order(c, a, id) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6504,11 +6502,11 @@ pub unsafe fn Z3_mk_tree_order(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_tree_order(c, a, id) };
+    let ret = unsafe { ::z3_sys::Z3_mk_tree_order(c, a, id) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6532,11 +6530,11 @@ pub unsafe fn Z3_mk_transitive_closure(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_transitive_closure(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_mk_transitive_closure(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6571,11 +6569,11 @@ pub unsafe fn Z3_mk_pattern(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_pattern(c, num_patterns, terms) };
+    let ret = unsafe { ::z3_sys::Z3_mk_pattern(c, num_patterns, terms) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6622,11 +6620,11 @@ pub unsafe fn Z3_mk_bound(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_bound(c, index, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_bound(c, index, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6670,7 +6668,7 @@ pub unsafe fn Z3_mk_forall(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_forall(
+        ::z3_sys::Z3_mk_forall(
             c,
             weight,
             num_patterns,
@@ -6684,7 +6682,7 @@ pub unsafe fn Z3_mk_forall(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6715,7 +6713,7 @@ pub unsafe fn Z3_mk_exists(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_exists(
+        ::z3_sys::Z3_mk_exists(
             c,
             weight,
             num_patterns,
@@ -6729,7 +6727,7 @@ pub unsafe fn Z3_mk_exists(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6772,7 +6770,7 @@ pub unsafe fn Z3_mk_quantifier(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_quantifier(
+        ::z3_sys::Z3_mk_quantifier(
             c,
             is_forall,
             weight,
@@ -6787,7 +6785,7 @@ pub unsafe fn Z3_mk_quantifier(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6837,7 +6835,7 @@ pub unsafe fn Z3_mk_quantifier_ex(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_quantifier_ex(
+        ::z3_sys::Z3_mk_quantifier_ex(
             c,
             is_forall,
             weight,
@@ -6856,7 +6854,7 @@ pub unsafe fn Z3_mk_quantifier_ex(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6894,7 +6892,7 @@ pub unsafe fn Z3_mk_forall_const(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_forall_const(
+        ::z3_sys::Z3_mk_forall_const(
             c,
             weight,
             num_bound,
@@ -6907,7 +6905,7 @@ pub unsafe fn Z3_mk_forall_const(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6947,7 +6945,7 @@ pub unsafe fn Z3_mk_exists_const(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_exists_const(
+        ::z3_sys::Z3_mk_exists_const(
             c,
             weight,
             num_bound,
@@ -6960,7 +6958,7 @@ pub unsafe fn Z3_mk_exists_const(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -6985,7 +6983,7 @@ pub unsafe fn Z3_mk_quantifier_const(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_quantifier_const(
+        ::z3_sys::Z3_mk_quantifier_const(
             c,
             is_forall,
             weight,
@@ -6999,7 +6997,7 @@ pub unsafe fn Z3_mk_quantifier_const(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7028,7 +7026,7 @@ pub unsafe fn Z3_mk_quantifier_const_ex(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_quantifier_const_ex(
+        ::z3_sys::Z3_mk_quantifier_const_ex(
             c,
             is_forall,
             weight,
@@ -7046,7 +7044,7 @@ pub unsafe fn Z3_mk_quantifier_const_ex(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7086,11 +7084,11 @@ pub unsafe fn Z3_mk_lambda(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_lambda(c, num_decls, sorts, decl_names, body) };
+    let ret = unsafe { ::z3_sys::Z3_mk_lambda(c, num_decls, sorts, decl_names, body) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7121,11 +7119,11 @@ pub unsafe fn Z3_mk_lambda_const(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_lambda_const(c, num_bound, bound, body) };
+    let ret = unsafe { ::z3_sys::Z3_mk_lambda_const(c, num_bound, bound, body) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7144,11 +7142,11 @@ pub unsafe fn Z3_get_symbol_kind(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_symbol_kind(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_symbol_kind(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7173,11 +7171,11 @@ pub unsafe fn Z3_get_symbol_int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_symbol_int(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_symbol_int(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7207,11 +7205,11 @@ pub unsafe fn Z3_get_symbol_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_symbol_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_symbol_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7225,11 +7223,11 @@ pub unsafe fn Z3_get_sort_name(c: Z3_context, d: Z3_sort) -> Result<Z3_symbol, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_sort_name(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_sort_name(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7246,11 +7244,11 @@ pub unsafe fn Z3_get_sort_id(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_sort_id(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_sort_id(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7264,11 +7262,11 @@ pub unsafe fn Z3_sort_to_ast(c: Z3_context, s: Z3_sort) -> Result<Z3_ast, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_sort_to_ast(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_sort_to_ast(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7286,11 +7284,11 @@ pub unsafe fn Z3_is_eq_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_eq_sort(c, s1, s2) };
+    let ret = unsafe { ::z3_sys::Z3_is_eq_sort(c, s1, s2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7311,11 +7309,11 @@ pub unsafe fn Z3_get_sort_kind(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_sort_kind(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_sort_kind(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7341,11 +7339,11 @@ pub unsafe fn Z3_get_bv_sort_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_bv_sort_size(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_bv_sort_size(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7364,11 +7362,11 @@ pub unsafe fn Z3_get_finite_domain_sort_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_finite_domain_sort_size(c, s, r) };
+    let ret = unsafe { ::z3_sys::Z3_get_finite_domain_sort_size(c, s, r) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7393,11 +7391,11 @@ pub unsafe fn Z3_get_array_arity(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_array_arity(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_array_arity(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7425,11 +7423,11 @@ pub unsafe fn Z3_get_array_sort_domain(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_array_sort_domain(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_array_sort_domain(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7457,11 +7455,11 @@ pub unsafe fn Z3_get_array_sort_domain_n(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_array_sort_domain_n(c, t, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_array_sort_domain_n(c, t, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7487,11 +7485,11 @@ pub unsafe fn Z3_get_array_sort_range(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_array_sort_range(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_array_sort_range(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7518,11 +7516,11 @@ pub unsafe fn Z3_get_tuple_sort_mk_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_tuple_sort_mk_decl(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_tuple_sort_mk_decl(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7548,11 +7546,11 @@ pub unsafe fn Z3_get_tuple_sort_num_fields(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_tuple_sort_num_fields(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_tuple_sort_num_fields(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7581,11 +7579,11 @@ pub unsafe fn Z3_get_tuple_sort_field_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_tuple_sort_field_decl(c, t, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_tuple_sort_field_decl(c, t, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7602,11 +7600,11 @@ pub unsafe fn Z3_is_recursive_datatype_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_recursive_datatype_sort(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_is_recursive_datatype_sort(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7633,11 +7631,11 @@ pub unsafe fn Z3_get_datatype_sort_num_constructors(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_datatype_sort_num_constructors(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_datatype_sort_num_constructors(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7666,11 +7664,11 @@ pub unsafe fn Z3_get_datatype_sort_constructor(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_datatype_sort_constructor(c, t, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_datatype_sort_constructor(c, t, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7699,11 +7697,11 @@ pub unsafe fn Z3_get_datatype_sort_recognizer(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_datatype_sort_recognizer(c, t, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_datatype_sort_recognizer(c, t, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7735,12 +7733,12 @@ pub unsafe fn Z3_get_datatype_sort_constructor_accessor(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_get_datatype_sort_constructor_accessor(c, t, idx_c, idx_a)
+        ::z3_sys::Z3_get_datatype_sort_constructor_accessor(c, t, idx_c, idx_a)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7773,11 +7771,11 @@ pub unsafe fn Z3_datatype_update_field(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_datatype_update_field(c, field_access, t, value) };
+    let ret = unsafe { ::z3_sys::Z3_datatype_update_field(c, field_access, t, value) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7802,11 +7800,11 @@ pub unsafe fn Z3_get_relation_arity(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_relation_arity(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_get_relation_arity(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -7833,11 +7831,11 @@ pub unsafe fn Z3_get_relation_column(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_relation_column(c, s, col) };
+    let ret = unsafe { ::z3_sys::Z3_get_relation_column(c, s, col) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7858,11 +7856,11 @@ pub unsafe fn Z3_mk_atmost(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_atmost(c, num_args, args, k) };
+    let ret = unsafe { ::z3_sys::Z3_mk_atmost(c, num_args, args, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7883,11 +7881,11 @@ pub unsafe fn Z3_mk_atleast(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_atleast(c, num_args, args, k) };
+    let ret = unsafe { ::z3_sys::Z3_mk_atleast(c, num_args, args, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7909,11 +7907,11 @@ pub unsafe fn Z3_mk_pble(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_pble(c, num_args, args, coeffs, k) };
+    let ret = unsafe { ::z3_sys::Z3_mk_pble(c, num_args, args, coeffs, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7935,11 +7933,11 @@ pub unsafe fn Z3_mk_pbge(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_pbge(c, num_args, args, coeffs, k) };
+    let ret = unsafe { ::z3_sys::Z3_mk_pbge(c, num_args, args, coeffs, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7961,11 +7959,11 @@ pub unsafe fn Z3_mk_pbeq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_pbeq(c, num_args, args, coeffs, k) };
+    let ret = unsafe { ::z3_sys::Z3_mk_pbeq(c, num_args, args, coeffs, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -7982,11 +7980,11 @@ pub unsafe fn Z3_func_decl_to_ast(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_decl_to_ast(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_func_decl_to_ast(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8004,11 +8002,11 @@ pub unsafe fn Z3_is_eq_func_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_eq_func_decl(c, f1, f2) };
+    let ret = unsafe { ::z3_sys::Z3_is_eq_func_decl(c, f1, f2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8025,11 +8023,11 @@ pub unsafe fn Z3_get_func_decl_id(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_func_decl_id(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_get_func_decl_id(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8046,11 +8044,11 @@ pub unsafe fn Z3_get_decl_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_name(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_name(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8067,11 +8065,11 @@ pub unsafe fn Z3_get_decl_kind(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_kind(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_kind(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8092,11 +8090,11 @@ pub unsafe fn Z3_get_domain_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_domain_size(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_domain_size(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8117,11 +8115,11 @@ pub unsafe fn Z3_get_arity(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_arity(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_arity(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8147,11 +8145,11 @@ pub unsafe fn Z3_get_domain(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_domain(c, d, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_domain(c, d, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8168,11 +8166,11 @@ pub unsafe fn Z3_get_range(c: Z3_context, d: Z3_func_decl) -> Result<Z3_sort, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_range(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_range(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8189,11 +8187,11 @@ pub unsafe fn Z3_get_decl_num_parameters(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_num_parameters(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_num_parameters(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8215,11 +8213,11 @@ pub unsafe fn Z3_get_decl_parameter_kind(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_parameter_kind(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_parameter_kind(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8241,11 +8239,11 @@ pub unsafe fn Z3_get_decl_int_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_int_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_int_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8267,11 +8265,11 @@ pub unsafe fn Z3_get_decl_double_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_double_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_double_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8293,11 +8291,11 @@ pub unsafe fn Z3_get_decl_symbol_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_symbol_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_symbol_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8319,11 +8317,11 @@ pub unsafe fn Z3_get_decl_sort_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_sort_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_sort_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8345,11 +8343,11 @@ pub unsafe fn Z3_get_decl_ast_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_ast_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_ast_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8371,11 +8369,11 @@ pub unsafe fn Z3_get_decl_func_decl_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_func_decl_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_func_decl_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8397,11 +8395,11 @@ pub unsafe fn Z3_get_decl_rational_parameter(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_decl_rational_parameter(c, d, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_decl_rational_parameter(c, d, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8415,11 +8413,11 @@ pub unsafe fn Z3_app_to_ast(c: Z3_context, a: Z3_app) -> Result<Z3_ast, Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_app_to_ast(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_app_to_ast(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8436,11 +8434,11 @@ pub unsafe fn Z3_get_app_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_app_decl(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_app_decl(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8462,11 +8460,11 @@ pub unsafe fn Z3_get_app_num_args(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_app_num_args(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_app_num_args(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8492,11 +8490,11 @@ pub unsafe fn Z3_get_app_arg(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_app_arg(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_app_arg(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8514,11 +8512,11 @@ pub unsafe fn Z3_is_eq_ast(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_eq_ast(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_is_eq_ast(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8541,11 +8539,11 @@ pub unsafe fn Z3_get_ast_id(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_ast_id(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_get_ast_id(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8565,11 +8563,11 @@ pub unsafe fn Z3_get_ast_hash(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_ast_hash(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_ast_hash(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8585,11 +8583,11 @@ pub unsafe fn Z3_get_sort(c: Z3_context, a: Z3_ast) -> Result<Z3_sort, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_sort(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_sort(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8603,11 +8601,11 @@ pub unsafe fn Z3_is_well_sorted(c: Z3_context, t: Z3_ast) -> Result<bool, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_well_sorted(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_is_well_sorted(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8621,11 +8619,11 @@ pub unsafe fn Z3_get_bool_value(c: Z3_context, a: Z3_ast) -> Result<Z3_lbool, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_bool_value(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_bool_value(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8639,11 +8637,11 @@ pub unsafe fn Z3_get_ast_kind(c: Z3_context, a: Z3_ast) -> Result<Z3_ast_kind, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_ast_kind(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_ast_kind(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8656,11 +8654,11 @@ pub unsafe fn Z3_is_app(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_app(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_app(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8673,11 +8671,11 @@ pub unsafe fn Z3_is_ground(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_ground(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_ground(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8693,11 +8691,11 @@ pub unsafe fn Z3_get_depth(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_depth(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_depth(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8710,11 +8708,11 @@ pub unsafe fn Z3_is_numeral_ast(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_numeral_ast(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_numeral_ast(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8728,11 +8726,11 @@ pub unsafe fn Z3_is_algebraic_number(c: Z3_context, a: Z3_ast) -> Result<bool, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_algebraic_number(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_algebraic_number(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8750,11 +8748,11 @@ pub unsafe fn Z3_to_app(c: Z3_context, a: Z3_ast) -> Result<Z3_app, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_to_app(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_to_app(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8775,11 +8773,11 @@ pub unsafe fn Z3_to_func_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_to_func_decl(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_to_func_decl(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8800,11 +8798,11 @@ pub unsafe fn Z3_get_numeral_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_string(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_string(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8826,11 +8824,11 @@ pub unsafe fn Z3_get_numeral_binary_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_binary_string(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_binary_string(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8853,11 +8851,11 @@ pub unsafe fn Z3_get_numeral_decimal_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_decimal_string(c, a, precision) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_decimal_string(c, a, precision) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8875,11 +8873,11 @@ pub unsafe fn Z3_get_numeral_double(c: Z3_context, a: Z3_ast) -> Result<f64, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_double(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_double(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8897,11 +8895,11 @@ pub unsafe fn Z3_get_numerator(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numerator(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_numerator(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8919,11 +8917,11 @@ pub unsafe fn Z3_get_denominator(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_denominator(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_denominator(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -8955,11 +8953,11 @@ pub unsafe fn Z3_get_numeral_small(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_small(c, a, num, den) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_small(c, a, num, den) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -8986,11 +8984,11 @@ pub unsafe fn Z3_get_numeral_int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_int(c, v, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_int(c, v, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9017,11 +9015,11 @@ pub unsafe fn Z3_get_numeral_uint(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_uint(c, v, u) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_uint(c, v, u) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9048,11 +9046,11 @@ pub unsafe fn Z3_get_numeral_uint64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_uint64(c, v, u) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_uint64(c, v, u) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9079,11 +9077,11 @@ pub unsafe fn Z3_get_numeral_int64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_int64(c, v, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_int64(c, v, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9111,11 +9109,11 @@ pub unsafe fn Z3_get_numeral_rational_int64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_numeral_rational_int64(c, v, num, den) };
+    let ret = unsafe { ::z3_sys::Z3_get_numeral_rational_int64(c, v, num, den) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9139,11 +9137,11 @@ pub unsafe fn Z3_get_algebraic_number_lower(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_algebraic_number_lower(c, a, precision) };
+    let ret = unsafe { ::z3_sys::Z3_get_algebraic_number_lower(c, a, precision) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9167,11 +9165,11 @@ pub unsafe fn Z3_get_algebraic_number_upper(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_algebraic_number_upper(c, a, precision) };
+    let ret = unsafe { ::z3_sys::Z3_get_algebraic_number_upper(c, a, precision) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9188,11 +9186,11 @@ pub unsafe fn Z3_pattern_to_ast(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_pattern_to_ast(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_pattern_to_ast(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9209,11 +9207,11 @@ pub unsafe fn Z3_get_pattern_num_terms(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_pattern_num_terms(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_get_pattern_num_terms(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9231,11 +9229,11 @@ pub unsafe fn Z3_get_pattern(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_pattern(c, p, idx) };
+    let ret = unsafe { ::z3_sys::Z3_get_pattern(c, p, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9256,11 +9254,11 @@ pub unsafe fn Z3_get_index_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_index_value(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_index_value(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9277,11 +9275,11 @@ pub unsafe fn Z3_is_quantifier_forall(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_quantifier_forall(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_quantifier_forall(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9298,11 +9296,11 @@ pub unsafe fn Z3_is_quantifier_exists(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_quantifier_exists(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_quantifier_exists(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9320,11 +9318,11 @@ pub unsafe fn Z3_is_lambda(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_lambda(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_lambda(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9345,11 +9343,11 @@ pub unsafe fn Z3_get_quantifier_weight(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_weight(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_weight(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9370,11 +9368,11 @@ pub unsafe fn Z3_get_quantifier_skolem_id(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_skolem_id(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_skolem_id(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9395,11 +9393,11 @@ pub unsafe fn Z3_get_quantifier_id(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_id(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_id(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9420,11 +9418,11 @@ pub unsafe fn Z3_get_quantifier_num_patterns(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_num_patterns(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_num_patterns(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9446,11 +9444,11 @@ pub unsafe fn Z3_get_quantifier_pattern_ast(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_pattern_ast(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_pattern_ast(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9471,11 +9469,11 @@ pub unsafe fn Z3_get_quantifier_num_no_patterns(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_num_no_patterns(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_num_no_patterns(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9497,11 +9495,11 @@ pub unsafe fn Z3_get_quantifier_no_pattern_ast(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_no_pattern_ast(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_no_pattern_ast(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9522,11 +9520,11 @@ pub unsafe fn Z3_get_quantifier_num_bound(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_num_bound(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_num_bound(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9548,11 +9546,11 @@ pub unsafe fn Z3_get_quantifier_bound_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_bound_name(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_bound_name(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9574,11 +9572,11 @@ pub unsafe fn Z3_get_quantifier_bound_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_bound_sort(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_bound_sort(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9599,11 +9597,11 @@ pub unsafe fn Z3_get_quantifier_body(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_quantifier_body(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_quantifier_body(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9626,11 +9624,11 @@ pub unsafe fn Z3_simplify(c: Z3_context, a: Z3_ast) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplify(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_simplify(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9658,11 +9656,11 @@ pub unsafe fn Z3_simplify_ex(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplify_ex(c, a, p) };
+    let ret = unsafe { ::z3_sys::Z3_simplify_ex(c, a, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9681,11 +9679,11 @@ pub unsafe fn Z3_simplify_get_help(c: Z3_context) -> Result<Z3_string, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplify_get_help(c) };
+    let ret = unsafe { ::z3_sys::Z3_simplify_get_help(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9706,11 +9704,11 @@ pub unsafe fn Z3_simplify_get_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplify_get_param_descrs(c) };
+    let ret = unsafe { ::z3_sys::Z3_simplify_get_param_descrs(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9732,11 +9730,11 @@ pub unsafe fn Z3_update_term(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_update_term(c, a, num_args, args) };
+    let ret = unsafe { ::z3_sys::Z3_update_term(c, a, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9758,11 +9756,11 @@ pub unsafe fn Z3_substitute(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_substitute(c, a, num_exprs, from, to) };
+    let ret = unsafe { ::z3_sys::Z3_substitute(c, a, num_exprs, from, to) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9783,11 +9781,11 @@ pub unsafe fn Z3_substitute_vars(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_substitute_vars(c, a, num_exprs, to) };
+    let ret = unsafe { ::z3_sys::Z3_substitute_vars(c, a, num_exprs, to) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9810,11 +9808,11 @@ pub unsafe fn Z3_substitute_funs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_substitute_funs(c, a, num_funs, from, to) };
+    let ret = unsafe { ::z3_sys::Z3_substitute_funs(c, a, num_funs, from, to) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9837,11 +9835,11 @@ pub unsafe fn Z3_translate(
     unsafe {
         Z3_set_error(source, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_translate(source, a, target) };
+    let ret = unsafe { ::z3_sys::Z3_translate(source, a, target) };
     unsafe {
         let err = Z3_get_error_code(source);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(source, err));
         }
     };
     Ok(ret.unwrap())
@@ -9855,11 +9853,11 @@ pub unsafe fn Z3_mk_model(c: Z3_context) -> Result<Z3_model, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_model(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_model(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -9873,11 +9871,11 @@ pub unsafe fn Z3_model_inc_ref(c: Z3_context, m: Z3_model) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_model_inc_ref(c, m) };
+    unsafe { ::z3_sys::Z3_model_inc_ref(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -9891,11 +9889,11 @@ pub unsafe fn Z3_model_dec_ref(c: Z3_context, m: Z3_model) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_model_dec_ref(c, m) };
+    unsafe { ::z3_sys::Z3_model_dec_ref(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -9933,11 +9931,11 @@ pub unsafe fn Z3_model_eval(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_eval(c, m, t, model_completion, v) };
+    let ret = unsafe { ::z3_sys::Z3_model_eval(c, m, t, model_completion, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9961,11 +9959,11 @@ pub unsafe fn Z3_model_get_const_interp(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_const_interp(c, m, a) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_const_interp(c, m, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -9983,11 +9981,11 @@ pub unsafe fn Z3_model_has_interp(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_has_interp(c, m, a) };
+    let ret = unsafe { ::z3_sys::Z3_model_has_interp(c, m, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10015,11 +10013,11 @@ pub unsafe fn Z3_model_get_func_interp(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_func_interp(c, m, f) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_func_interp(c, m, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10040,11 +10038,11 @@ pub unsafe fn Z3_model_get_num_consts(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_num_consts(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_num_consts(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10071,11 +10069,11 @@ pub unsafe fn Z3_model_get_const_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_const_decl(c, m, i) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_const_decl(c, m, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10099,11 +10097,11 @@ pub unsafe fn Z3_model_get_num_funcs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_num_funcs(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_num_funcs(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10129,11 +10127,11 @@ pub unsafe fn Z3_model_get_func_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_func_decl(c, m, i) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_func_decl(c, m, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10159,11 +10157,11 @@ pub unsafe fn Z3_model_get_num_sorts(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_num_sorts(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_num_sorts(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10190,11 +10188,11 @@ pub unsafe fn Z3_model_get_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_sort(c, m, i) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_sort(c, m, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10217,11 +10215,11 @@ pub unsafe fn Z3_model_get_sort_universe(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_get_sort_universe(c, m, s) };
+    let ret = unsafe { ::z3_sys::Z3_model_get_sort_universe(c, m, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10243,11 +10241,11 @@ pub unsafe fn Z3_model_translate(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_translate(c, m, dst) };
+    let ret = unsafe { ::z3_sys::Z3_model_translate(c, m, dst) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10269,11 +10267,11 @@ pub unsafe fn Z3_is_as_array(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_is_as_array(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_is_as_array(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10294,11 +10292,11 @@ pub unsafe fn Z3_get_as_array_func_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_as_array_func_decl(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_get_as_array_func_decl(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10323,11 +10321,11 @@ pub unsafe fn Z3_add_func_interp(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_add_func_interp(c, m, f, default_value) };
+    let ret = unsafe { ::z3_sys::Z3_add_func_interp(c, m, f, default_value) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10346,11 +10344,11 @@ pub unsafe fn Z3_add_const_interp(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_add_const_interp(c, m, f, a) };
+    unsafe { ::z3_sys::Z3_add_const_interp(c, m, f, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10367,11 +10365,11 @@ pub unsafe fn Z3_func_interp_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_func_interp_inc_ref(c, f) };
+    unsafe { ::z3_sys::Z3_func_interp_inc_ref(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10388,11 +10386,11 @@ pub unsafe fn Z3_func_interp_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_func_interp_dec_ref(c, f) };
+    unsafe { ::z3_sys::Z3_func_interp_dec_ref(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10417,11 +10415,11 @@ pub unsafe fn Z3_func_interp_get_num_entries(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_interp_get_num_entries(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_func_interp_get_num_entries(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10448,11 +10446,11 @@ pub unsafe fn Z3_func_interp_get_entry(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_interp_get_entry(c, f, i) };
+    let ret = unsafe { ::z3_sys::Z3_func_interp_get_entry(c, f, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10472,11 +10470,11 @@ pub unsafe fn Z3_func_interp_get_else(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_interp_get_else(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_func_interp_get_else(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10497,11 +10495,11 @@ pub unsafe fn Z3_func_interp_set_else(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_func_interp_set_else(c, f, else_value) };
+    unsafe { ::z3_sys::Z3_func_interp_set_else(c, f, else_value) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10518,11 +10516,11 @@ pub unsafe fn Z3_func_interp_get_arity(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_interp_get_arity(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_func_interp_get_arity(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10550,11 +10548,11 @@ pub unsafe fn Z3_func_interp_add_entry(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_func_interp_add_entry(c, fi, args, value) };
+    unsafe { ::z3_sys::Z3_func_interp_add_entry(c, fi, args, value) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10571,11 +10569,11 @@ pub unsafe fn Z3_func_entry_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_func_entry_inc_ref(c, e) };
+    unsafe { ::z3_sys::Z3_func_entry_inc_ref(c, e) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10592,11 +10590,11 @@ pub unsafe fn Z3_func_entry_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_func_entry_dec_ref(c, e) };
+    unsafe { ::z3_sys::Z3_func_entry_dec_ref(c, e) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10620,11 +10618,11 @@ pub unsafe fn Z3_func_entry_get_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_entry_get_value(c, e) };
+    let ret = unsafe { ::z3_sys::Z3_func_entry_get_value(c, e) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10646,11 +10644,11 @@ pub unsafe fn Z3_func_entry_get_num_args(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_entry_get_num_args(c, e) };
+    let ret = unsafe { ::z3_sys::Z3_func_entry_get_num_args(c, e) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10677,11 +10675,11 @@ pub unsafe fn Z3_func_entry_get_arg(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_entry_get_arg(c, e, i) };
+    let ret = unsafe { ::z3_sys::Z3_func_entry_get_arg(c, e, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -10700,7 +10698,7 @@ pub unsafe fn Z3_func_entry_get_arg(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_open_log(filename: Z3_string) -> bool {
-    unsafe { crate::ffi::Z3_open_log(filename) }
+    unsafe { ::z3_sys::Z3_open_log(filename) }
 }
 /// Append user-defined string to interaction log.
 ///
@@ -10720,7 +10718,7 @@ pub unsafe fn Z3_open_log(filename: Z3_string) -> bool {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_append_log(string: Z3_string) {
-    unsafe { crate::ffi::Z3_append_log(string) }
+    unsafe { ::z3_sys::Z3_append_log(string) }
 }
 /// Close interaction log.
 ///
@@ -10736,7 +10734,7 @@ pub unsafe fn Z3_append_log(string: Z3_string) {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_close_log() {
-    unsafe { crate::ffi::Z3_close_log() }
+    unsafe { ::z3_sys::Z3_close_log() }
 }
 /// Enable/disable printing warning messages to the console.
 ///
@@ -10747,7 +10745,7 @@ pub unsafe fn Z3_close_log() {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_toggle_warning_messages(enabled: bool) {
-    unsafe { crate::ffi::Z3_toggle_warning_messages(enabled) }
+    unsafe { ::z3_sys::Z3_toggle_warning_messages(enabled) }
 }
 /// Select mode for the format used for pretty-printing AST nodes.
 ///
@@ -10775,11 +10773,11 @@ pub unsafe fn Z3_set_ast_print_mode(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_set_ast_print_mode(c, mode) };
+    unsafe { ::z3_sys::Z3_set_ast_print_mode(c, mode) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -10802,11 +10800,11 @@ pub unsafe fn Z3_ast_to_string(c: Z3_context, a: Z3_ast) -> Result<Z3_string, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_to_string(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_ast_to_string(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10822,11 +10820,11 @@ pub unsafe fn Z3_pattern_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_pattern_to_string(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_pattern_to_string(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10842,11 +10840,11 @@ pub unsafe fn Z3_sort_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_sort_to_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_sort_to_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10862,11 +10860,11 @@ pub unsafe fn Z3_func_decl_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_func_decl_to_string(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_func_decl_to_string(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10887,11 +10885,11 @@ pub unsafe fn Z3_model_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_to_string(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_model_to_string(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10928,7 +10926,7 @@ pub unsafe fn Z3_benchmark_to_smtlib_string(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_benchmark_to_smtlib_string(
+        ::z3_sys::Z3_benchmark_to_smtlib_string(
             c,
             name,
             logic,
@@ -10942,7 +10940,7 @@ pub unsafe fn Z3_benchmark_to_smtlib_string(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -10969,7 +10967,7 @@ pub unsafe fn Z3_parse_smtlib2_string(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_parse_smtlib2_string(
+        ::z3_sys::Z3_parse_smtlib2_string(
             c,
             str_,
             num_sorts,
@@ -10983,7 +10981,7 @@ pub unsafe fn Z3_parse_smtlib2_string(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11007,7 +11005,7 @@ pub unsafe fn Z3_parse_smtlib2_file(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_parse_smtlib2_file(
+        ::z3_sys::Z3_parse_smtlib2_file(
             c,
             file_name,
             num_sorts,
@@ -11021,7 +11019,7 @@ pub unsafe fn Z3_parse_smtlib2_file(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11042,11 +11040,11 @@ pub unsafe fn Z3_eval_smtlib2_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_eval_smtlib2_string(c, str_) };
+    let ret = unsafe { ::z3_sys::Z3_eval_smtlib2_string(c, str_) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11065,11 +11063,11 @@ pub unsafe fn Z3_mk_parser_context(c: Z3_context) -> Result<Z3_parser_context, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_parser_context(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_parser_context(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11086,11 +11084,11 @@ pub unsafe fn Z3_parser_context_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_parser_context_inc_ref(c, pc) };
+    unsafe { ::z3_sys::Z3_parser_context_inc_ref(c, pc) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11107,11 +11105,11 @@ pub unsafe fn Z3_parser_context_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_parser_context_dec_ref(c, pc) };
+    unsafe { ::z3_sys::Z3_parser_context_dec_ref(c, pc) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11129,11 +11127,11 @@ pub unsafe fn Z3_parser_context_add_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_parser_context_add_sort(c, pc, s) };
+    unsafe { ::z3_sys::Z3_parser_context_add_sort(c, pc, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11151,11 +11149,11 @@ pub unsafe fn Z3_parser_context_add_decl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_parser_context_add_decl(c, pc, f) };
+    unsafe { ::z3_sys::Z3_parser_context_add_decl(c, pc, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11173,11 +11171,11 @@ pub unsafe fn Z3_parser_context_from_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_parser_context_from_string(c, pc, s) };
+    let ret = unsafe { ::z3_sys::Z3_parser_context_from_string(c, pc, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11195,7 +11193,7 @@ pub unsafe fn Z3_parser_context_from_string(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_get_error_code(c: Z3_context) -> Z3_error_code {
-    unsafe { crate::ffi::Z3_get_error_code(c) }
+    unsafe { ::z3_sys::Z3_get_error_code(c) }
 }
 /// Register a Z3 error handler.
 ///
@@ -11233,11 +11231,11 @@ pub unsafe fn Z3_set_error_handler(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_set_error_handler(c, h) };
+    unsafe { ::z3_sys::Z3_set_error_handler(c, h) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11248,7 +11246,7 @@ pub unsafe fn Z3_set_error_handler(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_set_error(c: Z3_context, e: Z3_error_code) {
-    unsafe { crate::ffi::Z3_set_error(c, e) }
+    unsafe { ::z3_sys::Z3_set_error(c, e) }
 }
 /// Return a string describing the given error code.
 #[inline]
@@ -11256,7 +11254,7 @@ pub unsafe fn Z3_set_error(c: Z3_context, e: Z3_error_code) {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_get_error_msg(c: Z3_context, err: Z3_error_code) -> Z3_string {
-    unsafe { crate::ffi::Z3_get_error_msg(c, err) }
+    unsafe { ::z3_sys::Z3_get_error_msg(c, err) }
 }
 /// Return Z3 version number information.
 ///
@@ -11273,7 +11271,7 @@ pub unsafe fn Z3_get_version(
     build_number: *mut ::core::ffi::c_uint,
     revision_number: *mut ::core::ffi::c_uint,
 ) {
-    unsafe { crate::ffi::Z3_get_version(major, minor, build_number, revision_number) }
+    unsafe { ::z3_sys::Z3_get_version(major, minor, build_number, revision_number) }
 }
 /// Return a string that fully describes the version of Z3 in use.
 ///
@@ -11285,7 +11283,7 @@ pub unsafe fn Z3_get_version(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_get_full_version() -> Z3_string {
-    unsafe { crate::ffi::Z3_get_full_version() }
+    unsafe { ::z3_sys::Z3_get_full_version() }
 }
 /// Enable tracing messages tagged as `tag` when Z3 is compiled in debug mode.
 /// It is a NOOP otherwise
@@ -11298,7 +11296,7 @@ pub unsafe fn Z3_get_full_version() -> Z3_string {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_enable_trace(tag: Z3_string) {
-    unsafe { crate::ffi::Z3_enable_trace(tag) }
+    unsafe { ::z3_sys::Z3_enable_trace(tag) }
 }
 /// Disable tracing messages tagged as `tag` when Z3 is compiled in debug mode.
 /// It is a NOOP otherwise
@@ -11311,7 +11309,7 @@ pub unsafe fn Z3_enable_trace(tag: Z3_string) {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_disable_trace(tag: Z3_string) {
-    unsafe { crate::ffi::Z3_disable_trace(tag) }
+    unsafe { ::z3_sys::Z3_disable_trace(tag) }
 }
 /// Reset all allocated resources.
 ///
@@ -11324,7 +11322,7 @@ pub unsafe fn Z3_disable_trace(tag: Z3_string) {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_reset_memory() {
-    unsafe { crate::ffi::Z3_reset_memory() }
+    unsafe { ::z3_sys::Z3_reset_memory() }
 }
 /// Destroy all allocated resources.
 ///
@@ -11335,7 +11333,7 @@ pub unsafe fn Z3_reset_memory() {
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_finalize_memory() {
-    unsafe { crate::ffi::Z3_finalize_memory() }
+    unsafe { ::z3_sys::Z3_finalize_memory() }
 }
 /// Create a goal (aka problem). A goal is essentially a set
 /// of formulas, that can be solved and/or transformed using
@@ -11363,11 +11361,11 @@ pub unsafe fn Z3_mk_goal(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_goal(c, models, unsat_cores, proofs) };
+    let ret = unsafe { ::z3_sys::Z3_mk_goal(c, models, unsat_cores, proofs) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11381,11 +11379,11 @@ pub unsafe fn Z3_goal_inc_ref(c: Z3_context, g: Z3_goal) -> Result<(), Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_goal_inc_ref(c, g) };
+    unsafe { ::z3_sys::Z3_goal_inc_ref(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11399,11 +11397,11 @@ pub unsafe fn Z3_goal_dec_ref(c: Z3_context, g: Z3_goal) -> Result<(), Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_goal_dec_ref(c, g) };
+    unsafe { ::z3_sys::Z3_goal_dec_ref(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11422,11 +11420,11 @@ pub unsafe fn Z3_goal_precision(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_precision(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_precision(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11451,11 +11449,11 @@ pub unsafe fn Z3_goal_assert(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_goal_assert(c, g, a) };
+    unsafe { ::z3_sys::Z3_goal_assert(c, g, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11469,11 +11467,11 @@ pub unsafe fn Z3_goal_inconsistent(c: Z3_context, g: Z3_goal) -> Result<bool, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_inconsistent(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_inconsistent(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11490,11 +11488,11 @@ pub unsafe fn Z3_goal_depth(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_depth(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_depth(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11508,11 +11506,11 @@ pub unsafe fn Z3_goal_reset(c: Z3_context, g: Z3_goal) -> Result<(), Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_goal_reset(c, g) };
+    unsafe { ::z3_sys::Z3_goal_reset(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11529,11 +11527,11 @@ pub unsafe fn Z3_goal_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_size(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_size(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11555,11 +11553,11 @@ pub unsafe fn Z3_goal_formula(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_formula(c, g, idx) };
+    let ret = unsafe { ::z3_sys::Z3_goal_formula(c, g, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11576,11 +11574,11 @@ pub unsafe fn Z3_goal_num_exprs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_num_exprs(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_num_exprs(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11597,11 +11595,11 @@ pub unsafe fn Z3_goal_is_decided_sat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_is_decided_sat(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_is_decided_sat(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11618,11 +11616,11 @@ pub unsafe fn Z3_goal_is_decided_unsat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_is_decided_unsat(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_is_decided_unsat(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11640,11 +11638,11 @@ pub unsafe fn Z3_goal_translate(
     unsafe {
         Z3_set_error(source, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_translate(source, g, target) };
+    let ret = unsafe { ::z3_sys::Z3_goal_translate(source, g, target) };
     unsafe {
         let err = Z3_get_error_code(source);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(source, err));
         }
     };
     Ok(ret.unwrap())
@@ -11669,11 +11667,11 @@ pub unsafe fn Z3_goal_convert_model(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_convert_model(c, g, m) };
+    let ret = unsafe { ::z3_sys::Z3_goal_convert_model(c, g, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11690,11 +11688,11 @@ pub unsafe fn Z3_goal_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_to_string(c, g) };
+    let ret = unsafe { ::z3_sys::Z3_goal_to_string(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11717,11 +11715,11 @@ pub unsafe fn Z3_goal_to_dimacs_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_goal_to_dimacs_string(c, g, include_names) };
+    let ret = unsafe { ::z3_sys::Z3_goal_to_dimacs_string(c, g, include_names) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -11742,11 +11740,11 @@ pub unsafe fn Z3_mk_tactic(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_tactic(c, name) };
+    let ret = unsafe { ::z3_sys::Z3_mk_tactic(c, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11760,11 +11758,11 @@ pub unsafe fn Z3_tactic_inc_ref(c: Z3_context, t: Z3_tactic) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_tactic_inc_ref(c, t) };
+    unsafe { ::z3_sys::Z3_tactic_inc_ref(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11778,11 +11776,11 @@ pub unsafe fn Z3_tactic_dec_ref(c: Z3_context, g: Z3_tactic) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_tactic_dec_ref(c, g) };
+    unsafe { ::z3_sys::Z3_tactic_dec_ref(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11801,11 +11799,11 @@ pub unsafe fn Z3_mk_probe(c: Z3_context, name: Z3_string) -> Result<Z3_probe, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_probe(c, name) };
+    let ret = unsafe { ::z3_sys::Z3_mk_probe(c, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11819,11 +11817,11 @@ pub unsafe fn Z3_probe_inc_ref(c: Z3_context, p: Z3_probe) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_probe_inc_ref(c, p) };
+    unsafe { ::z3_sys::Z3_probe_inc_ref(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11837,11 +11835,11 @@ pub unsafe fn Z3_probe_dec_ref(c: Z3_context, p: Z3_probe) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_probe_dec_ref(c, p) };
+    unsafe { ::z3_sys::Z3_probe_dec_ref(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -11860,11 +11858,11 @@ pub unsafe fn Z3_tactic_and_then(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_and_then(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_and_then(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11883,11 +11881,11 @@ pub unsafe fn Z3_tactic_or_else(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_or_else(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_or_else(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11905,11 +11903,11 @@ pub unsafe fn Z3_tactic_par_or(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_par_or(c, num, ts) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_par_or(c, num, ts) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11928,11 +11926,11 @@ pub unsafe fn Z3_tactic_par_and_then(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_par_and_then(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_par_and_then(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11951,11 +11949,11 @@ pub unsafe fn Z3_tactic_try_for(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_try_for(c, t, ms) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_try_for(c, t, ms) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11974,11 +11972,11 @@ pub unsafe fn Z3_tactic_when(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_when(c, p, t) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_when(c, p, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -11998,11 +11996,11 @@ pub unsafe fn Z3_tactic_cond(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_cond(c, p, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_cond(c, p, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12021,11 +12019,11 @@ pub unsafe fn Z3_tactic_repeat(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_repeat(c, t, max) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_repeat(c, t, max) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12039,11 +12037,11 @@ pub unsafe fn Z3_tactic_skip(c: Z3_context) -> Result<Z3_tactic, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_skip(c) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_skip(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12057,11 +12055,11 @@ pub unsafe fn Z3_tactic_fail(c: Z3_context) -> Result<Z3_tactic, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_fail(c) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_fail(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12078,11 +12076,11 @@ pub unsafe fn Z3_tactic_fail_if(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_fail_if(c, p) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_fail_if(c, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12099,11 +12097,11 @@ pub unsafe fn Z3_tactic_fail_if_not_decided(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_fail_if_not_decided(c) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_fail_if_not_decided(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12121,11 +12119,11 @@ pub unsafe fn Z3_tactic_using_params(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_using_params(c, t, p) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_using_params(c, t, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12146,11 +12144,11 @@ pub unsafe fn Z3_mk_simplifier(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_simplifier(c, name) };
+    let ret = unsafe { ::z3_sys::Z3_mk_simplifier(c, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12167,11 +12165,11 @@ pub unsafe fn Z3_simplifier_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_simplifier_inc_ref(c, t) };
+    unsafe { ::z3_sys::Z3_simplifier_inc_ref(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -12188,11 +12186,11 @@ pub unsafe fn Z3_simplifier_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_simplifier_dec_ref(c, g) };
+    unsafe { ::z3_sys::Z3_simplifier_dec_ref(c, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -12210,11 +12208,11 @@ pub unsafe fn Z3_solver_add_simplifier(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_add_simplifier(c, solver, simplifier) };
+    let ret = unsafe { ::z3_sys::Z3_solver_add_simplifier(c, solver, simplifier) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12233,11 +12231,11 @@ pub unsafe fn Z3_simplifier_and_then(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplifier_and_then(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_simplifier_and_then(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12255,11 +12253,11 @@ pub unsafe fn Z3_simplifier_using_params(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplifier_using_params(c, t, p) };
+    let ret = unsafe { ::z3_sys::Z3_simplifier_using_params(c, t, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12279,11 +12277,11 @@ pub unsafe fn Z3_get_num_simplifiers(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_num_simplifiers(c) };
+    let ret = unsafe { ::z3_sys::Z3_get_num_simplifiers(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12308,11 +12306,11 @@ pub unsafe fn Z3_get_simplifier_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_simplifier_name(c, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_simplifier_name(c, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12329,11 +12327,11 @@ pub unsafe fn Z3_simplifier_get_help(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplifier_get_help(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_simplifier_get_help(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12350,11 +12348,11 @@ pub unsafe fn Z3_simplifier_get_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplifier_get_param_descrs(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_simplifier_get_param_descrs(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12371,11 +12369,11 @@ pub unsafe fn Z3_simplifier_get_descr(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_simplifier_get_descr(c, name) };
+    let ret = unsafe { ::z3_sys::Z3_simplifier_get_descr(c, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12389,11 +12387,11 @@ pub unsafe fn Z3_probe_const(x: Z3_context, val: f64) -> Result<Z3_probe, Z3Erro
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_const(x, val) };
+    let ret = unsafe { ::z3_sys::Z3_probe_const(x, val) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12413,11 +12411,11 @@ pub unsafe fn Z3_probe_lt(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_lt(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_lt(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12437,11 +12435,11 @@ pub unsafe fn Z3_probe_gt(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_gt(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_gt(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12461,11 +12459,11 @@ pub unsafe fn Z3_probe_le(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_le(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_le(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12485,11 +12483,11 @@ pub unsafe fn Z3_probe_ge(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_ge(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_ge(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12509,11 +12507,11 @@ pub unsafe fn Z3_probe_eq(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_eq(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_eq(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12533,11 +12531,11 @@ pub unsafe fn Z3_probe_and(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_and(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_and(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12557,11 +12555,11 @@ pub unsafe fn Z3_probe_or(
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_or(x, p1, p2) };
+    let ret = unsafe { ::z3_sys::Z3_probe_or(x, p1, p2) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12577,11 +12575,11 @@ pub unsafe fn Z3_probe_not(x: Z3_context, p: Z3_probe) -> Result<Z3_probe, Z3Err
     unsafe {
         Z3_set_error(x, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_not(x, p) };
+    let ret = unsafe { ::z3_sys::Z3_probe_not(x, p) };
     unsafe {
         let err = Z3_get_error_code(x);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(x, err));
         }
     };
     Ok(ret.unwrap())
@@ -12599,11 +12597,11 @@ pub unsafe fn Z3_get_num_tactics(c: Z3_context) -> Result<::core::ffi::c_uint, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_num_tactics(c) };
+    let ret = unsafe { ::z3_sys::Z3_get_num_tactics(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12628,11 +12626,11 @@ pub unsafe fn Z3_get_tactic_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_tactic_name(c, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_tactic_name(c, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12650,11 +12648,11 @@ pub unsafe fn Z3_get_num_probes(c: Z3_context) -> Result<::core::ffi::c_uint, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_num_probes(c) };
+    let ret = unsafe { ::z3_sys::Z3_get_num_probes(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12679,11 +12677,11 @@ pub unsafe fn Z3_get_probe_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_get_probe_name(c, i) };
+    let ret = unsafe { ::z3_sys::Z3_get_probe_name(c, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12700,11 +12698,11 @@ pub unsafe fn Z3_tactic_get_help(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_get_help(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_get_help(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12721,11 +12719,11 @@ pub unsafe fn Z3_tactic_get_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_get_param_descrs(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_get_param_descrs(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12742,11 +12740,11 @@ pub unsafe fn Z3_tactic_get_descr(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_get_descr(c, name) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_get_descr(c, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12763,11 +12761,11 @@ pub unsafe fn Z3_probe_get_descr(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_get_descr(c, name) };
+    let ret = unsafe { ::z3_sys::Z3_probe_get_descr(c, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12786,11 +12784,11 @@ pub unsafe fn Z3_probe_apply(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_probe_apply(c, p, g) };
+    let ret = unsafe { ::z3_sys::Z3_probe_apply(c, p, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12812,11 +12810,11 @@ pub unsafe fn Z3_tactic_apply(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_apply(c, t, g) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_apply(c, t, g) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12839,11 +12837,11 @@ pub unsafe fn Z3_tactic_apply_ex(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_tactic_apply_ex(c, t, g, p) };
+    let ret = unsafe { ::z3_sys::Z3_tactic_apply_ex(c, t, g, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -12860,11 +12858,11 @@ pub unsafe fn Z3_apply_result_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_apply_result_inc_ref(c, r) };
+    unsafe { ::z3_sys::Z3_apply_result_inc_ref(c, r) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -12881,11 +12879,11 @@ pub unsafe fn Z3_apply_result_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_apply_result_dec_ref(c, r) };
+    unsafe { ::z3_sys::Z3_apply_result_dec_ref(c, r) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -12902,11 +12900,11 @@ pub unsafe fn Z3_apply_result_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_apply_result_to_string(c, r) };
+    let ret = unsafe { ::z3_sys::Z3_apply_result_to_string(c, r) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12927,11 +12925,11 @@ pub unsafe fn Z3_apply_result_get_num_subgoals(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_apply_result_get_num_subgoals(c, r) };
+    let ret = unsafe { ::z3_sys::Z3_apply_result_get_num_subgoals(c, r) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -12957,11 +12955,11 @@ pub unsafe fn Z3_apply_result_get_subgoal(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_apply_result_get_subgoal(c, r, i) };
+    let ret = unsafe { ::z3_sys::Z3_apply_result_get_subgoal(c, r, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13011,11 +13009,11 @@ pub unsafe fn Z3_mk_solver(c: Z3_context) -> Result<Z3_solver, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_solver(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_solver(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13054,11 +13052,11 @@ pub unsafe fn Z3_mk_simple_solver(c: Z3_context) -> Result<Z3_solver, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_simple_solver(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_simple_solver(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13085,11 +13083,11 @@ pub unsafe fn Z3_mk_solver_for_logic(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_solver_for_logic(c, logic) };
+    let ret = unsafe { ::z3_sys::Z3_mk_solver_for_logic(c, logic) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13117,11 +13115,11 @@ pub unsafe fn Z3_mk_solver_from_tactic(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_solver_from_tactic(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_solver_from_tactic(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13139,11 +13137,11 @@ pub unsafe fn Z3_solver_translate(
     unsafe {
         Z3_set_error(source, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_translate(source, s, target) };
+    let ret = unsafe { ::z3_sys::Z3_solver_translate(source, s, target) };
     unsafe {
         let err = Z3_get_error_code(source);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(source, err));
         }
     };
     Ok(ret.unwrap())
@@ -13169,11 +13167,11 @@ pub unsafe fn Z3_solver_import_model_converter(
     unsafe {
         Z3_set_error(ctx, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_import_model_converter(ctx, src, dst) };
+    unsafe { ::z3_sys::Z3_solver_import_model_converter(ctx, src, dst) };
     unsafe {
         let err = Z3_get_error_code(ctx);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(ctx, err));
         }
     };
     Ok(())
@@ -13195,11 +13193,11 @@ pub unsafe fn Z3_solver_get_help(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_help(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_help(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -13221,11 +13219,11 @@ pub unsafe fn Z3_solver_get_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_param_descrs(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_param_descrs(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13248,11 +13246,11 @@ pub unsafe fn Z3_solver_set_params(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_set_params(c, s, p) };
+    unsafe { ::z3_sys::Z3_solver_set_params(c, s, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13266,11 +13264,11 @@ pub unsafe fn Z3_solver_inc_ref(c: Z3_context, s: Z3_solver) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_inc_ref(c, s) };
+    unsafe { ::z3_sys::Z3_solver_inc_ref(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13284,11 +13282,11 @@ pub unsafe fn Z3_solver_dec_ref(c: Z3_context, s: Z3_solver) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_dec_ref(c, s) };
+    unsafe { ::z3_sys::Z3_solver_dec_ref(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13307,11 +13305,11 @@ pub unsafe fn Z3_solver_interrupt(c: Z3_context, s: Z3_solver) -> Result<(), Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_interrupt(c, s) };
+    unsafe { ::z3_sys::Z3_solver_interrupt(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13332,11 +13330,11 @@ pub unsafe fn Z3_solver_push(c: Z3_context, s: Z3_solver) -> Result<(), Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_push(c, s) };
+    unsafe { ::z3_sys::Z3_solver_push(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13363,11 +13361,11 @@ pub unsafe fn Z3_solver_pop(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_pop(c, s, n) };
+    unsafe { ::z3_sys::Z3_solver_pop(c, s, n) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13386,11 +13384,11 @@ pub unsafe fn Z3_solver_reset(c: Z3_context, s: Z3_solver) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_reset(c, s) };
+    unsafe { ::z3_sys::Z3_solver_reset(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13412,11 +13410,11 @@ pub unsafe fn Z3_solver_get_num_scopes(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_num_scopes(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_num_scopes(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -13442,11 +13440,11 @@ pub unsafe fn Z3_solver_assert(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_assert(c, s, a) };
+    unsafe { ::z3_sys::Z3_solver_assert(c, s, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13481,11 +13479,11 @@ pub unsafe fn Z3_solver_assert_and_track(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_assert_and_track(c, s, a, p) };
+    unsafe { ::z3_sys::Z3_solver_assert_and_track(c, s, a, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13508,11 +13506,11 @@ pub unsafe fn Z3_solver_from_file(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_from_file(c, s, file_name) };
+    unsafe { ::z3_sys::Z3_solver_from_file(c, s, file_name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13535,11 +13533,11 @@ pub unsafe fn Z3_solver_from_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_from_string(c, s, str_) };
+    unsafe { ::z3_sys::Z3_solver_from_string(c, s, str_) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13556,11 +13554,11 @@ pub unsafe fn Z3_solver_get_assertions(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_assertions(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_assertions(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13577,11 +13575,11 @@ pub unsafe fn Z3_solver_get_units(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_units(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_units(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13599,11 +13597,11 @@ pub unsafe fn Z3_solver_get_trail(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_trail(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_trail(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13620,11 +13618,11 @@ pub unsafe fn Z3_solver_get_non_units(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_non_units(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_non_units(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13645,11 +13643,11 @@ pub unsafe fn Z3_solver_get_levels(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_get_levels(c, s, literals, sz, levels) };
+    unsafe { ::z3_sys::Z3_solver_get_levels(c, s, literals, sz, levels) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13670,11 +13668,11 @@ pub unsafe fn Z3_solver_congruence_root(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_congruence_root(c, s, a) };
+    let ret = unsafe { ::z3_sys::Z3_solver_congruence_root(c, s, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13693,11 +13691,11 @@ pub unsafe fn Z3_solver_congruence_next(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_congruence_next(c, s, a) };
+    let ret = unsafe { ::z3_sys::Z3_solver_congruence_next(c, s, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13720,11 +13718,11 @@ pub unsafe fn Z3_solver_congruence_explain(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_congruence_explain(c, s, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_solver_congruence_explain(c, s, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -13747,11 +13745,11 @@ pub unsafe fn Z3_solver_solve_for(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_solve_for(c, s, variables, terms, guards) };
+    unsafe { ::z3_sys::Z3_solver_solve_for(c, s, variables, terms, guards) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13778,13 +13776,11 @@ pub unsafe fn Z3_solver_register_on_clause(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe {
-        crate::ffi::Z3_solver_register_on_clause(c, s, user_context, on_clause_eh)
-    };
+    unsafe { ::z3_sys::Z3_solver_register_on_clause(c, s, user_context, on_clause_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13813,19 +13809,12 @@ pub unsafe fn Z3_solver_propagate_init(
         Z3_set_error(c, ErrorCode::Ok);
     };
     unsafe {
-        crate::ffi::Z3_solver_propagate_init(
-            c,
-            s,
-            user_context,
-            push_eh,
-            pop_eh,
-            fresh_eh,
-        )
+        ::z3_sys::Z3_solver_propagate_init(c, s, user_context, push_eh, pop_eh, fresh_eh)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13846,11 +13835,11 @@ pub unsafe fn Z3_solver_propagate_fixed(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_fixed(c, s, fixed_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_fixed(c, s, fixed_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13878,11 +13867,11 @@ pub unsafe fn Z3_solver_propagate_final(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_final(c, s, final_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_final(c, s, final_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13900,11 +13889,11 @@ pub unsafe fn Z3_solver_propagate_eq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_eq(c, s, eq_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_eq(c, s, eq_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13922,11 +13911,11 @@ pub unsafe fn Z3_solver_propagate_diseq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_diseq(c, s, eq_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_diseq(c, s, eq_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13945,11 +13934,11 @@ pub unsafe fn Z3_solver_propagate_created(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_created(c, s, created_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_created(c, s, created_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13968,11 +13957,11 @@ pub unsafe fn Z3_solver_propagate_decide(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_decide(c, s, decide_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_decide(c, s, decide_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -13993,11 +13982,11 @@ pub unsafe fn Z3_solver_propagate_on_binding(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_on_binding(c, s, on_binding_eh) };
+    unsafe { ::z3_sys::Z3_solver_propagate_on_binding(c, s, on_binding_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14020,11 +14009,11 @@ pub unsafe fn Z3_solver_next_split(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_next_split(c, cb, t, idx, phase) };
+    let ret = unsafe { ::z3_sys::Z3_solver_next_split(c, cb, t, idx, phase) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14050,12 +14039,12 @@ pub unsafe fn Z3_solver_propagate_declare(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_solver_propagate_declare(c, name, n, domain, range)
+        ::z3_sys::Z3_solver_propagate_declare(c, name, n, domain, range)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14074,11 +14063,11 @@ pub unsafe fn Z3_solver_propagate_register(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_register(c, s, e) };
+    unsafe { ::z3_sys::Z3_solver_propagate_register(c, s, e) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14099,11 +14088,11 @@ pub unsafe fn Z3_solver_propagate_register_cb(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_propagate_register_cb(c, cb, e) };
+    unsafe { ::z3_sys::Z3_solver_propagate_register_cb(c, cb, e) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14143,7 +14132,7 @@ pub unsafe fn Z3_solver_propagate_consequence(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_solver_propagate_consequence(
+        ::z3_sys::Z3_solver_propagate_consequence(
             c,
             cb,
             num_fixed,
@@ -14157,7 +14146,7 @@ pub unsafe fn Z3_solver_propagate_consequence(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14178,11 +14167,11 @@ pub unsafe fn Z3_solver_set_initial_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_solver_set_initial_value(c, s, v, val) };
+    unsafe { ::z3_sys::Z3_solver_set_initial_value(c, s, v, val) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14210,11 +14199,11 @@ pub unsafe fn Z3_solver_check(c: Z3_context, s: Z3_solver) -> Result<Z3_lbool, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_check(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_check(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14242,12 +14231,12 @@ pub unsafe fn Z3_solver_check_assumptions(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_solver_check_assumptions(c, s, num_assumptions, assumptions)
+        ::z3_sys::Z3_solver_check_assumptions(c, s, num_assumptions, assumptions)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14281,12 +14270,12 @@ pub unsafe fn Z3_get_implied_equalities(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_get_implied_equalities(c, s, num_terms, terms, class_ids)
+        ::z3_sys::Z3_get_implied_equalities(c, s, num_terms, terms, class_ids)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14307,18 +14296,12 @@ pub unsafe fn Z3_solver_get_consequences(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_solver_get_consequences(
-            c,
-            s,
-            assumptions,
-            variables,
-            consequences,
-        )
+        ::z3_sys::Z3_solver_get_consequences(c, s, assumptions, variables, consequences)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14349,11 +14332,11 @@ pub unsafe fn Z3_solver_cube(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_cube(c, s, vars, backtrack_level) };
+    let ret = unsafe { ::z3_sys::Z3_solver_cube(c, s, vars, backtrack_level) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14373,11 +14356,11 @@ pub unsafe fn Z3_solver_get_model(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_model(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_model(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14398,11 +14381,11 @@ pub unsafe fn Z3_solver_get_proof(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_proof(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_proof(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14425,11 +14408,11 @@ pub unsafe fn Z3_solver_get_unsat_core(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_unsat_core(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_unsat_core(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14447,11 +14430,11 @@ pub unsafe fn Z3_solver_get_reason_unknown(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_reason_unknown(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_reason_unknown(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14470,11 +14453,11 @@ pub unsafe fn Z3_solver_get_statistics(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_get_statistics(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_get_statistics(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14496,11 +14479,11 @@ pub unsafe fn Z3_solver_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_to_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_solver_to_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14522,11 +14505,11 @@ pub unsafe fn Z3_solver_to_dimacs_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_solver_to_dimacs_string(c, s, include_names) };
+    let ret = unsafe { ::z3_sys::Z3_solver_to_dimacs_string(c, s, include_names) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14543,11 +14526,11 @@ pub unsafe fn Z3_stats_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_to_string(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_stats_to_string(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14561,11 +14544,11 @@ pub unsafe fn Z3_stats_inc_ref(c: Z3_context, s: Z3_stats) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_stats_inc_ref(c, s) };
+    unsafe { ::z3_sys::Z3_stats_inc_ref(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14579,11 +14562,11 @@ pub unsafe fn Z3_stats_dec_ref(c: Z3_context, s: Z3_stats) -> Result<(), Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_stats_dec_ref(c, s) };
+    unsafe { ::z3_sys::Z3_stats_dec_ref(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14600,11 +14583,11 @@ pub unsafe fn Z3_stats_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_size(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_stats_size(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14626,11 +14609,11 @@ pub unsafe fn Z3_stats_get_key(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_get_key(c, s, idx) };
+    let ret = unsafe { ::z3_sys::Z3_stats_get_key(c, s, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14652,11 +14635,11 @@ pub unsafe fn Z3_stats_is_uint(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_is_uint(c, s, idx) };
+    let ret = unsafe { ::z3_sys::Z3_stats_is_uint(c, s, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14678,11 +14661,11 @@ pub unsafe fn Z3_stats_is_double(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_is_double(c, s, idx) };
+    let ret = unsafe { ::z3_sys::Z3_stats_is_double(c, s, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14704,11 +14687,11 @@ pub unsafe fn Z3_stats_get_uint_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_get_uint_value(c, s, idx) };
+    let ret = unsafe { ::z3_sys::Z3_stats_get_uint_value(c, s, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14730,11 +14713,11 @@ pub unsafe fn Z3_stats_get_double_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_stats_get_double_value(c, s, idx) };
+    let ret = unsafe { ::z3_sys::Z3_stats_get_double_value(c, s, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14745,7 +14728,7 @@ pub unsafe fn Z3_stats_get_double_value(
 #[expect(clippy::missing_safety_doc)]
 #[allow(clippy::too_many_arguments)]
 pub unsafe fn Z3_get_estimated_alloc_size() -> u64 {
-    unsafe { crate::ffi::Z3_get_estimated_alloc_size() }
+    unsafe { ::z3_sys::Z3_get_estimated_alloc_size() }
 }
 /// Return an empty AST vector.
 ///
@@ -14759,11 +14742,11 @@ pub unsafe fn Z3_mk_ast_vector(c: Z3_context) -> Result<Z3_ast_vector, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ast_vector(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ast_vector(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14780,11 +14763,11 @@ pub unsafe fn Z3_ast_vector_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_vector_inc_ref(c, v) };
+    unsafe { ::z3_sys::Z3_ast_vector_inc_ref(c, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14801,11 +14784,11 @@ pub unsafe fn Z3_ast_vector_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_vector_dec_ref(c, v) };
+    unsafe { ::z3_sys::Z3_ast_vector_dec_ref(c, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14822,11 +14805,11 @@ pub unsafe fn Z3_ast_vector_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_vector_size(c, v) };
+    let ret = unsafe { ::z3_sys::Z3_ast_vector_size(c, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14848,11 +14831,11 @@ pub unsafe fn Z3_ast_vector_get(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_vector_get(c, v, i) };
+    let ret = unsafe { ::z3_sys::Z3_ast_vector_get(c, v, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -14875,11 +14858,11 @@ pub unsafe fn Z3_ast_vector_set(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_vector_set(c, v, i, a) };
+    unsafe { ::z3_sys::Z3_ast_vector_set(c, v, i, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14897,11 +14880,11 @@ pub unsafe fn Z3_ast_vector_resize(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_vector_resize(c, v, n) };
+    unsafe { ::z3_sys::Z3_ast_vector_resize(c, v, n) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14919,11 +14902,11 @@ pub unsafe fn Z3_ast_vector_push(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_vector_push(c, v, a) };
+    unsafe { ::z3_sys::Z3_ast_vector_push(c, v, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -14941,11 +14924,11 @@ pub unsafe fn Z3_ast_vector_translate(
     unsafe {
         Z3_set_error(s, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_vector_translate(s, v, t) };
+    let ret = unsafe { ::z3_sys::Z3_ast_vector_translate(s, v, t) };
     unsafe {
         let err = Z3_get_error_code(s);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(s, err));
         }
     };
     Ok(ret.unwrap())
@@ -14962,11 +14945,11 @@ pub unsafe fn Z3_ast_vector_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_vector_to_string(c, v) };
+    let ret = unsafe { ::z3_sys::Z3_ast_vector_to_string(c, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -14983,11 +14966,11 @@ pub unsafe fn Z3_mk_ast_map(c: Z3_context) -> Result<Z3_ast_map, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_ast_map(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_ast_map(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15001,11 +14984,11 @@ pub unsafe fn Z3_ast_map_inc_ref(c: Z3_context, m: Z3_ast_map) -> Result<(), Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_map_inc_ref(c, m) };
+    unsafe { ::z3_sys::Z3_ast_map_inc_ref(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -15019,11 +15002,11 @@ pub unsafe fn Z3_ast_map_dec_ref(c: Z3_context, m: Z3_ast_map) -> Result<(), Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_map_dec_ref(c, m) };
+    unsafe { ::z3_sys::Z3_ast_map_dec_ref(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -15041,11 +15024,11 @@ pub unsafe fn Z3_ast_map_contains(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_map_contains(c, m, k) };
+    let ret = unsafe { ::z3_sys::Z3_ast_map_contains(c, m, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15065,11 +15048,11 @@ pub unsafe fn Z3_ast_map_find(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_map_find(c, m, k) };
+    let ret = unsafe { ::z3_sys::Z3_ast_map_find(c, m, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15088,11 +15071,11 @@ pub unsafe fn Z3_ast_map_insert(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_map_insert(c, m, k, v) };
+    unsafe { ::z3_sys::Z3_ast_map_insert(c, m, k, v) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -15110,11 +15093,11 @@ pub unsafe fn Z3_ast_map_erase(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_map_erase(c, m, k) };
+    unsafe { ::z3_sys::Z3_ast_map_erase(c, m, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -15128,11 +15111,11 @@ pub unsafe fn Z3_ast_map_reset(c: Z3_context, m: Z3_ast_map) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_ast_map_reset(c, m) };
+    unsafe { ::z3_sys::Z3_ast_map_reset(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -15149,11 +15132,11 @@ pub unsafe fn Z3_ast_map_size(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_map_size(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_ast_map_size(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15170,11 +15153,11 @@ pub unsafe fn Z3_ast_map_keys(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_map_keys(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_ast_map_keys(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15191,11 +15174,11 @@ pub unsafe fn Z3_ast_map_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_ast_map_to_string(c, m) };
+    let ret = unsafe { ::z3_sys::Z3_ast_map_to_string(c, m) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15210,11 +15193,11 @@ pub unsafe fn Z3_algebraic_is_value(c: Z3_context, a: Z3_ast) -> Result<bool, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_is_value(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_is_value(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15232,11 +15215,11 @@ pub unsafe fn Z3_algebraic_is_pos(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_is_pos(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_is_pos(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15254,11 +15237,11 @@ pub unsafe fn Z3_algebraic_is_neg(c: Z3_context, a: Z3_ast) -> Result<bool, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_is_neg(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_is_neg(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15276,11 +15259,11 @@ pub unsafe fn Z3_algebraic_is_zero(c: Z3_context, a: Z3_ast) -> Result<bool, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_is_zero(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_is_zero(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15301,11 +15284,11 @@ pub unsafe fn Z3_algebraic_sign(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_sign(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_sign(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15330,11 +15313,11 @@ pub unsafe fn Z3_algebraic_add(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_add(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_add(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15359,11 +15342,11 @@ pub unsafe fn Z3_algebraic_sub(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_sub(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_sub(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15388,11 +15371,11 @@ pub unsafe fn Z3_algebraic_mul(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_mul(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_mul(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15418,11 +15401,11 @@ pub unsafe fn Z3_algebraic_div(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_div(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_div(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15447,11 +15430,11 @@ pub unsafe fn Z3_algebraic_root(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_root(c, a, k) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_root(c, a, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15475,11 +15458,11 @@ pub unsafe fn Z3_algebraic_power(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_power(c, a, k) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_power(c, a, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15502,11 +15485,11 @@ pub unsafe fn Z3_algebraic_lt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_lt(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_lt(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15529,11 +15512,11 @@ pub unsafe fn Z3_algebraic_gt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_gt(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_gt(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15556,11 +15539,11 @@ pub unsafe fn Z3_algebraic_le(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_le(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_le(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15583,11 +15566,11 @@ pub unsafe fn Z3_algebraic_ge(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_ge(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_ge(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15610,11 +15593,11 @@ pub unsafe fn Z3_algebraic_eq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_eq(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_eq(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15637,11 +15620,11 @@ pub unsafe fn Z3_algebraic_neq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_neq(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_neq(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15668,11 +15651,11 @@ pub unsafe fn Z3_algebraic_roots(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_roots(c, p, n, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_roots(c, p, n, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15697,11 +15680,11 @@ pub unsafe fn Z3_algebraic_eval(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_eval(c, p, n, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_eval(c, p, n, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15722,11 +15705,11 @@ pub unsafe fn Z3_algebraic_get_poly(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_get_poly(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_get_poly(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15747,11 +15730,11 @@ pub unsafe fn Z3_algebraic_get_i(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_algebraic_get_i(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_algebraic_get_i(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15778,11 +15761,11 @@ pub unsafe fn Z3_polynomial_subresultants(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_polynomial_subresultants(c, p, q, x) };
+    let ret = unsafe { ::z3_sys::Z3_polynomial_subresultants(c, p, q, x) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15796,11 +15779,11 @@ pub unsafe fn Z3_rcf_del(c: Z3_context, a: Z3_rcf_num) -> Result<(), Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_rcf_del(c, a) };
+    unsafe { ::z3_sys::Z3_rcf_del(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -15817,11 +15800,11 @@ pub unsafe fn Z3_rcf_mk_rational(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mk_rational(c, val) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mk_rational(c, val) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15838,11 +15821,11 @@ pub unsafe fn Z3_rcf_mk_small_int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mk_small_int(c, val) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mk_small_int(c, val) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15856,11 +15839,11 @@ pub unsafe fn Z3_rcf_mk_pi(c: Z3_context) -> Result<Z3_rcf_num, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mk_pi(c) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mk_pi(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15874,11 +15857,11 @@ pub unsafe fn Z3_rcf_mk_e(c: Z3_context) -> Result<Z3_rcf_num, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mk_e(c) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mk_e(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15892,11 +15875,11 @@ pub unsafe fn Z3_rcf_mk_infinitesimal(c: Z3_context) -> Result<Z3_rcf_num, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mk_infinitesimal(c) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mk_infinitesimal(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15921,11 +15904,11 @@ pub unsafe fn Z3_rcf_mk_roots(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mk_roots(c, n, a, roots) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mk_roots(c, n, a, roots) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -15943,11 +15926,11 @@ pub unsafe fn Z3_rcf_add(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_add(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_add(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15965,11 +15948,11 @@ pub unsafe fn Z3_rcf_sub(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_sub(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_sub(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -15987,11 +15970,11 @@ pub unsafe fn Z3_rcf_mul(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_mul(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_mul(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16009,11 +15992,11 @@ pub unsafe fn Z3_rcf_div(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_div(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_div(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16027,11 +16010,11 @@ pub unsafe fn Z3_rcf_neg(c: Z3_context, a: Z3_rcf_num) -> Result<Z3_rcf_num, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_neg(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_neg(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16045,11 +16028,11 @@ pub unsafe fn Z3_rcf_inv(c: Z3_context, a: Z3_rcf_num) -> Result<Z3_rcf_num, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_inv(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_inv(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16067,11 +16050,11 @@ pub unsafe fn Z3_rcf_power(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_power(c, a, k) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_power(c, a, k) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16089,11 +16072,11 @@ pub unsafe fn Z3_rcf_lt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_lt(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_lt(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16111,11 +16094,11 @@ pub unsafe fn Z3_rcf_gt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_gt(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_gt(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16133,11 +16116,11 @@ pub unsafe fn Z3_rcf_le(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_le(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_le(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16155,11 +16138,11 @@ pub unsafe fn Z3_rcf_ge(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_ge(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_ge(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16177,11 +16160,11 @@ pub unsafe fn Z3_rcf_eq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_eq(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_eq(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16199,11 +16182,11 @@ pub unsafe fn Z3_rcf_neq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_neq(c, a, b) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_neq(c, a, b) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16222,11 +16205,11 @@ pub unsafe fn Z3_rcf_num_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_num_to_string(c, a, compact, html) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_num_to_string(c, a, compact, html) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16244,11 +16227,11 @@ pub unsafe fn Z3_rcf_num_to_decimal_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_num_to_decimal_string(c, a, prec) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_num_to_decimal_string(c, a, prec) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16268,11 +16251,11 @@ pub unsafe fn Z3_rcf_get_numerator_denominator(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_rcf_get_numerator_denominator(c, a, n, d) };
+    unsafe { ::z3_sys::Z3_rcf_get_numerator_denominator(c, a, n, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16286,11 +16269,11 @@ pub unsafe fn Z3_rcf_is_rational(c: Z3_context, a: Z3_rcf_num) -> Result<bool, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_is_rational(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_is_rational(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16307,11 +16290,11 @@ pub unsafe fn Z3_rcf_is_algebraic(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_is_algebraic(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_is_algebraic(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16328,11 +16311,11 @@ pub unsafe fn Z3_rcf_is_infinitesimal(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_is_infinitesimal(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_is_infinitesimal(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16349,11 +16332,11 @@ pub unsafe fn Z3_rcf_is_transcendental(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_is_transcendental(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_is_transcendental(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16370,11 +16353,11 @@ pub unsafe fn Z3_rcf_extension_index(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_extension_index(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_extension_index(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16395,11 +16378,11 @@ pub unsafe fn Z3_rcf_transcendental_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_transcendental_name(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_transcendental_name(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16420,11 +16403,11 @@ pub unsafe fn Z3_rcf_infinitesimal_name(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_infinitesimal_name(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_infinitesimal_name(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16445,11 +16428,11 @@ pub unsafe fn Z3_rcf_num_coefficients(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_num_coefficients(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_num_coefficients(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16471,11 +16454,11 @@ pub unsafe fn Z3_rcf_coefficient(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_coefficient(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_coefficient(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16503,7 +16486,7 @@ pub unsafe fn Z3_rcf_interval(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_rcf_interval(
+        ::z3_sys::Z3_rcf_interval(
             c,
             a,
             lower_is_inf,
@@ -16517,7 +16500,7 @@ pub unsafe fn Z3_rcf_interval(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16538,11 +16521,11 @@ pub unsafe fn Z3_rcf_num_sign_conditions(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_num_sign_conditions(c, a) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_num_sign_conditions(c, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16564,11 +16547,11 @@ pub unsafe fn Z3_rcf_sign_condition_sign(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_sign_condition_sign(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_sign_condition_sign(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16590,11 +16573,11 @@ pub unsafe fn Z3_rcf_num_sign_condition_coefficients(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_num_sign_condition_coefficients(c, a, i) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_num_sign_condition_coefficients(c, a, i) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16617,11 +16600,11 @@ pub unsafe fn Z3_rcf_sign_condition_coefficient(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_rcf_sign_condition_coefficient(c, a, i, j) };
+    let ret = unsafe { ::z3_sys::Z3_rcf_sign_condition_coefficient(c, a, i, j) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16638,11 +16621,11 @@ pub unsafe fn Z3_mk_fixedpoint(c: Z3_context) -> Result<Z3_fixedpoint, Z3Error> 
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fixedpoint(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fixedpoint(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16659,11 +16642,11 @@ pub unsafe fn Z3_fixedpoint_inc_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_inc_ref(c, d) };
+    unsafe { ::z3_sys::Z3_fixedpoint_inc_ref(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16680,11 +16663,11 @@ pub unsafe fn Z3_fixedpoint_dec_ref(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_dec_ref(c, d) };
+    unsafe { ::z3_sys::Z3_fixedpoint_dec_ref(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16716,11 +16699,11 @@ pub unsafe fn Z3_fixedpoint_add_fact(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_add_fact(c, d, r, num_args, args) };
+    unsafe { ::z3_sys::Z3_fixedpoint_add_fact(c, d, r, num_args, args) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16741,11 +16724,11 @@ pub unsafe fn Z3_fixedpoint_assert(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_assert(c, d, axiom) };
+    unsafe { ::z3_sys::Z3_fixedpoint_assert(c, d, axiom) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16773,11 +16756,11 @@ pub unsafe fn Z3_fixedpoint_query(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_query(c, d, query) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_query(c, d, query) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16804,12 +16787,12 @@ pub unsafe fn Z3_fixedpoint_query_relations(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_fixedpoint_query_relations(c, d, num_relations, relations)
+        ::z3_sys::Z3_fixedpoint_query_relations(c, d, num_relations, relations)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16834,11 +16817,11 @@ pub unsafe fn Z3_fixedpoint_get_answer(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_answer(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_answer(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16857,11 +16840,11 @@ pub unsafe fn Z3_fixedpoint_get_reason_unknown(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_reason_unknown(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_reason_unknown(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16881,11 +16864,11 @@ pub unsafe fn Z3_fixedpoint_update_rule(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_update_rule(c, d, a, name) };
+    unsafe { ::z3_sys::Z3_fixedpoint_update_rule(c, d, a, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16907,11 +16890,11 @@ pub unsafe fn Z3_fixedpoint_get_num_levels(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_num_levels(c, d, pred) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_num_levels(c, d, pred) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -16935,11 +16918,11 @@ pub unsafe fn Z3_fixedpoint_get_cover_delta(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_cover_delta(c, d, level, pred) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_cover_delta(c, d, level, pred) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -16966,11 +16949,11 @@ pub unsafe fn Z3_fixedpoint_add_cover(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_add_cover(c, d, level, pred, property) };
+    unsafe { ::z3_sys::Z3_fixedpoint_add_cover(c, d, level, pred, property) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -16987,11 +16970,11 @@ pub unsafe fn Z3_fixedpoint_get_statistics(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_statistics(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_statistics(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17012,11 +16995,11 @@ pub unsafe fn Z3_fixedpoint_register_relation(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_register_relation(c, d, f) };
+    unsafe { ::z3_sys::Z3_fixedpoint_register_relation(c, d, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17041,7 +17024,7 @@ pub unsafe fn Z3_fixedpoint_set_predicate_representation(
         Z3_set_error(c, ErrorCode::Ok);
     };
     unsafe {
-        crate::ffi::Z3_fixedpoint_set_predicate_representation(
+        ::z3_sys::Z3_fixedpoint_set_predicate_representation(
             c,
             d,
             f,
@@ -17052,7 +17035,7 @@ pub unsafe fn Z3_fixedpoint_set_predicate_representation(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17069,11 +17052,11 @@ pub unsafe fn Z3_fixedpoint_get_rules(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_rules(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_rules(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17090,11 +17073,11 @@ pub unsafe fn Z3_fixedpoint_get_assertions(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_assertions(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_assertions(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17117,11 +17100,11 @@ pub unsafe fn Z3_fixedpoint_set_params(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_set_params(c, f, p) };
+    unsafe { ::z3_sys::Z3_fixedpoint_set_params(c, f, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17143,11 +17126,11 @@ pub unsafe fn Z3_fixedpoint_get_help(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_help(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_help(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -17169,11 +17152,11 @@ pub unsafe fn Z3_fixedpoint_get_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_param_descrs(c, f) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_param_descrs(c, f) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17201,11 +17184,11 @@ pub unsafe fn Z3_fixedpoint_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_to_string(c, f, num_queries, queries) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_to_string(c, f, num_queries, queries) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -17234,11 +17217,11 @@ pub unsafe fn Z3_fixedpoint_from_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_from_string(c, f, s) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_from_string(c, f, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17267,11 +17250,11 @@ pub unsafe fn Z3_fixedpoint_from_file(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_from_file(c, f, s) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_from_file(c, f, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17289,11 +17272,11 @@ pub unsafe fn Z3_fixedpoint_init(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_init(c, d, state) };
+    unsafe { ::z3_sys::Z3_fixedpoint_init(c, d, state) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17313,11 +17296,11 @@ pub unsafe fn Z3_fixedpoint_set_reduce_assign_callback(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_set_reduce_assign_callback(c, d, cb) };
+    unsafe { ::z3_sys::Z3_fixedpoint_set_reduce_assign_callback(c, d, cb) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17335,11 +17318,11 @@ pub unsafe fn Z3_fixedpoint_set_reduce_app_callback(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_set_reduce_app_callback(c, d, cb) };
+    unsafe { ::z3_sys::Z3_fixedpoint_set_reduce_app_callback(c, d, cb) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17361,7 +17344,7 @@ pub unsafe fn Z3_fixedpoint_add_callback(
         Z3_set_error(ctx, ErrorCode::Ok);
     };
     unsafe {
-        crate::ffi::Z3_fixedpoint_add_callback(
+        ::z3_sys::Z3_fixedpoint_add_callback(
             ctx,
             f,
             state,
@@ -17373,7 +17356,7 @@ pub unsafe fn Z3_fixedpoint_add_callback(
     unsafe {
         let err = Z3_get_error_code(ctx);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(ctx, err));
         }
     };
     Ok(())
@@ -17391,11 +17374,11 @@ pub unsafe fn Z3_fixedpoint_add_constraint(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_add_constraint(c, d, e, lvl) };
+    unsafe { ::z3_sys::Z3_fixedpoint_add_constraint(c, d, e, lvl) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17412,11 +17395,11 @@ pub unsafe fn Z3_mk_optimize(c: Z3_context) -> Result<Z3_optimize, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_optimize(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_optimize(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17430,11 +17413,11 @@ pub unsafe fn Z3_optimize_inc_ref(c: Z3_context, d: Z3_optimize) -> Result<(), Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_inc_ref(c, d) };
+    unsafe { ::z3_sys::Z3_optimize_inc_ref(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17448,11 +17431,11 @@ pub unsafe fn Z3_optimize_dec_ref(c: Z3_context, d: Z3_optimize) -> Result<(), Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_dec_ref(c, d) };
+    unsafe { ::z3_sys::Z3_optimize_dec_ref(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17475,11 +17458,11 @@ pub unsafe fn Z3_optimize_assert(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_assert(c, o, a) };
+    unsafe { ::z3_sys::Z3_optimize_assert(c, o, a) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17503,11 +17486,11 @@ pub unsafe fn Z3_optimize_assert_and_track(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_assert_and_track(c, o, a, t) };
+    unsafe { ::z3_sys::Z3_optimize_assert_and_track(c, o, a, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17532,11 +17515,11 @@ pub unsafe fn Z3_optimize_maximize(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_maximize(c, o, t) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_maximize(c, o, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -17561,11 +17544,11 @@ pub unsafe fn Z3_optimize_minimize(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_minimize(c, o, t) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_minimize(c, o, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -17586,11 +17569,11 @@ pub unsafe fn Z3_optimize_push(c: Z3_context, d: Z3_optimize) -> Result<(), Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_push(c, d) };
+    unsafe { ::z3_sys::Z3_optimize_push(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17612,11 +17595,11 @@ pub unsafe fn Z3_optimize_pop(c: Z3_context, d: Z3_optimize) -> Result<(), Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_pop(c, d) };
+    unsafe { ::z3_sys::Z3_optimize_pop(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17639,11 +17622,11 @@ pub unsafe fn Z3_optimize_set_initial_value(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_set_initial_value(c, o, v, val) };
+    unsafe { ::z3_sys::Z3_optimize_set_initial_value(c, o, v, val) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17673,13 +17656,11 @@ pub unsafe fn Z3_optimize_check(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe {
-        crate::ffi::Z3_optimize_check(c, o, num_assumptions, assumptions)
-    };
+    let ret = unsafe { ::z3_sys::Z3_optimize_check(c, o, num_assumptions, assumptions) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -17698,11 +17679,11 @@ pub unsafe fn Z3_optimize_get_reason_unknown(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_reason_unknown(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_reason_unknown(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -17723,11 +17704,11 @@ pub unsafe fn Z3_optimize_get_model(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_model(c, o) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_model(c, o) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17745,11 +17726,11 @@ pub unsafe fn Z3_optimize_get_unsat_core(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_unsat_core(c, o) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_unsat_core(c, o) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17777,11 +17758,11 @@ pub unsafe fn Z3_optimize_set_params(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_set_params(c, o, p) };
+    unsafe { ::z3_sys::Z3_optimize_set_params(c, o, p) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -17806,11 +17787,11 @@ pub unsafe fn Z3_optimize_get_param_descrs(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_param_descrs(c, o) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_param_descrs(c, o) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17849,11 +17830,11 @@ pub unsafe fn Z3_optimize_get_lower(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_lower(c, o, idx) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_lower(c, o, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17884,11 +17865,11 @@ pub unsafe fn Z3_optimize_get_upper(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_upper(c, o, idx) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_upper(c, o, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17925,11 +17906,11 @@ pub unsafe fn Z3_optimize_get_lower_as_vector(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_lower_as_vector(c, o, idx) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_lower_as_vector(c, o, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17961,11 +17942,11 @@ pub unsafe fn Z3_optimize_get_upper_as_vector(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_upper_as_vector(c, o, idx) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_upper_as_vector(c, o, idx) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -17989,11 +17970,11 @@ pub unsafe fn Z3_optimize_to_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_to_string(c, o) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_to_string(c, o) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -18022,11 +18003,11 @@ pub unsafe fn Z3_optimize_from_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_from_string(c, o, s) };
+    unsafe { ::z3_sys::Z3_optimize_from_string(c, o, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -18055,11 +18036,11 @@ pub unsafe fn Z3_optimize_from_file(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_from_file(c, o, s) };
+    unsafe { ::z3_sys::Z3_optimize_from_file(c, o, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -18081,11 +18062,11 @@ pub unsafe fn Z3_optimize_get_help(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_help(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_help(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -18102,11 +18083,11 @@ pub unsafe fn Z3_optimize_get_statistics(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_statistics(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_statistics(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18123,11 +18104,11 @@ pub unsafe fn Z3_optimize_get_assertions(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_assertions(c, o) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_assertions(c, o) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18149,11 +18130,11 @@ pub unsafe fn Z3_optimize_get_objectives(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_get_objectives(c, o) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_get_objectives(c, o) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18173,11 +18154,11 @@ pub unsafe fn Z3_optimize_register_model_eh(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_optimize_register_model_eh(c, o, m, ctx, model_eh) };
+    unsafe { ::z3_sys::Z3_optimize_register_model_eh(c, o, m, ctx, model_eh) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -18205,11 +18186,11 @@ pub unsafe fn Z3_optimize_translate(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_optimize_translate(c, o, target) };
+    let ret = unsafe { ::z3_sys::Z3_optimize_translate(c, o, target) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18238,11 +18219,11 @@ pub unsafe fn Z3_mk_fpa_rounding_mode_sort(c: Z3_context) -> Result<Z3_sort, Z3E
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rounding_mode_sort(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rounding_mode_sort(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18270,11 +18251,11 @@ pub unsafe fn Z3_mk_fpa_round_nearest_ties_to_even(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_round_nearest_ties_to_even(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_round_nearest_ties_to_even(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18300,11 +18281,11 @@ pub unsafe fn Z3_mk_fpa_rne(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rne(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rne(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18332,11 +18313,11 @@ pub unsafe fn Z3_mk_fpa_round_nearest_ties_to_away(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_round_nearest_ties_to_away(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_round_nearest_ties_to_away(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18362,11 +18343,11 @@ pub unsafe fn Z3_mk_fpa_rna(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rna(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rna(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18392,11 +18373,11 @@ pub unsafe fn Z3_mk_fpa_round_toward_positive(c: Z3_context) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_round_toward_positive(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_round_toward_positive(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18422,11 +18403,11 @@ pub unsafe fn Z3_mk_fpa_rtp(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rtp(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rtp(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18452,11 +18433,11 @@ pub unsafe fn Z3_mk_fpa_round_toward_negative(c: Z3_context) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_round_toward_negative(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_round_toward_negative(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18482,11 +18463,11 @@ pub unsafe fn Z3_mk_fpa_rtn(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rtn(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rtn(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18512,11 +18493,11 @@ pub unsafe fn Z3_mk_fpa_round_toward_zero(c: Z3_context) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_round_toward_zero(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_round_toward_zero(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18542,11 +18523,11 @@ pub unsafe fn Z3_mk_fpa_rtz(c: Z3_context) -> Result<Z3_ast, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rtz(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rtz(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18581,11 +18562,11 @@ pub unsafe fn Z3_mk_fpa_sort(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort(c, ebits, sbits) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort(c, ebits, sbits) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18610,11 +18591,11 @@ pub unsafe fn Z3_mk_fpa_sort_half(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_half(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_half(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18639,11 +18620,11 @@ pub unsafe fn Z3_mk_fpa_sort_16(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_16(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_16(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18668,11 +18649,11 @@ pub unsafe fn Z3_mk_fpa_sort_single(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_single(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_single(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18697,11 +18678,11 @@ pub unsafe fn Z3_mk_fpa_sort_32(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_32(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_32(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18726,11 +18707,11 @@ pub unsafe fn Z3_mk_fpa_sort_double(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_double(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_double(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18755,11 +18736,11 @@ pub unsafe fn Z3_mk_fpa_sort_64(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_64(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_64(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18784,11 +18765,11 @@ pub unsafe fn Z3_mk_fpa_sort_quadruple(c: Z3_context) -> Result<Z3_sort, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_quadruple(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_quadruple(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18813,11 +18794,11 @@ pub unsafe fn Z3_mk_fpa_sort_128(c: Z3_context) -> Result<Z3_sort, Z3Error> {
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sort_128(c) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sort_128(c) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18840,11 +18821,11 @@ pub unsafe fn Z3_mk_fpa_nan(c: Z3_context, s: Z3_sort) -> Result<Z3_ast, Z3Error
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_nan(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_nan(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18874,11 +18855,11 @@ pub unsafe fn Z3_mk_fpa_inf(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_inf(c, s, negative) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_inf(c, s, negative) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18908,11 +18889,11 @@ pub unsafe fn Z3_mk_fpa_zero(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_zero(c, s, negative) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_zero(c, s, negative) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18951,11 +18932,11 @@ pub unsafe fn Z3_mk_fpa_fp(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_fp(c, sgn, exp, sig) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_fp(c, sgn, exp, sig) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -18991,11 +18972,11 @@ pub unsafe fn Z3_mk_fpa_numeral_float(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_numeral_float(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_numeral_float(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19031,11 +19012,11 @@ pub unsafe fn Z3_mk_fpa_numeral_double(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_numeral_double(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_numeral_double(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19068,11 +19049,11 @@ pub unsafe fn Z3_mk_fpa_numeral_int(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_numeral_int(c, v, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_numeral_int(c, v, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19109,11 +19090,11 @@ pub unsafe fn Z3_mk_fpa_numeral_int_uint(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_numeral_int_uint(c, sgn, exp, sig, ty) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_numeral_int_uint(c, sgn, exp, sig, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19150,13 +19131,11 @@ pub unsafe fn Z3_mk_fpa_numeral_int64_uint64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe {
-        crate::ffi::Z3_mk_fpa_numeral_int64_uint64(c, sgn, exp, sig, ty)
-    };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_numeral_int64_uint64(c, sgn, exp, sig, ty) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19179,11 +19158,11 @@ pub unsafe fn Z3_mk_fpa_abs(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_abs(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_abs(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19206,11 +19185,11 @@ pub unsafe fn Z3_mk_fpa_neg(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z3Error>
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_neg(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_neg(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19236,11 +19215,11 @@ pub unsafe fn Z3_mk_fpa_add(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_add(c, rm, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_add(c, rm, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19266,11 +19245,11 @@ pub unsafe fn Z3_mk_fpa_sub(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sub(c, rm, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sub(c, rm, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19296,11 +19275,11 @@ pub unsafe fn Z3_mk_fpa_mul(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_mul(c, rm, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_mul(c, rm, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19326,11 +19305,11 @@ pub unsafe fn Z3_mk_fpa_div(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_div(c, rm, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_div(c, rm, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19360,11 +19339,11 @@ pub unsafe fn Z3_mk_fpa_fma(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_fma(c, rm, t1, t2, t3) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_fma(c, rm, t1, t2, t3) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19388,11 +19367,11 @@ pub unsafe fn Z3_mk_fpa_sqrt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_sqrt(c, rm, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_sqrt(c, rm, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19416,11 +19395,11 @@ pub unsafe fn Z3_mk_fpa_rem(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_rem(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_rem(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19445,11 +19424,11 @@ pub unsafe fn Z3_mk_fpa_round_to_integral(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_round_to_integral(c, rm, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_round_to_integral(c, rm, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19477,11 +19456,11 @@ pub unsafe fn Z3_mk_fpa_min(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_min(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_min(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19509,11 +19488,11 @@ pub unsafe fn Z3_mk_fpa_max(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_max(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_max(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19544,11 +19523,11 @@ pub unsafe fn Z3_mk_fpa_leq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_leq(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_leq(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19579,11 +19558,11 @@ pub unsafe fn Z3_mk_fpa_lt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_lt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_lt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19614,11 +19593,11 @@ pub unsafe fn Z3_mk_fpa_geq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_geq(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_geq(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19649,11 +19628,11 @@ pub unsafe fn Z3_mk_fpa_gt(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_gt(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_gt(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19686,11 +19665,11 @@ pub unsafe fn Z3_mk_fpa_eq(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_eq(c, t1, t2) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_eq(c, t1, t2) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19716,11 +19695,11 @@ pub unsafe fn Z3_mk_fpa_is_normal(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_normal(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_normal(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19749,11 +19728,11 @@ pub unsafe fn Z3_mk_fpa_is_subnormal(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_subnormal(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_subnormal(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19780,11 +19759,11 @@ pub unsafe fn Z3_mk_fpa_is_zero(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_zero(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_zero(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19814,11 +19793,11 @@ pub unsafe fn Z3_mk_fpa_is_infinite(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_infinite(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_infinite(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19845,11 +19824,11 @@ pub unsafe fn Z3_mk_fpa_is_nan(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z3Err
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_nan(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_nan(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19877,11 +19856,11 @@ pub unsafe fn Z3_mk_fpa_is_negative(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_negative(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_negative(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19909,11 +19888,11 @@ pub unsafe fn Z3_mk_fpa_is_positive(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_is_positive(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_is_positive(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19942,11 +19921,11 @@ pub unsafe fn Z3_mk_fpa_to_fp_bv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_fp_bv(c, bv, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_fp_bv(c, bv, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -19976,11 +19955,11 @@ pub unsafe fn Z3_mk_fpa_to_fp_float(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_fp_float(c, rm, t, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_fp_float(c, rm, t, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20010,11 +19989,11 @@ pub unsafe fn Z3_mk_fpa_to_fp_real(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_fp_real(c, rm, t, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_fp_real(c, rm, t, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20045,11 +20024,11 @@ pub unsafe fn Z3_mk_fpa_to_fp_signed(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_fp_signed(c, rm, t, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_fp_signed(c, rm, t, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20080,11 +20059,11 @@ pub unsafe fn Z3_mk_fpa_to_fp_unsigned(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_fp_unsigned(c, rm, t, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_fp_unsigned(c, rm, t, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20112,11 +20091,11 @@ pub unsafe fn Z3_mk_fpa_to_ubv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_ubv(c, rm, t, sz) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_ubv(c, rm, t, sz) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20144,11 +20123,11 @@ pub unsafe fn Z3_mk_fpa_to_sbv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_sbv(c, rm, t, sz) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_sbv(c, rm, t, sz) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20169,11 +20148,11 @@ pub unsafe fn Z3_mk_fpa_to_real(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z3Er
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_real(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_real(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20197,11 +20176,11 @@ pub unsafe fn Z3_fpa_get_ebits(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_ebits(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_ebits(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20225,11 +20204,11 @@ pub unsafe fn Z3_fpa_get_sbits(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_sbits(c, s) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_sbits(c, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20254,11 +20233,11 @@ pub unsafe fn Z3_fpa_is_numeral(c: Z3_context, t: Z3_ast) -> Result<bool, Z3Erro
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20282,11 +20261,11 @@ pub unsafe fn Z3_fpa_is_numeral_nan(c: Z3_context, t: Z3_ast) -> Result<bool, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_nan(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_nan(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20310,11 +20289,11 @@ pub unsafe fn Z3_fpa_is_numeral_inf(c: Z3_context, t: Z3_ast) -> Result<bool, Z3
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_inf(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_inf(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20338,11 +20317,11 @@ pub unsafe fn Z3_fpa_is_numeral_zero(c: Z3_context, t: Z3_ast) -> Result<bool, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_zero(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_zero(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20369,11 +20348,11 @@ pub unsafe fn Z3_fpa_is_numeral_normal(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_normal(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_normal(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20400,11 +20379,11 @@ pub unsafe fn Z3_fpa_is_numeral_subnormal(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_subnormal(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_subnormal(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20428,11 +20407,11 @@ pub unsafe fn Z3_fpa_is_numeral_positive(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_positive(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_positive(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20456,11 +20435,11 @@ pub unsafe fn Z3_fpa_is_numeral_negative(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_is_numeral_negative(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_is_numeral_negative(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20482,11 +20461,11 @@ pub unsafe fn Z3_fpa_get_numeral_sign_bv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_sign_bv(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_sign_bv(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20508,11 +20487,11 @@ pub unsafe fn Z3_fpa_get_numeral_significand_bv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_significand_bv(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_significand_bv(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20539,11 +20518,11 @@ pub unsafe fn Z3_fpa_get_numeral_sign(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_sign(c, t, sgn) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_sign(c, t, sgn) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20568,11 +20547,11 @@ pub unsafe fn Z3_fpa_get_numeral_significand_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_significand_string(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_significand_string(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20598,11 +20577,11 @@ pub unsafe fn Z3_fpa_get_numeral_significand_uint64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_significand_uint64(c, t, n) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_significand_uint64(c, t, n) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20629,11 +20608,11 @@ pub unsafe fn Z3_fpa_get_numeral_exponent_string(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_exponent_string(c, t, biased) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_exponent_string(c, t, biased) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20662,11 +20641,11 @@ pub unsafe fn Z3_fpa_get_numeral_exponent_int64(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_exponent_int64(c, t, n, biased) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_exponent_int64(c, t, n, biased) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20691,11 +20670,11 @@ pub unsafe fn Z3_fpa_get_numeral_exponent_bv(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fpa_get_numeral_exponent_bv(c, t, biased) };
+    let ret = unsafe { ::z3_sys::Z3_fpa_get_numeral_exponent_bv(c, t, biased) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20719,11 +20698,11 @@ pub unsafe fn Z3_mk_fpa_to_ieee_bv(c: Z3_context, t: Z3_ast) -> Result<Z3_ast, Z
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_ieee_bv(c, t) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_ieee_bv(c, t) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20755,11 +20734,11 @@ pub unsafe fn Z3_mk_fpa_to_fp_int_real(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_mk_fpa_to_fp_int_real(c, rm, exp, sig, s) };
+    let ret = unsafe { ::z3_sys::Z3_mk_fpa_to_fp_int_real(c, rm, exp, sig, s) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20788,11 +20767,11 @@ pub unsafe fn Z3_fixedpoint_query_from_lvl(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_query_from_lvl(c, d, query, lvl) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_query_from_lvl(c, d, query, lvl) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret)
@@ -20811,11 +20790,11 @@ pub unsafe fn Z3_fixedpoint_get_ground_sat_answer(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_ground_sat_answer(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_ground_sat_answer(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20832,11 +20811,11 @@ pub unsafe fn Z3_fixedpoint_get_rules_along_trace(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_rules_along_trace(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_rules_along_trace(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20853,11 +20832,11 @@ pub unsafe fn Z3_fixedpoint_get_rule_names_along_trace(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_rule_names_along_trace(c, d) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_rule_names_along_trace(c, d) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20879,11 +20858,11 @@ pub unsafe fn Z3_fixedpoint_add_invariant(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_add_invariant(c, d, pred, property) };
+    unsafe { ::z3_sys::Z3_fixedpoint_add_invariant(c, d, pred, property) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -20902,11 +20881,11 @@ pub unsafe fn Z3_fixedpoint_get_reachable(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_fixedpoint_get_reachable(c, d, pred) };
+    let ret = unsafe { ::z3_sys::Z3_fixedpoint_get_reachable(c, d, pred) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20926,11 +20905,11 @@ pub unsafe fn Z3_qe_model_project(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_qe_model_project(c, m, num_bounds, bound, body) };
+    let ret = unsafe { ::z3_sys::Z3_qe_model_project(c, m, num_bounds, bound, body) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20952,12 +20931,12 @@ pub unsafe fn Z3_qe_model_project_skolem(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_qe_model_project_skolem(c, m, num_bounds, bound, body, map)
+        ::z3_sys::Z3_qe_model_project_skolem(c, m, num_bounds, bound, body, map)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -20982,12 +20961,12 @@ pub unsafe fn Z3_qe_model_project_with_witness(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_qe_model_project_with_witness(c, m, num_bounds, bound, body, map)
+        ::z3_sys::Z3_qe_model_project_with_witness(c, m, num_bounds, bound, body, map)
     };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -21005,11 +20984,11 @@ pub unsafe fn Z3_model_extrapolate(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_model_extrapolate(c, m, fml) };
+    let ret = unsafe { ::z3_sys::Z3_model_extrapolate(c, m, fml) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -21027,11 +21006,11 @@ pub unsafe fn Z3_qe_lite(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let ret = unsafe { crate::ffi::Z3_qe_lite(c, vars, body) };
+    let ret = unsafe { ::z3_sys::Z3_qe_lite(c, vars, body) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())

@@ -2,7 +2,7 @@ use std::convert::TryInto;
 use std::ffi::CStr;
 use std::fmt;
 use std::{borrow::Borrow, ffi::c_uint};
-use z3_sys::*;
+use z3_low::*;
 
 use crate::{Context, FuncDecl, Sort, Symbol, Translate, ast, ast::Ast};
 impl FuncDecl {

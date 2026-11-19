@@ -32,7 +32,7 @@ pub unsafe fn Z3_mk_constructor(
         Z3_set_error(c, ErrorCode::Ok);
     };
     let ret = unsafe {
-        crate::ffi::Z3_mk_constructor(
+        ::z3_sys::Z3_mk_constructor(
             c,
             name,
             recognizer,
@@ -45,7 +45,7 @@ pub unsafe fn Z3_mk_constructor(
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(ret.unwrap())
@@ -72,11 +72,11 @@ pub unsafe fn Z3_fixedpoint_add_rule(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    unsafe { crate::ffi::Z3_fixedpoint_add_rule(c, d, rule, name) };
+    unsafe { ::z3_sys::Z3_fixedpoint_add_rule(c, d, rule, name) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(())
@@ -108,11 +108,11 @@ pub unsafe fn Z3_optimize_assert_soft(
     unsafe {
         Z3_set_error(c, ErrorCode::Ok);
     };
-    let res = unsafe { crate::ffi::Z3_optimize_assert_soft(c, o, a, weight, id) };
+    let res = unsafe { ::z3_sys::Z3_optimize_assert_soft(c, o, a, weight, id) };
     unsafe {
         let err = Z3_get_error_code(c);
         if err != ErrorCode::Ok {
-            return Err(Z3Error { err });
+            return Err(Z3Error::new(c, err));
         }
     };
     Ok(res)

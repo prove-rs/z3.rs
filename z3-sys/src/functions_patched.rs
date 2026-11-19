@@ -1,6 +1,6 @@
 // Hand-written declarations for functions with nullable parameters that require
 // Option<T> in their signatures. These are excluded from the bindgen-generated
-// functions_ffi.rs via blocklist_function in build.rs.
+// functions via blocklist_function in build.rs.
 
 unsafe extern "C" {
     /// Create a constructor.

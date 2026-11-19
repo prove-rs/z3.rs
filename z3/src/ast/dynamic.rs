@@ -3,7 +3,7 @@ use crate::ast::Complex;
 use crate::ast::{Array, Ast, BV, Bool, Char, Datatype, Float, Int, Real, Seq, Set};
 use crate::{Context, Sort, Symbol, ast};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// A dynamically typed [`Ast`] node.
 pub struct Dynamic {

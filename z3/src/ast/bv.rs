@@ -2,7 +2,7 @@ use crate::ast::IntoAst;
 use crate::ast::{Ast, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a bitvector value.
 pub struct BV {
