@@ -1,6 +1,6 @@
 use crate::ast::{Ast, Bool};
 use crate::{AstVector, Model};
-use z3_sys::*;
+use z3_low::*;
 
 /// Quantifier elimination using Z3's built-in QE APIs.
 #[derive(Debug)]

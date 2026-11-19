@@ -4,7 +4,7 @@ use crate::ast::{Ast, Bool, Int, binop, unop, varop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::{CStr, CString, NulError};
 use std::str::FromStr;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a string value.
 pub struct String {
@@ -52,7 +52,7 @@ impl String {
     pub fn as_string(&self) -> Option<std::string::String> {
         let z3_ctx = self.get_ctx().z3_ctx.as_ptr();
         unsafe {
-            let bytes = Z3_get_string(z3_ctx, self.get_z3_ast());
+            let bytes = Z3_get_string(z3_ctx, self.get_z3_ast()).unwrap();
             if bytes.is_null() {
                 None
             } else {

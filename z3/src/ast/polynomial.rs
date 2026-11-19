@@ -1,6 +1,6 @@
 use crate::ast::Ast;
 use crate::ast_vector::AstVector;
-use z3_sys::*;
+use z3_low::*;
 
 /// Polynomial operations for Z3 expressions.
 #[derive(Debug)]

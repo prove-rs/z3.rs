@@ -19,12 +19,12 @@ edition = "2024"
 features = ["num"]
 
 [features]
-vendored = ["z3-sys/vendored"]
-vcpkg = ["z3-sys/vcpkg"]
-gh-release = ["z3-sys/gh-release"]
+vendored = ["z3-low/vendored"]
+vcpkg = ["z3-low/vcpkg"]
+gh-release = ["z3-low/gh-release"]
 
 # Deprecated alias for `vendored`; will be removed in a future release.
-bundled = ["z3-sys/bundled"]
+bundled = ["z3-low/bundled"]
 
 num = ["dep:num"]
 
@@ -39,6 +39,6 @@ env_logger = "0.11"
 semver = "1"
 rayon = "1.10.0"
 
-[dependencies.z3-sys]
-path = "../z3-sys"
+[dependencies.z3-low]
+path = "../z3-low"
 version = "0.14"

@@ -1,6 +1,6 @@
 use crate::Context;
 use crate::ast::Ast;
-use z3_sys::Z3_translate;
+use z3_low::Z3_translate;
 
 pub mod synchronization;
 

@@ -2,7 +2,7 @@
 //!
 //! Z3 is a theorem prover [from Microsoft Research](https://github.com/Z3Prover/z3/).
 //!
-//! This crate provides low-level bindings that provide no real
+//! This crate provides raw FFI bindings that provide no real
 //! affordances for usage from Rust and that mirror the C API.
 //!
 //! For bindings that are easier to use from Rust, see the higher level
@@ -22,7 +22,7 @@
 //! | `bundled` | **Deprecated.** Alias for `vendored`; will be removed in a future release |
 //! | `gh-release` | Build against a pre-compiled Z3 static library from GitHub Releases |
 //! | `vcpkg` | Use a Z3 installed via vcpkg |
-//! | `bindgen` | Regenerate `functions.rs` from local Z3 headers at build time |
+//! | `bindgen` | Regenerate `functions` from local Z3 headers at build time |
 //!
 //! ## Environment variables
 //!
@@ -63,7 +63,7 @@
 //! | Variable | Feature | Description |
 //! |----------|---------|-------------|
 //! | `Z3_SYS_Z3_HEADER` | `bindgen` | Path to `z3.h`; defaults to `z3-src/z3/src/api/z3.h` |
-//! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions.rs` and `src/generated/enums.rs` |
+//! | `Z3_SYS_UPDATE_GENERATED` | `bindgen` | Set to `1` to also write `src/generated/functions` and `src/generated/enums.rs` |
 //! | `Z3_LIBRARY_PATH_OVERRIDE` | default | Add an extra library search path for the linker |
 //! | `Z3_SYS_Z3_VERSION` | `gh-release` | Z3 version to download (e.g. `4.13.0`) |
 //! | `READ_ONLY_GITHUB_TOKEN` | `gh-release` | GitHub PAT to avoid API rate limits in CI |
@@ -93,22 +93,28 @@
 // Generated C API docs don't conform to Rust doc formatting conventions.
 #![allow(clippy::doc_markdown)]
 #![allow(clippy::doc_lazy_continuation)]
-#![no_std]
+#![cfg_attr(not(feature = "bindgen"), no_std)]
 
-mod types;
+#[cfg(feature = "bindgen")]
+pub mod bindgen;
 
-pub use types::*;
+pub mod types {
+    #[expect(clippy::module_inception)]
+    mod types;
+    pub use crate::types::types::*;
+
+    #[cfg(not(feature = "bindgen"))]
+    include!("generated/enums.rs");
+
+    #[cfg(feature = "bindgen")]
+    include!(concat!(env!("OUT_DIR"), "/enums.rs"));
+}
+pub use crate::types::*;
 
 #[cfg(not(feature = "bindgen"))]
 include!("generated/functions.rs");
 
-#[cfg(not(feature = "bindgen"))]
-include!("generated/enums.rs");
-
 #[cfg(feature = "bindgen")]
 include!(concat!(env!("OUT_DIR"), "/functions.rs"));
-
-#[cfg(feature = "bindgen")]
-include!(concat!(env!("OUT_DIR"), "/enums.rs"));
 
 include!("functions_patched.rs");

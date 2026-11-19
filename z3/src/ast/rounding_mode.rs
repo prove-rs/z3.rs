@@ -1,6 +1,6 @@
 use crate::Context;
 use crate::ast::{Ast, Float, trinop};
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a rounding mode for [`Float`] operations.
 pub struct RoundingMode {

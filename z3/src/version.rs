@@ -11,7 +11,7 @@ pub struct Version {
 pub fn version() -> Version {
     let mut ver = Version::default();
     unsafe {
-        z3_sys::Z3_get_version(
+        z3_low::Z3_get_version(
             &mut ver.major,
             &mut ver.minor,
             &mut ver.build_number,
@@ -22,7 +22,7 @@ pub fn version() -> Version {
 }
 
 pub fn full_version() -> &'static str {
-    let ver_ptr = unsafe { z3_sys::Z3_get_full_version() };
+    let ver_ptr = unsafe { z3_low::Z3_get_full_version() };
     let ver = unsafe { CStr::from_ptr(ver_ptr) };
     ver.to_str()
         .expect("Z3_get_full_version returned non-UTF-8 characters")

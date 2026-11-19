@@ -35,7 +35,7 @@
 mod constructor;
 
 use std::convert::TryInto;
-use z3_sys::*;
+use z3_low::*;
 
 use crate::datatype_builder::constructor::{Constructor, ConstructorList};
 use crate::{Context, DatatypeBuilder, DatatypeSort, DatatypeVariant, FuncDecl, Sort, Symbol};
@@ -196,7 +196,8 @@ pub fn create_datatypes(datatype_builders: Vec<DatatypeBuilder>) -> Vec<Datatype
             names.as_ptr(),
             raw_sorts.as_mut_ptr(),
             clist_handles.as_mut_ptr(),
-        );
+        )
+        .unwrap();
         raw_sorts.set_len(num);
     };
     let sorts = raw_sorts

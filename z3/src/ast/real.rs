@@ -4,7 +4,7 @@ use crate::{Context, Sort, Symbol};
 #[cfg(feature = "num")]
 use num::BigRational;
 use std::ffi::{CStr, CString};
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a real value.
 pub struct Real {
@@ -29,7 +29,7 @@ impl Real {
         let sort = Sort::real();
         let ast = unsafe {
             let fraction_cstring = CString::new(format!("{num:} / {den:}")).unwrap();
-            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), fraction_cstring.as_ptr(), sort.z3_sort)?
+            Z3_mk_numeral(ctx.z3_ctx.as_ptr(), fraction_cstring.as_ptr(), sort.z3_sort).ok()?
         };
         Some(unsafe { Real::wrap(ctx, ast) })
     }
@@ -88,7 +88,10 @@ impl Real {
         unsafe {
             let mut num: i64 = 0;
             let mut den: i64 = 0;
-            if Z3_get_numeral_small(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut num, &mut den) {
+            if let Ok(b) =
+                Z3_get_numeral_small(self.ctx.z3_ctx.as_ptr(), self.z3_ast, &mut num, &mut den)
+                && b
+            {
                 Some((num, den))
             } else {
                 None
@@ -98,11 +101,14 @@ impl Real {
 
     pub fn approx(&self, precision: usize) -> ::std::string::String {
         let s = unsafe {
-            CStr::from_ptr(Z3_get_numeral_decimal_string(
-                self.ctx.z3_ctx.as_ptr(),
-                self.z3_ast,
-                precision as _,
-            ))
+            CStr::from_ptr(
+                Z3_get_numeral_decimal_string(
+                    self.ctx.z3_ctx.as_ptr(),
+                    self.z3_ast,
+                    precision as _,
+                )
+                .unwrap(),
+            )
         }
         .to_str()
         .unwrap();

@@ -1,7 +1,7 @@
 use crate::ast::{Array, Ast, Bool, Dynamic, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a finite set value.
 ///

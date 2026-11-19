@@ -25,9 +25,9 @@ fn main() {
     println!("cargo::rustc-check-cfg=cfg(z3_version_patch, values(any()))");
 
     println!("cargo:rerun-if-env-changed=DOCS_RS");
-    println!("cargo:rerun-if-env-changed=DEP_Z3_VERSION_MAJOR");
-    println!("cargo:rerun-if-env-changed=DEP_Z3_VERSION_MINOR");
-    println!("cargo:rerun-if-env-changed=DEP_Z3_VERSION_PATCH");
+    println!("cargo:rerun-if-env-changed=DEP_Z3_LOW_VERSION_MAJOR");
+    println!("cargo:rerun-if-env-changed=DEP_Z3_LOW_VERSION_MINOR");
+    println!("cargo:rerun-if-env-changed=DEP_Z3_LOW_VERSION_PATCH");
 
     let (major, minor, patch) = if env::var_os("DOCS_RS").is_some() {
         // docs.rs never links a real Z3 (z3-sys's own detection falls back to
@@ -39,7 +39,7 @@ fn main() {
             .max()
             .expect("KNOWN_THRESHOLDS is non-empty")
     } else {
-        read_dep_z3_version()
+        read_dep_z3_low_version()
     };
 
     println!("cargo::rustc-cfg=z3_version_major=\"{major}\"");
@@ -55,22 +55,22 @@ fn main() {
 /// Reads the Z3 version z3-sys detected, via the `links = "z3"` metadata
 /// passthrough (`DEP_Z3_VERSION_MAJOR`/`MINOR`/`PATCH` in `z3/build.rs`),
 /// emitted by z3-sys/build.rs.
-fn read_dep_z3_version() -> (u32, u32, u32) {
-    let major = env::var("DEP_Z3_VERSION_MAJOR")
+fn read_dep_z3_low_version() -> (u32, u32, u32) {
+    let major = env::var("DEP_Z3_LOW_VERSION_MAJOR")
         .ok()
         .and_then(|s| s.parse().ok());
-    let minor = env::var("DEP_Z3_VERSION_MINOR")
+    let minor = env::var("DEP_Z3_LOW_VERSION_MINOR")
         .ok()
         .and_then(|s| s.parse().ok());
-    let patch = env::var("DEP_Z3_VERSION_PATCH")
+    let patch = env::var("DEP_Z3_LOW_VERSION_PATCH")
         .ok()
         .and_then(|s| s.parse().ok());
     match (major, minor, patch) {
         (Some(major), Some(minor), Some(patch)) => (major, minor, patch),
         _ => {
             println!(
-                "cargo:warning=z3: could not read the Z3 version detected by z3-sys \
-                 (DEP_Z3_VERSION_MAJOR/MINOR/PATCH); version-gated APIs will be unavailable."
+                "cargo:warning=z3: could not read the Z3 version detected by z3-low \
+                 (DEP_Z3_LOW_VERSION_MAJOR/MINOR/PATCH); version-gated APIs will be unavailable."
             );
             (0, 0, 0)
         }

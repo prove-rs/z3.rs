@@ -2,7 +2,7 @@ use crate::ast::string::String as Z3String;
 use crate::ast::{Ast, BV, Bool, Int, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a Unicode character value.
 pub struct Char {

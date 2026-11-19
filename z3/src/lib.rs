@@ -85,8 +85,8 @@
 use std::cell::Cell;
 use std::ffi::CString;
 use std::ptr::NonNull;
-use z3_sys::*;
-pub use z3_sys::{AstKind, GoalPrec, SortKind};
+use z3_low::*;
+pub use z3_low::{AstKind, GoalPrec, SortKind};
 
 pub mod ast;
 mod callbacks;
@@ -288,7 +288,7 @@ pub struct RecFuncDecl {
     z3_func_decl: Z3_func_decl,
 }
 
-pub use z3_sys::DeclKind;
+pub use z3_low::DeclKind;
 
 /// Build a custom [datatype sort](DatatypeSort).
 ///

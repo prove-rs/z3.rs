@@ -2,7 +2,7 @@
 
 [![Rust](https://github.com/prove-rs/z3.rs/actions/workflows/rust.yml/badge.svg)](https://github.com/prove-rs/z3.rs/actions/workflows/rust.yml)
 
-This repository contains [high-level][z3] and [low-level][z3-sys] Rust bindings
+This repository contains [high-level][z3], [low-level][z3-low] and [raw FFI][z3-sys] Rust bindings
 for the [Z3 solver][upstream].
 
 [upstream]: https://github.com/Z3Prover/z3
@@ -18,12 +18,18 @@ The [`z3` crate][z3] provides high-level bindings to the Z3 solver. It is built
 on top of, and wraps, the `z3-sys` crate. This is the crate you'll want to use
 99% of the time.
 
+## `z3-low`
+
+[![](https://img.shields.io/crates/v/z3-low.svg)](https://crates.io/crates/z3-low)
+
+The [`z3-low` crate][z3-low] provides the raw, unsafe, low-level C API that Z3
+exposes.
+
 ## `z3-sys`
 
 [![](https://img.shields.io/crates/v/z3-sys.svg)](https://crates.io/crates/z3-sys)
 
-The [`z3-sys` crate][z3-sys] provides the raw, unsafe, low-level C API that Z3
-exposes.
+The [`z3-sys` crate][z3-sys] provides the raw, unsafe, FFI C API that Z3 exposes.
 
 ## `z3-src`
 

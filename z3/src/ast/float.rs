@@ -3,7 +3,7 @@ use crate::ast::rounding_mode::RoundingMode;
 use crate::ast::{Ast, BV, Bool, binop, unop};
 use crate::{Context, Sort, Symbol};
 use std::ffi::CString;
-use z3_sys::*;
+use z3_low::*;
 
 /// [`Ast`] node representing a float value.
 pub struct Float {
@@ -36,7 +36,7 @@ impl Float {
     }
 
     pub fn as_f64(&self) -> f64 {
-        unsafe { Z3_get_numeral_double(self.ctx.z3_ctx.as_ptr(), self.z3_ast) }
+        unsafe { Z3_get_numeral_double(self.ctx.z3_ctx.as_ptr(), self.z3_ast).unwrap() }
     }
 
     /// A NaN (Not a Number) value of the given ([`Float`]) [`Sort`].

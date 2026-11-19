@@ -2,7 +2,7 @@
 
 [![](https://img.shields.io/crates/v/z3-sys.svg)](https://crates.io/crates/z3-sys)
 
-Low-level rust bindings to the Z3 SMT solver
+Raw FFI rust bindings to the Z3 SMT solver
 
 Licensed under the MIT license.
 
@@ -19,7 +19,7 @@ This crate works with Cargo and is on
 [crates.io](https://crates.io/crates/z3-sys).
 Add it to your project with `cargo add`:
 
-```bash 
+```bash
 $ cargo add z3-sys
 ```
 
