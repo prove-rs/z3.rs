@@ -70,10 +70,10 @@ impl Context {
     /// _Replaces_ the thread-local [`Context`] with a new one created from the given [`Config`].
     /// This is useful if you want to use a specific configuration, but also want
     /// to use the default thread-local context. Note that calling this function will
-    /// _replace_ the existing thread-local context. All existing [`Ast`]s and other Z3 objects
+    /// _replace_ the existing thread-local context. All existing [`Ast`](crate::ast::Ast)s and other Z3 objects
     /// that were created using the previous thread-local context will still be valid, but cannot
     /// be used with the new context without translation. You will generally want to call this
-    /// before you create any [`Ast`]s or other Z3 objects to avoid confusion. Also note that
+    /// before you create any [`Ast`](crate::ast::Ast)s or other Z3 objects to avoid confusion. Also note that
     /// since the [`Context`] is thread-local, this will only affect the current thread.
     ///
     /// # See also:

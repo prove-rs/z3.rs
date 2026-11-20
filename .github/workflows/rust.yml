@@ -207,6 +207,12 @@ jobs:
         run: brew install z3
       - name: Run clippy
         run: cargo clippy --workspace --all-targets --features num
+      # Clippy does not run rustdoc lints, so catch broken/stale doc links here.
+      # Private items are included so links in `pub(crate)` docs are checked too.
+      - name: Check docs
+        run: cargo doc --workspace --no-deps --features num --document-private-items
+        env:
+          RUSTDOCFLAGS: -D warnings
 
   build_with_gh_release_z3:
     if: github.ref == 'refs/heads/master' || startsWith(github.ref, 'refs/tags/v') || github.event_name == 'workflow_dispatch'
