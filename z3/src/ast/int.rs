@@ -197,12 +197,42 @@ impl Int {
         div(Z3_mk_div, Self);
         rem(Z3_mk_rem, Self);
         modulo(Z3_mk_mod, Self);
-        power(Z3_mk_power, Real);
         lt(Z3_mk_lt, Bool);
         le(Z3_mk_le, Bool);
         gt(Z3_mk_gt, Bool);
         ge(Z3_mk_ge, Bool);
     }
+
+    // Z3 >= 5.4.0 changed Int ^ Int's native result sort from Real to Int (SMT-LIB integer
+    // exponentiation; see Z3Prover/z3#11211 and z3-src/z3/RELEASE_NOTES.md "Version 5.4.0").
+    // We avoid the binop! macro because its return type must be version-conditional, which
+    // the macro can't express.
+
+    /// Requires Z3 < 5.4.0 (auto-detected; see z3/build.rs). On these versions, `Int ^ Int`
+    /// is always coerced to `Real`.
+    #[cfg(not(z3_5_4_0))]
+    pub fn power<T: crate::ast::IntoAst<Self>>(&self, other: T) -> Real {
+        let ast = other.into_ast(self);
+        unsafe {
+            Real::wrap(&self.ctx, {
+                Z3_mk_power(self.ctx.z3_ctx.as_ptr(), self.z3_ast, ast.z3_ast).unwrap()
+            })
+        }
+    }
+
+    /// Requires Z3 >= 5.4.0 (auto-detected; see z3/build.rs). On these versions, `Int ^ Int`
+    /// is native SMT-LIB integer exponentiation and stays in the `Int` sort; negative/zero
+    /// exponents are handled within `Int` without coercion to `Real`. See Z3Prover/z3#11211.
+    #[cfg(z3_5_4_0)]
+    pub fn power<T: crate::ast::IntoAst<Self>>(&self, other: T) -> Int {
+        let ast = other.into_ast(self);
+        unsafe {
+            Int::wrap(&self.ctx, {
+                Z3_mk_power(self.ctx.z3_ctx.as_ptr(), self.z3_ast, ast.z3_ast).unwrap()
+            })
+        }
+    }
+
     // Z3 does support mixing ints and reals in add(), sub(), mul(), div(), and power()
     //   (but not rem(), modulo(), lt(), le(), gt(), or ge()).
     // TODO: we could consider expressing this by having a Numeric trait with these methods.

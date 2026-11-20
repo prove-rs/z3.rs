@@ -875,6 +875,18 @@ unsafe extern "C" {
     pub fn Z3_mk_rem(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
     /// Create an AST node representing `arg1 ^ arg2`.
     ///
+    /// If both arguments are integers, the result is an integer and denotes
+    /// SMT-LIB integer exponentiation `(** arg1 arg2)`, including `(** 0 0) = 1`.
+    /// Negative integer exponents yield zero unless the base is 1 or -1,
+    /// in which case the usual parity-dependent value is returned.
+    /// Otherwise the arguments are coerced to reals and real exponentiation is used.
+    /// Real powers with exponent zero are also 1, including `0.0 ^ 0.0`.
+    /// Zero to any nonzero real exponent is zero. For a negative real base,
+    /// a reduced rational exponent p/q with odd positive q has the usual
+    /// real value (including reciprocals for negative p); all other real
+    /// exponents yield zero. Positive real bases have ordinary real powers.
+    /// Thus real `2.0 ^ -1.0 = 1/2`, unlike integer `(** 2 -1) = 0`.
+    ///
     /// The arguments must have int or real type.
     pub fn Z3_mk_power(c: Z3_context, arg1: Z3_ast, arg2: Z3_ast) -> Option<Z3_ast>;
     /// Take the absolute value of an integer

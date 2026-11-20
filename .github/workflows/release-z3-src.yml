@@ -1,5 +1,8 @@
 name: Release z3-src (prepare)
 
+# Opens a z3-src release PR. Once it merges, run update-z3-sys.yml for the
+# matching z3-sys update.
+
 on:
   workflow_dispatch:
     inputs:
@@ -16,6 +19,8 @@ jobs:
     permissions:
       contents: write
       pull-requests: write
+    env:
+      Z3_TAG: ${{ inputs.z3_tag }}
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -26,26 +31,27 @@ jobs:
       - name: Install Rust toolchain
         uses: dtolnay/rust-toolchain@stable
 
-      - name: Create release branch
-        run: git checkout -b release/z3-src-${{ inputs.z3_tag }}
-
       - name: Prepare z3-src
-        run: cargo xtask prepare-z3-src "${{ inputs.z3_tag }}"
-
-      - name: Commit version bump
+        id: prep
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+          cargo xtask prepare-z3-src "$Z3_TAG"
           git add z3-src/Cargo.toml z3-src/z3
-          git commit -m "chore: release z3-src (Z3 ${{ inputs.z3_tag }})"
-          git push origin release/z3-src-${{ inputs.z3_tag }}
+          echo "version=$(cargo xtask z3-version)" >> "$GITHUB_OUTPUT"
 
-      - name: Open PR
-        run: |
-          gh pr create \
-            --title "chore: release z3-src (Z3 ${{ inputs.z3_tag }})" \
-            --body "Automated release PR. Review the submodule pointer and Cargo.toml version, then merge to publish." \
-            --base master \
-            --head release/z3-src-${{ inputs.z3_tag }}
+      - name: Commit and open PR
         env:
           GH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+          VERSION: ${{ steps.prep.outputs.version }}
+        run: |
+          branch="release/z3-src-$VERSION"
+          title="chore(z3-src): release for Z3 $VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git commit -m "$title"
+          git push origin "$branch"
+          gh pr create \
+            --title "$title" \
+            --body "Automated release PR. Review the submodule pointer and Cargo.toml version, then merge to publish. After merging, run the \"Update z3-sys for z3-src\" workflow for the follow-up z3-sys update." \
+            --base master \
+            --head "$branch"

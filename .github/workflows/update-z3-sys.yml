@@ -1,0 +1,71 @@
+name: Update z3-sys for z3-src
+
+# Points z3-sys at the Z3 version in the z3-src submodule (gh-release version,
+# z3-src dependency series) and regenerates the bindings, then opens a regular
+# PR and merges it once its CI passes. release-plz picks the change up in its
+# own release PR. Run manually after a z3-src release PR merges.
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: update-z3-sys
+  cancel-in-progress: false
+
+jobs:
+  update-z3-sys:
+    name: Open z3-sys update PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    if: ${{ github.repository_owner == 'prove-rs' }}
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: master
+          submodules: true
+          token: ${{ secrets.RELEASE_PLZ_TOKEN }}
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Update z3-sys
+        id: update
+        run: |
+          cargo xtask update-z3-sys
+          echo "version=$(cargo xtask z3-version)" >> "$GITHUB_OUTPUT"
+
+      - name: Commit, open PR and merge
+        env:
+          GH_TOKEN: ${{ secrets.RELEASE_PLZ_TOKEN }}
+          VERSION: ${{ steps.update.outputs.version }}
+        run: |
+          if git diff --quiet -- z3-sys; then
+            echo "z3-sys is already up to date with Z3 $VERSION"
+            exit 0
+          fi
+          branch="chore/z3-sys-z3-$VERSION"
+          title="chore(z3-sys): bump to Z3 $VERSION"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add z3-sys
+          git commit -m "$title"
+          git push --force origin "$branch"
+          if ! gh pr view "$branch" --json state --jq .state | grep -q OPEN; then
+            gh pr create \
+              --title "$title" \
+              --body "Points z3-sys at Z3 $VERSION (\`GH_RELEASE_VERSION\`, z3-src dependency) and regenerates bindings via \`cargo xtask update-z3-sys\`." \
+              --base master \
+              --head "$branch"
+          fi
+
+          # No branch protection to gate --auto on, so wait for the PR's CI here.
+          until [ "$(gh pr view "$branch" --json statusCheckRollup --jq '.statusCheckRollup | length')" -gt 0 ]; do
+            sleep 15
+          done
+          gh pr checks "$branch" --watch --fail-fast --interval 30
+          gh pr merge "$branch" --squash --delete-branch
