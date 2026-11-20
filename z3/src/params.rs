@@ -2,7 +2,7 @@ use std::ffi::{CStr, CString};
 use std::fmt;
 use z3_sys::*;
 
-use crate::{Context, Params, Symbol};
+use crate::{Context, Error, ParamDescrs, Params, Symbol};
 
 impl Params {
     unsafe fn wrap(ctx: &Context, z3_params: Z3_params) -> Params {
@@ -132,5 +132,51 @@ impl fmt::Debug for Params {
 impl Drop for Params {
     fn drop(&mut self) {
         unsafe { Z3_params_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_params) };
+    }
+}
+
+impl Params {
+    /// Checks that every parameter in this set is described in `descrs` and has the right type.
+    pub fn validate(&self, descrs: &ParamDescrs) -> Result<(), Error> {
+        self.ctx
+            .checked(|c| unsafe { Z3_params_validate(c, self.z3_params, descrs.z3_param_descrs) })
+    }
+}
+
+impl ParamDescrs {
+    pub(crate) unsafe fn wrap(ctx: &Context, z3_param_descrs: Z3_param_descrs) -> ParamDescrs {
+        unsafe {
+            Z3_param_descrs_inc_ref(ctx.z3_ctx.as_ptr(), z3_param_descrs);
+        }
+        ParamDescrs {
+            ctx: ctx.clone(),
+            z3_param_descrs,
+        }
+    }
+}
+
+impl fmt::Display for ParamDescrs {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        let p =
+            unsafe { Z3_param_descrs_to_string(self.ctx.z3_ctx.as_ptr(), self.z3_param_descrs) };
+        if p.is_null() {
+            return Result::Err(fmt::Error);
+        }
+        match unsafe { CStr::from_ptr(p) }.to_str() {
+            Ok(s) => write!(f, "{s}"),
+            Err(_) => Result::Err(fmt::Error),
+        }
+    }
+}
+
+impl fmt::Debug for ParamDescrs {
+    fn fmt(&self, f: &mut fmt::Formatter) -> Result<(), fmt::Error> {
+        <Self as fmt::Display>::fmt(self, f)
+    }
+}
+
+impl Drop for ParamDescrs {
+    fn drop(&mut self) {
+        unsafe { Z3_param_descrs_dec_ref(self.ctx.z3_ctx.as_ptr(), self.z3_param_descrs) };
     }
 }

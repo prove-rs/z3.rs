@@ -86,13 +86,14 @@ use std::cell::Cell;
 use std::ffi::CString;
 use std::ptr::NonNull;
 use z3_sys::*;
-pub use z3_sys::{AstKind, GoalPrec, SortKind};
+pub use z3_sys::{AstKind, ErrorCode, GoalPrec, SortKind};
 
 pub mod ast;
 mod callbacks;
 mod config;
 mod context;
 pub mod datatype_builder;
+mod error;
 mod fixedpoint;
 mod func_decl;
 mod func_entry;
@@ -125,6 +126,7 @@ pub use crate::version::{Version, full_version, version};
 pub use ast_vector::AstVector;
 pub use context::Context;
 pub use datatype_builder::DatatypeAccessor;
+pub use error::Error;
 pub use solver::Solvable;
 /// Configuration used to initialize [logical contexts](Context).
 ///
@@ -303,7 +305,8 @@ pub use z3_sys::DeclKind;
 ///     "Some",
 ///     vec![("value", DatatypeAccessor::Sort(Sort::int()))],
 /// )
-/// .finish();
+/// .finish()
+/// .unwrap();
 ///
 /// // Assert x.is_none()
 /// let x = Datatype::new_const("x", &option_int.sort);
@@ -347,6 +350,14 @@ pub struct DatatypeSort {
 pub struct Params {
     ctx: Context,
     z3_params: Z3_params,
+}
+
+/// Descriptions of the parameters a component (e.g. a [`Solver`]) accepts.
+///
+/// Use it with [`Params::validate()`] to check a [`Params`] set before applying it.
+pub struct ParamDescrs {
+    ctx: Context,
+    z3_param_descrs: Z3_param_descrs,
 }
 
 /// Result of a satisfiability query.
