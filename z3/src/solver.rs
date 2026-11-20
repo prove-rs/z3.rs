@@ -61,13 +61,6 @@ impl Solver {
             .checked(|c| unsafe { Z3_solver_from_string(c, self.z3_slv, source_cstring.as_ptr()) })
     }
 
-    /// Renamed to [`Solver::load_smtlib2()`], since it adds to an existing solver rather than
-    /// constructing one.
-    #[deprecated(note = "renamed to `load_smtlib2`")]
-    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
-        self.load_smtlib2(source_string)
-    }
-
     /// Create a new solver customized for the given logic.
     /// It returns `None` if the logic is unknown or unsupported.
     pub fn new_for_logic<S: Into<Symbol>>(logic: S) -> Option<Solver> {

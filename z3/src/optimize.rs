@@ -81,13 +81,6 @@ impl Optimize {
         })
     }
 
-    /// Renamed to [`Optimize::load_smtlib2()`], since it adds to an existing optimizer rather
-    /// than constructing one.
-    #[deprecated(note = "renamed to `load_smtlib2`")]
-    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
-        self.load_smtlib2(source_string)
-    }
-
     /// Get this optimizers 's context.
     pub fn get_context(&self) -> &Context {
         &self.ctx

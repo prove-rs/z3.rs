@@ -53,7 +53,7 @@ impl From<NulError> for Error {
 
 /// A value returned by a Z3 call, and what [`Context::checked`] hands back for it on success.
 ///
-/// Nullable handles (`Option<T>`) are unwrapped, and null becomes [`Error::UnexpectedNull`]
+/// Nullable handles (`Option<T>`) are unwrapped, and null becomes [`Error::NullHandle`]
 /// (Z3 normally sets an error code when it returns null, which `checked` reports first).
 /// Do not pass calls through `checked` for which null is a normal answer
 /// (e.g. `Z3_model_get_const_interp`).

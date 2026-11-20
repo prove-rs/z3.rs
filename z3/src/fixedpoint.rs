@@ -230,18 +230,6 @@ impl Fixedpoint {
             .checked(|c| unsafe { Z3_fixedpoint_from_file(c, self.z3_fp, cs.as_ptr()) })?;
         Ok(unsafe { AstVector::wrap(&self.ctx, v) })
     }
-
-    /// Renamed to [`Fixedpoint::load_smtlib2()`], which also returns the parsed queries.
-    #[deprecated(note = "renamed to `load_smtlib2`")]
-    pub fn from_string(&self, s: &str) -> Result<(), Error> {
-        self.load_smtlib2(s).map(drop)
-    }
-
-    /// Renamed to [`Fixedpoint::load_smtlib2_file()`], which also returns the parsed queries.
-    #[deprecated(note = "renamed to `load_smtlib2_file`")]
-    pub fn from_file(&self, filename: &str) -> Result<(), Error> {
-        self.load_smtlib2_file(filename).map(drop)
-    }
 }
 
 impl Default for Fixedpoint {

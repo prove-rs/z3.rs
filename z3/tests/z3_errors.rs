@@ -58,7 +58,7 @@ fn test_solver_valid_params_are_accepted() {
 }
 
 #[test]
-fn test_solver_from_string_parse_error_is_reported() {
+fn test_solver_load_smtlib2_parse_error_is_reported() {
     let s = Solver::new();
     assert!(matches!(
         s.load_smtlib2(BAD_SMTLIB),
@@ -85,7 +85,7 @@ fn test_solver_pop_beyond_scopes_is_error() {
 }
 
 #[test]
-fn test_optimize_from_string_parse_error_is_reported() {
+fn test_optimize_load_smtlib2_parse_error_is_reported() {
     let o = Optimize::new();
     assert!(o.load_smtlib2(BAD_SMTLIB).is_err());
     o.load_smtlib2("(declare-const x Int) (assert (= x 5))")
@@ -104,7 +104,7 @@ fn test_fixedpoint_invalid_params_are_rejected() {
 }
 
 #[test]
-fn test_fixedpoint_from_string_parse_error_is_reported() {
+fn test_fixedpoint_load_smtlib2_parse_error_is_reported() {
     let fp = Fixedpoint::new();
     assert!(
         fp.load_smtlib2("(declare-rel p ()) (rule (bogus))")
