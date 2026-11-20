@@ -218,7 +218,7 @@ impl Fixedpoint {
         let cs = CString::new(s)?;
         let v = self
             .ctx
-            .checked_some(|c| unsafe { Z3_fixedpoint_from_string(c, self.z3_fp, cs.as_ptr()) })?;
+            .checked(|c| unsafe { Z3_fixedpoint_from_string(c, self.z3_fp, cs.as_ptr()) })?;
         Ok(unsafe { AstVector::wrap(&self.ctx, v) })
     }
 
@@ -227,7 +227,7 @@ impl Fixedpoint {
         let cs = CString::new(filename)?;
         let v = self
             .ctx
-            .checked_some(|c| unsafe { Z3_fixedpoint_from_file(c, self.z3_fp, cs.as_ptr()) })?;
+            .checked(|c| unsafe { Z3_fixedpoint_from_file(c, self.z3_fp, cs.as_ptr()) })?;
         Ok(unsafe { AstVector::wrap(&self.ctx, v) })
     }
 

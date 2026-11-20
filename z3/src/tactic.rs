@@ -231,9 +231,9 @@ impl Tactic {
     ///
     /// Returns an error if a parameter is unknown to this tactic or has the wrong type.
     pub fn with(&self, params: &Params) -> Result<Tactic, Error> {
-        let t = self.ctx.checked_some(|c| unsafe {
-            Z3_tactic_using_params(c, self.z3_tactic, params.z3_params)
-        })?;
+        let t = self
+            .ctx
+            .checked(|c| unsafe { Z3_tactic_using_params(c, self.z3_tactic, params.z3_params) })?;
         Ok(unsafe { Self::wrap(&self.ctx, t) })
     }
 
@@ -241,7 +241,7 @@ impl Tactic {
     /// `Ok(_)` with a `ApplyResult`. If the tactic fails, returns `Err(_)` with
     /// the error describing why.
     pub fn apply(&self, goal: &Goal, params: Option<&Params>) -> Result<ApplyResult, Error> {
-        let result = self.ctx.checked_some(|c| unsafe {
+        let result = self.ctx.checked(|c| unsafe {
             match params {
                 None => Z3_tactic_apply(c, self.z3_tactic, goal.z3_goal),
                 Some(params) => {

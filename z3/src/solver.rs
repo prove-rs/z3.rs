@@ -352,7 +352,7 @@ impl Solver {
     pub fn get_param_descrs(&self) -> Result<ParamDescrs, Error> {
         let d = self
             .ctx
-            .checked_some(|c| unsafe { Z3_solver_get_param_descrs(c, self.z3_slv) })?;
+            .checked(|c| unsafe { Z3_solver_get_param_descrs(c, self.z3_slv) })?;
         Ok(unsafe { ParamDescrs::wrap(&self.ctx, d) })
     }
 
