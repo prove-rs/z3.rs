@@ -10,8 +10,8 @@ use z3_sys::*;
 /// constructed via [`FiniteSet::singleton`], [`FiniteSet::range`], and the
 /// set operations below.
 ///
-/// Z3 has no dedicated [`SortKind`](crate::SortKind) for finite sets: the
-/// sort of a `FiniteSet` reports [`SortKind::Unknown`](crate::SortKind::Unknown)
+/// Z3 has no dedicated [`SortKind`] for finite sets: the
+/// sort of a `FiniteSet` reports [`SortKind::Unknown`]
 /// from [`Sort::kind`] and [`Dynamic::sort_kind`]. Use [`Sort::is_finite_set`]
 /// or [`Dynamic::as_finite_set`] to recognize finite sets.
 pub struct FiniteSet {
@@ -145,7 +145,7 @@ impl Dynamic {
     /// Returns `None` if the `Dynamic` is not actually a `FiniteSet`.
     ///
     /// Unlike the other `as_*` methods, this does not dispatch on
-    /// [`Dynamic::sort_kind`], which is [`SortKind::Unknown`](crate::SortKind::Unknown)
+    /// [`Dynamic::sort_kind`], which is [`SortKind::Unknown`]
     /// for finite sets.
     pub fn as_finite_set(&self) -> Option<FiniteSet> {
         self.get_sort()
