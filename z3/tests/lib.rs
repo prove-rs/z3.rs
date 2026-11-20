@@ -274,7 +274,7 @@ fn test_solver_new_from_smtlib2() {
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
     let solver = Solver::new();
-    solver.from_string(problem).unwrap();
+    solver.load_smtlib2(problem).unwrap();
     assert_eq!(solver.check(), SatResult::Sat);
 }
 
@@ -286,7 +286,7 @@ fn test_solver_to_smtlib2() {
     solver1.assert(t1.eq(&t2));
     let s1_smt2 = solver1.to_smt2();
     let solver2 = Solver::new();
-    solver2.from_string(s1_smt2).unwrap();
+    solver2.load_smtlib2(s1_smt2).unwrap();
     assert_eq!(solver2.check(), solver1.check());
 }
 
@@ -719,7 +719,7 @@ fn test_optimize_new_from_smtlib2() {
 (assert (=(+( -(* 2 x) (* 2 y)) (* 4 z)) -2))
 "#;
     let optimize = Optimize::new();
-    optimize.from_string(problem).unwrap();
+    optimize.load_smtlib2(problem).unwrap();
     assert_eq!(optimize.check(&[]), SatResult::Sat);
 }
 

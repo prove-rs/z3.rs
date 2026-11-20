@@ -7,8 +7,8 @@ use z3_sys::*;
 
 use crate::ast::Bool;
 use crate::{
-    AstVector, Context, Error, Model, Params, SatResult, Solver, Statistics, Symbol, Translate,
-    ast, ast::Ast,
+    AstVector, Context, Error, Model, ParamDescrs, Params, SatResult, Solver, Statistics, Symbol,
+    Translate, ast, ast::Ast,
 };
 use std::ops::AddAssign;
 
@@ -55,10 +55,17 @@ impl Solver {
     ///
     /// Returns an error if the input does not parse, in which case none of it is added and
     /// declarations from earlier calls are forgotten.
-    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
+    pub fn load_smtlib2<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
         let source_cstring = CString::new(source_string)?;
         self.ctx
             .checked(|c| unsafe { Z3_solver_from_string(c, self.z3_slv, source_cstring.as_ptr()) })
+    }
+
+    /// Renamed to [`Solver::load_smtlib2()`], since it adds to an existing solver rather than
+    /// constructing one.
+    #[deprecated(note = "renamed to `load_smtlib2`")]
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
+        self.load_smtlib2(source_string)
     }
 
     /// Create a new solver customized for the given logic.
@@ -334,13 +341,19 @@ impl Solver {
         // On a solver that has not been used yet, Z3_solver_set_params stores the parameters
         // without checking them; the error then surfaces in the next call (e.g. an assert),
         // which is silently skipped. Validate up front so the error is reported here instead.
-        let ctx = &self.ctx;
-        let descrs = ctx.checked_some(|c| unsafe { Z3_solver_get_param_descrs(c, self.z3_slv) })?;
-        unsafe { Z3_param_descrs_inc_ref(ctx.z3_ctx.as_ptr(), descrs) };
-        let validated = ctx.checked(|c| unsafe { Z3_params_validate(c, params.z3_params, descrs) });
-        unsafe { Z3_param_descrs_dec_ref(ctx.z3_ctx.as_ptr(), descrs) };
-        validated?;
-        ctx.checked(|c| unsafe { Z3_solver_set_params(c, self.z3_slv, params.z3_params) })
+        params.validate(&self.get_param_descrs()?)?;
+        self.ctx
+            .checked(|c| unsafe { Z3_solver_set_params(c, self.z3_slv, params.z3_params) })
+    }
+
+    /// Return the descriptions of the parameters this solver accepts.
+    ///
+    /// On a solver that has not been used yet, Z3 builds a temporary solver to collect these.
+    pub fn get_param_descrs(&self) -> Result<ParamDescrs, Error> {
+        let d = self
+            .ctx
+            .checked_some(|c| unsafe { Z3_solver_get_param_descrs(c, self.z3_slv) })?;
+        Ok(unsafe { ParamDescrs::wrap(&self.ctx, d) })
     }
 
     /// Retrieve the statistics for the last [`Solver::check()`].

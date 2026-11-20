@@ -74,11 +74,18 @@ impl Optimize {
     /// Add the parsed constraints and objectives to the optimizer.
     ///
     /// Returns an error if the input does not parse, in which case none of it is added.
-    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
+    pub fn load_smtlib2<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
         let source_cstring = CString::new(source_string)?;
         self.ctx.checked(|c| unsafe {
             Z3_optimize_from_string(c, self.z3_opt, source_cstring.as_ptr())
         })
+    }
+
+    /// Renamed to [`Optimize::load_smtlib2()`], since it adds to an existing optimizer rather
+    /// than constructing one.
+    #[deprecated(note = "renamed to `load_smtlib2`")]
+    pub fn from_string<T: Into<Vec<u8>>>(&self, source_string: T) -> Result<(), Error> {
+        self.load_smtlib2(source_string)
     }
 
     /// Get this optimizers 's context.

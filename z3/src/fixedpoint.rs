@@ -1,5 +1,5 @@
 use crate::ast::{Ast, Bool};
-use crate::{Context, Error, Fixedpoint, FuncDecl, Params, SatResult, Statistics};
+use crate::{AstVector, Context, Error, Fixedpoint, FuncDecl, Params, SatResult, Statistics};
 use std::ffi::CString;
 use std::fmt;
 use z3_sys::*;
@@ -211,20 +211,36 @@ impl Fixedpoint {
         }
     }
 
-    /// Parse a fixedpoint problem from a string in SMT-LIB format.
-    pub fn from_string(&self, s: &str) -> Result<(), Error> {
+    /// Parse a fixedpoint problem in SMT-LIB2 format and add its rules and facts to this context.
+    ///
+    /// Returns the queries the input contains, which are not run.
+    pub fn load_smtlib2(&self, s: &str) -> Result<AstVector, Error> {
         let cs = CString::new(s)?;
-        self.ctx
-            .checked(|c| unsafe { Z3_fixedpoint_from_string(c, self.z3_fp, cs.as_ptr()) })?;
-        Ok(())
+        let v = self
+            .ctx
+            .checked_some(|c| unsafe { Z3_fixedpoint_from_string(c, self.z3_fp, cs.as_ptr()) })?;
+        Ok(unsafe { AstVector::wrap(&self.ctx, v) })
     }
 
-    /// Parse a file containing a fixedpoint problem.
-    pub fn from_file(&self, filename: &str) -> Result<(), Error> {
+    /// Like [`Fixedpoint::load_smtlib2()`], reading the problem from a file.
+    pub fn load_smtlib2_file(&self, filename: &str) -> Result<AstVector, Error> {
         let cs = CString::new(filename)?;
-        self.ctx
-            .checked(|c| unsafe { Z3_fixedpoint_from_file(c, self.z3_fp, cs.as_ptr()) })?;
-        Ok(())
+        let v = self
+            .ctx
+            .checked_some(|c| unsafe { Z3_fixedpoint_from_file(c, self.z3_fp, cs.as_ptr()) })?;
+        Ok(unsafe { AstVector::wrap(&self.ctx, v) })
+    }
+
+    /// Renamed to [`Fixedpoint::load_smtlib2()`], which also returns the parsed queries.
+    #[deprecated(note = "renamed to `load_smtlib2`")]
+    pub fn from_string(&self, s: &str) -> Result<(), Error> {
+        self.load_smtlib2(s).map(drop)
+    }
+
+    /// Renamed to [`Fixedpoint::load_smtlib2_file()`], which also returns the parsed queries.
+    #[deprecated(note = "renamed to `load_smtlib2_file`")]
+    pub fn from_file(&self, filename: &str) -> Result<(), Error> {
+        self.load_smtlib2_file(filename).map(drop)
     }
 }
 

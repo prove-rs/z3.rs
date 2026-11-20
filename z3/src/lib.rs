@@ -352,6 +352,14 @@ pub struct Params {
     z3_params: Z3_params,
 }
 
+/// Descriptions of the parameters a component (e.g. a [`Solver`]) accepts.
+///
+/// Use it with [`Params::validate()`] to check a [`Params`] set before applying it.
+pub struct ParamDescrs {
+    ctx: Context,
+    z3_param_descrs: Z3_param_descrs,
+}
+
 /// Result of a satisfiability query.
 #[derive(Copy, Clone, Debug, PartialEq, Eq)]
 pub enum SatResult {
