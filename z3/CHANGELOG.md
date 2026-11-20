@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.24.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.23.0...z3-v0.24.0) - 2026-11-20
+
+### Fixed
+
+- *(z3)* [**breaking**] Report Z3 errors instead of ignoring them ([#624](https://github.com/prove-rs/z3.rs/pull/624)) (by @progwriter)
+- Prevent Solver::solutions from overcapturing lifetimes ([#634](https://github.com/prove-rs/z3.rs/pull/634)) (by @yanqui-uxo) - #634
+
+### Other
+
+- check rustdoc lints and fix broken doc links ([#639](https://github.com/prove-rs/z3.rs/pull/639)) (by @toolCHAINZ) - #639
+
+### Contributors
+
+* @toolCHAINZ
+* @progwriter
+* @yanqui-uxo
+
 ## [0.23.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.22.0...z3-v0.23.0) - 2026-11-11
 
 ### Fixed
