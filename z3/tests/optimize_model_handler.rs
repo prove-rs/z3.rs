@@ -109,6 +109,56 @@ fn second_set_model_handler_replaces_first() {
     assert!(second_fired.get(), "second handler should have fired");
 }
 
+/// Regression test for #640: replacing the handler from inside itself must not free the
+/// closure (and its captured state) or the model while the handler is still running.
+#[test]
+fn set_model_handler_from_inside_handler() {
+    let x = Int::new_const("x");
+    let opt = Rc::new(Optimize::new());
+    opt.assert(x.ge(0));
+    opt.assert(x.le(10));
+    opt.minimize(&x);
+
+    let first_calls = Rc::new(Cell::new(0u32));
+    let replacement_calls = Rc::new(Cell::new(0u32));
+
+    // `Weak` avoids an `Optimize` -> handler -> `Optimize` reference cycle.
+    let weak_opt = Rc::downgrade(&opt);
+    let first = first_calls.clone();
+    let replacement = replacement_calls.clone();
+    let canary = String::from("captured state");
+    let x2 = x.clone();
+    opt.set_model_handler(move |model| {
+        first.set(first.get() + 1);
+        let before = model.to_string();
+
+        let replacement = replacement.clone();
+        weak_opt
+            .upgrade()
+            .unwrap()
+            .set_model_handler(move |_| replacement.set(replacement.get() + 1));
+
+        // The closure's captures and the model must still be valid here.
+        assert_eq!(canary, "captured state");
+        assert_eq!(model.to_string(), before);
+        assert!(model.eval(&x2, true).is_some());
+    });
+
+    assert_eq!(opt.check(&[]), SatResult::Sat);
+    assert_eq!(
+        first_calls.get(),
+        1,
+        "first handler is replaced after one call"
+    );
+
+    // The replacement receives later models; a fresh check guarantees at least one.
+    let before = replacement_calls.get();
+    opt.assert(x.ge(1));
+    assert_eq!(opt.check(&[]), SatResult::Sat);
+    assert!(replacement_calls.get() > before);
+    assert_eq!(first_calls.get(), 1);
+}
+
 #[test]
 fn drop_with_active_handler_does_not_panic() {
     let x = Int::new_const("x");
