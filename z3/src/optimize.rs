@@ -31,12 +31,14 @@ pub(crate) struct ModelHandlerState {
 /// Trampoline called by Z3 for each incremental model found during optimization.
 ///
 /// # Safety
-/// `ctx` must be a pointer previously returned by `FfiState::<ModelHandlerState>::into_raw`
+/// `ctx` must be a pointer previously returned by `FfiState::<ModelHandlerState>::into_non_null`
 /// and the state must still be live (i.e., the owning `Optimize` has not been dropped or had
-/// its handler replaced).
+/// its handler replaced) when Z3 invokes this function.
 unsafe extern "C" fn model_handler_trampoline(ctx: *mut c_void) {
     // SAFETY: invariant above; pointer is valid and live.
-    let state = unsafe { FfiState::<ModelHandlerState>::borrow_raw(ctx) };
+    // Holding our own reference keeps the closure and model alive if the callback replaces
+    // this handler (which releases the `Optimize`'s reference) while it is still running.
+    let state = unsafe { FfiState::<ModelHandlerState>::retain_raw(ctx) };
     (state.callback)(&state.model);
 }
 
@@ -429,6 +431,7 @@ impl Optimize {
     /// Register a model handler that is invoked for every incrementally improved model
     /// produced by the optimization process. Only one model handler can be registered within
     /// each optimization solver; calling this method a second time replaces the first handler.
+    /// This may be done from inside the handler itself; the replacement receives subsequent models.
     ///
     /// The [`Model`] passed to the handler is the same object for every invocation, updated
     /// in-place by Z3. To capture a snapshot, copy out the values you need inside the handler.
@@ -501,8 +504,9 @@ impl Optimize {
         }
     }
 
-    /// Swap in `new` as the current model handler state, freeing whatever state was
-    /// previously registered. This does not touch Z3's callback registration; callers are
+    /// Swap in `new` as the current model handler state, releasing whatever state was
+    /// previously registered. If that state's callback is currently running (i.e. the handler
+    /// is being replaced from inside itself), it is freed once the callback returns. This does not touch Z3's callback registration; callers are
     /// responsible for calling [`Z3_optimize_register_model_eh`] themselves before swapping in
     /// a new handler, since Z3 exposes no API for clearing a registered handler.
     ///
