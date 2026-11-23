@@ -607,7 +607,7 @@ fn test_rec_func_def() {
         &ast::Int::mul(&[&n, &fac_of_n_minus_1.as_int().unwrap()]),
     );
 
-    fac.add_def(&[&n], &body);
+    fac.add_def(&[&n], &body).unwrap();
 
     let x = ast::Int::new_const("x");
     let y = ast::Int::new_const("y");
@@ -636,7 +636,7 @@ fn test_rec_func_def_unsat() {
         &ast::Int::mul(&[&n, &fac_of_n_minus_1.as_int().unwrap()]),
     );
 
-    fac.add_def(&[&n], &body);
+    fac.add_def(&[&n], &body).unwrap();
 
     let x = ast::Int::new_const("x");
     let y = ast::Int::new_const("y");
@@ -652,6 +652,37 @@ fn test_rec_func_def_unsat() {
     solver.assert(y.eq(25));
 
     assert_eq!(solver.check(), SatResult::Unsat);
+}
+
+#[test]
+fn test_rec_func_def_arity_mismatch() {
+    let int = Sort::int();
+    let f = RecFuncDecl::new("f", &[&int, &int, &int, &int], &int);
+    let x0 = ast::Int::new_const("x0");
+    let x1 = ast::Int::new_const("x1");
+    let body = ast::Int::add(&[&x0, &ast::Int::from_i64(1)]);
+
+    // Too few arguments: previously Z3 read past the end of the argument array.
+    assert_eq!(
+        f.add_def(&[&x0, &x1], &body),
+        Err(Error::ArityMismatch {
+            expected: 4,
+            actual: 2
+        })
+    );
+
+    // Too many arguments: previously the extra argument was silently dropped.
+    let g = RecFuncDecl::new("g", &[&int], &int);
+    assert_eq!(
+        g.add_def(&[&x0, &x1], &body),
+        Err(Error::ArityMismatch {
+            expected: 1,
+            actual: 2
+        })
+    );
+
+    // The rejected calls left `g` undefined, so a correct definition still succeeds.
+    g.add_def(&[&x0], &body).unwrap();
 }
 
 #[test]

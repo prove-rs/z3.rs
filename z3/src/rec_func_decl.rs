@@ -4,7 +4,7 @@ use std::fmt;
 use std::ops::Deref;
 use z3_sys::*;
 
-use crate::{Context, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
+use crate::{Context, Error, FuncDecl, RecFuncDecl, Sort, Symbol, ast, ast::Ast};
 
 impl RecFuncDecl {
     pub(crate) unsafe fn wrap(ctx: &Context, z3_func_decl: Z3_func_decl) -> Self {
@@ -55,7 +55,7 @@ impl RecFuncDecl {
     /// f.add_def(
     ///     &[&n],
     ///     &Int::add(&[&n, &Int::from_i64(1)])
-    /// );
+    /// ).unwrap();
     ///
     /// let f_of_n = &f.apply(&[&n.clone()]);
     ///
@@ -72,9 +72,23 @@ impl RecFuncDecl {
     /// ```
     ///
     /// Note that `args` should have the types corresponding to the `domain` of the `RecFuncDecl`.
-    pub fn add_def(&self, args: &[&dyn ast::Ast], body: &dyn Ast) {
+    ///
+    /// # Errors
+    ///
+    /// Returns [`Error::ArityMismatch`] if `args.len()` differs from the function's arity, or
+    /// [`Error::Z3`] if Z3 rejects the definition (e.g. an argument is not a constant, or the
+    /// function already has a definition).
+    pub fn add_def(&self, args: &[&dyn ast::Ast], body: &dyn Ast) -> Result<(), Error> {
         assert!(args.iter().all(|arg| arg.get_ctx() == body.get_ctx()));
         assert_eq!(&self.ctx, body.get_ctx());
+
+        let arity = self.arity();
+        if args.len() != arity {
+            return Err(Error::ArityMismatch {
+                expected: arity,
+                actual: args.len(),
+            });
+        }
 
         let mut args: Vec<_> = args.iter().map(|s| s.get_z3_ast()).collect();
         unsafe {
@@ -82,15 +96,17 @@ impl RecFuncDecl {
                 body.get_sort().z3_sort,
                 Z3_get_range(self.ctx.z3_ctx.as_ptr(), self.z3_func_decl).unwrap()
             );
+        }
 
+        self.ctx.checked(|ctx| unsafe {
             Z3_add_rec_def(
-                self.ctx.z3_ctx.as_ptr(),
+                ctx,
                 self.z3_func_decl,
-                self.arity() as u32,
+                args.len().try_into().unwrap(),
                 args.as_mut_ptr(),
                 body.get_z3_ast(),
-            );
-        }
+            )
+        })
     }
 }
 
