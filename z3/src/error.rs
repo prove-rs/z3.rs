@@ -24,6 +24,13 @@ pub enum Error {
     ///
     /// Z3 should always report why a call failed, so this indicates a bug in Z3 or in this crate.
     NullHandle,
+    /// A function was given a different number of arguments than its declaration's arity.
+    ArityMismatch {
+        /// The arity of the function declaration.
+        expected: usize,
+        /// The number of arguments supplied.
+        actual: usize,
+    },
 }
 
 impl fmt::Display for Error {
@@ -32,6 +39,9 @@ impl fmt::Display for Error {
             Error::Z3 { code, message } => write!(f, "{message} ({code:?})"),
             Error::InteriorNul(err) => err.fmt(f),
             Error::NullHandle => f.write_str("Z3 returned null without reporting an error"),
+            Error::ArityMismatch { expected, actual } => {
+                write!(f, "expected {expected} arguments, got {actual}")
+            }
         }
     }
 }
@@ -39,7 +49,7 @@ impl fmt::Display for Error {
 impl StdError for Error {
     fn source(&self) -> Option<&(dyn StdError + 'static)> {
         match self {
-            Error::Z3 { .. } | Error::NullHandle => None,
+            Error::Z3 { .. } | Error::NullHandle | Error::ArityMismatch { .. } => None,
             Error::InteriorNul(err) => Some(err),
         }
     }
