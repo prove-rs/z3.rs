@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.25.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.24.0...z3-v0.25.0) - 2026-11-23
+
+### Fixed
+
+- *(z3)* [**breaking**] Reject arity mismatches in RecFuncDecl::add_def ([#642](https://github.com/prove-rs/z3.rs/pull/642)) (by @toolCHAINZ)
+- *(z3)* Keep a model handler alive while it replaces itself ([#643](https://github.com/prove-rs/z3.rs/pull/643)) (by @toolCHAINZ)
+
+### Contributors
+
+* @toolCHAINZ
+
 ## [0.24.0](https://github.com/prove-rs/z3.rs/compare/z3-v0.23.0...z3-v0.24.0) - 2026-11-20
 
 ### Fixed
